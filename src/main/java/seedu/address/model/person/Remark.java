@@ -9,6 +9,10 @@ import static java.util.Objects.requireNonNull;
 public class Remark {
     public final String value;
 
+    /**
+     * Creates a new Remark. What else do you want from me Checkstyle????????
+     * @param remark Literally the remark like what else could it POSSIBLY BE?
+     */
     public Remark(String remark) {
         requireNonNull(remark);
         value = remark;
