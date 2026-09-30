@@ -276,14 +276,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 | Priority | As a …​                                    | I want to …​                     | So that I can…​                                                        |
 | -------- | ------------------------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person               |                                                                        |
-| `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name          | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
+| `* * *`  | home-based nurse                                   | add an appointment for a client with a date and time         | I can plan my home visits in advance                 |
+| `* * *`  | home-based nurse                                       | record and view a client's medical profile (conditions, allergies, medications, next-of-kin) person               | I know their health details and whom to call in an emergency                                                                        |
+| `* * *`  | home-based nurse                                       | record personal notes about a client (routine, hobbies, pet peeves, past conversations)                | I can build rapport and recall what we've talked about                                   |
+| `* * *`  | home-based nurse                                       | reschedule an appointment in one command          | I don't have to delete and re-add it |
+| `* `    | home-based nurse                                       | archive a discharged client instead of deleting them   | they're hidden from my list but I keep their records                |
+| `* *`      | home-based nurse | see clients with no upcoming appointment           | ensure that no one gets missed easily                                                 |
 
-*{More to be added}*
+
 
 ### Use cases
 
