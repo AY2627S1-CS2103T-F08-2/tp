@@ -45,12 +45,11 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Role: Developer
 * Responsibilities: Project Manager
 
-### James Doe
+### bruhmiuz
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/bruhmiuz.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/bruhmiuz)]
 
-* Role: Developer
-* Responsibilities: UI
+* Role: Ex-Fang Tekh Lid
+* Responsibilities: Yap
