@@ -9,16 +9,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### Qin Fangzheng
+### John Doe
 
 <img src="images/johndoe.png" width="200px">
 
 [[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/Anthony-QIN-fz)]
+[[github](https://github.com/johndoe)]
 [[portfolio](team/johndoe.md)]
 
-* Role: Testing
-* Responsibilities: UI
+* Role: Project Advisor
 
 ### Jaydon Law
 
