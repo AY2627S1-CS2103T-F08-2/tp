@@ -11,11 +11,9 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ### Qin Fangzheng
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/anthony-qin-fz.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
 [[github](https://github.com/Anthony-QIN-fz)]
-[[portfolio](team/johndoe.md)]
 
 * Role: Testing
 * Responsibilities: UI
@@ -33,20 +31,19 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/johndoe.png" width="200px">
 
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
+[[github](http://github.com/johndoe)]
 
 * Role: Developer
 * Responsibilities: Data
 
-### Jean Doe
+### Yong Kang Teo
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/ykteo000.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](http://github.com/ykteo000)]
 
 * Role: Developer
-* Responsibilities: Dev Ops + Threading
+* Responsibilities: Project Manager
 
 ### James Doe
 
