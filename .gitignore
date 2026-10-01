@@ -1,5 +1,3 @@
-.gitignore
-
 # Gradle build files
 /.gradle/
 /build/
@@ -26,25 +24,8 @@ docs/_site/
 # AI Agents
 AGENTS.md
 CLAUDE.md
-CLAUDE.local.md
-GEMINI.md
-.mcp.json
 /.claude/
 /.codex/
-/.gemini/
-/.cursor/
-.cursorrules
-/.windsurf/
-.windsurfrules
-/.clinerules
-/.roo/
-/.aider*
-/.continue/
-/.junie/
-/.agents/
-.github/copilot-instructions.md
-.github/instructions/
-.github/prompts/
 
 # Temp files
 _temp/
