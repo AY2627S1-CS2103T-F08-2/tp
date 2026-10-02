@@ -336,29 +336,134 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified
-otherwise)
+(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `nurse`, unless specified otherwise)
 
-**Use case: Delete a person**
+**Use case: UC01 - Add a patient**
 
 **MSS**
 
-1. User requests to list persons
-2. AddressBook shows a list of persons
-3. User requests to delete a specific person in the list
-4. AddressBook deletes the person
+1.  Nurse requests to add a patient with the patient's details
+2.  AddressBook adds the patient
+3.  AddressBook shows the details of the added patient
 
    Use case ends.
 
 **Extensions**
 
-* 2a. The list is empty.
+* 1a. One or more compulsory fields (ID, name, phone number, address) are missing.
 
-  Use case ends.
+    * 1a1. AddressBook shows an error message.
 
-* 3a. The given index is invalid.
+      Use case resumes at step 1.
 
-    * 3a1. AddressBook shows an error message.
+* 1b. One or more fields are in an invalid format.
+
+    * 1b1. AddressBook shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
+* 1c. The given next appointment date/time is invalid.
+
+    * 1c1. AddressBook shows an error message.
+
+      Use case resumes at step 1.
+
+* 1d. A patient with the given ID already exists.
+
+    * 1d1. AddressBook shows an error message.
+
+      Use case ends.
+
+**Use case: UC02 - Find a patient**
+
+**MSS**
+
+1.  Nurse requests to find a patient by name or ID
+2.  AddressBook shows a list of matching patients
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The search keyword is missing.
+
+    * 1a1. AddressBook shows an error message.
+
+      Use case resumes at step 1.
+
+* 2a. No patients match the keyword.
+
+    * 2a1. AddressBook shows a message that no matching patients were found.
+
+      Use case ends.
+
+**Use case: UC03 - Delete a patient**
+
+**MSS**
+
+1.  Nurse <u>finds the patient (UC02)</u>
+2.  Nurse requests to delete the patient by ID
+3.  AddressBook deletes the patient and all of the patient's details
+4.  AddressBook shows a message confirming the deletion
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Nurse already knows the patient's ID.
+
+  Use case resumes at step 2.
+
+* 2a. The ID is missing.
+
+    * 2a1. AddressBook shows an error message.
+
+      Use case resumes at step 2.
+
+* 2b. The given ID does not match any patient.
+
+    * 2b1. AddressBook shows an error message.
+
+      Use case resumes at step 2.
+
+**Use case: UC04 - Edit a patient's details**
+
+**MSS**
+
+1.  Nurse <u>finds the patient (UC02)</u>
+2.  Nurse requests to edit the patient by ID with the fields to change
+3.  AddressBook updates the patient's details
+4.  AddressBook shows the updated details of the patient
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Nurse already knows the patient's ID.
+
+  Use case resumes at step 2.
+
+* 2a. The given ID does not match any patient.
+
+    * 2a1. AddressBook shows an error message.
+
+      Use case resumes at step 2.
+
+* 2b. No fields to edit are provided.
+
+    * 2b1. AddressBook shows an error message.
+
+      Use case resumes at step 2.
+
+* 2c. One or more fields are in an invalid format.
+
+    * 2c1. AddressBook shows an error message with the valid format.
+
+      Use case resumes at step 2.
+
+* 2d. The new ID already belongs to another patient.
+
+    * 2d1. AddressBook shows an error message.
 
       Use case resumes at step 2.
 
