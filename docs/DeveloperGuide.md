@@ -426,7 +426,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
 3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
 4. Should function fully offline without requiring an internet connection or a remote server, ensuring home nurses can operate in areas without network connectivity.
-5. Should respond to any command within 100 milliseconds under typical workloads (up to 1000 patients and active schedules).
+5. Should respond to any command within 100 milliseconds under typical workloads.
 6. Should be packaged as a single portable JAR file and run directly without requiring an installer.
 7. Should store all data locally in a human-editable, plain-text format (e.g., JSON) that can be inspected and backed up manually.
 8. Should fail gracefully and alert the user with a descriptive error message if data files are corrupted or formatted incorrectly, without crashing silently.
