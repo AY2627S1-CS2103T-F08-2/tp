@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -40,9 +40,34 @@ public class UniquePersonListTest {
     @Test
     public void contains_personWithSameIdentityFieldsInList_returnsTrue() {
         uniquePersonList.add(ALICE);
-        Person editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).withTags(VALID_TAG_HUSBAND)
+        Person editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).withMedicalHistory("Asthma")
                 .build();
         assertTrue(uniquePersonList.contains(editedAlice));
+    }
+
+    @Test
+    public void findById_nullId_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> uniquePersonList.findById(null));
+    }
+
+    @Test
+    public void findById_idNotInList_returnsEmpty() {
+        uniquePersonList.add(ALICE);
+        assertEquals(Optional.empty(), uniquePersonList.findById(BOB.getId()));
+    }
+
+    @Test
+    public void findById_idInList_returnsPerson() {
+        uniquePersonList.add(ALICE);
+        uniquePersonList.add(BOB);
+        assertEquals(Optional.of(BOB), uniquePersonList.findById(BOB.getId()));
+    }
+
+    @Test
+    public void findById_idDiffersInCase_returnsPerson() {
+        uniquePersonList.add(ALICE);
+        PatientId lowerCaseId = new PatientId(ALICE.getId().value.toLowerCase());
+        assertEquals(Optional.of(ALICE), uniquePersonList.findById(lowerCaseId));
     }
 
     @Test
@@ -83,7 +108,7 @@ public class UniquePersonListTest {
     @Test
     public void setPerson_editedPersonHasSameIdentity_success() {
         uniquePersonList.add(ALICE);
-        Person editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).withTags(VALID_TAG_HUSBAND)
+        Person editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).withMedicalHistory("Asthma")
                 .build();
         uniquePersonList.setPerson(ALICE, editedAlice);
         UniquePersonList expectedUniquePersonList = new UniquePersonList();

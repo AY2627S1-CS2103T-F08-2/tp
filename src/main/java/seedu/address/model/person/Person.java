@@ -2,39 +2,43 @@ package seedu.address.model.person;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
+import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
-import seedu.address.model.tag.Tag;
 
 /**
- * Represents a Person in the address book.
+ * Represents a Person (a patient) in the address book.
  * Guarantees: details are present and not null, field values are validated, immutable.
  */
 public class Person {
 
     // Identity fields
-    private final Name name;
-    private final Phone phone;
-    private final Email email;
+    private final PatientId id;
 
     // Data fields
+    private final Name name;
+    private final Phone phone;
     private final Address address;
-    private final Set<Tag> tags = new HashSet<>();
+    private final MedicalHistory medicalHistory; // null if not given
+    private final NextAppointment nextAppointment; // null if not given
 
     /**
-     * Every field must be present and not null.
+     * Every field must be present and not null. Optional fields are passed as {@code Optional#empty()}.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
-        requireAllNonNull(name, phone, email, address, tags);
+    public Person(PatientId id, Name name, Phone phone, Address address,
+            Optional<MedicalHistory> medicalHistory, Optional<NextAppointment> nextAppointment) {
+        requireAllNonNull(id, name, phone, address, medicalHistory, nextAppointment);
+        this.id = id;
         this.name = name;
         this.phone = phone;
-        this.email = email;
         this.address = address;
-        this.tags.addAll(tags);
+        this.medicalHistory = medicalHistory.orElse(null);
+        this.nextAppointment = nextAppointment.orElse(null);
+    }
+
+    public PatientId getId() {
+        return id;
     }
 
     public Name getName() {
@@ -45,24 +49,26 @@ public class Person {
         return phone;
     }
 
-    public Email getEmail() {
-        return email;
-    }
-
     public Address getAddress() {
         return address;
     }
 
     /**
-     * Returns an immutable tag set, which throws {@code UnsupportedOperationException}
-     * if modification is attempted.
+     * Returns the medical history, or {@code Optional#empty()} if none was given.
      */
-    public Set<Tag> getTags() {
-        return Collections.unmodifiableSet(tags);
+    public Optional<MedicalHistory> getMedicalHistory() {
+        return Optional.ofNullable(medicalHistory);
     }
 
     /**
-     * Returns true if both persons have the same name.
+     * Returns the next appointment, or {@code Optional#empty()} if none was given.
+     */
+    public Optional<NextAppointment> getNextAppointment() {
+        return Optional.ofNullable(nextAppointment);
+    }
+
+    /**
+     * Returns true if both persons have the same patient ID.
      * This defines a weaker notion of equality between two persons.
      */
     public boolean isSamePerson(Person otherPerson) {
@@ -71,7 +77,7 @@ public class Person {
         }
 
         return otherPerson != null
-                && otherPerson.getName().equals(getName());
+                && otherPerson.getId().equals(getId());
     }
 
     /**
@@ -89,27 +95,29 @@ public class Person {
             return false;
         }
 
-        return name.equals(otherPerson.name)
+        return id.equals(otherPerson.id)
+                && name.equals(otherPerson.name)
                 && phone.equals(otherPerson.phone)
-                && email.equals(otherPerson.email)
                 && address.equals(otherPerson.address)
-                && tags.equals(otherPerson.tags);
+                && Objects.equals(medicalHistory, otherPerson.medicalHistory)
+                && Objects.equals(nextAppointment, otherPerson.nextAppointment);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, phone, email, address, tags);
+        return Objects.hash(id, name, phone, address, medicalHistory, nextAppointment);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
+                .add("id", id)
                 .add("name", name)
                 .add("phone", phone)
-                .add("email", email)
                 .add("address", address)
-                .add("tags", tags)
+                .add("medicalHistory", medicalHistory)
+                .add("nextAppointment", nextAppointment)
                 .toString();
     }
 
