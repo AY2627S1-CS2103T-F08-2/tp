@@ -2,18 +2,15 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
-import seedu.address.model.person.Email;
+import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.NextAppointment;
+import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Phone;
-import seedu.address.model.tag.Tag;
 
 /**
  * Contains utility methods used for parsing strings in the various *Parser classes.
@@ -33,6 +30,21 @@ public class ParserUtil {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
         return Index.fromOneBased(Integer.parseInt(trimmedIndex));
+    }
+
+    /**
+     * Parses a {@code String id} into a {@code PatientId}.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code id} is invalid.
+     */
+    public static PatientId parseId(String id) throws ParseException {
+        requireNonNull(id);
+        String trimmedId = id.trim();
+        if (!PatientId.isValidId(trimmedId)) {
+            throw new ParseException(PatientId.MESSAGE_CONSTRAINTS);
+        }
+        return new PatientId(trimmedId);
     }
 
     /**
@@ -81,44 +93,32 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String email} into an {@code Email}.
+     * Parses a {@code String medicalHistory} into a {@code MedicalHistory}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code email} is invalid.
+     * @throws ParseException if the given {@code medicalHistory} is invalid.
      */
-    public static Email parseEmail(String email) throws ParseException {
-        requireNonNull(email);
-        String trimmedEmail = email.trim();
-        if (!Email.isValidEmail(trimmedEmail)) {
-            throw new ParseException(Email.MESSAGE_CONSTRAINTS);
+    public static MedicalHistory parseMedicalHistory(String medicalHistory) throws ParseException {
+        requireNonNull(medicalHistory);
+        String trimmedMedicalHistory = medicalHistory.trim();
+        if (!MedicalHistory.isValidMedicalHistory(trimmedMedicalHistory)) {
+            throw new ParseException(MedicalHistory.MESSAGE_CONSTRAINTS);
         }
-        return new Email(trimmedEmail);
+        return new MedicalHistory(trimmedMedicalHistory);
     }
 
     /**
-     * Parses a {@code String tag} into a {@code Tag}.
+     * Parses a {@code String nextAppointment} into a {@code NextAppointment}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code tag} is invalid.
+     * @throws ParseException if the given {@code nextAppointment} is invalid.
      */
-    public static Tag parseTag(String tag) throws ParseException {
-        requireNonNull(tag);
-        String trimmedTag = tag.trim();
-        if (!Tag.isValidTagName(trimmedTag)) {
-            throw new ParseException(Tag.MESSAGE_CONSTRAINTS);
+    public static NextAppointment parseNextAppointment(String nextAppointment) throws ParseException {
+        requireNonNull(nextAppointment);
+        String trimmedNextAppointment = nextAppointment.trim();
+        if (!NextAppointment.isValidNextAppointment(trimmedNextAppointment)) {
+            throw new ParseException(NextAppointment.MESSAGE_CONSTRAINTS);
         }
-        return new Tag(trimmedTag);
-    }
-
-    /**
-     * Parses {@code Collection<String> tags} into a {@code Set<Tag>}.
-     */
-    public static Set<Tag> parseTags(Collection<String> tags) throws ParseException {
-        requireNonNull(tags);
-        final Set<Tag> tagSet = new HashSet<>();
-        for (String tagName : tags) {
-            tagSet.add(parseTag(tagName));
-        }
-        return tagSet;
+        return new NextAppointment(trimmedNextAppointment);
     }
 }
