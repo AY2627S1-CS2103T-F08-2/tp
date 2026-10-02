@@ -480,9 +480,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Glossary
 
-* **LaiNurse**: The desktop application designed for home nurses to manage patient contact details, medical histories,
+* **LaiNurse**: The desktop application designed for (home) nurses to manage patient contact details, medical histories,
   and home visit schedules via a Command Line Interface (CLI).
-* **Home Nurse**: The primary target user; a healthcare professional who conducts on-site medical checkups and
+* **(Home) Nurse**: The primary target user; a healthcare professional who conducts on-site medical checkups and
   caregiving visits at patients' residential addresses.
 * **Patient**: An individual receiving home-based medical care or rehabilitation from a visiting nurse, tracked in the
   system alongside their specific treatment location, clinical history, and scheduled visit times.
@@ -490,7 +490,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   individual patients and prevent duplicate profile collisions (e.g., Singapore NRIC/FIN format such as T0123456B).
 * **NRIC / FIN**: National Registration Identity Card / Foreign Identification Number; the standard national identity
   identification format used in Singapore.
-* **Address**: The physical location of the patient where home nursing care is delivered. This is not necessarily the
+* **Address**: The physical location of the patient where home nursing care is delivered. This is not necessarily the
   true residential location, as some treatment, e.g. rehabilitation post surgery may be done outdoors.
 * **Medical History**: Free-form textual records capturing relevant chronic conditions, allergies, past diagnoses, or
   ongoing medical concerns of a patient (e.g., "dementia").
