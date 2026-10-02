@@ -5,18 +5,18 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 
 /**
  * Represents a Person's name in the address book.
+ * The name is stored in upper case with whitespace normalized, so names that differ only in case
+ * or spacing are equal.
  * Guarantees: immutable; is valid as declared in {@link #isValidName(String)}
  */
 public class Name {
 
-    public static final String MESSAGE_CONSTRAINTS =
-            "Names should only contain alphanumeric characters and spaces, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Names can contain any characters, and should not be blank";
 
     /*
-     * The first character of the name must not be a whitespace,
-     * otherwise " " (a blank string) becomes a valid input.
+     * Checked against the normalized name, so a blank string becomes "" and is rejected.
      */
-    public static final String VALIDATION_REGEX = "[\\p{Alnum}][\\p{Alnum} ]*";
+    public static final String VALIDATION_REGEX = ".+";
 
     public final String fullName;
 
@@ -28,14 +28,15 @@ public class Name {
     public Name(String name) {
         requireNonNull(name);
         checkArgument(isValidName(name), MESSAGE_CONSTRAINTS);
-        fullName = name;
+        fullName = TextNormalizer.normalize(name);
     }
 
     /**
      * Returns true if a given string is a valid name.
+     * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidName(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
     }
 
 
