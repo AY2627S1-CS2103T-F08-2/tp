@@ -482,6 +482,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * **LaiNurse**: The desktop application designed for (home) nurses to manage patient contact details, medical histories,
   and home visit schedules via a Command Line Interface (CLI).
+* **Mainstream OS**: Windows, Linux, Unix, or macOS.
 * **(Home) Nurse**: The primary target user; a healthcare professional who conducts on-site medical checkups and
   caregiving visits at patients' residential addresses.
 * **Patient**: An individual receiving home-based medical care or rehabilitation from a visiting nurse, tracked in the
