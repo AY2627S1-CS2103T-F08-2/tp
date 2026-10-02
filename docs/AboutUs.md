@@ -9,51 +9,47 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### Qin Fangzheng
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/anthony-qin-fz.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/Anthony-QIN-fz)]
 
-* Role: Project Advisor
-
-### Jane Doe
-
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Team Lead
+* Role: Testing
 * Responsibilities: UI
 
-### Johnny Doe
+### Jaydon Law
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/less413.png" width="200px">
 
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
+[[github](https://github.com/less413)]
+
+* Role: Developer
+* Responsibilities: UI
+
+### Darren Lim
+
+<img src="images/dardenren.png" width="200px">
+
+[[github](http://github.com/dardenren)]
 
 * Role: Developer
 * Responsibilities: Data
 
-### Jean Doe
+### Yong Kang Teo
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/ykteo000.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Developer
-* Responsibilities: Dev Ops + Threading
-
-### James Doe
-
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](http://github.com/ykteo000)]
 
 * Role: Developer
-* Responsibilities: UI
+* Responsibilities: Project Manager
+
+### bruhmiuz
+
+<img src="images/bruhmiuz.png" width="200px">
+
+[[github](https://github.com/bruhmiuz)]
+
+* Role: Ex-Fang Tekh Lid
+* Responsibilities: Yap
