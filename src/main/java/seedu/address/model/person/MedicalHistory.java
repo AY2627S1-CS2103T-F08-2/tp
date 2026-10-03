@@ -44,11 +44,11 @@ public class MedicalHistory {
         }
 
         // instanceof handles nulls
-        if (!(other instanceof MedicalHistory otherAddress)) {
+        if (!(other instanceof MedicalHistory otherMedicalHistory)) {
             return false;
         }
 
-        return value.equals(otherAddress.value);
+        return value.equals(otherMedicalHistory.value);
     }
 
     @Override

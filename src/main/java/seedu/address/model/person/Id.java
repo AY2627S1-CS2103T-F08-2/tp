@@ -49,11 +49,11 @@ public class Id {
         }
 
         // instanceof handles nulls
-        if (!(other instanceof Address otherAddress)) {
+        if (!(other instanceof Id otherId)) {
             return false;
         }
 
-        return value.equals(otherAddress.value);
+        return value.equals(otherId.value);
     }
 
     @Override

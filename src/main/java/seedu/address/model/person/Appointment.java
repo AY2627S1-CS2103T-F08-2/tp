@@ -50,11 +50,11 @@ public class Appointment {
         }
 
         // instanceof handles nulls
-        if (!(other instanceof Appointment otherAddress)) {
+        if (!(other instanceof Appointment otherAppointment)) {
             return false;
         }
 
-        return value.equals(otherAddress.value);
+        return value.equals(otherAppointment.value);
     }
 
     @Override
