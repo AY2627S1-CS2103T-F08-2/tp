@@ -13,9 +13,10 @@ public class Appointment {
     public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
 
     /*
-     * Must be of format yyyy-MM-dd or yyyy-MM-dd hh:mm
+     * Must be of format yyyy-MM-dd or yyyy-MM-dd hh:mm, or an empty string
+     * TODO possibly reject empty string, depends on Person's optional field implementation
      */
-    public static final String VALIDATION_REGEX = "\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2})?";
+    public static final String VALIDATION_REGEX = "(\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2})?)?";
 
     public final String value;
 
