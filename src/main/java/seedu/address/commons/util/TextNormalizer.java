@@ -1,13 +1,13 @@
-package seedu.address.model.person;
+package seedu.address.commons.util;
 
 import static java.util.Objects.requireNonNull;
 
 import java.util.Locale;
 
 /**
- * Normalizes the text stored in {@code Person} fields, so that values differing only in case or spacing are equal.
+ * Normalizes text so that values differing only in case or spacing are equal.
  */
-final class TextNormalizer {
+public final class TextNormalizer {
 
     private TextNormalizer() {} // prevents instantiation
 
@@ -20,7 +20,7 @@ final class TextNormalizer {
      *       </pre>
      * @throws NullPointerException if {@code s} is null.
      */
-    static String normalize(String s) {
+    public static String normalize(String s) {
         requireNonNull(s);
         return s.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
     }

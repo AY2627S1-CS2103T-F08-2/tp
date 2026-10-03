@@ -3,6 +3,8 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import seedu.address.commons.util.TextNormalizer;
+
 /**
  * Represents a Person's phone number in the address book.
  * The number is stored with leading, trailing and repeated whitespace removed.

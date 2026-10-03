@@ -3,6 +3,8 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import seedu.address.commons.util.TextNormalizer;
+
 /**
  * Represents a Person's name in the address book.
  * The name is stored in upper case with whitespace normalized, so names that differ only in case

@@ -3,6 +3,8 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import seedu.address.commons.util.TextNormalizer;
+
 /**
  * Represents a Person's medical history in the address book, as free-form notes.
  * The notes are stored in upper case with whitespace normalized.

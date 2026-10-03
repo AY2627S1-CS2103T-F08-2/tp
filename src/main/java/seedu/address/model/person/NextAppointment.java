@@ -10,6 +10,8 @@ import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.Optional;
 
+import seedu.address.commons.util.TextNormalizer;
+
 /**
  * Represents the date, and optionally the time, of a Person's next appointment.
  * Guarantees: immutable; is valid as declared in {@link #isValidNextAppointment(String)}
