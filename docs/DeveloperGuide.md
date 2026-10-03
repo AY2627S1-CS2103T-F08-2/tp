@@ -425,8 +425,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
 2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
 3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+4. Should function fully offline without requiring an internet connection or a remote server, ensuring home nurses can operate in areas without network connectivity.
+5. Should respond to any command within 100 milliseconds under typical workloads.
+6. Should be packaged as a single portable JAR file and run directly without requiring an installer.
+7. Should store all data locally in a human-editable, plain-text format (e.g., JSON) that can be inspected and backed up manually.
+8. Should fail gracefully and alert the user with a descriptive error message if data files are corrupted or formatted incorrectly, without crashing silently.
+9. Should not depend on any proprietary third-party software, commercial libraries, or paid external APIs.
+10. A new home nurse familiar with standard CLI operations should be able to learn the basic command set within 1 hour by reading the User Guide.
+11. Should launch and present the user interface ready for input within 2 seconds on standard desktop hardware.
 
 ### Glossary
 
