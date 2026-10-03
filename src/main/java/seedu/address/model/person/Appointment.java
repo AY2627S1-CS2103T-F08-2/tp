@@ -5,7 +5,8 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 
 /**
  * Represents a Person's address in the address book.
- * Guarantees: immutable; is valid as declared in {@link #isValidAddress(String)}
+ * Guarantees: immutable; is valid as declared in {@link #isValidAppointment(String)}
+ * TODO update everything in this class
  */
 public class Appointment {
 
@@ -26,15 +27,15 @@ public class Appointment {
      */
     public Appointment(String address) {
         requireNonNull(address);
-        checkArgument(isValidAddress(address), MESSAGE_CONSTRAINTS);
+        checkArgument(isValidAppointment(address), MESSAGE_CONSTRAINTS);
         value = address;
     }
 
     /**
      * Returns true if a given string is a valid address.
      */
-    public static boolean isValidAddress(String test) {
-        return test.matches(VALIDATION_REGEX);
+    public static boolean isValidAppointment(String test) {
+        return true;
     }
 
     @Override

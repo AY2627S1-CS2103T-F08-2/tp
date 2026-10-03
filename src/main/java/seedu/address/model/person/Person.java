@@ -35,6 +35,17 @@ public class Person {
         this.address = address;
     }
 
+    /**
+     * Every field must be present and not null.
+     * TODO get rid of this constructor and modify every single usage
+     */
+    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
+        requireAllNonNull(name, phone, address);
+        this.name = name;
+        this.phone = phone;
+        this.address = address;
+    }
+
     public Name getName() {
         return name;
     }
@@ -43,8 +54,12 @@ public class Person {
         return phone;
     }
 
+    /**
+     * Returns a dummy email
+     * TODO get rid of this
+     */
     public Email getEmail() {
-        return null;
+        return new Email("dummy@example.com");
     }
 
     public Address getAddress() {

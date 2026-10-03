@@ -5,17 +5,12 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 
 /**
  * Represents a Person's address in the address book.
- * Guarantees: immutable; is valid as declared in {@link #isValidAddress(String)}
+ * Guarantees: immutable; is valid as declared in {@link #isValidMedicalHistory(String)}
+ * TODO update everything in this class
  */
 public class MedicalHistory {
 
     public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
-
-    /*
-     * The first character of the address must not be a whitespace,
-     * otherwise " " (a blank string) becomes a valid input.
-     */
-    public static final String VALIDATION_REGEX = "[^\\s].*";
 
     public final String value;
 
@@ -26,15 +21,15 @@ public class MedicalHistory {
      */
     public MedicalHistory(String address) {
         requireNonNull(address);
-        checkArgument(isValidAddress(address), MESSAGE_CONSTRAINTS);
+        checkArgument(isValidMedicalHistory(address), MESSAGE_CONSTRAINTS);
         value = address;
     }
 
     /**
      * Returns true if a given string is a valid address.
      */
-    public static boolean isValidAddress(String test) {
-        return test.matches(VALIDATION_REGEX);
+    public static boolean isValidMedicalHistory(String test) {
+        return true;
     }
 
     @Override
