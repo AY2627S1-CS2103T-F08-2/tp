@@ -7,7 +7,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  * Represents a Person's address in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidAddress(String)}
  */
-public class Address {
+public class Id {
 
     public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
 
@@ -24,7 +24,7 @@ public class Address {
      *
      * @param address A valid address.
      */
-    public Address(String address) {
+    public Id(String address) {
         requireNonNull(address);
         checkArgument(isValidAddress(address), MESSAGE_CONSTRAINTS);
         value = address;
