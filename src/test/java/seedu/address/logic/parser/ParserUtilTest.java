@@ -13,24 +13,40 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.Appointment;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Id;
+import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 
 public class ParserUtilTest {
-    private static final String INVALID_NAME = "R@chel";
+    private static final String INVALID_ID_1 = "S909090909S";
+    private static final String INVALID_ID_2 = "S 9090909S";
+    private static final String INVALID_NAME = "R@CHEL";
     private static final String INVALID_PHONE = "+651234";
     private static final String INVALID_ADDRESS = " ";
-    private static final String INVALID_EMAIL = "example.com";
-    private static final String INVALID_TAG = "#friend";
+    private static final String INVALID_APPOINTMENT_1 = "2026/06/07";
+    private static final String INVALID_APPOINTMENT_2 = "2026-06-07 1807";
+    private static final String INVALID_EMAIL = "EXAMPLE.COM";
+    private static final String INVALID_TAG = "#FRIEND";
 
-    private static final String VALID_NAME = "Rachel Walker";
+    private static final String VALID_ID = "S9090909S";
+    private static final String VALID_NAME = "RACHEL WALKER";
     private static final String VALID_PHONE = "123456";
-    private static final String VALID_ADDRESS = "123 Main Street #0505";
-    private static final String VALID_EMAIL = "rachel@example.com";
-    private static final String VALID_TAG_1 = "friend";
-    private static final String VALID_TAG_2 = "neighbour";
+    private static final String VALID_ADDRESS = "123 MAIN STREET #0505";
+    private static final String VALID_MEDICAL_HISTORY = "DEMENTIA";
+    private static final String VALID_APPOINTMENT_1 = "2026-06-07";
+    private static final String VALID_APPOINTMENT_2 = "2026-06-07 18:07";
+    private static final String VALID_EMAIL = "RACHEL@EXAMPLE.COM";
+    private static final String VALID_TAG_1 = "FRIEND";
+    private static final String VALID_TAG_2 = "NEIGHBOUR";
+
+    private static final String NOT_UPPERCASE_ID = "s9090909s";
+    private static final String NOT_UPPERCASE_NAME = "Rachel Walker";
+    private static final String NOT_UPPERCASE_ADDRESS = "123 Main Street #0505";
+    private static final String NOT_UPPERCASE_MEDICAL_HISTORY = "Dementia";
 
     private static final String WHITESPACE = " \t\r\n";
 
@@ -55,6 +71,37 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseId_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseId((String) null));
+    }
+
+    @Test
+    public void parseId_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parseId(INVALID_ID_1));
+        assertThrows(ParseException.class, () -> ParserUtil.parseId(INVALID_ID_2));
+    }
+
+    @Test
+    public void parseId_validValueWithoutWhitespace_returnsId() throws Exception {
+        Id expectedId = new Id(VALID_ID);
+        assertEquals(expectedId, ParserUtil.parseId(VALID_ID));
+    }
+
+    @Test
+    public void parseId_validValueWithWhitespace_returnsTrimmedId() throws Exception {
+        String idWithWhitespace = WHITESPACE + VALID_ID + WHITESPACE;
+        Id expectedId = new Id(VALID_ID);
+        assertEquals(expectedId, ParserUtil.parseId(idWithWhitespace));
+    }
+
+    @Test
+    public void parseId_notUppercaseValue_returnsUppercaseId() throws Exception {
+        String notUppercaseId = NOT_UPPERCASE_ID;
+        Id expectedId = new Id(notUppercaseId.toUpperCase());
+        assertEquals(expectedId, ParserUtil.parseId(notUppercaseId));
+    }
+
+    @Test
     public void parseName_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseName((String) null));
     }
@@ -75,6 +122,13 @@ public class ParserUtilTest {
         String nameWithWhitespace = WHITESPACE + VALID_NAME + WHITESPACE;
         Name expectedName = new Name(VALID_NAME);
         assertEquals(expectedName, ParserUtil.parseName(nameWithWhitespace));
+    }
+
+    @Test
+    public void parseName_notUppercaseValue_returnsUppercaseName() throws Exception {
+        String notUppercaseName = NOT_UPPERCASE_NAME;
+        Name expectedName = new Name(notUppercaseName.toUpperCase());
+        assertEquals(expectedName, ParserUtil.parseName(notUppercaseName));
     }
 
     @Test
@@ -121,6 +175,68 @@ public class ParserUtilTest {
         String addressWithWhitespace = WHITESPACE + VALID_ADDRESS + WHITESPACE;
         Address expectedAddress = new Address(VALID_ADDRESS);
         assertEquals(expectedAddress, ParserUtil.parseAddress(addressWithWhitespace));
+    }
+
+    @Test
+    public void parseAddress_notUppercaseValue_returnsUppercaseAddress() throws Exception {
+        String notUppercaseAddress = NOT_UPPERCASE_ADDRESS;
+        Address expectedAddress = new Address(notUppercaseAddress.toUpperCase());
+        assertEquals(expectedAddress, ParserUtil.parseAddress(notUppercaseAddress));
+    }
+
+    @Test
+    public void parseMedicalHistory_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseMedicalHistory((String) null));
+    }
+
+    @Test
+    public void parseMedicalHistory_validValueWithoutWhitespace_returnsMedicalHistory() throws Exception {
+        MedicalHistory expectedMedicalHistory = new MedicalHistory(VALID_MEDICAL_HISTORY);
+        assertEquals(expectedMedicalHistory, ParserUtil.parseMedicalHistory(VALID_MEDICAL_HISTORY));
+    }
+
+    @Test
+    public void parseMedicalHistory_validValueWithWhitespace_returnsTrimmedMedicalHistory() throws Exception {
+        String medicalHistoryWithWhitespace = WHITESPACE + VALID_MEDICAL_HISTORY + WHITESPACE;
+        MedicalHistory expectedMedicalHistory = new MedicalHistory(VALID_MEDICAL_HISTORY);
+        assertEquals(expectedMedicalHistory, ParserUtil.parseMedicalHistory(medicalHistoryWithWhitespace));
+    }
+
+    @Test
+    public void parseMedicalHistory_notUppercaseValue_returnsUppercaseMedicalHistory() throws Exception {
+        String notUppercaseMedicalHistory = NOT_UPPERCASE_MEDICAL_HISTORY;
+        MedicalHistory expectedMedicalHistory = new MedicalHistory(notUppercaseMedicalHistory.toUpperCase());
+        assertEquals(expectedMedicalHistory, ParserUtil.parseMedicalHistory(notUppercaseMedicalHistory));
+    }
+
+    @Test
+    public void parseAppointment_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseAppointment((String) null));
+    }
+
+    @Test
+    public void parseAppointment_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parseAppointment(INVALID_APPOINTMENT_1));
+        assertThrows(ParseException.class, () -> ParserUtil.parseAppointment(INVALID_APPOINTMENT_2));
+    }
+
+    @Test
+    public void parseAppointment_validValueWithoutTime_returnsAppointment() throws Exception {
+        Appointment expectedAppointment = new Appointment(VALID_APPOINTMENT_1);
+        assertEquals(expectedAppointment, ParserUtil.parseAppointment(VALID_APPOINTMENT_1));
+    }
+
+    @Test
+    public void parseAppointment_validValueWithTime_returnsAppointment() throws Exception {
+        Appointment expectedAppointment = new Appointment(VALID_APPOINTMENT_2);
+        assertEquals(expectedAppointment, ParserUtil.parseAppointment(VALID_APPOINTMENT_2));
+    }
+
+    @Test
+    public void parseAppointment_validValueWithExtraWhitespace_returnsTrimmedAppointment() throws Exception {
+        String appointmentWithExtraWhitespace = WHITESPACE + VALID_APPOINTMENT_2 + WHITESPACE;
+        Appointment expectedAppointment = new Appointment(VALID_APPOINTMENT_2);
+        assertEquals(expectedAppointment, ParserUtil.parseAppointment(appointmentWithExtraWhitespace));
     }
 
     @Test
