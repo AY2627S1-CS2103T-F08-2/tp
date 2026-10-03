@@ -327,12 +327,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 | Priority | As a …​           | I want to …​                                                                                         | So that I can…​                                               |
 |----------|------------------|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `* * *`  | home-based nurse | add an appointment for a client with a date and time                                                | I can plan my home visits in advance                         |
-| `* * *`  | home-based nurse | record and view a client's medical profile (conditions, allergies, medications, next-of-kin) person | I know their health details and whom to call in an emergency |
-| `* * *`  | home-based nurse | record personal notes about a client (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
+| `* * *`  | home-based nurse | add an appointment for a patient with a date and time                                                | I can plan my home visits in advance                         |
+| `* * *`  | home-based nurse | record and view a patient's medical profile (conditions, allergies, medications, next-of-kin)        | I know their health details and whom to call in an emergency |
+| `* * *`  | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
 | `* * *`  | home-based nurse | reschedule an appointment in one command                                                            | I don't have to delete and re-add it                         |
-| `* `     | home-based nurse | archive a discharged client instead of deleting them                                                | they're hidden from my list but I keep their records         |
-| `* *`    | home-based nurse | see clients with no upcoming appointment                                                            | ensure that no one gets missed easily                        |
+| `* `     | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
+| `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | ensure that no one gets missed easily                        |
 
 ### Use cases
 
@@ -532,17 +532,17 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
-### Deleting a person
+### Deleting a patient
 
-1. Deleting a person while all persons are being shown
+1. Deleting a patient while all patients are being shown
 
-    1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+    1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
 
     1. Test case: `delete 1`<br>
        Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
 
     1. Test case: `delete 0`<br>
-       Expected: No person is deleted. The status message shows error details.
+       Expected: No patient is deleted. The status message shows error details.
 
     1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
        Expected: Similar to previous.
