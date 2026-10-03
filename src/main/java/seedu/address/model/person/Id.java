@@ -13,10 +13,9 @@ public class Id {
     public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
 
     /*
-     * The first character of the address must not be a whitespace,
-     * otherwise " " (a blank string) becomes a valid input.
+     * An ID must consist of 1 to 10 alphanumeric characters.
      */
-    public static final String VALIDATION_REGEX = "[^\\s].*";
+    public static final String VALIDATION_REGEX = "^[\\p{Alnum}]{1,10}$";
 
     public final String value;
 
