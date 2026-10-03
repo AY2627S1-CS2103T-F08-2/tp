@@ -26,136 +26,145 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     /**
-     * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
-     * trimmed.
+     * Parses {@code oneBasedIndex} into an {@code Index} and returns it.
+     * Characters will be converted to uppercase.
+     * Leading and trailing whitespaces will be trimmed.
      * @throws ParseException if the specified index is invalid (not a non-zero unsigned integer).
      */
     public static Index parseIndex(String oneBasedIndex) throws ParseException {
-        String trimmedIndex = oneBasedIndex.trim();
-        if (!StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
+        String processedIndex = oneBasedIndex.trim().toUpperCase();
+        if (!StringUtil.isNonZeroUnsignedInteger(processedIndex)) {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
-        return Index.fromOneBased(Integer.parseInt(trimmedIndex));
+        return Index.fromOneBased(Integer.parseInt(processedIndex));
     }
 
     /**
      * Parses a {@code String id} into a {@code id}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code id} is invalid.
      */
     public static Id parseId(String id) throws ParseException {
         requireNonNull(id);
-        String trimmedId = id.trim();
-        if (!Id.isValidId(trimmedId)) {
+        String processedId = id.trim().toUpperCase();
+        if (!Id.isValidId(processedId)) {
             throw new ParseException(Id.MESSAGE_CONSTRAINTS);
         }
-        return new Id(trimmedId);
+        return new Id(processedId);
     }
 
     /**
      * Parses a {@code String name} into a {@code Name}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code name} is invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        String trimmedName = name.trim();
-        if (!Name.isValidName(trimmedName)) {
+        String processedName = name.trim().toUpperCase();
+        if (!Name.isValidName(processedName)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
-        return new Name(trimmedName);
+        return new Name(processedName);
     }
 
     /**
      * Parses a {@code String phone} into a {@code Phone}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code phone} is invalid.
      */
     public static Phone parsePhone(String phone) throws ParseException {
         requireNonNull(phone);
-        String trimmedPhone = phone.trim();
-        if (!Phone.isValidPhone(trimmedPhone)) {
+        String processedPhone = phone.trim().toUpperCase();
+        if (!Phone.isValidPhone(processedPhone)) {
             throw new ParseException(Phone.MESSAGE_CONSTRAINTS);
         }
-        return new Phone(trimmedPhone);
+        return new Phone(processedPhone);
     }
 
     /**
      * Parses a {@code String address} into an {@code Address}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code address} is invalid.
      */
     public static Address parseAddress(String address) throws ParseException {
         requireNonNull(address);
-        String trimmedAddress = address.trim();
-        if (!Address.isValidAddress(trimmedAddress)) {
+        String processedAddress = address.trim().toUpperCase();
+        if (!Address.isValidAddress(processedAddress)) {
             throw new ParseException(Address.MESSAGE_CONSTRAINTS);
         }
-        return new Address(trimmedAddress);
+        return new Address(processedAddress);
     }
 
     /**
      * Parses {@code String medicalHistory} into a {@code MedicalHistory}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code medicalHistory} is invalid.
      */
     public static MedicalHistory parseMedicalHistory(String medicalHistory) throws ParseException {
         requireNonNull(medicalHistory);
-        String trimmedMedicalHistory = medicalHistory.trim();
-        if (!MedicalHistory.isValidMedicalHistory(trimmedMedicalHistory)) {
+        String processedMedicalHistory = medicalHistory.trim().toUpperCase();
+        if (!MedicalHistory.isValidMedicalHistory(processedMedicalHistory)) {
             throw new ParseException(MedicalHistory.MESSAGE_CONSTRAINTS);
         }
-        return new MedicalHistory(trimmedMedicalHistory);
+        return new MedicalHistory(processedMedicalHistory);
     }
 
     /**
      * Parses {@code String appointment} into a {@code Appointment}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code Appointment} is invalid.
      */
     public static Appointment parseAppointment(String appointment) throws ParseException {
         requireNonNull(appointment);
-        String trimmedAppointment = appointment.trim();
-        if (!Appointment.isValidAppointment(trimmedAppointment)) {
+        String processedAppointment = appointment.trim().toUpperCase();
+        if (!Appointment.isValidAppointment(processedAppointment)) {
             throw new ParseException(Appointment.MESSAGE_CONSTRAINTS);
         }
-        return new Appointment(trimmedAppointment);
+        return new Appointment(processedAppointment);
     }
 
     /**
      * Parses a {@code String email} into an {@code Email}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code email} is invalid.
      */
     public static Email parseEmail(String email) throws ParseException {
         requireNonNull(email);
-        String trimmedEmail = email.trim();
-        if (!Email.isValidEmail(trimmedEmail)) {
+        String processedEmail = email.trim().toUpperCase();
+        if (!Email.isValidEmail(processedEmail)) {
             throw new ParseException(Email.MESSAGE_CONSTRAINTS);
         }
-        return new Email(trimmedEmail);
+        return new Email(processedEmail);
     }
 
     /**
      * Parses a {@code String tag} into a {@code Tag}.
+     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code tag} is invalid.
      */
     public static Tag parseTag(String tag) throws ParseException {
         requireNonNull(tag);
-        String trimmedTag = tag.trim();
-        if (!Tag.isValidTagName(trimmedTag)) {
+        String processedTag = tag.trim().toUpperCase();
+        if (!Tag.isValidTagName(processedTag)) {
             throw new ParseException(Tag.MESSAGE_CONSTRAINTS);
         }
-        return new Tag(trimmedTag);
+        return new Tag(processedTag);
     }
 
     /**
