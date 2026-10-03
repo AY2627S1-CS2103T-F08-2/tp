@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +67,27 @@ public class ModelManagerTest {
     public void hasPerson_personInAddressBook_returnsTrue() {
         modelManager.addPerson(ALICE);
         assertTrue(modelManager.hasPerson(ALICE));
+    }
+
+    @Test
+    public void findPersonById_nullId_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> modelManager.findPersonById(null));
+    }
+
+    @Test
+    public void findPersonById_idNotInAddressBook_returnsEmpty() {
+        assertEquals(Optional.empty(), modelManager.findPersonById(ALICE.getId()));
+    }
+
+    @Test
+    public void findPersonById_personFilteredOut_stillReturnsPerson() {
+        modelManager.addPerson(ALICE);
+        modelManager.addPerson(BENSON);
+        // Show only BENSON, so ALICE is hidden from the filtered list
+        modelManager.updateFilteredPersonList(person -> person.equals(BENSON));
+        assertFalse(modelManager.getFilteredPersonList().contains(ALICE));
+
+        assertEquals(Optional.of(ALICE), modelManager.findPersonById(ALICE.getId()));
     }
 
     @Test
