@@ -13,10 +13,9 @@ public class Appointment {
     public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
 
     /*
-     * The first character of the address must not be a whitespace,
-     * otherwise " " (a blank string) becomes a valid input.
+     * Must be of format yyyy-MM-dd or yyyy-MM-dd hh:mm
      */
-    public static final String VALIDATION_REGEX = "[^\\s].*";
+    public static final String VALIDATION_REGEX = "\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2})?";
 
     public final String value;
 
@@ -35,7 +34,7 @@ public class Appointment {
      * Returns true if a given string is a valid address.
      */
     public static boolean isValidAppointment(String test) {
-        return true;
+        return test.matches(VALIDATION_REGEX);
     }
 
     @Override
