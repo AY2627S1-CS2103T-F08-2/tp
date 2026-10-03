@@ -261,13 +261,12 @@ _{Explain here how the data archiving feature will be implemented}_
 
 **Target user profile**:
 
-* has a need to manage a significant number of contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
+* manages a number of patients, schedules and follow-up appointments
+* carries a laptop along to work, prefers using it over mobile devices
+* prefers doing work while commuting (does not require a mouse)
+* is reasonably comfortable with the keyboard and CLI applications
 
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: Manages patients details and appointments faster than with a typical mouse-driven GUI application. Lightweight, provides value even when used in short timeframes such as commuting in public transport.
 
 
 ### User stories
