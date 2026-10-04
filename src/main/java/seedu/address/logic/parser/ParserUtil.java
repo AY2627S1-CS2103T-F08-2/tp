@@ -21,16 +21,16 @@ public class ParserUtil {
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it.
-     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
+     *
      * @throws ParseException if the specified index is invalid (not a non-zero unsigned integer).
      */
     public static Index parseIndex(String oneBasedIndex) throws ParseException {
-        String processedIndex = oneBasedIndex.trim().toUpperCase();
-        if (!StringUtil.isNonZeroUnsignedInteger(processedIndex)) {
+        String trimmedIndex = oneBasedIndex.trim();
+        if (!StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
-        return Index.fromOneBased(Integer.parseInt(processedIndex));
+        return Index.fromOneBased(Integer.parseInt(trimmedIndex));
     }
 
     /**
@@ -50,81 +50,76 @@ public class ParserUtil {
 
     /**
      * Parses a {@code String name} into a {@code Name}.
-     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code name} is invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        String processedName = name.trim().toUpperCase();
-        if (!Name.isValidName(processedName)) {
+        String trimmedName = name.trim();
+        if (!Name.isValidName(trimmedName)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
-        return new Name(processedName);
+        return new Name(trimmedName);
     }
 
     /**
      * Parses a {@code String phone} into a {@code Phone}.
-     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code phone} is invalid.
      */
     public static Phone parsePhone(String phone) throws ParseException {
         requireNonNull(phone);
-        String processedPhone = phone.trim().toUpperCase();
-        if (!Phone.isValidPhone(processedPhone)) {
+        String trimmedPhone = phone.trim();
+        if (!Phone.isValidPhone(trimmedPhone)) {
             throw new ParseException(Phone.MESSAGE_CONSTRAINTS);
         }
-        return new Phone(processedPhone);
+        return new Phone(trimmedPhone);
     }
 
     /**
      * Parses a {@code String address} into an {@code Address}.
-     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code address} is invalid.
      */
     public static Address parseAddress(String address) throws ParseException {
         requireNonNull(address);
-        String processedAddress = address.trim().toUpperCase();
-        if (!Address.isValidAddress(processedAddress)) {
+        String trimmedAddress = address.trim();
+        if (!Address.isValidAddress(trimmedAddress)) {
             throw new ParseException(Address.MESSAGE_CONSTRAINTS);
         }
-        return new Address(processedAddress);
+        return new Address(trimmedAddress);
     }
 
     /**
      * Parses {@code String medicalHistory} into a {@code MedicalHistory}.
-     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code medicalHistory} is invalid.
      */
     public static MedicalHistory parseMedicalHistory(String medicalHistory) throws ParseException {
         requireNonNull(medicalHistory);
-        String processedMedicalHistory = medicalHistory.trim().toUpperCase();
-        if (!MedicalHistory.isValidMedicalHistory(processedMedicalHistory)) {
+        String trimmedMedicalHistory = medicalHistory.trim();
+        if (!MedicalHistory.isValidMedicalHistory(trimmedMedicalHistory)) {
             throw new ParseException(MedicalHistory.MESSAGE_CONSTRAINTS);
         }
-        return new MedicalHistory(processedMedicalHistory);
+        return new MedicalHistory(trimmedMedicalHistory);
     }
 
     /**
      * Parses {@code String appointment} into a {@code NextAppointment}.
-     * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code Appointment} is invalid.
      */
     public static NextAppointment parseNextAppointment(String nextAppointment) throws ParseException {
         requireNonNull(nextAppointment);
-        String processedNextAppointmentAppointment = nextAppointment.trim().toUpperCase();
-        if (!NextAppointment.isValidNextAppointment(processedNextAppointmentAppointment)) {
+        String trimmedNextAppointmentAppointment = nextAppointment.trim();
+        if (!NextAppointment.isValidNextAppointment(trimmedNextAppointmentAppointment)) {
             throw new ParseException(NextAppointment.MESSAGE_CONSTRAINTS);
         }
-        return new NextAppointment(processedNextAppointmentAppointment);
+        return new NextAppointment(trimmedNextAppointmentAppointment);
     }
 }
