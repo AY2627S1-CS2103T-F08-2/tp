@@ -3,8 +3,11 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import seedu.address.commons.util.TextNormalizer;
+
 /**
  * Represents a Person's address in the address book.
+ * The address is stored in upper case with whitespace normalized.
  * Guarantees: immutable; is valid as declared in {@link #isValidAddress(String)}
  */
 public class Address {
@@ -12,10 +15,9 @@ public class Address {
     public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
 
     /*
-     * The first character of the address must not be a whitespace,
-     * otherwise " " (a blank string) becomes a valid input.
+     * Checked against the normalized address, so a blank string becomes "" and is rejected.
      */
-    public static final String VALIDATION_REGEX = "[^\\s].*";
+    public static final String VALIDATION_REGEX = ".+";
 
     public final String value;
 
@@ -27,14 +29,15 @@ public class Address {
     public Address(String address) {
         requireNonNull(address);
         checkArgument(isValidAddress(address), MESSAGE_CONSTRAINTS);
-        value = address;
+        value = TextNormalizer.normalize(address);
     }
 
     /**
      * Returns true if a given string is a valid address.
+     * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidAddress(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
     }
 
     @Override

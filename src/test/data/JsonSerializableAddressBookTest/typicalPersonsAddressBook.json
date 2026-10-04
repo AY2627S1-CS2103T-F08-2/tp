@@ -1,46 +1,43 @@
 {
   "_comment": "AddressBook save file which contains the same Person values as in TypicalPersons#getTypicalAddressBook()",
   "persons" : [ {
-    "name" : "Alice Pauline",
+    "id" : "S1234567A",
+    "name" : "ALICE PAULINE",
     "phone" : "94351253",
-    "email" : "alice@example.com",
-    "address" : "123, Jurong West Ave 6, #08-111",
-    "tags" : [ "friends" ]
+    "address" : "123, JURONG WEST AVE 6, #08-111",
+    "medicalHistory" : "TYPE 2 DIABETES"
   }, {
-    "name" : "Benson Meier",
+    "id" : "S2345678B",
+    "name" : "BENSON MEIER",
     "phone" : "98765432",
-    "email" : "johnd@example.com",
-    "address" : "311, Clementi Ave 2, #02-25",
-    "tags" : [ "owesMoney", "friends" ]
+    "address" : "311, CLEMENTI AVE 2, #02-25",
+    "medicalHistory" : "HYPERTENSION, ALLERGIC TO PENICILLIN",
+    "nextAppointment" : "2026-10-05 09:30"
   }, {
-    "name" : "Carl Kurz",
+    "id" : "S3456789C",
+    "name" : "CARL KURZ",
     "phone" : "95352563",
-    "email" : "heinz@example.com",
-    "address" : "wall street",
-    "tags" : [ ]
+    "address" : "WALL STREET"
   }, {
-    "name" : "Daniel Meier",
+    "id" : "S4567890D",
+    "name" : "DANIEL MEIER",
     "phone" : "87652533",
-    "email" : "cornelia@example.com",
-    "address" : "10th street",
-    "tags" : [ "friends" ]
+    "address" : "10TH STREET",
+    "nextAppointment" : "2026-10-06"
   }, {
-    "name" : "Elle Meyer",
+    "id" : "T0123456E",
+    "name" : "ELLE MEYER",
     "phone" : "9482224",
-    "email" : "werner@example.com",
-    "address" : "michegan ave",
-    "tags" : [ ]
+    "address" : "MICHEGAN AVE"
   }, {
-    "name" : "Fiona Kunz",
+    "id" : "T1234567F",
+    "name" : "FIONA KUNZ",
     "phone" : "9482427",
-    "email" : "lydia@example.com",
-    "address" : "little tokyo",
-    "tags" : [ ]
+    "address" : "LITTLE TOKYO"
   }, {
-    "name" : "George Best",
+    "id" : "G1234567G",
+    "name" : "GEORGE BEST",
     "phone" : "9482442",
-    "email" : "anna@example.com",
-    "address" : "4th street",
-    "tags" : [ ]
+    "address" : "4TH STREET"
   } ]
 }
