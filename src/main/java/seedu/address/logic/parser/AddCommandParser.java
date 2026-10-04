@@ -8,13 +8,14 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Appointment;
-import seedu.address.model.person.Id;
+import seedu.address.model.person.PatientId;
 import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
@@ -41,9 +42,8 @@ public class AddCommandParser implements Parser<AddCommand> {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
         }
 
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                PREFIX_MEDICAL_HISTORY, PREFIX_NEXT_APPOINTMENT);
-        Id id = ParserUtil.parseId(argMultimap.getValue(PREFIX_ID).get());
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS);
+        PatientId id = ParserUtil.parseId(argMultimap.getValue(PREFIX_ID).get());
         Name name = ParserUtil.parseName(argMultimap.getValue(PREFIX_NAME).get());
         Phone phone = ParserUtil.parsePhone(argMultimap.getValue(PREFIX_PHONE).get());
         Address address = ParserUtil.parseAddress(argMultimap.getValue(PREFIX_ADDRESS).get());
@@ -52,7 +52,7 @@ public class AddCommandParser implements Parser<AddCommand> {
         Appointment nextAppointment =
                 ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_NEXT_APPOINTMENT).orElse(""));
 
-        Person person = new Person(id, name, phone, address, medicalHistory, nextAppointment);
+        Person person = new Person(id, name, phone, address, Optional.empty(), Optional.empty());
 
         return new AddCommand(person);
     }

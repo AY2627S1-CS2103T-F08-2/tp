@@ -4,13 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_ID_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.BOB;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -18,10 +20,43 @@ import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
 
+    private static final String VALID_MEDICAL_HISTORY = "Asthma";
+    private static final String VALID_NEXT_APPOINTMENT = "2026-10-20 10:00";
+
     @Test
-    public void asObservableList_modifyList_throwsUnsupportedOperationException() {
+    public void constructor_nullField_throwsNullPointerException() {
+        PatientId id = new PatientId("S1234567A");
+        Name name = new Name("Alice");
+        Phone phone = new Phone("94351253");
+        Address address = new Address("Jurong West");
+
+        assertThrows(NullPointerException.class, () ->
+                new Person(null, name, phone, address, Optional.empty(), Optional.empty()));
+        assertThrows(NullPointerException.class, () ->
+                new Person(id, null, phone, address, Optional.empty(), Optional.empty()));
+        assertThrows(NullPointerException.class, () ->
+                new Person(id, name, null, address, Optional.empty(), Optional.empty()));
+        assertThrows(NullPointerException.class, () ->
+                new Person(id, name, phone, null, Optional.empty(), Optional.empty()));
+        assertThrows(NullPointerException.class, () ->
+                new Person(id, name, phone, address, null, Optional.empty()));
+        assertThrows(NullPointerException.class, () ->
+                new Person(id, name, phone, address, Optional.empty(), null));
+    }
+
+    @Test
+    public void getOptionalFields_notGiven_returnsEmpty() {
         Person person = new PersonBuilder().build();
-        assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));
+        assertEquals(Optional.empty(), person.getMedicalHistory());
+        assertEquals(Optional.empty(), person.getNextAppointment());
+    }
+
+    @Test
+    public void getOptionalFields_given_returnsValue() {
+        Person person = new PersonBuilder().withMedicalHistory(VALID_MEDICAL_HISTORY)
+                .withNextAppointment(VALID_NEXT_APPOINTMENT).build();
+        assertEquals(Optional.of(new MedicalHistory(VALID_MEDICAL_HISTORY)), person.getMedicalHistory());
+        assertEquals(Optional.of(new NextAppointment(VALID_NEXT_APPOINTMENT)), person.getNextAppointment());
     }
 
     @Test
@@ -32,22 +67,26 @@ public class PersonTest {
         // null -> returns false
         assertFalse(ALICE.isSamePerson(null));
 
-        // same name, all other attributes different -> returns true
-        Person editedAlice = new PersonBuilder(ALICE).withPhone(VALID_PHONE_BOB).withEmail(VALID_EMAIL_BOB)
-                .withAddress(VALID_ADDRESS_BOB).withTags(VALID_TAG_HUSBAND).build();
+        // same id, all other attributes different -> returns true
+        Person editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
+                .withAddress(VALID_ADDRESS_BOB).withMedicalHistory(VALID_MEDICAL_HISTORY)
+                .withNextAppointment(VALID_NEXT_APPOINTMENT).build();
         assertTrue(ALICE.isSamePerson(editedAlice));
 
-        // different name, all other attributes same -> returns false
-        editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).build();
+        // different id, all other attributes same -> returns false
+        editedAlice = new PersonBuilder(ALICE).withId(VALID_ID_BOB).build();
         assertFalse(ALICE.isSamePerson(editedAlice));
 
-        // name differs in case, all other attributes same -> returns false
-        Person editedBob = new PersonBuilder(BOB).withName(VALID_NAME_BOB.toLowerCase()).build();
-        assertFalse(BOB.isSamePerson(editedBob));
+        // id differs in case, all other attributes same -> returns true
+        Person editedBob = new PersonBuilder(BOB).withId(VALID_ID_BOB.toLowerCase()).build();
+        assertTrue(BOB.isSamePerson(editedBob));
 
-        // name has trailing spaces, all other attributes same -> returns false
-        String nameWithTrailingSpaces = VALID_NAME_BOB + " ";
-        editedBob = new PersonBuilder(BOB).withName(nameWithTrailingSpaces).build();
+        // id has surrounding spaces, all other attributes same -> returns true
+        editedBob = new PersonBuilder(BOB).withId(" " + VALID_ID_BOB + " ").build();
+        assertTrue(BOB.isSamePerson(editedBob));
+
+        // same name, different id -> returns false
+        editedBob = new PersonBuilder(BOB).withId("S9999999Z").build();
         assertFalse(BOB.isSamePerson(editedBob));
     }
 
@@ -69,31 +108,46 @@ public class PersonTest {
         // different person -> returns false
         assertFalse(ALICE.equals(BOB));
 
+        // different id -> returns false
+        Person editedAlice = new PersonBuilder(ALICE).withId(VALID_ID_BOB).build();
+        assertFalse(ALICE.equals(editedAlice));
+
         // different name -> returns false
-        Person editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).build();
+        editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
         // different phone -> returns false
         editedAlice = new PersonBuilder(ALICE).withPhone(VALID_PHONE_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
-        // different email -> returns false
-        editedAlice = new PersonBuilder(ALICE).withEmail(VALID_EMAIL_BOB).build();
-        assertFalse(ALICE.equals(editedAlice));
-
         // different address -> returns false
         editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
-        // different tags -> returns false
-        editedAlice = new PersonBuilder(ALICE).withTags(VALID_TAG_HUSBAND).build();
+        // different medical history -> returns false
+        editedAlice = new PersonBuilder(ALICE).withMedicalHistory(VALID_MEDICAL_HISTORY).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // different next appointment -> returns false
+        editedAlice = new PersonBuilder(ALICE).withNextAppointment(VALID_NEXT_APPOINTMENT).build();
+        assertFalse(ALICE.equals(editedAlice));
+
+        // optional field present vs absent -> returns false
+        assertFalse(new PersonBuilder().build().equals(
+                new PersonBuilder().withMedicalHistory(VALID_MEDICAL_HISTORY).build()));
+    }
+
+    @Test
+    public void hashCode_equalPersons_equalHashCodes() {
+        assertEquals(BENSON.hashCode(), new PersonBuilder(BENSON).build().hashCode());
     }
 
     @Test
     public void toStringMethod() {
-        String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
-                + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
-        assertEquals(expected, ALICE.toString());
+        String expected = Person.class.getCanonicalName() + "{id=" + BENSON.getId() + ", name=" + BENSON.getName()
+                + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
+                + ", medicalHistory=" + BENSON.getMedicalHistory().get()
+                + ", nextAppointment=" + BENSON.getNextAppointment().get() + "}";
+        assertEquals(expected, BENSON.toString());
     }
 }

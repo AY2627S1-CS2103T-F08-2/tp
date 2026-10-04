@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -27,8 +28,7 @@ public class NameTest {
         // invalid name
         assertFalse(Name.isValidName("")); // empty string
         assertFalse(Name.isValidName(" ")); // spaces only
-        assertFalse(Name.isValidName("^")); // only non-alphanumeric characters
-        assertFalse(Name.isValidName("peter*")); // contains non-alphanumeric characters
+        assertFalse(Name.isValidName(" \t\n ")); // whitespace only
 
         // valid name
         assertTrue(Name.isValidName("peter jack")); // alphabets only
@@ -36,6 +36,16 @@ public class NameTest {
         assertTrue(Name.isValidName("peter the 2nd")); // alphanumeric characters
         assertTrue(Name.isValidName("Capital Tan")); // with capital letters
         assertTrue(Name.isValidName("David Roger Jackson Ray Jr 2nd")); // long names
+        assertTrue(Name.isValidName("Nur'Ain bte Ahmad")); // apostrophe
+        assertTrue(Name.isValidName("Tan Ah-Kow")); // hyphen
+        assertTrue(Name.isValidName("José Müller")); // non-ASCII letters
+        assertTrue(Name.isValidName("陈大文")); // non-Latin script
+        assertTrue(Name.isValidName("  peter  ")); // surrounding whitespace is ignored
+    }
+
+    @Test
+    public void constructor_normalizesValue() {
+        assertEquals("PETER JACK", new Name("  peter   jack ").fullName);
     }
 
     @Test
@@ -56,5 +66,8 @@ public class NameTest {
 
         // different values -> returns false
         assertFalse(name.equals(new Name("Other Valid Name")));
+
+        // differs only in case and spacing -> returns true
+        assertTrue(name.equals(new Name(" valid   NAME ")));
     }
 }

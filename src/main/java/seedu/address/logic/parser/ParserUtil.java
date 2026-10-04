@@ -2,21 +2,15 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Appointment;
-import seedu.address.model.person.Email;
-import seedu.address.model.person.Id;
 import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Phone;
-import seedu.address.model.tag.Tag;
 
 /**
  * Contains utility methods used for parsing strings in the various *Parser classes.
@@ -40,19 +34,18 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a {@code String id} into a {@code id}.
-     * Characters will be converted to uppercase.
+     * Parses a {@code String id} into a {@code PatientId}.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code id} is invalid.
      */
-    public static Id parseId(String id) throws ParseException {
+    public static PatientId parseId(String id) throws ParseException {
         requireNonNull(id);
-        String processedId = id.trim().toUpperCase();
-        if (!Id.isValidId(processedId)) {
-            throw new ParseException(Id.MESSAGE_CONSTRAINTS);
+        String trimmedId = id.trim();
+        if (!PatientId.isValidId(trimmedId)) {
+            throw new ParseException(PatientId.MESSAGE_CONSTRAINTS);
         }
-        return new Id(processedId);
+        return new PatientId(trimmedId);
     }
 
     /**
@@ -133,49 +126,5 @@ public class ParserUtil {
             throw new ParseException(Appointment.MESSAGE_CONSTRAINTS);
         }
         return new Appointment(processedAppointment);
-    }
-
-    /**
-     * Parses a {@code String email} into an {@code Email}.
-     * Characters will be converted to uppercase.
-     * Leading and trailing whitespaces will be trimmed.
-     *
-     * @throws ParseException if the given {@code email} is invalid.
-     */
-    public static Email parseEmail(String email) throws ParseException {
-        requireNonNull(email);
-        String processedEmail = email.trim().toUpperCase();
-        if (!Email.isValidEmail(processedEmail)) {
-            throw new ParseException(Email.MESSAGE_CONSTRAINTS);
-        }
-        return new Email(processedEmail);
-    }
-
-    /**
-     * Parses a {@code String tag} into a {@code Tag}.
-     * Characters will be converted to uppercase.
-     * Leading and trailing whitespaces will be trimmed.
-     *
-     * @throws ParseException if the given {@code tag} is invalid.
-     */
-    public static Tag parseTag(String tag) throws ParseException {
-        requireNonNull(tag);
-        String processedTag = tag.trim().toUpperCase();
-        if (!Tag.isValidTagName(processedTag)) {
-            throw new ParseException(Tag.MESSAGE_CONSTRAINTS);
-        }
-        return new Tag(processedTag);
-    }
-
-    /**
-     * Parses {@code Collection<String> tags} into a {@code Set<Tag>}.
-     */
-    public static Set<Tag> parseTags(Collection<String> tags) throws ParseException {
-        requireNonNull(tags);
-        final Set<Tag> tagSet = new HashSet<>();
-        for (String tagName : tags) {
-            tagSet.add(parseTag(tagName));
-        }
-        return tagSet;
     }
 }

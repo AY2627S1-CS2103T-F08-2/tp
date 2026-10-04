@@ -3,33 +3,41 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import seedu.address.commons.util.TextNormalizer;
+
 /**
- * Represents a Person's address in the address book.
+ * Represents a Person's medical history in the address book, as free-form notes.
+ * The notes are stored in upper case with whitespace normalized.
  * Guarantees: immutable; is valid as declared in {@link #isValidMedicalHistory(String)}
- * TODO update everything in this class
  */
 public class MedicalHistory {
 
-    public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Medical history can take any values, and should not be blank";
+
+    /*
+     * Checked against the normalized notes, so a blank string becomes "" and is rejected.
+     */
+    public static final String VALIDATION_REGEX = ".+";
 
     public final String value;
 
     /**
-     * Constructs an {@code Address}.
+     * Constructs a {@code MedicalHistory}.
      *
-     * @param address A valid address.
+     * @param medicalHistory Valid medical history notes.
      */
-    public MedicalHistory(String address) {
-        requireNonNull(address);
-        checkArgument(isValidMedicalHistory(address), MESSAGE_CONSTRAINTS);
-        value = address;
+    public MedicalHistory(String medicalHistory) {
+        requireNonNull(medicalHistory);
+        checkArgument(isValidMedicalHistory(medicalHistory), MESSAGE_CONSTRAINTS);
+        value = TextNormalizer.normalize(medicalHistory);
     }
 
     /**
-     * Returns true if a given string is a valid address.
+     * Returns true if a given string is valid medical history.
+     * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidMedicalHistory(String test) {
-        return true;
+        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
     }
 
     @Override
