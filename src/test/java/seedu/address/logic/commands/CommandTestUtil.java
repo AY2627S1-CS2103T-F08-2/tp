@@ -52,7 +52,8 @@ public class CommandTestUtil {
     public static final String INVALID_NAME_DESC = " " + PREFIX_NAME + " "; // blank names not allowed
     public static final String INVALID_PHONE_DESC = " " + PREFIX_PHONE + "911a"; // 'a' not allowed in phones
     public static final String INVALID_ADDRESS_DESC = " " + PREFIX_ADDRESS; // empty string not allowed for addresses
-    public static final String INVALID_NEXT_APPOINTMENT_DESC = " " + PREFIX_ADDRESS + "2026/12/31"; // does not use '-'
+    public static final String INVALID_MEDICAL_HISTORY_DESC = " " + PREFIX_MEDICAL_HISTORY; // similar to address
+    public static final String INVALID_NEXT_APPOINTMENT_DESC = " " + PREFIX_NEXT_APPOINTMENT + "2026/12/31"; // uses '/'
 
     public static final String PREAMBLE_WHITESPACE = "\t  \r  \n";
     public static final String PREAMBLE_NON_EMPTY = "NonEmptyPreamble";
