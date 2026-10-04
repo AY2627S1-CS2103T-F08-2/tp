@@ -34,9 +34,7 @@ public class CommandTestUtil {
     public static final String VALID_PHONE_BOB = "22222222";
     public static final String VALID_ADDRESS_AMY = "Block 312, Amy Street 1";
     public static final String VALID_ADDRESS_BOB = "Block 123, Bobby Street 3";
-    public static final String VALID_MEDICAL_HISTORY_AMY = "dementia";
-    public static final String VALID_MEDICAL_HISTORY_BOB = "too bobby";
-    public static final String VALID_NEXT_APPOINTMENT_AMY = "2026-10-31";
+    public static final String VALID_MEDICAL_HISTORY_BOB = "dementia";
     public static final String VALID_NEXT_APPOINTMENT_BOB = "2026-11-30 09:00";
 
     public static final String ID_DESC_AMY = " " + PREFIX_ID + VALID_ID_AMY;
@@ -47,9 +45,7 @@ public class CommandTestUtil {
     public static final String PHONE_DESC_BOB = " " + PREFIX_PHONE + VALID_PHONE_BOB;
     public static final String ADDRESS_DESC_AMY = " " + PREFIX_ADDRESS + VALID_ADDRESS_AMY;
     public static final String ADDRESS_DESC_BOB = " " + PREFIX_ADDRESS + VALID_ADDRESS_BOB;
-    public static final String MEDICAL_HISTORY_DESC_AMY = " " + PREFIX_MEDICAL_HISTORY + VALID_MEDICAL_HISTORY_AMY;
     public static final String MEDICAL_HISTORY_DESC_BOB = " " + PREFIX_MEDICAL_HISTORY + VALID_MEDICAL_HISTORY_BOB;
-    public static final String NEXT_APPOINTMENT_DESC_AMY = " " + PREFIX_NEXT_APPOINTMENT + VALID_NEXT_APPOINTMENT_AMY;
     public static final String NEXT_APPOINTMENT_DESC_BOB = " " + PREFIX_NEXT_APPOINTMENT + VALID_NEXT_APPOINTMENT_BOB;
 
     public static final String INVALID_ID_DESC = " " + PREFIX_ID + "S1234-567"; // '-' not allowed in IDs

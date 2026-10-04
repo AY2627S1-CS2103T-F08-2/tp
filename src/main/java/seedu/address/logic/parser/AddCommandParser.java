@@ -14,10 +14,10 @@ import java.util.stream.Stream;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
-import seedu.address.model.person.Appointment;
-import seedu.address.model.person.PatientId;
 import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.NextAppointment;
+import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 
@@ -42,17 +42,24 @@ public class AddCommandParser implements Parser<AddCommand> {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
         }
 
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
+                PREFIX_MEDICAL_HISTORY, PREFIX_NEXT_APPOINTMENT);
         PatientId id = ParserUtil.parseId(argMultimap.getValue(PREFIX_ID).get());
         Name name = ParserUtil.parseName(argMultimap.getValue(PREFIX_NAME).get());
         Phone phone = ParserUtil.parsePhone(argMultimap.getValue(PREFIX_PHONE).get());
         Address address = ParserUtil.parseAddress(argMultimap.getValue(PREFIX_ADDRESS).get());
-        MedicalHistory medicalHistory =
-                ParserUtil.parseMedicalHistory(argMultimap.getValue(PREFIX_MEDICAL_HISTORY).orElse(""));
-        Appointment nextAppointment =
-                ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_NEXT_APPOINTMENT).orElse(""));
 
-        Person person = new Person(id, name, phone, address, Optional.empty(), Optional.empty());
+        MedicalHistory medicalHistory =
+                argMultimap.getValue(PREFIX_MEDICAL_HISTORY).isPresent()
+                ? ParserUtil.parseMedicalHistory(argMultimap.getValue(PREFIX_MEDICAL_HISTORY).get())
+                : null;
+        NextAppointment nextAppointment =
+                argMultimap.getValue(PREFIX_NEXT_APPOINTMENT).isPresent()
+                ? ParserUtil.parseNextAppointment(argMultimap.getValue(PREFIX_NEXT_APPOINTMENT).get())
+                : null;
+
+        Person person = new Person(id, name, phone, address, Optional.ofNullable(medicalHistory),
+                Optional.ofNullable(nextAppointment));
 
         return new AddCommand(person);
     }

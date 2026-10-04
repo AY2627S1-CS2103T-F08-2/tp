@@ -6,9 +6,9 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
-import seedu.address.model.person.Appointment;
 import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.NextAppointment;
 import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Phone;
 
@@ -113,18 +113,18 @@ public class ParserUtil {
     }
 
     /**
-     * Parses {@code String appointment} into a {@code Appointment}.
+     * Parses {@code String appointment} into a {@code NextAppointment}.
      * Characters will be converted to uppercase.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code Appointment} is invalid.
      */
-    public static Appointment parseAppointment(String appointment) throws ParseException {
-        requireNonNull(appointment);
-        String processedAppointment = appointment.trim().toUpperCase();
-        if (!Appointment.isValidAppointment(processedAppointment)) {
-            throw new ParseException(Appointment.MESSAGE_CONSTRAINTS);
+    public static NextAppointment parseNextAppointment(String nextAppointment) throws ParseException {
+        requireNonNull(nextAppointment);
+        String processedNextAppointmentAppointment = nextAppointment.trim().toUpperCase();
+        if (!NextAppointment.isValidNextAppointment(processedNextAppointmentAppointment)) {
+            throw new ParseException(NextAppointment.MESSAGE_CONSTRAINTS);
         }
-        return new Appointment(processedAppointment);
+        return new NextAppointment(processedNextAppointmentAppointment);
     }
 }

@@ -32,8 +32,12 @@ public class PersonUtil {
         sb.append(PREFIX_NAME + person.getName().fullName + " ");
         sb.append(PREFIX_PHONE + person.getPhone().value + " ");
         sb.append(PREFIX_ADDRESS + person.getAddress().value + " ");
-        sb.append(PREFIX_MEDICAL_HISTORY + person.getMedicalHistory().value + " ");
-        sb.append(PREFIX_NEXT_APPOINTMENT + person.getNextAppointment().value + " ");
+        if (person.getMedicalHistory().isPresent()) {
+            sb.append(PREFIX_MEDICAL_HISTORY + person.getMedicalHistory().get().value + " ");
+        }
+        if (person.getNextAppointment().isPresent()) {
+            sb.append(PREFIX_NEXT_APPOINTMENT + person.getNextAppointment().get().value + " ");
+        }
         return sb.toString();
     }
 
