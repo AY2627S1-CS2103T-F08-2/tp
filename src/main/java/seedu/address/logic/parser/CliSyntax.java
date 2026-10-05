@@ -6,11 +6,11 @@ package seedu.address.logic.parser;
 public class CliSyntax {
 
     /* Prefix definitions */
-    public static final Prefix PREFIX_ID = new Prefix("id/");
-    public static final Prefix PREFIX_NAME = new Prefix("n/");
-    public static final Prefix PREFIX_PHONE = new Prefix("p/");
-    public static final Prefix PREFIX_EMAIL = new Prefix("e/");
-    public static final Prefix PREFIX_ADDRESS = new Prefix("a/");
-    public static final Prefix PREFIX_TAG = new Prefix("t/");
+    public static final Prefix PREFIX_ID = new Prefix("--id ");
+    public static final Prefix PREFIX_NAME = new Prefix("--name ");
+    public static final Prefix PREFIX_PHONE = new Prefix("--number ");
+    public static final Prefix PREFIX_ADDRESS = new Prefix("--address ");
+    public static final Prefix PREFIX_MEDICAL_HISTORY = new Prefix("--medical-history ");
+    public static final Prefix PREFIX_NEXT_APPOINTMENT = new Prefix("--next-appointment ");
 
 }
