@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.NextAppointment;
 import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Phone;
 
@@ -18,11 +20,16 @@ public class ParserUtilTest {
     private static final String INVALID_NAME = " ";
     private static final String INVALID_PHONE = "+65abc";
     private static final String INVALID_ADDRESS = " ";
+    private static final String INVALID_APPOINTMENT_1 = "2026/06/07";
+    private static final String INVALID_APPOINTMENT_2 = "2026-06-07 1807";
 
     private static final String VALID_ID = "S1234567A";
     private static final String VALID_NAME = "Rachel Walker";
     private static final String VALID_PHONE = "123456";
     private static final String VALID_ADDRESS = "123 Main Street #0505";
+    private static final String VALID_MEDICAL_HISTORY = "dementia";
+    private static final String VALID_APPOINTMENT_WITHOUT_TIME = "2026-06-07";
+    private static final String VALID_APPOINTMENT_WITH_TIME = "2026-06-07 18:07";
 
     private static final String WHITESPACE = " \t\r\n";
 
@@ -136,5 +143,60 @@ public class ParserUtilTest {
         String addressWithWhitespace = WHITESPACE + VALID_ADDRESS + WHITESPACE;
         Address expectedAddress = new Address(VALID_ADDRESS);
         assertEquals(expectedAddress, ParserUtil.parseAddress(addressWithWhitespace));
+    }
+
+    @Test
+    public void parseMedicalHistory_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseMedicalHistory((String) null));
+    }
+
+    @Test
+    public void parseMedicalHistory_validValueWithoutWhitespace_returnsMedicalHistory() throws Exception {
+        MedicalHistory expectedMedicalHistory = new MedicalHistory(VALID_MEDICAL_HISTORY);
+        assertEquals(expectedMedicalHistory, ParserUtil.parseMedicalHistory(VALID_MEDICAL_HISTORY));
+    }
+
+    @Test
+    public void parseMedicalHistory_validValueWithWhitespace_returnsTrimmedMedicalHistory() throws Exception {
+        String medicalHistoryWithWhitespace = WHITESPACE + VALID_MEDICAL_HISTORY + WHITESPACE;
+        MedicalHistory expectedMedicalHistory = new MedicalHistory(VALID_MEDICAL_HISTORY);
+        assertEquals(expectedMedicalHistory, ParserUtil.parseMedicalHistory(medicalHistoryWithWhitespace));
+    }
+
+    @Test
+    public void parseAppointment_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseNextAppointment((String) null));
+    }
+
+    @Test
+    public void parseAppointment_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parseNextAppointment(INVALID_APPOINTMENT_1));
+        assertThrows(ParseException.class, () -> ParserUtil.parseNextAppointment(INVALID_APPOINTMENT_2));
+    }
+
+    @Test
+    public void parseAppointment_validValueWithoutTime_returnsAppointment() throws Exception {
+        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITHOUT_TIME);
+        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(VALID_APPOINTMENT_WITHOUT_TIME));
+    }
+
+    @Test
+    public void parseAppointment_validValueWithTime_returnsAppointment() throws Exception {
+        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITH_TIME);
+        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(VALID_APPOINTMENT_WITH_TIME));
+    }
+
+    @Test
+    public void parseAppointment_validValueWithoutTimeWithWhitespace_returnsTrimmedAppointment() throws Exception {
+        String appointmentWithWhitespace = WHITESPACE + VALID_APPOINTMENT_WITHOUT_TIME + WHITESPACE;
+        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITHOUT_TIME);
+        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(appointmentWithWhitespace));
+    }
+
+    @Test
+    public void parseAppointment_validValueWithTimeWithExtraWhitespace_returnsTrimmedAppointment() throws Exception {
+        String appointmentWithExtraWhitespace = WHITESPACE + VALID_APPOINTMENT_WITH_TIME + WHITESPACE;
+        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITH_TIME);
+        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(appointmentWithExtraWhitespace));
     }
 }

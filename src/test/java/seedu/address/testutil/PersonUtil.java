@@ -2,7 +2,9 @@ package seedu.address.testutil;
 
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import seedu.address.logic.commands.AddCommand;
@@ -30,6 +32,12 @@ public class PersonUtil {
         sb.append(PREFIX_NAME + person.getName().fullName + " ");
         sb.append(PREFIX_PHONE + person.getPhone().value + " ");
         sb.append(PREFIX_ADDRESS + person.getAddress().value + " ");
+        if (person.getMedicalHistory().isPresent()) {
+            sb.append(PREFIX_MEDICAL_HISTORY + person.getMedicalHistory().get().value + " ");
+        }
+        if (person.getNextAppointment().isPresent()) {
+            sb.append(PREFIX_NEXT_APPOINTMENT + person.getNextAppointment().get().value + " ");
+        }
         return sb.toString();
     }
 
