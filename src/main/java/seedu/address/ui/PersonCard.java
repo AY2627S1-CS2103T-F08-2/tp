@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import java.util.Optional;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -35,6 +37,10 @@ public class PersonCard extends UiPart<Region> {
     private Label address;
     @FXML
     private Label patientId;
+    @FXML
+    private Label medicalHistory;
+    @FXML
+    private Label nextAppointment;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -47,5 +53,18 @@ public class PersonCard extends UiPart<Region> {
         patientId.setText(person.getId().value);
         phone.setText(person.getPhone().value);
         address.setText(person.getAddress().value);
+        setOptionalLabel(medicalHistory, person.getMedicalHistory().map(history -> "Medical history: " + history));
+        setOptionalLabel(nextAppointment,
+                person.getNextAppointment().map(appointment -> "Next appointment: " + appointment));
+    }
+
+    /**
+     * Sets the text of {@code label}, or hides the label if {@code text} is empty.
+     */
+    private static void setOptionalLabel(Label label, Optional<String> text) {
+        text.ifPresentOrElse(label::setText, () -> {
+            label.setVisible(false);
+            label.setManaged(false);
+        });
     }
 }
