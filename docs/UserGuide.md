@@ -26,13 +26,13 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
-   * `list` : Lists all contacts.
+   * `list` : Lists all patients.
 
-   * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` to the address book.
+   * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` with the ID `T0123456B`.
 
-   * `delete 3` : Deletes the 3rd contact shown in the current list.
+   * `delete S1234567A` : Deletes the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
-   * `clear` : Deletes all contacts.
+   * `clear` : Deletes all patients.
 
    * `exit` : Exits the app.
 
@@ -53,7 +53,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.
 
 * Items followed by `…`​ can appear zero or more times.<br>
-  For example, `[KEYWORD]…​` may be omitted, or written as `John` or `John Jane`.
+  For example, in `find KEYWORD [MORE_KEYWORDS]…​`, the `[MORE_KEYWORDS]…​` part may be omitted, or written as `Jane` or `Jane Bob`.
 
 * Parameters can be in any order.<br>
   For example, if the command specifies `--name NAME --number NUMBER`, `--number NUMBER --name NAME` is also acceptable.
@@ -66,7 +66,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
+Opens a window with a link to this user guide.
 
 ![help message](images/helpMessage.png)
 
@@ -87,6 +87,7 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * Next appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
+* After a patient is added, the list shows all patients again, even if it was showing `find` results. The list numbers of other patients may change.
 
 Examples:
 
@@ -121,31 +122,36 @@ Examples:
 
 Finds patients whose names contain any of the given keywords.
 
-Format: `find KEYWORD [MORE_KEYWORDS]`
+Format: `find KEYWORD [MORE_KEYWORDS]…​`
 
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
+* The search is case-insensitive; for example, `hans` matches `HANS`.
+* Keyword order does not matter; for example, `Hans Bo` matches `BO HANS`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* patients matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Only full words match; for example, `Han` does not match `HANS`.
+* Patients matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `HANS GRUBER` and `BO YANG`.
 
 Examples:
-* `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
+* `find John` returns `JOHN` and `JOHN DOE`
+* `find alex david` returns `ALEX YEOH`, `DAVID LI`<br>
   ![result for 'find alex david'](images/findAlexDavidResult.png)
 
 ### Deleting a patient: `delete`
 
-Deletes the specified patient from the address book.
+Deletes the specified patient from LaiNurse.
 
 Format: `delete ID`
 
-* Deletes the patient with the specified `ID`.
-* The ID **must be a valid user ID** eg "T0123456B"​
+* Deletes the patient with the specified `ID`. IDs are case-insensitive, so `s1234567a` and `S1234567A` refer to the same patient.
+* The patient does not need to be in the displayed list, because `delete` searches all patients.
+* If no patient has that ID, LaiNurse shows an error and deletes nothing.
+* The displayed list keeps its current filter, so the list numbers of the patients below the deleted one go down by one.
 
-### Clearing all entries: `clear`
+Examples:
+* `delete S1234567A` deletes the patient with the ID `S1234567A`.
 
-Clears all entries from the address book.
+### Deleting all patients: `clear`
+
+Deletes all patients from LaiNurse. This cannot be undone.
 
 Format: `clear`
 
@@ -168,16 +174,12 @@ If your changes make the data file invalid, AddressBook starts with an empty add
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## FAQ
 
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**A**: Install LaiNurse on the other computer. Then copy `data/addressbook.json` from your old LaiNurse home folder into a `data` folder next to the JAR file on the new computer, replacing the file there if there is one.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -196,6 +198,7 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **Edit** | `edit ID [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
+**Find** | `find KEYWORD [MORE_KEYWORDS]…​`<br> e.g., `find James Jake`
 **List** | `list`
 **Help** | `help`
+**Exit** | `exit`
