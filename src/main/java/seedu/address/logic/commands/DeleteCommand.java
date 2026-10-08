@@ -8,22 +8,22 @@ import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
-import seedu.address.model.person.PatientId;
-import seedu.address.model.person.Person;
+import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientId;
 
 /**
- * Deletes a person identified using its displayed ID from the address book.
+ * Deletes a patient identified using its displayed ID from the address book.
  */
 public class DeleteCommand extends Command {
 
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes the person with the given ID number.\n"
+            + ": Deletes the patient with the given ID number.\n"
             + "Parameters: ID\n"
             + "Example: " + COMMAND_WORD + " T0123456B";
 
-    public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted person: %1$s";
+    public static final String MESSAGE_DELETE_PATIENT_SUCCESS = "Deleted patient: %1$s";
 
     private final PatientId targetId;
 
@@ -38,12 +38,12 @@ public class DeleteCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        List<Person> listAllPersons = model.getAddressBook().getPersonList();
+        List<Patient> listAllPatients = model.getAddressBook().getPatientList();
 
-        Person personToDelete = listAllPersons.stream().filter(person -> person.getId().equals(targetId))
-                        .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PERSON_ID));
-        model.deletePerson(personToDelete);
-        return new CommandResult(String.format(MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(personToDelete)));
+        Patient patientToDelete = listAllPatients.stream().filter(patient -> patient.getId().equals(targetId))
+                        .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
+        model.deletePatient(patientToDelete);
+        return new CommandResult(String.format(MESSAGE_DELETE_PATIENT_SUCCESS, Messages.format(patientToDelete)));
     }
 
     @Override

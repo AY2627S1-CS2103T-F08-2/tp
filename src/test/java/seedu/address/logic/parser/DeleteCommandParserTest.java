@@ -9,7 +9,7 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSucces
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.DeleteCommand;
-import seedu.address.model.person.PatientId;
+import seedu.address.model.patient.PatientId;
 
 public class DeleteCommandParserTest {
 
