@@ -326,26 +326,26 @@ _{Explain here how the data archiving feature will be implemented}_
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
 
-| Priority | As a …​           | I want to …​                                                                                         | So that …​                                                    |
+| Priority | As a …​           | I want to …​                                                                                         | So that I can…​                                               |
 |----------|------------------|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | `* * *`  | home-based nurse | add an appointment for a patient with a date and time                                                | I can plan my home visits in advance                         |
 | `* * *`  | home-based nurse | record and view a patient's medical profile (conditions, allergies, medications, next-of-kin)        | I know their health details and whom to call in an emergency |
 | `* * *`  | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
 | `* * *`  | home-based nurse | reschedule an appointment in one command                                                            | I don't have to delete and re-add it                         |
 | `* `     | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
-| `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
+| `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | ensure that no one gets missed easily                        |
 
 ### Use cases
 
-(For all use cases below, the **System** is `LaiNurse` and the **Actor** is the `nurse`, unless specified otherwise)
+(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `nurse`, unless specified otherwise)
 
 **Use case: UC01 - Add a patient**
 
 **MSS**
 
 1.  Nurse requests to add a patient with the patient's details
-2.  LaiNurse adds the patient
-3.  LaiNurse shows the details of the added patient
+2.  AddressBook adds the patient
+3.  AddressBook shows the details of the added patient
 
    Use case ends.
 
@@ -353,25 +353,25 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 1a. One or more compulsory fields (ID, name, phone number, address) are missing.
 
-    * 1a1. LaiNurse shows an error message.
+    * 1a1. AddressBook shows an error message.
 
       Use case resumes at step 1.
 
 * 1b. One or more fields are in an invalid format.
 
-    * 1b1. LaiNurse shows an error message with the valid format.
+    * 1b1. AddressBook shows an error message with the valid format.
 
       Use case resumes at step 1.
 
 * 1c. The given next appointment date/time is invalid.
 
-    * 1c1. LaiNurse shows an error message.
+    * 1c1. AddressBook shows an error message.
 
       Use case resumes at step 1.
 
 * 1d. A patient with the given ID already exists.
 
-    * 1d1. LaiNurse shows an error message.
+    * 1d1. AddressBook shows an error message.
 
       Use case ends.
 
@@ -380,7 +380,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1.  Nurse requests to find a patient by name or ID
-2.  LaiNurse shows a list of matching patients
+2.  AddressBook shows a list of matching patients
 
     Use case ends.
 
@@ -388,13 +388,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 1a. The search keyword is missing.
 
-    * 1a1. LaiNurse shows an error message.
+    * 1a1. AddressBook shows an error message.
 
       Use case resumes at step 1.
 
 * 2a. No patients match the keyword.
 
-    * 2a1. LaiNurse shows a message that no matching patients were found.
+    * 2a1. AddressBook shows a message that no matching patients were found.
 
       Use case ends.
 
@@ -404,8 +404,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 1.  Nurse <u>finds the patient (UC02)</u>
 2.  Nurse requests to delete the patient by ID
-3.  LaiNurse deletes the patient and all of the patient's details
-4.  LaiNurse shows a message confirming the deletion
+3.  AddressBook deletes the patient and all of the patient's details
+4.  AddressBook shows a message confirming the deletion
 
     Use case ends.
 
@@ -417,13 +417,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. The ID is missing.
 
-    * 2a1. LaiNurse shows an error message.
+    * 2a1. AddressBook shows an error message.
 
       Use case resumes at step 2.
 
 * 2b. The given ID does not match any patient.
 
-    * 2b1. LaiNurse shows an error message.
+    * 2b1. AddressBook shows an error message.
 
       Use case resumes at step 2.
 
@@ -433,8 +433,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 1.  Nurse <u>finds the patient (UC02)</u>
 2.  Nurse requests to edit the patient by ID with the fields to change
-3.  LaiNurse updates the patient's details
-4.  LaiNurse shows the updated details of the patient
+3.  AddressBook updates the patient's details
+4.  AddressBook shows the updated details of the patient
 
     Use case ends.
 
@@ -446,25 +446,25 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. The given ID does not match any patient.
 
-    * 2a1. LaiNurse shows an error message.
+    * 2a1. AddressBook shows an error message.
 
       Use case resumes at step 2.
 
 * 2b. No fields to edit are provided.
 
-    * 2b1. LaiNurse shows an error message.
+    * 2b1. AddressBook shows an error message.
 
       Use case resumes at step 2.
 
 * 2c. One or more fields are in an invalid format.
 
-    * 2c1. LaiNurse shows an error message with the valid format.
+    * 2c1. AddressBook shows an error message with the valid format.
 
       Use case resumes at step 2.
 
 * 2d. The new ID already belongs to another patient.
 
-    * 2d1. LaiNurse shows an error message.
+    * 2d1. AddressBook shows an error message.
 
       Use case resumes at step 2.
 
@@ -472,14 +472,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Non-Functional Requirements
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed. On macOS, this must be the JDK version given in the User Guide's Quick Start.
-2.  Should be able to hold up to 1000 patients without noticeable sluggishness in performance for typical usage.
+1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
+2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
 3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
 4. Should function fully offline without requiring an internet connection or a remote server, ensuring home nurses can operate in areas without network connectivity.
 5. Should respond to any command within 100 milliseconds under typical workloads.
 6. Should be packaged as a single portable JAR file and run directly without requiring an installer.
 7. Should store all data locally in a human-editable, plain-text format (e.g., JSON) that can be inspected and backed up manually.
-8. Should not crash if a data file is corrupted or formatted incorrectly. Instead, it should start with an empty patient list (or default preferences) and log a warning that describes the problem.
+8. Should fail gracefully and alert the user with a descriptive error message if data files are corrupted or formatted incorrectly, without crashing silently.
 9. Should not depend on any proprietary third-party software, commercial libraries, or paid external APIs.
 10. A new home nurse familiar with standard CLI operations should be able to learn the basic command set within 1 hour by reading the User Guide.
 11. Should launch and present the user interface ready for input within 2 seconds on standard desktop hardware.
