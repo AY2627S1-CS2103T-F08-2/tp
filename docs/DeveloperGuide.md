@@ -12,6 +12,8 @@ title: Developer Guide
 * _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the
   originals.}_
 
+* AI Use Declaration from Qin Fangzheng: "As my career path is not related to software engineering, I choose AI-5/AI-6 as my AI use level, where I get Codex to do the tasks, and then I myself review the results, including feature behavior and partial code."
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
