@@ -53,7 +53,7 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
   For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.
 
 * Items followed by `…`​ can appear zero or more times.<br>
-  For example, in `find KEYWORD [MORE_KEYWORDS]…​`, the `[MORE_KEYWORDS]…​` part may be omitted, or written as `Jane` or `Jane Bob`.
+  For example, `[KEYWORD]…​` may be omitted, or written as `John` or `John Jane`.
 
 * Parameters can be in any order.<br>
   For example, if the command specifies `--name NAME --number NUMBER`, `--number NUMBER --name NAME` is also acceptable.
@@ -122,17 +122,17 @@ Examples:
 
 Finds patients whose names contain any of the given keywords.
 
-Format: `find KEYWORD [MORE_KEYWORDS]…​`
+Format: `find KEYWORD [MORE_KEYWORDS]`
 
-* The search is case-insensitive; for example, `hans` matches `HANS`.
-* Keyword order does not matter; for example, `Hans Bo` matches `BO HANS`.
+* The search is case-insensitive; for example, `hans` matches `Hans`.
+* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
 * The search considers only names.
-* Only full words match; for example, `Han` does not match `HANS`.
-* Patients matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `HANS GRUBER` and `BO YANG`.
+* Only full words match; for example, `Han` does not match `Hans`.
+* patients matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
 
 Examples:
-* `find John` returns `JOHN` and `JOHN DOE`
-* `find alex david` returns `ALEX YEOH`, `DAVID LI`<br>
+* `find John` returns `john` and `John Doe`
+* `find alex david` returns `Alex Yeoh`, `David Li`<br>
   ![result for 'find alex david'](images/findAlexDavidResult.png)
 
 ### Deleting a patient: `delete`
@@ -198,7 +198,7 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **Edit** | `edit ID [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find KEYWORD [MORE_KEYWORDS]…​`<br> e.g., `find James Jake`
+**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
 **Help** | `help`
 **Exit** | `exit`
