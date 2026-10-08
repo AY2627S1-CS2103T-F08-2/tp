@@ -26,13 +26,13 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try:
 
-   * `list` : Lists all contacts.
+   * `list` : Lists all patients.
 
-   * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` to the address book.
+   * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` with the ID `T0123456B`.
 
-   * `delete 3` : Deletes the 3rd contact shown in the current list.
+   * `delete S1234567A` : Deletes the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
-   * `clear` : Deletes all contacts.
+   * `clear` : Deletes all patients.
 
    * `exit` : Exits the app.
 
@@ -66,7 +66,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
+Opens a window with a link to this user guide.
 
 ![help message](images/helpMessage.png)
 
@@ -87,6 +87,7 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * Next appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
+* After a patient is added, the list shows all patients again, even if it was showing `find` results. The list numbers of other patients may change.
 
 Examples:
 
@@ -136,16 +137,21 @@ Examples:
 
 ### Deleting a patient: `delete`
 
-Deletes the specified patient from the address book.
+Deletes the specified patient from LaiNurse.
 
 Format: `delete ID`
 
-* Deletes the patient with the specified `ID`.
-* The ID **must be a valid user ID** eg "T0123456B"​
+* Deletes the patient with the specified `ID`. IDs are case-insensitive, so `s1234567a` and `S1234567A` refer to the same patient.
+* The patient does not need to be in the displayed list, because `delete` searches all patients.
+* If no patient has that ID, LaiNurse shows an error and deletes nothing.
+* The displayed list keeps its current filter, so the list numbers of the patients below the deleted one go down by one.
 
-### Clearing all entries: `clear`
+Examples:
+* `delete S1234567A` deletes the patient with the ID `S1234567A`.
 
-Clears all entries from the address book.
+### Deleting all patients: `clear`
+
+Deletes all patients from LaiNurse. This cannot be undone.
 
 Format: `clear`
 
@@ -168,16 +174,12 @@ If your changes make the data file invalid, AddressBook starts with an empty add
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## FAQ
 
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**A**: Install LaiNurse on the other computer. Then copy `data/addressbook.json` from your old LaiNurse home folder into a `data` folder next to the JAR file on the new computer, replacing the file there if there is one.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -199,3 +201,4 @@ Action | Format, Examples
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
 **Help** | `help`
+**Exit** | `exit`
