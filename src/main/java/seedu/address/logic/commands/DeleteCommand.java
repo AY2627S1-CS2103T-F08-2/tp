@@ -4,7 +4,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 
-import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -13,43 +12,36 @@ import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Person;
 
 /**
- * Deletes a person identified using its displayed index from the address book.
+ * Deletes a person identified using its displayed ID from the address book.
  */
 public class DeleteCommand extends Command {
 
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes the person with the given the ID number.\n"
+            + ": Deletes the person with the given ID number.\n"
             + "Parameters: ID\n"
             + "Example: " + COMMAND_WORD + " T0123456B";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted person: %1$s";
 
-    private final Index targetIndex;
-
-    public DeleteCommand(Index targetIndex) {
-        this.targetIndex = targetIndex;
-    }
+    private final PatientId targetId;
 
     /**
-     * Creates a dummy DeleteCommand.
-     * TODO update implementation of DeleteCommand
+     * Creates a DeleteCommand to delete the patient with the specified {@code targetId}.
      */
-    public DeleteCommand(PatientId id) {
-        this(Index.fromZeroBased(0));
+    public DeleteCommand(PatientId targetId) {
+        requireNonNull(targetId);
+        this.targetId = targetId;
     }
 
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        List<Person> lastShownList = model.getFilteredPersonList();
+        List<Person> listAllPersons = model.getAddressBook().getPersonList();
 
-        if (targetIndex.getZeroBased() >= lastShownList.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
-        }
-
-        Person personToDelete = lastShownList.get(targetIndex.getZeroBased());
+        Person personToDelete = listAllPersons.stream().filter(person -> person.getId().equals(targetId))
+                        .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PERSON_ID));
         model.deletePerson(personToDelete);
         return new CommandResult(String.format(MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(personToDelete)));
     }
@@ -65,13 +57,13 @@ public class DeleteCommand extends Command {
             return false;
         }
 
-        return targetIndex.equals(otherDeleteCommand.targetIndex);
+        return targetId.equals(otherDeleteCommand.targetId);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                .add("targetIndex", targetIndex)
+                .add("targetId", targetId)
                 .toString();
     }
 }
