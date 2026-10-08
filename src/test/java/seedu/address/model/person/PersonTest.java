@@ -147,7 +147,8 @@ public class PersonTest {
         String expected = Person.class.getCanonicalName() + "{id=" + BENSON.getId() + ", name=" + BENSON.getName()
                 + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
                 + ", medicalHistory=" + BENSON.getMedicalHistory().get()
-                + ", nextAppointment=" + BENSON.getNextAppointment().get() + "}";
+                + ", nextAppointment=" + BENSON.getNextAppointment().get()
+                + ", remark=" + BENSON.getRemark() + "}";
         assertEquals(expected, BENSON.toString());
     }
 }

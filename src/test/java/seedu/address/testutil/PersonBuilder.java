@@ -9,6 +9,7 @@ import seedu.address.model.person.NextAppointment;
 import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Remark;
 
 /**
  * A utility class to help with building Person objects.
@@ -26,6 +27,7 @@ public class PersonBuilder {
     private Address address;
     private Optional<MedicalHistory> medicalHistory;
     private Optional<NextAppointment> nextAppointment;
+    private Remark remark;
 
     /**
      * Creates a {@code PersonBuilder} with the default details and no optional fields.
@@ -37,6 +39,7 @@ public class PersonBuilder {
         address = new Address(DEFAULT_ADDRESS);
         medicalHistory = Optional.empty();
         nextAppointment = Optional.empty();
+        remark = new Remark("");
     }
 
     /**
@@ -49,6 +52,7 @@ public class PersonBuilder {
         address = personToCopy.getAddress();
         medicalHistory = personToCopy.getMedicalHistory();
         nextAppointment = personToCopy.getNextAppointment();
+        remark = personToCopy.getRemark();
     }
 
     /**
@@ -99,8 +103,16 @@ public class PersonBuilder {
         return this;
     }
 
+    /**
+     * Sets the {@code Remark} of the {@code Person} that we are building.
+     */
+    public PersonBuilder withRemark(String remark) {
+        this.remark = new Remark(remark);
+        return this;
+    }
+
     public Person build() {
-        return new Person(id, name, phone, address, medicalHistory, nextAppointment);
+        return new Person(id, name, phone, address, medicalHistory, nextAppointment, remark);
     }
 
 }

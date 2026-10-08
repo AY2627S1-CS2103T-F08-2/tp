@@ -22,19 +22,30 @@ public class Person {
     private final Address address;
     private final MedicalHistory medicalHistory; // null if not given
     private final NextAppointment nextAppointment; // null if not given
+    private final Remark remark;
 
     /**
      * Every field must be present and not null. Optional fields are passed as {@code Optional#empty()}.
      */
     public Person(PatientId id, Name name, Phone phone, Address address,
-            Optional<MedicalHistory> medicalHistory, Optional<NextAppointment> nextAppointment) {
-        requireAllNonNull(id, name, phone, address, medicalHistory, nextAppointment);
+            Optional<MedicalHistory> medicalHistory, Optional<NextAppointment> nextAppointment, Remark remark) {
+        requireAllNonNull(id, name, phone, address, medicalHistory, nextAppointment, remark);
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.medicalHistory = medicalHistory.orElse(null);
         this.nextAppointment = nextAppointment.orElse(null);
+        this.remark = remark;
+    }
+
+    /**
+     * Creates a person with an empty remark.
+     * Every field must be present and not null. Optional fields are passed as {@code Optional#empty()}.
+     */
+    public Person(PatientId id, Name name, Phone phone, Address address,
+            Optional<MedicalHistory> medicalHistory, Optional<NextAppointment> nextAppointment) {
+        this(id, name, phone, address, medicalHistory, nextAppointment, new Remark(""));
     }
 
     public PatientId getId() {
@@ -65,6 +76,10 @@ public class Person {
      */
     public Optional<NextAppointment> getNextAppointment() {
         return Optional.ofNullable(nextAppointment);
+    }
+
+    public Remark getRemark() {
+        return remark;
     }
 
     /**
@@ -100,13 +115,14 @@ public class Person {
                 && phone.equals(otherPerson.phone)
                 && address.equals(otherPerson.address)
                 && Objects.equals(medicalHistory, otherPerson.medicalHistory)
-                && Objects.equals(nextAppointment, otherPerson.nextAppointment);
+                && Objects.equals(nextAppointment, otherPerson.nextAppointment)
+                && remark.equals(otherPerson.remark);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(id, name, phone, address, medicalHistory, nextAppointment);
+        return Objects.hash(id, name, phone, address, medicalHistory, nextAppointment, remark);
     }
 
     @Override
@@ -118,6 +134,7 @@ public class Person {
                 .add("address", address)
                 .add("medicalHistory", medicalHistory)
                 .add("nextAppointment", nextAppointment)
+                .add("remark", remark)
                 .toString();
     }
 

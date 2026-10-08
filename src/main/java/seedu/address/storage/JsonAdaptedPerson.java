@@ -14,6 +14,7 @@ import seedu.address.model.person.NextAppointment;
 import seedu.address.model.person.PatientId;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Remark;
 
 /**
  * Jackson-friendly version of {@link Person}.
@@ -30,6 +31,7 @@ class JsonAdaptedPerson {
     private final String address;
     private final String medicalHistory; // null if not set
     private final String nextAppointment; // null if not set
+    private final String remark; // null or empty if not set
 
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
@@ -38,13 +40,22 @@ class JsonAdaptedPerson {
     public JsonAdaptedPerson(@JsonProperty("id") String id, @JsonProperty("name") String name,
             @JsonProperty("phone") String phone, @JsonProperty("address") String address,
             @JsonProperty("medicalHistory") String medicalHistory,
-            @JsonProperty("nextAppointment") String nextAppointment) {
+            @JsonProperty("nextAppointment") String nextAppointment, @JsonProperty("remark") String remark) {
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.medicalHistory = medicalHistory;
         this.nextAppointment = nextAppointment;
+        this.remark = remark;
+    }
+
+    /**
+     * Constructs a {@code JsonAdaptedPerson} with the given person details and no remark.
+     */
+    public JsonAdaptedPerson(String id, String name, String phone, String address,
+            String medicalHistory, String nextAppointment) {
+        this(id, name, phone, address, medicalHistory, nextAppointment, null);
     }
 
     /**
@@ -57,6 +68,7 @@ class JsonAdaptedPerson {
         address = source.getAddress().value;
         medicalHistory = source.getMedicalHistory().map(history -> history.value).orElse(null);
         nextAppointment = source.getNextAppointment().map(appointment -> appointment.value).orElse(null);
+        remark = source.getRemark().isEmpty() ? null : source.getRemark().value;
     }
 
     /**
@@ -110,7 +122,11 @@ class JsonAdaptedPerson {
         final Optional<NextAppointment> modelNextAppointment =
                 Optional.ofNullable(nextAppointment).map(NextAppointment::new);
 
-        return new Person(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelNextAppointment);
+        // Data files saved before remarks were added have no remark field.
+        final Remark modelRemark = new Remark(remark == null ? "" : remark);
+
+        return new Person(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelNextAppointment,
+                modelRemark);
     }
 
 }

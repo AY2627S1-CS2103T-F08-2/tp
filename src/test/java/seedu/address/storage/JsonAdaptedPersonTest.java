@@ -14,7 +14,9 @@ import seedu.address.model.person.MedicalHistory;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.NextAppointment;
 import seedu.address.model.person.PatientId;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_ID = "S1234-567";
@@ -35,6 +37,13 @@ public class JsonAdaptedPersonTest {
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(BENSON);
         assertEquals(BENSON, person.toModelType());
+    }
+
+    @Test
+    public void toModelType_personWithRemark_returnsPerson() throws Exception {
+        Person bensonWithRemark = new PersonBuilder(BENSON).withRemark("Likes to swim.").build();
+        JsonAdaptedPerson person = new JsonAdaptedPerson(bensonWithRemark);
+        assertEquals(bensonWithRemark, person.toModelType());
     }
 
     @Test
