@@ -13,9 +13,10 @@ import java.util.logging.SimpleFormatter;
 /**
  * Configures and manages loggers and handlers, including their logging level.
  * Named {@link Logger}s can be obtained from this class.<br>
- * These loggers have been configured to output messages to the console and a {@code .log} file by default,
- *   at the {@code INFO} level. A new {@code .log} file with a new numbering will be created after the log
- *   file reaches 5MB in size, up to a maximum of 5 files.<br>
+ * These loggers write to the console and, by default, to {@code addressbook.log.0}, at the {@code INFO} level.
+ *   When that file reaches 5MB, each log file is renamed with the next number up ({@code addressbook.log.0}
+ *   becomes {@code addressbook.log.1}, and so on) and a new {@code addressbook.log.0} is started, keeping at
+ *   most 5 files.<br>
  */
 public class LogsCenter {
     // Change this to a lower level (e.g., Level.FINE) to enable more detailed log messages

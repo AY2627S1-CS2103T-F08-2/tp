@@ -42,7 +42,9 @@ public class JsonUtil {
 
     /**
      * Returns the JSON object from the given file or {@code Optional.empty()} object if the file is not found.
-     * If any values are missing from the file, default values will be used, as long as the file is a valid JSON file.
+     * If the file is valid JSON but some values are missing, those fields are left at their defaults, such as
+     * {@code null}. Code that converts the result may still reject it: for example, a data file with a patient
+     * whose ID is missing does not load.
      *
      * @param filePath cannot be null.
      * @param classOfObjectToDeserialize JSON file has to correspond to the structure in the class given here.
