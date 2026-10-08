@@ -86,7 +86,7 @@ The **API** of this component is specified in [
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and
+The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, and
 `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common
 behavior among classes that represent visible GUI parts.
 
@@ -101,7 +101,7 @@ The `UI` component,
 * executes user commands using the `Logic` component.
 * listens for changes to `Model` data so that the UI can be updated with the modified data.
 * keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component because it displays `Person` objects from the model.
+* depends on some classes in the `Model` component because it displays `Patient` objects from the model.
 
 ### Logic component
 
@@ -126,7 +126,7 @@ How the `Logic` component works:
    turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which
    is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
+1. The command can communicate with the `Model` when it is executed (e.g. to delete a patient).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several
    interactions between the command object and the `Model` to complete the operation.
 1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
@@ -154,9 +154,9 @@ How the parsing works:
 
 The `Model` component,
 
-* stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
-* stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It
-  exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates
+* stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
+* stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It
+  exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates
   when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed
   to the outside as a `ReadOnlyUserPrefs` object.

@@ -15,13 +15,13 @@ import java.util.stream.Stream;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.Address;
-import seedu.address.model.person.MedicalHistory;
-import seedu.address.model.person.Name;
-import seedu.address.model.person.NextAppointment;
-import seedu.address.model.person.PatientId;
-import seedu.address.model.person.Person;
-import seedu.address.model.person.Phone;
+import seedu.address.model.patient.Address;
+import seedu.address.model.patient.MedicalHistory;
+import seedu.address.model.patient.Name;
+import seedu.address.model.patient.NextAppointment;
+import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientId;
+import seedu.address.model.patient.Phone;
 
 /**
  * Parses input arguments and creates a new AddCommand object
@@ -63,10 +63,10 @@ public class AddCommandParser implements Parser<AddCommand> {
                 ? ParserUtil.parseNextAppointment(argMultimap.getValue(PREFIX_NEXT_APPOINTMENT).get())
                 : null;
 
-        Person person = new Person(id, name, phone, address, Optional.ofNullable(medicalHistory),
+        Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory),
                 Optional.ofNullable(nextAppointment));
 
-        return new AddCommand(person);
+        return new AddCommand(patient);
     }
 
     /**

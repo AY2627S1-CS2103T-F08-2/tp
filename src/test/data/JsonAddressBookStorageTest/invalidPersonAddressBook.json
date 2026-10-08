@@ -1,8 +1,0 @@
-{
-  "persons": [ {
-    "id": "Person with invalid ID field: S1234-567",
-    "name": "Hans Muster",
-    "phone": "9482424",
-    "address": "4th street"
-  } ]
-}

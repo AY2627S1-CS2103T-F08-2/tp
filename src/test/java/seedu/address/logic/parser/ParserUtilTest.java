@@ -3,17 +3,17 @@ package seedu.address.logic.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
-import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
+import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.Address;
-import seedu.address.model.person.MedicalHistory;
-import seedu.address.model.person.Name;
-import seedu.address.model.person.NextAppointment;
-import seedu.address.model.person.PatientId;
-import seedu.address.model.person.Phone;
+import seedu.address.model.patient.Address;
+import seedu.address.model.patient.MedicalHistory;
+import seedu.address.model.patient.Name;
+import seedu.address.model.patient.NextAppointment;
+import seedu.address.model.patient.PatientId;
+import seedu.address.model.patient.Phone;
 
 public class ParserUtilTest {
     private static final String INVALID_ID = "S1234-567";
@@ -47,10 +47,10 @@ public class ParserUtilTest {
     @Test
     public void parseIndex_validInput_success() throws Exception {
         // No whitespaces
-        assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("1"));
+        assertEquals(INDEX_FIRST_PATIENT, ParserUtil.parseIndex("1"));
 
         // Leading and trailing whitespaces
-        assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("  1  "));
+        assertEquals(INDEX_FIRST_PATIENT, ParserUtil.parseIndex("  1  "));
     }
 
     @Test

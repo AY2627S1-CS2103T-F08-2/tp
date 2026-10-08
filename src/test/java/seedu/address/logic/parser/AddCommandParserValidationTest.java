@@ -22,8 +22,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
-import static seedu.address.testutil.TypicalPersons.AMY;
-import static seedu.address.testutil.TypicalPersons.BOB;
+import static seedu.address.testutil.TypicalPatients.AMY;
+import static seedu.address.testutil.TypicalPatients.BOB;
 
 import java.util.List;
 
@@ -32,15 +32,15 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.Address;
-import seedu.address.model.person.MedicalHistory;
-import seedu.address.model.person.Name;
-import seedu.address.model.person.NextAppointment;
-import seedu.address.model.person.PatientId;
-import seedu.address.model.person.Person;
-import seedu.address.model.person.Phone;
-import seedu.address.testutil.PersonBuilder;
-import seedu.address.testutil.PersonUtil;
+import seedu.address.model.patient.Address;
+import seedu.address.model.patient.MedicalHistory;
+import seedu.address.model.patient.Name;
+import seedu.address.model.patient.NextAppointment;
+import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientId;
+import seedu.address.model.patient.Phone;
+import seedu.address.testutil.PatientBuilder;
+import seedu.address.testutil.PatientUtil;
 
 /**
  * Tests option boundaries and validation for add commands.
@@ -58,11 +58,11 @@ public class AddCommandParserValidationTest {
         assertParseSuccess(parser, ADDRESS_DESC_AMY + PHONE_DESC_AMY + NAME_DESC_AMY + ID_DESC_AMY,
                 new AddCommand(AMY));
 
-        Person historyOnly = new PersonBuilder(AMY).withMedicalHistory(VALID_MEDICAL_HISTORY_BOB).build();
+        Patient historyOnly = new PatientBuilder(AMY).withMedicalHistory(VALID_MEDICAL_HISTORY_BOB).build();
         assertParseSuccess(parser, MEDICAL_HISTORY_DESC_BOB + PHONE_DESC_AMY + ADDRESS_DESC_AMY
                 + ID_DESC_AMY + NAME_DESC_AMY, new AddCommand(historyOnly));
 
-        Person appointmentOnly = new PersonBuilder(AMY).withNextAppointment(VALID_NEXT_APPOINTMENT_BOB).build();
+        Patient appointmentOnly = new PatientBuilder(AMY).withNextAppointment(VALID_NEXT_APPOINTMENT_BOB).build();
         assertParseSuccess(parser, NAME_DESC_AMY + NEXT_APPOINTMENT_DESC_BOB + ADDRESS_DESC_AMY
                 + ID_DESC_AMY + PHONE_DESC_AMY, new AddCommand(appointmentOnly));
 
@@ -72,9 +72,9 @@ public class AddCommandParserValidationTest {
 
     @Test
     public void parse_dateOnlyAppointment_success() {
-        Person expectedPerson = new PersonBuilder(AMY).withNextAppointment("2026-09-20").build();
+        Patient expectedPatient = new PatientBuilder(AMY).withNextAppointment("2026-09-20").build();
         assertParseSuccess(parser, REQUIRED_ARGUMENTS + " --next-appointment 2026-09-20",
-                new AddCommand(expectedPerson));
+                new AddCommand(expectedPatient));
     }
 
     @Test
@@ -86,7 +86,7 @@ public class AddCommandParserValidationTest {
 
     @Test
     public void parse_noLeadingWhitespace_success() {
-        assertParseSuccess(parser, PersonUtil.getPersonDetails(AMY).trim(), new AddCommand(AMY));
+        assertParseSuccess(parser, PatientUtil.getPatientDetails(AMY).trim(), new AddCommand(AMY));
     }
 
     @Test
@@ -133,9 +133,10 @@ public class AddCommandParserValidationTest {
 
     @Test
     public void parse_embeddedDoubleHyphenText_success() {
-        Person expectedPerson = new PersonBuilder(AMY).withName("Anne--Marie")
+        Patient expectedPatient = new PatientBuilder(AMY).withName("Anne--Marie")
                 .withAddress("Block--A, West Street").withMedicalHistory("Follow-up--stable").build();
-        assertParseSuccess(parser, " " + PersonUtil.getPersonDetails(expectedPerson), new AddCommand(expectedPerson));
+        assertParseSuccess(parser, " " + PatientUtil.getPatientDetails(expectedPatient),
+                new AddCommand(expectedPatient));
     }
 
     @Test

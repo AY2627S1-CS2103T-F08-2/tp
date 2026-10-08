@@ -33,146 +33,146 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
-import static seedu.address.testutil.TypicalPersons.AMY;
-import static seedu.address.testutil.TypicalPersons.BOB;
+import static seedu.address.testutil.TypicalPatients.AMY;
+import static seedu.address.testutil.TypicalPatients.BOB;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddCommand;
-import seedu.address.model.person.Address;
-import seedu.address.model.person.MedicalHistory;
-import seedu.address.model.person.Name;
-import seedu.address.model.person.NextAppointment;
-import seedu.address.model.person.PatientId;
-import seedu.address.model.person.Person;
-import seedu.address.model.person.Phone;
-import seedu.address.testutil.PersonBuilder;
+import seedu.address.model.patient.Address;
+import seedu.address.model.patient.MedicalHistory;
+import seedu.address.model.patient.Name;
+import seedu.address.model.patient.NextAppointment;
+import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientId;
+import seedu.address.model.patient.Phone;
+import seedu.address.testutil.PatientBuilder;
 
 public class AddCommandParserTest {
     private AddCommandParser parser = new AddCommandParser();
 
     @Test
     public void parse_allFieldsPresent_success() {
-        Person expectedPerson = new PersonBuilder(BOB).build();
+        Patient expectedPatient = new PatientBuilder(BOB).build();
 
         // whitespace only preamble
         assertParseSuccess(parser,
                 PREAMBLE_WHITESPACE + ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
-                        + MEDICAL_HISTORY_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB, new AddCommand(expectedPerson));
+                        + MEDICAL_HISTORY_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB, new AddCommand(expectedPatient));
 
         // reordered fields
         assertParseSuccess(parser,
                 PREAMBLE_WHITESPACE + MEDICAL_HISTORY_DESC_BOB + NAME_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB
-                        + PHONE_DESC_BOB + ID_DESC_BOB + ADDRESS_DESC_BOB, new AddCommand(expectedPerson));
+                        + PHONE_DESC_BOB + ID_DESC_BOB + ADDRESS_DESC_BOB, new AddCommand(expectedPatient));
         assertParseSuccess(parser,
                 PREAMBLE_WHITESPACE + ADDRESS_DESC_BOB + PHONE_DESC_BOB + ID_DESC_BOB + MEDICAL_HISTORY_DESC_BOB
-                        + NAME_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB, new AddCommand(expectedPerson));
+                        + NAME_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB, new AddCommand(expectedPatient));
     }
 
     @Test
     public void parse_repeatedValue_failure() {
-        String validExpectedPersonString = ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
+        String validExpectedPatientString = ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
                 + MEDICAL_HISTORY_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB;
 
         // multiple ids
-        assertParseFailure(parser, ID_DESC_AMY + validExpectedPersonString,
+        assertParseFailure(parser, ID_DESC_AMY + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
 
         // multiple names
-        assertParseFailure(parser, NAME_DESC_AMY + validExpectedPersonString,
+        assertParseFailure(parser, NAME_DESC_AMY + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME));
 
         // multiple phones
-        assertParseFailure(parser, PHONE_DESC_AMY + validExpectedPersonString,
+        assertParseFailure(parser, PHONE_DESC_AMY + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE));
 
         // multiple addresses
-        assertParseFailure(parser, ADDRESS_DESC_AMY + validExpectedPersonString,
+        assertParseFailure(parser, ADDRESS_DESC_AMY + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ADDRESS));
 
         // multiple medical histories
-        assertParseFailure(parser, MEDICAL_HISTORY_DESC_BOB + validExpectedPersonString,
+        assertParseFailure(parser, MEDICAL_HISTORY_DESC_BOB + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_MEDICAL_HISTORY));
 
         // multiple next appointments
-        assertParseFailure(parser, NEXT_APPOINTMENT_DESC_BOB + validExpectedPersonString,
+        assertParseFailure(parser, NEXT_APPOINTMENT_DESC_BOB + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NEXT_APPOINTMENT));
 
         // multiple fields repeated
         assertParseFailure(parser,
-                validExpectedPersonString + ID_DESC_AMY + PHONE_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY
+                validExpectedPatientString + ID_DESC_AMY + PHONE_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY
                         + MEDICAL_HISTORY_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE,
                         PREFIX_MEDICAL_HISTORY, PREFIX_NEXT_APPOINTMENT));
 
         assertParseFailure(parser,
-                validExpectedPersonString + ID_DESC_AMY + PHONE_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY,
+                validExpectedPatientString + ID_DESC_AMY + PHONE_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE));
 
         assertParseFailure(parser,
-                validExpectedPersonString + MEDICAL_HISTORY_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB,
+                validExpectedPatientString + MEDICAL_HISTORY_DESC_BOB + NEXT_APPOINTMENT_DESC_BOB,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_MEDICAL_HISTORY, PREFIX_NEXT_APPOINTMENT));
 
         // invalid value followed by valid value
 
         // invalid id
-        assertParseFailure(parser, INVALID_ID_DESC + validExpectedPersonString,
+        assertParseFailure(parser, INVALID_ID_DESC + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
 
         // invalid name
-        assertParseFailure(parser, INVALID_NAME_DESC + validExpectedPersonString,
+        assertParseFailure(parser, INVALID_NAME_DESC + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME));
 
         // invalid phone
-        assertParseFailure(parser, INVALID_PHONE_DESC + validExpectedPersonString,
+        assertParseFailure(parser, INVALID_PHONE_DESC + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE));
 
         // invalid address
-        assertParseFailure(parser, INVALID_ADDRESS_DESC + validExpectedPersonString,
+        assertParseFailure(parser, INVALID_ADDRESS_DESC + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ADDRESS));
 
         // invalid medical history
-        assertParseFailure(parser, INVALID_MEDICAL_HISTORY_DESC + validExpectedPersonString,
+        assertParseFailure(parser, INVALID_MEDICAL_HISTORY_DESC + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_MEDICAL_HISTORY));
 
         // invalid next appointment
-        assertParseFailure(parser, INVALID_NEXT_APPOINTMENT_DESC + validExpectedPersonString,
+        assertParseFailure(parser, INVALID_NEXT_APPOINTMENT_DESC + validExpectedPatientString,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NEXT_APPOINTMENT));
 
         // valid value followed by invalid value
 
         // invalid id
-        assertParseFailure(parser, validExpectedPersonString + INVALID_ID_DESC,
+        assertParseFailure(parser, validExpectedPatientString + INVALID_ID_DESC,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
 
         // invalid name
-        assertParseFailure(parser, validExpectedPersonString + INVALID_NAME_DESC,
+        assertParseFailure(parser, validExpectedPatientString + INVALID_NAME_DESC,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME));
 
         // invalid phone
-        assertParseFailure(parser, validExpectedPersonString + INVALID_PHONE_DESC,
+        assertParseFailure(parser, validExpectedPatientString + INVALID_PHONE_DESC,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE));
 
         // invalid address
-        assertParseFailure(parser, validExpectedPersonString + INVALID_ADDRESS_DESC,
+        assertParseFailure(parser, validExpectedPatientString + INVALID_ADDRESS_DESC,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ADDRESS));
 
         // invalid medical history
-        assertParseFailure(parser, validExpectedPersonString + INVALID_MEDICAL_HISTORY_DESC,
+        assertParseFailure(parser, validExpectedPatientString + INVALID_MEDICAL_HISTORY_DESC,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_MEDICAL_HISTORY));
 
         // invalid next appointment
-        assertParseFailure(parser, validExpectedPersonString + INVALID_NEXT_APPOINTMENT_DESC,
+        assertParseFailure(parser, validExpectedPatientString + INVALID_NEXT_APPOINTMENT_DESC,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NEXT_APPOINTMENT));
     }
 
     @Test
     public void parse_optionalFieldsMissing_success() {
         // no medical history or next appointment
-        Person expectedPerson = new PersonBuilder(AMY).build();
+        Patient expectedPatient = new PatientBuilder(AMY).build();
         assertParseSuccess(parser, ID_DESC_AMY + NAME_DESC_AMY + PHONE_DESC_AMY + ADDRESS_DESC_AMY,
-                new AddCommand(expectedPerson));
+                new AddCommand(expectedPatient));
     }
 
     @Test
