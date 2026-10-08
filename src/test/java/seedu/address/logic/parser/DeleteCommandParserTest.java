@@ -20,6 +20,7 @@ public class DeleteCommandParserTest {
         PatientId expectedId = new PatientId(VALID_ID_AMY);
         DeleteCommand expectedCommand = new DeleteCommand(expectedId);
         assertParseSuccess(parser, VALID_ID_AMY, expectedCommand);
+        assertParseSuccess(parser, "  " + VALID_ID_AMY + "  ", expectedCommand);
     }
 
     @Test
