@@ -535,18 +535,18 @@ testers are expected to do more *exploratory* testing.
 
 ### Deleting a patient
 
-1. Deleting a patient while all patients are being shown
+1. Deleting a patient
 
-    1. Prerequisites: List all patients using the `list` command, with multiple patients in the list.
+    1. Prerequisites: Start with the sample data, which includes a patient with the ID `S1234567A`.
 
-    1. Test case: `delete 1`<br>
-       Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+    1. Test case: `delete S1234567A`<br>
+       Expected: The patient with the ID `S1234567A` is deleted from the list. The status message shows the deleted patient's details.
 
-    1. Test case: `delete 0`<br>
-       Expected: No patient is deleted. The status message shows error details.
+    1. Test case: `delete S0000000Z`, where no patient has that ID<br>
+       Expected: No patient is deleted. The status message shows an error.
 
-    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-       Expected: Similar to previous.
+    1. Other incorrect delete commands to try: `delete`, `delete S123-456` (not a valid ID)<br>
+       Expected: No patient is deleted. The status message shows the correct command format.
 
 1. _{ more test cases …​ }_
 
