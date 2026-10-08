@@ -12,14 +12,14 @@ import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 
 /**
- * Deletes a patient identified using its displayed ID from the address book.
+ * Deletes the patient with the given ID from the address book.
  */
 public class DeleteCommand extends Command {
 
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes the patient with the given ID number.\n"
+            + ": Deletes the patient with the given ID.\n"
             + "Parameters: ID\n"
             + "Example: " + COMMAND_WORD + " T0123456B";
 
