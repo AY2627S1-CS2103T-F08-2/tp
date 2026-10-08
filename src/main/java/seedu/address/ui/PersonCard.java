@@ -41,6 +41,8 @@ public class PersonCard extends UiPart<Region> {
     private Label medicalHistory;
     @FXML
     private Label nextAppointment;
+    @FXML
+    private Label remark;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -56,6 +58,9 @@ public class PersonCard extends UiPart<Region> {
         setOptionalLabel(medicalHistory, person.getMedicalHistory().map(history -> "Medical history: " + history));
         setOptionalLabel(nextAppointment,
                 person.getNextAppointment().map(appointment -> "Next appointment: " + appointment));
+        setOptionalLabel(remark, Optional.of(person.getRemark())
+                .filter(personRemark -> !personRemark.isEmpty())
+                .map(personRemark -> "Remark: " + personRemark));
     }
 
     /**
