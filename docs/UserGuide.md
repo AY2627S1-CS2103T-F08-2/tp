@@ -136,6 +136,21 @@ Examples:
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
   ![result for 'find alex david'](images/findAlexDavidResult.png)
 
+### Viewing appointments: `viewappt`
+
+Views patients who have appointments on the specified date.
+
+Format: `viewappt DATE`
+
+* `DATE` must be a real date in `yyyy-MM-dd` format.
+* The date range is inclusive (views appointments on that specific date).
+* Only patients with appointments on the specified date are shown.
+* If no patients have appointments on that date, an empty list is shown.
+
+Examples:
+* `viewappt 2026-10-15` views all patients with appointments on October 15, 2026.
+* `viewappt 2026-12-25` views all patients with appointments on December 25, 2026.
+
 ### Deleting a patient: `delete`
 
 Deletes the specified patient from LaiNurse.
@@ -201,5 +216,6 @@ Action | Format, Examples
 **Edit** | `edit ID [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
+**ViewAppt** | `viewappt DATE`<br> e.g., `viewappt 2026-10-15`
 **Help** | `help`
 **Exit** | `exit`
