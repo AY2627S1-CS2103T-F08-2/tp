@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 
 public class ViewAppointmentCommandTest {
 
@@ -24,6 +25,11 @@ public class ViewAppointmentCommandTest {
     public void execute_noAppointmentsFound_emptyList() {
         LocalDate date = LocalDate.of(2030, 1, 1); // Far future, no appointments
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
+
+        // Create expected model with same filtered list state
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(date, date));
+
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 0, date.toString());
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
@@ -33,6 +39,11 @@ public class ViewAppointmentCommandTest {
         // Bob has appointment on 2026-10-06
         LocalDate date = LocalDate.of(2026, 10, 6);
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
+
+        // Create expected model with same filtered list state
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(date, date));
+
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date.toString());
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }

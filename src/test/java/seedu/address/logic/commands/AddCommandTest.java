@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -147,11 +146,6 @@ public class AddCommandTest {
 
         @Override
         public void updateFilteredPatientList(Predicate<Patient> predicate) {
-            throw new AssertionError("This method should not be called.");
-        }
-
-        @Override
-        public List<Patient> findPatientsWithAppointmentOn(LocalDate startDate, LocalDate endDate) {
             throw new AssertionError("This method should not be called.");
         }
     }

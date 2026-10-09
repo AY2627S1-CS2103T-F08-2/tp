@@ -3,12 +3,9 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -119,17 +116,6 @@ public class ModelManager implements Model {
     public void updateFilteredPatientList(Predicate<Patient> predicate) {
         requireNonNull(predicate);
         filteredPatients.setPredicate(predicate);
-    }
-
-    @Override
-    public List<Patient> findPatientsWithAppointmentOn(LocalDate startDate, LocalDate endDate) {
-        requireNonNull(startDate);
-        requireNonNull(endDate);
-        return addressBook.getPatientList().stream()
-                .filter(patient -> patient.getNextAppointment()
-                        .map(app -> !app.getDate().isBefore(startDate) && !app.getDate().isAfter(endDate))
-                        .orElse(false))
-                .collect(Collectors.toList());
     }
 
     @Override

@@ -1,7 +1,5 @@
 package seedu.address.model;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -86,12 +84,4 @@ public interface Model {
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate);
-
-    /**
-     * Returns all patients who have an appointment on or between the given dates.
-     *
-     * @param startDate Start of date range (inclusive)
-     * @param endDate   End of date range (inclusive)
-     */
-    List<Patient> findPatientsWithAppointmentOn(LocalDate startDate, LocalDate endDate);
 }

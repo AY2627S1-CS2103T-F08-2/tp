@@ -4,10 +4,9 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import seedu.address.model.Model;
-import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 
 /**
  * Views all patients with appointments on the specified date.
@@ -34,9 +33,9 @@ public class ViewAppointmentCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        List<Patient> patients = model.findPatientsWithAppointmentOn(date, date);
-        return new CommandResult(
-                String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, patients.size(), date.toString()));
+        model.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(date, date));
+        return new CommandResult(String.format(
+                MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, model.getFilteredPatientList().size(), date.toString()));
     }
 
     @Override
