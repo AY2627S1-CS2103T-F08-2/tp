@@ -1,5 +1,7 @@
 package seedu.address.model;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -12,7 +14,9 @@ import seedu.address.model.patient.PatientId;
  * The API of the Model component.
  */
 public interface Model {
-    /** {@code Predicate} that always evaluates to true */
+    /**
+     * {@code Predicate} that always evaluates to true
+     */
     Predicate<Patient> PREDICATE_SHOW_ALL_PATIENTS = unused -> true;
 
     /**
@@ -35,7 +39,9 @@ public interface Model {
      */
     void setAddressBook(ReadOnlyAddressBook addressBook);
 
-    /** Returns the AddressBook */
+    /**
+     * Returns the AddressBook
+     */
     ReadOnlyAddressBook getAddressBook();
 
     /**
@@ -69,12 +75,23 @@ public interface Model {
      */
     void setPatient(Patient target, Patient editedPatient);
 
-    /** Returns an unmodifiable view of the filtered patient list */
+    /**
+     * Returns an unmodifiable view of the filtered patient list
+     */
     ObservableList<Patient> getFilteredPatientList();
 
     /**
      * Updates the filter of the filtered patient list to filter by the given {@code predicate}.
+     *
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate);
+
+    /**
+     * Returns all patients who have an appointment on or between the given dates.
+     *
+     * @param startDate Start of date range (inclusive)
+     * @param endDate   End of date range (inclusive)
+     */
+    List<Patient> findPatientsWithAppointmentOn(LocalDate startDate, LocalDate endDate);
 }

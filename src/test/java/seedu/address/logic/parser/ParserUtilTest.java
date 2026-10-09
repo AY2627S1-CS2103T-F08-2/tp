@@ -5,6 +5,8 @@ import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -198,5 +200,29 @@ public class ParserUtilTest {
         String appointmentWithExtraWhitespace = WHITESPACE + VALID_APPOINTMENT_WITH_TIME + WHITESPACE;
         NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITH_TIME);
         assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(appointmentWithExtraWhitespace));
+    }
+
+    @Test
+    public void parseDate_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseDate((String) null));
+    }
+
+    @Test
+    public void parseDate_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parseDate("2026/06/07"));
+        assertThrows(ParseException.class, () -> ParserUtil.parseDate("2026-06-07 1807"));
+    }
+
+    @Test
+    public void parseDate_validValueWithoutWhitespace_returnsDate() throws Exception {
+        LocalDate expectedDate = LocalDate.of(2026, 6, 7);
+        assertEquals(expectedDate, ParserUtil.parseDate("2026-06-07"));
+    }
+
+    @Test
+    public void parseDate_validValueWithWhitespace_returnsTrimmedDate() throws Exception {
+        String dateWithWhitespace = "  2026-06-07  ";
+        LocalDate expectedDate = LocalDate.of(2026, 6, 7);
+        assertEquals(expectedDate, ParserUtil.parseDate(dateWithWhitespace));
     }
 }

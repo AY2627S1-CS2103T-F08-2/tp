@@ -16,8 +16,9 @@ public class Messages {
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format!\n%1$s";
     public static final String MESSAGE_INVALID_PATIENT_ID = "The patient ID provided is invalid.";
     public static final String MESSAGE_PATIENTS_LISTED_OVERVIEW = "%1$d patient(s) listed!";
+    public static final String MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW = "%1$d patient(s) with appointments on %2$s";
     public static final String MESSAGE_DUPLICATE_FIELDS =
-                "Multiple values specified for the following single-valued field(s): ";
+            "Multiple values specified for the following single-valued field(s): ";
 
     /**
      * Returns an error message indicating the duplicate prefixes.
