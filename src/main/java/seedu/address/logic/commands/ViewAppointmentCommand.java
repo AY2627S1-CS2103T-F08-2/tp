@@ -10,13 +10,13 @@ import seedu.address.model.Model;
 import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 
 /**
- * Views all patients with appointments on the specified date.
+ * Views patients with appointments on the specified date.
  */
 public class ViewAppointmentCommand extends Command {
 
     public static final String COMMAND_WORD = "viewappt";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Views all patients with appointments on "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Views patients with appointments on "
             + "the specified date.\n"
             + "Parameters: DATE (yyyy-MM-dd)\n"
             + "Example: " + COMMAND_WORD + " 2026-10-15";

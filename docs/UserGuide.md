@@ -144,7 +144,7 @@ Format: `viewappt DATE`
 
 * `DATE` must be a real date in `yyyy-MM-dd` format.
 * Only each patient's next appointment is checked.
-* Patients whose next appointment is on `DATE` are shown, regardless if it has a time.
+* Patients whose next appointment is on `DATE`, with or without a time, are shown.
 * If no patients have appointments on that date, an empty list is shown.
 
 Examples:
