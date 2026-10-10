@@ -88,7 +88,7 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * Next appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
-* After a patient is added, the list shows all patients again, even if it was showing `find` results. The list numbers of other patients may change.
+* After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change.
 
 Examples:
 
@@ -135,6 +135,21 @@ Examples:
 * `find John` returns `john` and `John Doe`
 * `find alex david` returns `Alex Yeoh`, `David Li`<br>
   ![result for 'find alex david'](images/findAlexDavidResult.png)
+
+### Viewing appointments: `viewappt`
+
+Views patients whose next appointment is on the specified date.
+
+Format: `viewappt DATE`
+
+* `DATE` must be a real date in `yyyy-MM-dd` format.
+* Only each patient's next appointment is checked.
+* Patients whose next appointment is on `DATE`, with or without a time, are shown.
+* If no patients have appointments on that date, an empty list is shown.
+
+Examples:
+* `viewappt 2026-10-15` views all patients with appointments on October 15, 2026.
+* `viewappt 2026-12-25` views all patients with appointments on December 25, 2026.
 
 ### Deleting a patient: `delete`
 
@@ -201,5 +216,6 @@ Action | Format, Examples
 **Edit** | `edit ID [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
+**ViewAppt** | `viewappt DATE`<br> e.g., `viewappt 2026-10-15`
 **Help** | `help`
 **Exit** | `exit`

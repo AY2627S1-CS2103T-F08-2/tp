@@ -5,6 +5,8 @@ import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -20,18 +22,20 @@ public class ParserUtilTest {
     private static final String INVALID_NAME = " ";
     private static final String INVALID_PHONE = "+65abc";
     private static final String INVALID_ADDRESS = " ";
-    private static final String INVALID_APPOINTMENT_1 = "2026/06/07";
-    private static final String INVALID_APPOINTMENT_2 = "2026-06-07 1807";
+    private static final String INVALID_DATE_WITHOUT_TIME = "2026/06/07";
+    private static final String INVALID_DATE_WITH_TIME = "2026-06-07 1807";
 
     private static final String VALID_ID = "S1234567A";
     private static final String VALID_NAME = "Rachel Walker";
     private static final String VALID_PHONE = "123456";
     private static final String VALID_ADDRESS = "123 Main Street #0505";
     private static final String VALID_MEDICAL_HISTORY = "dementia";
-    private static final String VALID_APPOINTMENT_WITHOUT_TIME = "2026-06-07";
-    private static final String VALID_APPOINTMENT_WITH_TIME = "2026-06-07 18:07";
+    private static final String VALID_DATE_WITHOUT_TIME = "2026-06-07";
+    private static final String VALID_DATE_WITH_TIME = "2026-06-07 18:07";
 
     private static final String WHITESPACE = " \t\r\n";
+
+    private static final LocalDate VALID_DATE_OBJECT = LocalDate.of(2026, 6, 7);
 
     @Test
     public void parseIndex_invalidInput_throwsParseException() {
@@ -170,33 +174,55 @@ public class ParserUtilTest {
 
     @Test
     public void parseAppointment_invalidValue_throwsParseException() {
-        assertThrows(ParseException.class, () -> ParserUtil.parseNextAppointment(INVALID_APPOINTMENT_1));
-        assertThrows(ParseException.class, () -> ParserUtil.parseNextAppointment(INVALID_APPOINTMENT_2));
+        assertThrows(ParseException.class, () -> ParserUtil.parseNextAppointment(INVALID_DATE_WITHOUT_TIME));
+        assertThrows(ParseException.class, () -> ParserUtil.parseNextAppointment(INVALID_DATE_WITH_TIME));
     }
 
     @Test
     public void parseAppointment_validValueWithoutTime_returnsAppointment() throws Exception {
-        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITHOUT_TIME);
-        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(VALID_APPOINTMENT_WITHOUT_TIME));
+        NextAppointment expectedAppointment = new NextAppointment(VALID_DATE_WITHOUT_TIME);
+        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(VALID_DATE_WITHOUT_TIME));
     }
 
     @Test
     public void parseAppointment_validValueWithTime_returnsAppointment() throws Exception {
-        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITH_TIME);
-        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(VALID_APPOINTMENT_WITH_TIME));
+        NextAppointment expectedAppointment = new NextAppointment(VALID_DATE_WITH_TIME);
+        assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(VALID_DATE_WITH_TIME));
     }
 
     @Test
     public void parseAppointment_validValueWithoutTimeWithWhitespace_returnsTrimmedAppointment() throws Exception {
-        String appointmentWithWhitespace = WHITESPACE + VALID_APPOINTMENT_WITHOUT_TIME + WHITESPACE;
-        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITHOUT_TIME);
+        String appointmentWithWhitespace = WHITESPACE + VALID_DATE_WITHOUT_TIME + WHITESPACE;
+        NextAppointment expectedAppointment = new NextAppointment(VALID_DATE_WITHOUT_TIME);
         assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(appointmentWithWhitespace));
     }
 
     @Test
     public void parseAppointment_validValueWithTimeWithExtraWhitespace_returnsTrimmedAppointment() throws Exception {
-        String appointmentWithExtraWhitespace = WHITESPACE + VALID_APPOINTMENT_WITH_TIME + WHITESPACE;
-        NextAppointment expectedAppointment = new NextAppointment(VALID_APPOINTMENT_WITH_TIME);
+        String appointmentWithExtraWhitespace = WHITESPACE + VALID_DATE_WITH_TIME + WHITESPACE;
+        NextAppointment expectedAppointment = new NextAppointment(VALID_DATE_WITH_TIME);
         assertEquals(expectedAppointment, ParserUtil.parseNextAppointment(appointmentWithExtraWhitespace));
+    }
+
+    @Test
+    public void parseDate_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseDate((String) null));
+    }
+
+    @Test
+    public void parseDate_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parseDate(INVALID_DATE_WITHOUT_TIME));
+        assertThrows(ParseException.class, () -> ParserUtil.parseDate(VALID_DATE_WITH_TIME));
+    }
+
+    @Test
+    public void parseDate_validValueWithoutWhitespace_returnsDate() throws Exception {
+        assertEquals(VALID_DATE_OBJECT, ParserUtil.parseDate(VALID_DATE_WITHOUT_TIME));
+    }
+
+    @Test
+    public void parseDate_validValueWithWhitespace_returnsTrimmedDate() throws Exception {
+        String dateWithWhitespace = WHITESPACE + VALID_DATE_WITHOUT_TIME + WHITESPACE;
+        assertEquals(VALID_DATE_OBJECT, ParserUtil.parseDate(dateWithWhitespace));
     }
 }

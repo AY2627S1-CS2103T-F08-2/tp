@@ -35,7 +35,9 @@ public interface Model {
      */
     void setAddressBook(ReadOnlyAddressBook addressBook);
 
-    /** Returns the AddressBook */
+    /**
+     * Returns the AddressBook
+     */
     ReadOnlyAddressBook getAddressBook();
 
     /**
@@ -69,11 +71,14 @@ public interface Model {
      */
     void setPatient(Patient target, Patient editedPatient);
 
-    /** Returns an unmodifiable view of the filtered patient list */
+    /**
+     * Returns an unmodifiable view of the filtered patient list
+     */
     ObservableList<Patient> getFilteredPatientList();
 
     /**
      * Updates the filter of the filtered patient list to filter by the given {@code predicate}.
+     *
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate);
