@@ -138,13 +138,13 @@ Examples:
 
 ### Viewing appointments: `viewappt`
 
-Views patients who have appointments on the specified date.
+Views patients whose next appointment is on the specified date.
 
 Format: `viewappt DATE`
 
 * `DATE` must be a real date in `yyyy-MM-dd` format.
-* The date range is inclusive (views appointments on that specific date).
-* Only patients with appointments on the specified date are shown.
+* Only each patient's next appointment is checked.
+* Patients whose next appointment is on `DATE` are shown, regardless if it has a time.
 * If no patients have appointments on that date, an empty list is shown.
 
 Examples:
