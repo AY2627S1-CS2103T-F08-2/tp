@@ -335,6 +335,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | record and view a patient's medical profile (conditions, allergies, medications, next-of-kin)        | I know their health details and whom to call in an emergency |
 | `* * *`  | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
 | `* * *`  | home-based nurse | reschedule an appointment in one command                                                            | I don't have to delete and re-add it                         |
+| `* * *`  | home-based nurse | view patients with appointments on a specific date                                                   | I can plan my visits for that day                            |
 | `* `     | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
 
@@ -470,6 +471,29 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2d1. LaiNurse shows an error message.
 
       Use case resumes at step 2.
+
+**Use case: UC05 - View patients by appointment date**
+
+**MSS**
+
+1. Nurse requests to view patients with appointments on a date.
+2. LaiNurse shows patients whose next appointment is on that date.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The date is missing, invalid, or does not exist.
+
+    * 1a1. LaiNurse indicates that the date is invalid.
+
+      Use case resumes at step 1.
+
+* 2a. No patients have their next appointment on the given date.
+
+    * 2a1. LaiNurse indicates that there are no matching patients.
+
+      Use case ends.
 
 *{More to be added}*
 
