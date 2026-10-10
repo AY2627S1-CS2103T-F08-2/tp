@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.testutil.TypicalPatients.DANIEL;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +37,7 @@ public class ViewAppointmentCommandTest {
 
     @Test
     public void execute_validDate_appointmentFound() {
-        // Bob has appointment on 2026-10-06
+        // Daniel has appointment on 2026-10-06
         LocalDate date = LocalDate.of(2026, 10, 6);
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
 
@@ -44,6 +46,7 @@ public class ViewAppointmentCommandTest {
 
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date.toString());
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
+        assertEquals(List.of(DANIEL), model.getFilteredPatientList());
     }
 
     @Test

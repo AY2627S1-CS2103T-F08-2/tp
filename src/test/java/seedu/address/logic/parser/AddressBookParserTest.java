@@ -7,6 +7,7 @@ import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,8 +93,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_viewAppointment() throws Exception {
-        assertTrue(parser.parseCommand(ViewAppointmentCommand.COMMAND_WORD + " 2026-10-15")
-                instanceof ViewAppointmentCommand);
+        assertEquals(new ViewAppointmentCommand(LocalDate.of(2026, 10, 15)),
+                parser.parseCommand(ViewAppointmentCommand.COMMAND_WORD + " 2026-10-15"));
     }
 
     @Test

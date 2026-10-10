@@ -50,24 +50,36 @@ public class AppointmentBetweenDatesPredicateTest {
         AppointmentBetweenDatesPredicate predicate = new AppointmentBetweenDatesPredicate(startDate, endDate);
         assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-15").build()));
 
+        // Timed appointment on same date as start date
+        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-15 09:30").build()));
+
         // Appointment on same date as end date
         assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-20").build()));
 
+        // Timed appointment on same date as end date
+        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-20 23:59").build()));
+
         // Appointment in the middle of the range
         assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-17").build()));
+
+        // Timed appointment in the middle of the range
+        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-17 14:00").build()));
     }
 
     @Test
     public void test_appointmentOutsideDateRange_returnsFalse() {
         LocalDate startDate = LocalDate.of(2026, 10, 15);
         LocalDate endDate = LocalDate.of(2026, 10, 20);
+        AppointmentBetweenDatesPredicate predicate = new AppointmentBetweenDatesPredicate(startDate, endDate);
 
         // Appointment before start date
-        AppointmentBetweenDatesPredicate predicate = new AppointmentBetweenDatesPredicate(startDate, endDate);
         assertFalse(predicate.test(new PatientBuilder().withNextAppointment("2026-10-14").build()));
 
         // Appointment after end date
         assertFalse(predicate.test(new PatientBuilder().withNextAppointment("2026-10-21").build()));
+
+        // Patient with no next appointment
+        assertFalse(predicate.test(new PatientBuilder().build()));
     }
 
     @Test
