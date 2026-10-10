@@ -27,7 +27,6 @@ public class ViewAppointmentCommandTest {
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
 
         // Create expected model with same filtered list state
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(date, date));
 
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 0, date.toString());
@@ -41,7 +40,6 @@ public class ViewAppointmentCommandTest {
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
 
         // Create expected model with same filtered list state
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(date, date));
 
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date.toString());
@@ -77,7 +75,7 @@ public class ViewAppointmentCommandTest {
     public void toStringMethod() {
         LocalDate date = LocalDate.of(2026, 10, 15);
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
-        String expected = "ViewAppointmentCommand{" + "date=" + date + '}';
+        String expected = ViewAppointmentCommand.class.getCanonicalName() + "{date=" + date + "}";
         assertEquals(expected, command.toString());
     }
 }

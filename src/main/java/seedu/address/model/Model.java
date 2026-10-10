@@ -12,9 +12,7 @@ import seedu.address.model.patient.PatientId;
  * The API of the Model component.
  */
 public interface Model {
-    /**
-     * {@code Predicate} that always evaluates to true
-     */
+    /** {@code Predicate} that always evaluates to true */
     Predicate<Patient> PREDICATE_SHOW_ALL_PATIENTS = unused -> true;
 
     /**

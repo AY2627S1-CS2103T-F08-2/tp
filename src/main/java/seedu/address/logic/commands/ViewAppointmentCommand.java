@@ -5,6 +5,7 @@ import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_LISTED_OVERV
 
 import java.time.LocalDate;
 
+import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.Model;
 import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 
@@ -54,6 +55,8 @@ public class ViewAppointmentCommand extends Command {
 
     @Override
     public String toString() {
-        return "ViewAppointmentCommand{" + "date=" + date + '}';
+        return new ToStringBuilder(this)
+                .add("date", date)
+                .toString();
     }
 }

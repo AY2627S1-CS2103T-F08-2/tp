@@ -37,11 +37,12 @@ public class AppointmentBetweenDatesPredicate implements Predicate<Patient> {
         }
 
         // instanceof handles nulls
-        if (!(other instanceof AppointmentBetweenDatesPredicate otherPredicate)) {
+        if (!(other instanceof AppointmentBetweenDatesPredicate otherAppointmentBetweenDatesPredicate)) {
             return false;
         }
 
-        return startDate.equals(otherPredicate.startDate) && endDate.equals(otherPredicate.endDate);
+        return startDate.equals(otherAppointmentBetweenDatesPredicate.startDate)
+                && endDate.equals(otherAppointmentBetweenDatesPredicate.endDate);
     }
 
     @Override
