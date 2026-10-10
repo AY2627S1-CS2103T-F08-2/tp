@@ -3,6 +3,7 @@ package seedu.address.model.patient;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.LocalDate;
 
@@ -11,6 +12,24 @@ import org.junit.jupiter.api.Test;
 import seedu.address.testutil.PatientBuilder;
 
 public class AppointmentBetweenDatesPredicateTest {
+
+    @Test
+    public void constructor_nullStartDate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, ()
+            -> new AppointmentBetweenDatesPredicate(null, LocalDate.of(2026, 10, 20)));
+    }
+
+    @Test
+    public void constructor_nullEndDate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, ()
+            -> new AppointmentBetweenDatesPredicate(LocalDate.of(2026, 10, 15), null));
+    }
+
+    @Test
+    public void constructor_startDateAfterEndDate_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, ()
+            -> new AppointmentBetweenDatesPredicate(LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 15)));
+    }
 
     @Test
     public void equals() {
