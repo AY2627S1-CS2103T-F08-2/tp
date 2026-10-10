@@ -18,7 +18,7 @@ public class ViewAppointmentCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Views all patients with appointments on "
             + "the specified date.\n"
-            + "Parameters: DATE\n"
+            + "Parameters: DATE (yyyy-MM-dd)\n"
             + "Example: " + COMMAND_WORD + " 2026-10-15";
 
     private final LocalDate date;
