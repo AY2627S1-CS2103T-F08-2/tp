@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.util.DateUtil;
 import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
@@ -37,9 +38,12 @@ public class ViewAppointmentCommandParserTest {
 
     @Test
     public void parse_invalidDate_throwsParseException() {
-        assertThrows(ParseException.class, () -> parser.parse("2026/10/15"));
-        assertThrows(ParseException.class, () -> parser.parse("invalid"));
-        assertThrows(ParseException.class, () -> parser.parse("2026-13-01"));
+        String expectedMessage = DateUtil.MESSAGE_CONSTRAINTS;
+
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("2026/10/15"));
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("invalid"));
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("2026-13-01"));
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("2026-02-30"));
     }
 
     @Test

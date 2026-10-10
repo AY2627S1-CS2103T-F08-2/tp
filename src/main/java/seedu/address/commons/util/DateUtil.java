@@ -12,6 +12,7 @@ public final class DateUtil {
 
     public static final String DATE_FORMAT = "yyyy-MM-dd";
     public static final String TIME_FORMAT = "HH:mm";
+    public static final String MESSAGE_CONSTRAINTS = "Dates should be a real date in the format " + DATE_FORMAT;
 
     // Strict resolving rejects dates that do not exist, such as 2026-02-30.
     // "uuuu" is the proleptic year, which strict resolving requires in place of "yyyy".

@@ -22,8 +22,6 @@ import seedu.address.model.patient.Phone;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
-    public static final String MESSAGE_INVALID_DATE = "Invalid date. Expected format: "
-            + DateUtil.DATE_FORMAT;
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it.
@@ -141,7 +139,7 @@ public class ParserUtil {
         try {
             return DateUtil.parseDate(trimmedDate);
         } catch (DateTimeParseException e) {
-            throw new ParseException(MESSAGE_INVALID_DATE);
+            throw new ParseException(DateUtil.MESSAGE_CONSTRAINTS);
         }
     }
 }

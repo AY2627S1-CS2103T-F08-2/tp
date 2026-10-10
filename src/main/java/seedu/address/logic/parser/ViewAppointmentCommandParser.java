@@ -19,12 +19,13 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
      * @throws ParseException if the user input does not conform to the expected format
      */
     public ViewAppointmentCommand parse(String args) throws ParseException {
-        try {
-            LocalDate date = ParserUtil.parseDate(args);
-            return new ViewAppointmentCommand(date);
-        } catch (ParseException pe) {
+        String trimmedArgs = args.trim();
+        if (trimmedArgs.isEmpty()) {
             throw new ParseException(
-                    String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAppointmentCommand.MESSAGE_USAGE), pe);
+                    String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAppointmentCommand.MESSAGE_USAGE));
         }
+
+        LocalDate date = ParserUtil.parseDate(trimmedArgs);
+        return new ViewAppointmentCommand(date);
     }
 }
