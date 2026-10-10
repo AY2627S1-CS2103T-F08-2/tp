@@ -14,6 +14,9 @@ title: Developer Guide
 
 * AI Use Declaration from Qin Fangzheng: "As my career path is not related to software engineering, I choose AI-5/AI-6 as my AI use level, where I get Codex to do the tasks, and then I myself review the results, including feature behavior and partial code."
 
+* AI Use Declaration from Jaydon: "I used Codex to review and generate code. 
+  Based on the given levels of AI use in coding tasks, this ranges between AI-2 and AI-5".
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
