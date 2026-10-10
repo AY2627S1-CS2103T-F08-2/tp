@@ -88,7 +88,7 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * Next appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
-* After a patient is added, the list shows all patients again, even if it was showing `find` results. The list numbers of other patients may change.
+* After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change.
 
 Examples:
 
