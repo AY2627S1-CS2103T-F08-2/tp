@@ -3,9 +3,10 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 import seedu.address.commons.core.index.Index;
-import seedu.address.commons.util.DateParser;
+import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
@@ -21,6 +22,8 @@ import seedu.address.model.patient.Phone;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+    public static final String MESSAGE_INVALID_DATE = "Invalid date. Expected format: "
+            + DateUtil.DATE_FORMAT;
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it.
@@ -133,6 +136,12 @@ public class ParserUtil {
      * @throws ParseException if the given {@code date} is invalid.
      */
     public static LocalDate parseDate(String date) throws ParseException {
-        return DateParser.parseDate(date);
+        requireNonNull(date);
+        String trimmedDate = date.trim();
+        try {
+            return DateUtil.parseDate(trimmedDate);
+        } catch (DateTimeParseException e) {
+            throw new ParseException(MESSAGE_INVALID_DATE);
+        }
     }
 }
