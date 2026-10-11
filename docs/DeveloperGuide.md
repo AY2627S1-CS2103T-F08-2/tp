@@ -577,6 +577,42 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
+### Viewing patients by appointment date
+
+1. Viewing patients whose next appointment falls on a given date
+
+    1. Prerequisites: Start with the sample data, which includes patients with the next appointments
+       `2026-10-05 09:30` (Alex Yeoh), `2026-10-06` (Bernice Yu) and `2026-10-07 14:00` (Irfan Ibrahim).
+       If you have modified the data, delete the data file and relaunch the app to restore the sample data.
+
+    1. Test case: `viewappt 2026-10-07`<br>
+       Expected: Only Irfan Ibrahim is shown in the list. The status message shows `1 patient(s) with appointments on 2026-10-07`.
+
+    1. Test case: `viewappt 2026-11-11`, a date on which no patient has an appointment<br>
+       Expected: An empty list is shown. The status message shows `0 patient(s) with appointments on 2026-11-11`.
+
+    1. Test case: `viewappt 2026-02-30`, an impossible date<br>
+       Expected: The list is unchanged. The status message shows an error: `Dates should be a real date in the format yyyy-MM-dd`.
+
+    1. Test case: `viewappt 15/10/2026`, a date in the wrong format<br>
+       Expected: The list is unchanged. The status message shows the same date format error as above.
+
+    1. Other incorrect `viewappt` commands to try: `viewappt` (missing date), `viewappt 2026-10-15 2026-10-20` (more than one date)<br>
+       Expected: The list is unchanged. The status message shows the correct command format or the date format error.
+
+1. Viewing a date-only appointment next to a timed one on the same day
+
+    1. Prerequisites: Start with the sample data, then add a timed appointment on the same date as Bernice Yu's
+       date-only one: `add --id T0456789D --name Eve Tan --number 98765432 --address Blk 123 Clementi Ave 3, #05-12 --next-appointment 2026-10-06 15:00`.
+
+    1. Test case: `viewappt 2026-10-06`<br>
+       Expected: Both Bernice Yu (appointment `2026-10-06`, no time) and Eve Tan (appointment `2026-10-06 15:00`) are shown.
+       The status message shows `2 patient(s) with appointments on 2026-10-06`.
+
+    1. Note: the list stays filtered after a `viewappt` command. After testing, enter `list` to show all patients again.
+
+1. _{ more test cases …​ }_
+
 ### Saving data
 
 1. Dealing with missing/corrupted data files
