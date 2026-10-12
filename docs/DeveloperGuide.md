@@ -14,6 +14,9 @@ title: Developer Guide
 
 * AI Use Declaration from Qin Fangzheng: "As my career path is not related to software engineering, I choose AI-5/AI-6 as my AI use level, where I get Codex to do the tasks, and then I myself review the results, including feature behavior and partial code."
 
+* AI Use Declaration from Jaydon: "I used Codex and OpenCode to review and generate code.
+  Based on the given levels of AI use in coding tasks, this ranges between AI-2 and AI-5".
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
@@ -332,6 +335,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | record and view a patient's medical profile (conditions, allergies, medications, next-of-kin)        | I know their health details and whom to call in an emergency |
 | `* * *`  | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
 | `* * *`  | home-based nurse | reschedule an appointment in one command                                                            | I don't have to delete and re-add it                         |
+| `* * *`  | home-based nurse | view patients with appointments on a specific date                                                   | I can plan my visits for that day                            |
 | `* `     | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
 
@@ -468,6 +472,29 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 2.
 
+**Use case: UC05 - View patients by appointment date**
+
+**MSS**
+
+1. Nurse requests to view patients with appointments on a date.
+2. LaiNurse shows patients whose next appointment is on that date.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The date is missing, invalid, or does not exist.
+
+    * 1a1. LaiNurse indicates that the date is invalid.
+
+      Use case resumes at step 1.
+
+* 2a. No patients have their next appointment on the given date.
+
+    * 2a1. LaiNurse indicates that there are no matching patients.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
@@ -547,6 +574,42 @@ testers are expected to do more *exploratory* testing.
 
     1. Other incorrect delete commands to try: `delete`, `delete S123-456` (not a valid ID)<br>
        Expected: No patient is deleted. The status message shows the correct command format.
+
+1. _{ more test cases …​ }_
+
+### Viewing patients by appointment date
+
+1. Viewing patients whose next appointment falls on a given date
+
+    1. Prerequisites: Start with the sample data, which includes patients with the next appointments
+       `2026-10-05 09:30` (Alex Yeoh), `2026-10-06` (Bernice Yu) and `2026-10-07 14:00` (Irfan Ibrahim).
+       If you have modified the data, delete the data file and relaunch the app to restore the sample data.
+
+    1. Test case: `viewappt 2026-10-07`<br>
+       Expected: Only Irfan Ibrahim is shown in the list. The status message shows `1 patient(s) with appointments on 2026-10-07`.
+
+    1. Test case: `viewappt 2026-11-11`, a date on which no patient has an appointment<br>
+       Expected: An empty list is shown. The status message shows `0 patient(s) with appointments on 2026-11-11`.
+
+    1. Test case: `viewappt 2026-02-30`, an impossible date<br>
+       Expected: The list is unchanged. The status message shows an error: `Dates should be a real date in the format yyyy-MM-dd`.
+
+    1. Test case: `viewappt 15/10/2026`, a date in the wrong format<br>
+       Expected: The list is unchanged. The status message shows the same date format error as above.
+
+    1. Other incorrect `viewappt` commands to try: `viewappt` (missing date), `viewappt 2026-10-15 2026-10-20` (more than one date)<br>
+       Expected: The list is unchanged. The status message shows the correct command format or the date format error.
+
+1. Viewing a date-only appointment next to a timed one on the same day
+
+    1. Prerequisites: Start with the sample data, then add a timed appointment on the same date as Bernice Yu's
+       date-only one: `add --id T0456789D --name Eve Tan --number 98765432 --address Blk 123 Clementi Ave 3, #05-12 --next-appointment 2026-10-06 15:00`.
+
+    1. Test case: `viewappt 2026-10-06`<br>
+       Expected: Both Bernice Yu (appointment `2026-10-06`, no time) and Eve Tan (appointment `2026-10-06 15:00`) are shown.
+       The status message shows `2 patient(s) with appointments on 2026-10-06`.
+
+    1. Note: the list stays filtered after a `viewappt` command. After testing, enter `list` to show all patients again.
 
 1. _{ more test cases …​ }_
 

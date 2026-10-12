@@ -5,11 +5,10 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.format.ResolverStyle;
 import java.util.Optional;
 
+import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
@@ -18,19 +17,9 @@ import seedu.address.commons.util.TextNormalizer;
  */
 public class NextAppointment {
 
-    public static final String DATE_FORMAT = "yyyy-MM-dd";
-    public static final String TIME_FORMAT = "HH:mm";
-
     public static final String MESSAGE_CONSTRAINTS = "Next appointment should be a real date in the format "
-            + DATE_FORMAT + ", optionally followed by a 24-hour time in the format " + TIME_FORMAT
+            + DateUtil.DATE_FORMAT + ", optionally followed by a 24-hour time in the format " + DateUtil.TIME_FORMAT
             + ", e.g. 2026-09-20 or 2026-09-20 14:00";
-
-    // Strict resolving rejects dates that do not exist, such as 2026-02-30.
-    // "uuuu" is the proleptic year, which strict resolving requires in place of "yyyy".
-    private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT);
-    private static final DateTimeFormatter TIME_FORMATTER =
-            DateTimeFormatter.ofPattern(TIME_FORMAT).withResolverStyle(ResolverStyle.STRICT);
 
     public final String value;
     private final LocalDate date;
@@ -46,8 +35,8 @@ public class NextAppointment {
         checkArgument(isValidNextAppointment(nextAppointment), MESSAGE_CONSTRAINTS);
         value = TextNormalizer.normalize(nextAppointment);
         String[] parts = value.split(" ");
-        date = LocalDate.parse(parts[0], DATE_FORMATTER);
-        time = parts.length == 2 ? LocalTime.parse(parts[1], TIME_FORMATTER) : null;
+        date = DateUtil.parseDate(parts[0]);
+        time = parts.length == 2 ? DateUtil.parseTime(parts[1]) : null;
     }
 
     /**
@@ -60,9 +49,9 @@ public class NextAppointment {
             return false;
         }
         try {
-            LocalDate.parse(parts[0], DATE_FORMATTER);
+            DateUtil.parseDate(parts[0]);
             if (parts.length == 2) {
-                LocalTime.parse(parts[1], TIME_FORMATTER);
+                DateUtil.parseTime(parts[1]);
             }
             return true;
         } catch (DateTimeParseException e) {
