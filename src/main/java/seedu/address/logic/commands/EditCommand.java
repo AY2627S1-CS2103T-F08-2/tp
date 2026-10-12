@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -19,6 +18,7 @@ import seedu.address.model.Model;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 
 /**
@@ -28,51 +28,42 @@ public class EditCommand extends Command {
 
     public static final String COMMAND_WORD = "edit";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the patient identified "
-            + "by the index number used in the displayed patient list. "
-            + "Existing values will be overwritten by the input values.\n"
-            + "Parameters: INDEX (must be a positive integer) "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the patient with the given ID. "
+            + "Existing values will be overwritten by the input values. The ID itself cannot be edited.\n"
+            + "Parameters: ID "
             + "[" + PREFIX_NAME + "NAME] "
-            + "[" + PREFIX_PHONE + "PHONE] "
+            + "[" + PREFIX_PHONE + "NUMBER] "
             + "[" + PREFIX_ADDRESS + "ADDRESS]\n"
-            + "Example: " + COMMAND_WORD + " 1 "
+            + "Example: " + COMMAND_WORD + " T0123456B "
             + PREFIX_PHONE + "91234567 "
             + PREFIX_ADDRESS + "311, Clementi Ave 2, #02-25";
 
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
-    public static final String MESSAGE_DUPLICATE_PATIENT = "This patient already exists in the address book.";
 
-    private final Index index;
+    private final PatientId targetId;
     private final EditPatientDescriptor editPatientDescriptor;
 
     /**
-     * @param index of the patient in the filtered patient list to edit
+     * @param targetId ID of the patient to edit
      * @param editPatientDescriptor details to edit the patient with
      */
-    public EditCommand(Index index, EditPatientDescriptor editPatientDescriptor) {
-        requireNonNull(index);
+    public EditCommand(PatientId targetId, EditPatientDescriptor editPatientDescriptor) {
+        requireNonNull(targetId);
         requireNonNull(editPatientDescriptor);
 
-        this.index = index;
+        this.targetId = targetId;
         this.editPatientDescriptor = new EditPatientDescriptor(editPatientDescriptor);
     }
 
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        List<Patient> lastShownList = model.getFilteredPatientList();
+        List<Patient> allPatients = model.getAddressBook().getPatientList();
 
-        if (index.getZeroBased() >= lastShownList.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
-        }
-
-        Patient patientToEdit = lastShownList.get(index.getZeroBased());
+        Patient patientToEdit = allPatients.stream().filter(patient -> patient.getId().equals(targetId))
+                .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
         Patient editedPatient = createEditedPatient(patientToEdit, editPatientDescriptor);
-
-        if (!patientToEdit.isSamePatient(editedPatient) && model.hasPatient(editedPatient)) {
-            throw new CommandException(MESSAGE_DUPLICATE_PATIENT);
-        }
 
         model.setPatient(patientToEdit, editedPatient);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
@@ -81,7 +72,7 @@ public class EditCommand extends Command {
 
     /**
      * Creates and returns a {@code Patient} with the details of {@code patientToEdit}
-     * edited with {@code editPatientDescriptor}.
+     * edited with {@code editPatientDescriptor}. The patient ID is never changed.
      */
     private static Patient createEditedPatient(Patient patientToEdit, EditPatientDescriptor editPatientDescriptor) {
         assert patientToEdit != null;
@@ -105,14 +96,14 @@ public class EditCommand extends Command {
             return false;
         }
 
-        return index.equals(otherEditCommand.index)
+        return targetId.equals(otherEditCommand.targetId)
                 && editPatientDescriptor.equals(otherEditCommand.editPatientDescriptor);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                .add("index", index)
+                .add("targetId", targetId)
                 .add("editPatientDescriptor", editPatientDescriptor)
                 .toString();
     }

@@ -6,10 +6,10 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
-import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.PatientId;
 
 /**
  * Parses input arguments and creates a new EditCommand object
@@ -26,10 +26,10 @@ public class EditCommandParser implements Parser<EditCommand> {
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS);
 
-        Index index;
+        PatientId id;
 
         try {
-            index = ParserUtil.parseIndex(argMultimap.getPreamble());
+            id = ParserUtil.parseId(argMultimap.getPreamble());
         } catch (ParseException pe) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE), pe);
         }
@@ -52,7 +52,7 @@ public class EditCommandParser implements Parser<EditCommand> {
             throw new ParseException(EditCommand.MESSAGE_NOT_EDITED);
         }
 
-        return new EditCommand(index, editPatientDescriptor);
+        return new EditCommand(id, editPatientDescriptor);
     }
 
 }
