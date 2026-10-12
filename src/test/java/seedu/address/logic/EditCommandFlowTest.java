@@ -190,10 +190,10 @@ public class EditCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("edit S12345678901 --name Alex", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
 
-        // the ID cannot be edited, and --appt belongs to add
+        // the ID cannot be edited, and --next-appointment belongs to add
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --id S9999999Z", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --appt 2026-10-10", ParseException.class,
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --next-appointment 2026-10-10", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
 
         // single-valued field repeated

@@ -26,10 +26,10 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_MEDICAL_HISTORY
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -77,7 +77,8 @@ public class AddCommandParserTest {
         String validPatientString = ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
                 + MEDICAL_HISTORY_DESC_BOB;
 
-        assertParseSuccess(parser, validPatientString + APPOINTMENT_DESC_BOB + " " + PREFIX_APPOINTMENT + "2026-12-15",
+        assertParseSuccess(parser,
+                validPatientString + APPOINTMENT_DESC_BOB + " " + PREFIX_NEXT_APPOINTMENT + "2026-12-15",
                 new AddCommand(expectedPatient));
 
         // same appointment twice is kept once

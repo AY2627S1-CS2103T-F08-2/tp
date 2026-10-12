@@ -78,7 +78,7 @@ public class AddCommandFlowTest {
     @Test
     public void execute_dateOnlyAppointment_persisted() throws Exception {
         Patient expectedPatient = new PatientBuilder(AMY).withAppointments("2026-09-20").build();
-        assertAddedPatientPersisted(AddCommand.COMMAND_WORD + " --appt 2026-09-20"
+        assertAddedPatientPersisted(AddCommand.COMMAND_WORD + " --next-appointment 2026-09-20"
                 + NAME_DESC_AMY + ADDRESS_DESC_AMY + ID_DESC_AMY + PHONE_DESC_AMY, expectedPatient);
     }
 
@@ -114,7 +114,7 @@ public class AddCommandFlowTest {
 
         assertRejectedCommandLeavesDataUnchanged(command + " --medical-history", ParseException.class,
                 MedicalHistory.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged(command + " --appt", ParseException.class,
+        assertRejectedCommandLeavesDataUnchanged(command + " --next-appointment", ParseException.class,
                 Appointment.MESSAGE_CONSTRAINTS);
     }
 
