@@ -68,6 +68,12 @@ public class EditCommandFlowTest {
     }
 
     @Test
+    public void execute_tabSeparatedOptions_edited() throws Exception {
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withPhone("71234567").build();
+        assertEditPersisted("edit S1234567A\t--number\t71234567", ALEX_ID, expected);
+    }
+
+    @Test
     public void execute_lowerCaseIdAndExtraSpaces_normalized() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withName("Alex Tan").build();
         assertEditPersisted("edit   s1234567a   --name   alex    tan  ", ALEX_ID, expected);
@@ -175,6 +181,12 @@ public class EditCommandFlowTest {
                 Phone.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --medical-history  --name Alex",
                 ParseException.class, MedicalHistory.MESSAGE_CONSTRAINTS);
+
+        // option with no value at the end of the command
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt", ParseException.class,
+                Appointment.MESSAGE_CONSTRAINTS);
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --number", ParseException.class,
+                Phone.MESSAGE_CONSTRAINTS);
     }
 
     @Test

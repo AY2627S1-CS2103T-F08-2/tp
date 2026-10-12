@@ -9,8 +9,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import seedu.address.logic.commands.AddCommand;
@@ -28,8 +26,6 @@ import seedu.address.model.patient.Phone;
  */
 public class AddCommandParser implements Parser<AddCommand> {
 
-    private static final Pattern OPTION_PATTERN = Pattern.compile("(?<!\\S)--\\S*");
-
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
      * and returns an AddCommand object for execution.
@@ -37,7 +33,9 @@ public class AddCommandParser implements Parser<AddCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public AddCommand parse(String args) throws ParseException {
-        String normalizedArgs = normalizeOptionSeparators(args);
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE),
+                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_APPOINTMENT);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
                         PREFIX_MEDICAL_HISTORY, PREFIX_APPOINTMENT);
@@ -64,27 +62,6 @@ public class AddCommandParser implements Parser<AddCommand> {
         Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory), appointments);
 
         return new AddCommand(patient);
-    }
-
-    /**
-     * Recognizes whitespace-delimited long options and supplies space separators for the existing tokenizer.
-     *
-     * @throws ParseException if an option is not supported by the add command.
-     */
-    private static String normalizeOptionSeparators(String args) throws ParseException {
-        Matcher matcher = OPTION_PATTERN.matcher(args);
-        StringBuilder normalizedArgs = new StringBuilder();
-        while (matcher.find()) {
-            String option = matcher.group();
-            if (Stream.of(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                    PREFIX_MEDICAL_HISTORY, PREFIX_APPOINTMENT)
-                    .noneMatch(prefix -> prefix.getPrefix().trim().equals(option))) {
-                throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
-            }
-            matcher.appendReplacement(normalizedArgs, Matcher.quoteReplacement(" " + option + " "));
-        }
-        matcher.appendTail(normalizedArgs);
-        return normalizedArgs.toString();
     }
 
     /**

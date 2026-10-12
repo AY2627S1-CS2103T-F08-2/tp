@@ -26,16 +26,18 @@ public class EditCommandParser implements Parser<EditCommand> {
      */
     public EditCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        ArgumentMultimap argMultimap =
-                ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
-                        PREFIX_ADD_APPOINTMENT, PREFIX_REMOVE_APPOINTMENT);
+        String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
+        Prefix[] prefixes = {PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
+            PREFIX_ADD_APPOINTMENT, PREFIX_REMOVE_APPOINTMENT};
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage, prefixes);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, prefixes);
 
         PatientId id;
 
         try {
             id = ParserUtil.parseId(argMultimap.getPreamble());
         } catch (ParseException pe) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE), pe);
+            throw new ParseException(invalidFormatMessage, pe);
         }
 
         // Appointments may be added or removed more than once, so they are not checked for duplicates

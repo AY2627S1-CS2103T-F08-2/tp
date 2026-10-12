@@ -167,6 +167,32 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_tabSeparatedOptions_success() {
+        PatientId targetId = new PatientId(VALID_ID_AMY);
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withPhone(VALID_PHONE_BOB)
+                .withAppointmentsToAdd("2026-10-20 09:30").build();
+        assertParseSuccess(parser, VALID_ID_AMY + "\t--number\t" + VALID_PHONE_BOB + "\t--add-appt\t2026-10-20 09:30",
+                new EditCommand(targetId, descriptor));
+    }
+
+    @Test
+    public void parse_finalOptionWithoutValue_failure() {
+        // the option is recognized, so the error names the field instead of showing the usage
+        assertParseFailure(parser, VALID_ID_AMY + " --add-appt", Appointment.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --remove-appt", Appointment.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --number", Phone.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --medical-history", MedicalHistory.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_unsupportedOption_failure() {
+        // misspelt option, an add-only option, and the ID, which cannot be edited
+        assertParseFailure(parser, VALID_ID_AMY + " --nmae Alex", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, VALID_ID_AMY + " --appt 2026-10-20", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, VALID_ID_AMY + " --id S9999999Z", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
     public void parse_invalidAppointment_failure() {
         assertParseFailure(parser, VALID_ID_AMY + " " + PREFIX_ADD_APPOINTMENT + "2026-02-30",
                 Appointment.MESSAGE_CONSTRAINTS);
