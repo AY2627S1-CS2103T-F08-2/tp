@@ -198,6 +198,25 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Finding patients by substrings
+
+`FindCommandParser` recognizes the six patient-field options defined in `CliSyntax`. It normalizes option separators
+using the same approach as `add`, then reuses `ArgumentTokenizer` and `ArgumentMultimap` to extract values and reject
+duplicate options. At least one option is required, and every supplied value must be non-blank. Matching straight or
+curly double quotes surrounding a complete value are removed. Unknown options, unexpected preamble text, and malformed
+quotes cause a `ParseException` before the displayed list is changed. Words beginning with `--` remain reserved for
+options, including inside quoted values.
+
+`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by `TextNormalizer`. Each criterion
+is a literal, contiguous substring of its corresponding stored field. The criteria combine using OR, so a patient is
+included if any supplied criterion matches. Missing medical history or appointment contributes no match for that field.
+Phone and appointment criteria are substrings rather than complete field values, so the parser does not apply the
+validation used when adding those fields.
+
+`FindCommand` applies the predicate through `Model#updateFilteredPatientList()` and reports the existing patient count
+message. This replaces the previous filter and searches the full patient collection while preserving its order.
+Filtering does not change patient records. `list` restores the full list.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -383,22 +402,28 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to find a patient by name or ID
+1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, medical history, or next appointment
 2.  LaiNurse shows a list of matching patients
 
     Use case ends.
 
 **Extensions**
 
-* 1a. The search keyword is missing.
+* 1a. No search option is supplied, or a supplied value is blank.
 
     * 1a1. LaiNurse shows an error message.
 
       Use case resumes at step 1.
 
-* 2a. No patients match the keyword.
+* 1b. An option is unknown or repeated, or the command contains unexpected text or malformed quotes.
 
-    * 2a1. LaiNurse shows a message that no matching patients were found.
+    * 1b1. LaiNurse shows an error message and keeps the displayed list unchanged.
+
+      Use case resumes at step 1.
+
+* 2a. No patients match any supplied field substring.
+
+    * 2a1. LaiNurse shows an empty list and a count of zero matching patients.
 
       Use case ends.
 
@@ -576,6 +601,60 @@ testers are expected to do more *exploratory* testing.
        Expected: No patient is deleted. The status message shows the correct command format.
 
 1. _{ more test cases …​ }_
+
+### Finding patients by substrings
+
+1. Searching each patient field
+
+    1. Prerequisites: Start with the unmodified sample data and enter `list`.
+
+    1. Test case: `find --id 0123`<br>
+       Expected: Only Charlotte Oliveiro is shown, because her ID contains `0123`.
+
+    1. Test case: `find --name "lex"`<br>
+       Expected: Only Alex Yeoh is shown. Partial names match, even though the previous search showed another patient.
+
+    1. Test case: `find --address “  sErAnGoOn   gArDeNs ”`<br>
+       Expected: Bernice Yu and David Li are shown. Matching ignores case and repeated whitespace, and accepts curly quotes.
+
+    1. Test case: `find --number 4388`<br>
+       Expected: Only Alex Yeoh is shown, because his phone number contains `4388`.
+
+    1. Test case: `find --medical-history penicillin`<br>
+       Expected: Only Bernice Yu is shown. Patients without medical history do not match this criterion.
+
+    1. Test case: `find --next-appointment 2026-10`<br>
+       Expected: Alex Yeoh, Bernice Yu and Irfan Ibrahim are shown. Both date-only and timed appointments can match.
+
+    1. Test case: `find --next-appointment "09:30"`<br>
+       Expected: Only Alex Yeoh is shown. Patients without an appointment do not match this criterion.
+
+1. Combining substrings and restoring the list
+
+    1. Test case: `find --name Alex --address "Serangoon Gardens"`<br>
+       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in their original order. Either field may match.
+
+    1. Test case: `find --name Alex --id 1234567`<br>
+       Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though both criteria match him.
+
+    1. Test case: `find --address "Gardens Serangoon"`<br>
+       Expected: An empty list is shown with a count of zero. Multiword values must match a contiguous substring.
+
+    1. Test case: `list`<br>
+       Expected: All six sample patients are shown again.
+
+1. Rejecting invalid commands
+
+    1. Prerequisites: Enter `find --name Alex`, so only Alex Yeoh is shown.
+
+    1. Test cases: `find`, `find Alex`, `find --name ""`, `find --name "Alex`, `find --name “Alex"`,
+       `find --name "Alex" trailing`, `find --unknown Alex`, and `find --name=Alex`<br>
+       Expected: The displayed list and patient records are unchanged. The status message shows the command usage instructions.
+
+    1. Test case: `find --name Alex --name Bernice`<br>
+       Expected: The displayed list and patient records are unchanged. The status message shows a duplicate-option error.
+
+    1. Enter `list` after testing to show all patients again.
 
 ### Viewing patients by appointment date
 
