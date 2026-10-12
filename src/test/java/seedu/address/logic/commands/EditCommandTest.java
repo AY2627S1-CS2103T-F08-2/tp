@@ -16,6 +16,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
+import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import org.junit.jupiter.api.Test;
@@ -95,6 +96,54 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_addAppointments_success() {
+        // BENSON already has an appointment on 2026-10-05 09:30
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withAppointmentsToAdd("2026-11-03", "2026-10-05 09:30").build();
+        Patient editedPatient = new PatientBuilder(BENSON).withAppointments("2026-10-05 09:30", "2026-11-03").build();
+
+        assertEditSuccess(BENSON, descriptor, editedPatient);
+    }
+
+    @Test
+    public void execute_removeAppointment_success() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withAppointmentsToRemove("2026-10-05 09:30").build();
+        Patient editedPatient = new PatientBuilder(BENSON).withAppointments().build();
+
+        assertEditSuccess(BENSON, descriptor, editedPatient);
+    }
+
+    @Test
+    public void execute_removeAndAddAppointment_movesAppointment() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withAppointmentsToRemove("2026-10-05 09:30").withAppointmentsToAdd("2026-10-07 14:00").build();
+        Patient editedPatient = new PatientBuilder(BENSON).withAppointments("2026-10-07 14:00").build();
+
+        assertEditSuccess(BENSON, descriptor, editedPatient);
+    }
+
+    @Test
+    public void execute_removeAndAddSameAppointment_keepsAppointment() {
+        // removals happen before additions, so the appointment is still there afterwards
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withAppointmentsToRemove("2026-10-05 09:30").withAppointmentsToAdd("2026-10-05 09:30").build();
+
+        assertEditSuccess(BENSON, descriptor, BENSON);
+    }
+
+    @Test
+    public void execute_removeMissingAppointment_failure() {
+        // BENSON's appointment has a time, so a date-only appointment on the same day does not match
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withAppointmentsToRemove("2026-10-05").build();
+        EditCommand editCommand = new EditCommand(BENSON.getId(), descriptor);
+
+        assertCommandFailure(editCommand, model,
+                String.format(EditCommand.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05"));
+    }
+
+    @Test
     public void execute_noFieldSpecified_success() {
         Patient firstPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         EditCommand editCommand = new EditCommand(firstPatient.getId(), new EditPatientDescriptor());
@@ -156,6 +205,21 @@ public class EditCommandTest {
         EditCommand editCommand = new EditCommand(new PatientId(VALID_ID_AMY), descriptor);
 
         assertCommandFailure(editCommand, model, Messages.MESSAGE_INVALID_PATIENT_ID);
+    }
+
+    /**
+     * Asserts that editing {@code patientToEdit} with {@code descriptor} succeeds and gives {@code editedPatient}.
+     */
+    private void assertEditSuccess(Patient patientToEdit, EditPatientDescriptor descriptor, Patient editedPatient) {
+        EditCommand editCommand = new EditCommand(patientToEdit.getId(), descriptor);
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
+                Messages.format(editedPatient));
+
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPatient(patientToEdit, editedPatient);
+
+        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
     @Test

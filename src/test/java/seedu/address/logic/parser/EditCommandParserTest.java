@@ -20,8 +20,10 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_REMOVE_APPOINTMENT;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -31,6 +33,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.PatientId;
@@ -137,6 +140,38 @@ public class EditCommandParserTest {
         descriptor = new EditPatientDescriptorBuilder().withMedicalHistory(VALID_MEDICAL_HISTORY_BOB).build();
         expectedCommand = new EditCommand(targetId, descriptor);
         assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
+    public void parse_appointments_success() {
+        PatientId targetId = new PatientId(VALID_ID_AMY);
+
+        // one appointment to add, given on its own
+        String userInput = VALID_ID_AMY + " " + PREFIX_ADD_APPOINTMENT + "2026-10-20 09:30";
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withAppointmentsToAdd("2026-10-20 09:30").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetId, descriptor));
+
+        // several appointments to add
+        userInput = VALID_ID_AMY + " " + PREFIX_ADD_APPOINTMENT + "2026-10-20 09:30 "
+                + PREFIX_ADD_APPOINTMENT + "2026-11-03";
+        descriptor = new EditPatientDescriptorBuilder().withAppointmentsToAdd("2026-10-20 09:30", "2026-11-03").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetId, descriptor));
+
+        // remove and add in one command, together with another field
+        userInput = VALID_ID_AMY + PHONE_DESC_BOB + " " + PREFIX_REMOVE_APPOINTMENT + "2026-10-20 09:30 "
+                + PREFIX_ADD_APPOINTMENT + "2026-10-22 14:00";
+        descriptor = new EditPatientDescriptorBuilder().withPhone(VALID_PHONE_BOB)
+                .withAppointmentsToRemove("2026-10-20 09:30").withAppointmentsToAdd("2026-10-22 14:00").build();
+        assertParseSuccess(parser, userInput, new EditCommand(targetId, descriptor));
+    }
+
+    @Test
+    public void parse_invalidAppointment_failure() {
+        assertParseFailure(parser, VALID_ID_AMY + " " + PREFIX_ADD_APPOINTMENT + "2026-02-30",
+                Appointment.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " " + PREFIX_REMOVE_APPOINTMENT + "2026/10/20",
+                Appointment.MESSAGE_CONSTRAINTS);
     }
 
     @Test

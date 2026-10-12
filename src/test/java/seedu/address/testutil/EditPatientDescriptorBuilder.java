@@ -6,6 +6,7 @@ import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.util.SampleDataUtil;
 
 /**
  * A utility class to help with building EditPatientDescriptor objects.
@@ -62,6 +63,22 @@ public class EditPatientDescriptorBuilder {
      */
     public EditPatientDescriptorBuilder withMedicalHistory(String medicalHistory) {
         descriptor.setMedicalHistory(new MedicalHistory(medicalHistory));
+        return this;
+    }
+
+    /**
+     * Sets the appointments to add of the {@code EditPatientDescriptor} that we are building.
+     */
+    public EditPatientDescriptorBuilder withAppointmentsToAdd(String... appointments) {
+        descriptor.setAppointmentsToAdd(SampleDataUtil.getAppointments(appointments));
+        return this;
+    }
+
+    /**
+     * Sets the appointments to remove of the {@code EditPatientDescriptor} that we are building.
+     */
+    public EditPatientDescriptorBuilder withAppointmentsToRemove(String... appointments) {
+        descriptor.setAppointmentsToRemove(SampleDataUtil.getAppointments(appointments));
         return this;
     }
 
