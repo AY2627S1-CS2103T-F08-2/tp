@@ -8,6 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ID_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ID_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_MEDICAL_HISTORY_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
@@ -39,7 +40,7 @@ public class EditCommandTest {
 
     @Test
     public void execute_allFieldsSpecified_success() {
-        // Edit cannot change the ID, medical history or next appointment, so these are kept from the first patient
+        // Edit cannot change the ID or next appointment, so these are kept from the first patient
         Patient firstPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         Patient editedPatient = new PatientBuilder(firstPatient).withName(VALID_NAME_BOB)
                 .withPhone(VALID_PHONE_BOB).withAddress(VALID_ADDRESS_BOB).build();
@@ -71,6 +72,24 @@ public class EditCommandTest {
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         expectedModel.setPatient(lastPatient, editedPatient);
+
+        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_medicalHistorySpecified_success() {
+        // Only the medical history changes; the other fields are kept
+        Patient firstPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
+        Patient editedPatient = new PatientBuilder(firstPatient).withMedicalHistory(VALID_MEDICAL_HISTORY_BOB).build();
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
+                .withMedicalHistory(VALID_MEDICAL_HISTORY_BOB).build();
+        EditCommand editCommand = new EditCommand(firstPatient.getId(), descriptor);
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
+                Messages.format(editedPatient));
+
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPatient(firstPatient, editedPatient);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
@@ -110,14 +129,17 @@ public class EditCommandTest {
     @Test
     public void execute_sameDetailsAsOtherPatient_successAndKeepsId() {
         // Patients are identified by ID, which edit cannot change, so copying another patient's
-        // name, phone and address does not create a duplicate
+        // name, phone, address and medical history does not create a duplicate
         Patient firstPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         Patient secondPatient = model.getFilteredPatientList().get(INDEX_SECOND_PATIENT.getZeroBased());
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder(firstPatient).build();
         EditCommand editCommand = new EditCommand(secondPatient.getId(), descriptor);
 
-        Patient editedPatient = new PatientBuilder(secondPatient).withName(firstPatient.getName().fullName)
-                .withPhone(firstPatient.getPhone().value).withAddress(firstPatient.getAddress().value).build();
+        PatientBuilder editedPatientBuilder = new PatientBuilder(secondPatient)
+                .withName(firstPatient.getName().fullName).withPhone(firstPatient.getPhone().value)
+                .withAddress(firstPatient.getAddress().value);
+        firstPatient.getMedicalHistory().ifPresent(history -> editedPatientBuilder.withMedicalHistory(history.value));
+        Patient editedPatient = editedPatientBuilder.build();
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(editedPatient));
 

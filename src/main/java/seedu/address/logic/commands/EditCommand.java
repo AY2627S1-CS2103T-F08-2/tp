@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
@@ -16,6 +17,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
@@ -33,7 +35,8 @@ public class EditCommand extends Command {
             + "Parameters: ID "
             + "[" + PREFIX_NAME + "NAME] "
             + "[" + PREFIX_PHONE + "NUMBER] "
-            + "[" + PREFIX_ADDRESS + "ADDRESS]\n"
+            + "[" + PREFIX_ADDRESS + "ADDRESS] "
+            + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL_HISTORY]\n"
             + "Example: " + COMMAND_WORD + " T0123456B "
             + PREFIX_PHONE + "91234567 "
             + PREFIX_ADDRESS + "311, Clementi Ave 2, #02-25";
@@ -80,9 +83,11 @@ public class EditCommand extends Command {
         Name updatedName = editPatientDescriptor.getName().orElse(patientToEdit.getName());
         Phone updatedPhone = editPatientDescriptor.getPhone().orElse(patientToEdit.getPhone());
         Address updatedAddress = editPatientDescriptor.getAddress().orElse(patientToEdit.getAddress());
+        Optional<MedicalHistory> updatedMedicalHistory = editPatientDescriptor.getMedicalHistory()
+                .or(patientToEdit::getMedicalHistory);
 
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                patientToEdit.getMedicalHistory(), patientToEdit.getNextAppointment());
+                updatedMedicalHistory, patientToEdit.getNextAppointment());
     }
 
     @Override
@@ -116,6 +121,7 @@ public class EditCommand extends Command {
         private Name name;
         private Phone phone;
         private Address address;
+        private MedicalHistory medicalHistory;
 
         public EditPatientDescriptor() {}
 
@@ -126,13 +132,14 @@ public class EditCommand extends Command {
             setName(toCopy.name);
             setPhone(toCopy.phone);
             setAddress(toCopy.address);
+            setMedicalHistory(toCopy.medicalHistory);
         }
 
         /**
          * Returns true if at least one field is edited.
          */
         public boolean isAnyFieldEdited() {
-            return CollectionUtil.isAnyNonNull(name, phone, address);
+            return CollectionUtil.isAnyNonNull(name, phone, address, medicalHistory);
         }
 
         public void setName(Name name) {
@@ -159,6 +166,14 @@ public class EditCommand extends Command {
             return Optional.ofNullable(address);
         }
 
+        public void setMedicalHistory(MedicalHistory medicalHistory) {
+            this.medicalHistory = medicalHistory;
+        }
+
+        public Optional<MedicalHistory> getMedicalHistory() {
+            return Optional.ofNullable(medicalHistory);
+        }
+
         @Override
         public boolean equals(Object other) {
             if (other == this) {
@@ -172,7 +187,8 @@ public class EditCommand extends Command {
 
             return Objects.equals(name, otherEditPatientDescriptor.name)
                     && Objects.equals(phone, otherEditPatientDescriptor.phone)
-                    && Objects.equals(address, otherEditPatientDescriptor.address);
+                    && Objects.equals(address, otherEditPatientDescriptor.address)
+                    && Objects.equals(medicalHistory, otherEditPatientDescriptor.medicalHistory);
         }
 
         @Override
@@ -181,6 +197,7 @@ public class EditCommand extends Command {
                     .add("name", name)
                     .add("phone", phone)
                     .add("address", address)
+                    .add("medicalHistory", medicalHistory)
                     .toString();
         }
     }
