@@ -41,7 +41,7 @@ public class EditCommandTest {
 
     @Test
     public void execute_allFieldsSpecified_success() {
-        // Edit cannot change the ID or next appointment, so these are kept from the first patient
+        // The descriptor copies no appointments and the ID cannot be edited, so these are kept from the first patient
         Patient firstPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         Patient editedPatient = new PatientBuilder(firstPatient).withName(VALID_NAME_BOB)
                 .withPhone(VALID_PHONE_BOB).withAddress(VALID_ADDRESS_BOB).build();

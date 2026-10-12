@@ -26,10 +26,10 @@ public class AppointmentTest {
 
     @Test
     public void isValidAppointment() {
-        // null next appointment
+        // null appointment
         assertThrows(NullPointerException.class, () -> Appointment.isValidAppointment(null));
 
-        // invalid next appointments
+        // invalid appointments
         assertFalse(Appointment.isValidAppointment("")); // empty string
         assertFalse(Appointment.isValidAppointment(" ")); // spaces only
         assertFalse(Appointment.isValidAppointment("2026/09/20")); // wrong separator
@@ -45,7 +45,7 @@ public class AppointmentTest {
         assertFalse(Appointment.isValidAppointment("2026-09-20 14:00 extra")); // trailing text
         assertFalse(Appointment.isValidAppointment("tomorrow")); // not a date
 
-        // valid next appointments
+        // valid appointments
         assertTrue(Appointment.isValidAppointment("2026-09-20")); // date only
         assertTrue(Appointment.isValidAppointment("2026-09-20 14:00")); // date and time
         assertTrue(Appointment.isValidAppointment("2026-09-20 00:00")); // midnight

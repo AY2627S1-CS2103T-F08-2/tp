@@ -104,7 +104,7 @@ public class AppointmentBetweenDatesPredicateTest {
         // several appointments, none in range -> returns false
         assertFalse(predicate.test(new PatientBuilder().withAppointments("2026-10-01", "2026-11-01").build()));
 
-        // Patient with no next appointment
+        // Patient with no appointment
         assertFalse(predicate.test(new PatientBuilder().build()));
     }
 

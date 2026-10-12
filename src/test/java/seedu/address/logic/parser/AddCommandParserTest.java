@@ -180,7 +180,7 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_optionalFieldsMissing_success() {
-        // no medical history or next appointment
+        // no medical history or appointment
         Patient expectedPatient = new PatientBuilder(AMY).build();
         assertParseSuccess(parser, ID_DESC_AMY + NAME_DESC_AMY + PHONE_DESC_AMY + ADDRESS_DESC_AMY,
                 new AddCommand(expectedPatient));
@@ -243,7 +243,7 @@ public class AddCommandParserTest {
                         + INVALID_MEDICAL_HISTORY_DESC + APPOINTMENT_DESC_BOB,
                 MedicalHistory.MESSAGE_CONSTRAINTS);
 
-        // invalid next appointment
+        // invalid appointment
         assertParseFailure(parser, ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
                         + MEDICAL_HISTORY_DESC_BOB + INVALID_APPOINTMENT_DESC,
                 Appointment.MESSAGE_CONSTRAINTS);
@@ -258,7 +258,7 @@ public class AddCommandParserTest {
                 MedicalHistory.MESSAGE_CONSTRAINTS);
 
         // reordered invalid values, invalid value reported follows the following precedence order:
-        // ID, name, number, address, medical history, next appointment
+        // ID, name, number, address, medical history, appointment
         assertParseFailure(parser, ID_DESC_BOB + PHONE_DESC_BOB + INVALID_ADDRESS_DESC + INVALID_NAME_DESC
                         + MEDICAL_HISTORY_DESC_BOB + APPOINTMENT_DESC_BOB,
                 Name.MESSAGE_CONSTRAINTS);
