@@ -56,7 +56,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Items followed by `…`​ can appear zero or more times.<br>
   For example, `[KEYWORD]…​` may be omitted, or written as `John` or `John Jane`.
 
-* Parameters can be in any order.<br>
+* Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --number NUMBER`, `--number NUMBER --name NAME` is also acceptable.
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
