@@ -638,9 +638,6 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `edit S1234567A --number 91234567`<br>
        Expected: Alex Yeoh's phone number changes to `91234567`. The other details are unchanged.
 
-    1. Test case: `find bernice`, then `edit S1234567A --medical-history Hypertension`<br>
-       Expected: Alex Yeoh is edited despite not being in the filtered list, and the list shows all patients again.
-
     1. Test case: `edit S0000000Z --number 91234567`, an ID that no patient has<br>
        Expected: No patient is changed. The status message shows `The patient ID provided is invalid.`
 

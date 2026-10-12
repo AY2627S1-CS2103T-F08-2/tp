@@ -118,7 +118,7 @@ Format: `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-
 * `--add-appt` adds an appointment, and `--remove-appt` removes one. Both can be repeated. Appointments use the same format as in `add`.
 * `--remove-appt` must match an existing appointment exactly. For example, `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`. If any appointment to remove is not found, nothing is changed.
 * Appointments are removed before they are added, so one command can move an appointment to a new date. Adding an appointment the patient already has makes no change.
-* After a patient is edited, the list shows all patients again, even if it was showing `find` or `viewappt` results.
+* After a patient is edited, the list shows all patients again.
 
 Examples:
 *  `edit S1234567A --number 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.

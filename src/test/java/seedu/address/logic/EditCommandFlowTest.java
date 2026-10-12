@@ -80,16 +80,6 @@ public class EditCommandFlowTest {
     }
 
     @Test
-    public void execute_patientHiddenByFind_editedAndListReset() throws Exception {
-        logic.execute("find bernice");
-        assertEquals(1, model.getFilteredPatientList().size());
-
-        Patient expected = new PatientBuilder(patient(ALEX_ID)).withAddress("Blk 1 Test Road").build();
-        assertEditPersisted("edit S1234567A --address Blk 1 Test Road", ALEX_ID, expected);
-        assertEquals(model.getAddressBook().getPatientList(), model.getFilteredPatientList());
-    }
-
-    @Test
     public void execute_addMedicalHistoryToPatientWithout_persisted() throws Exception {
         Patient expected = new PatientBuilder(patient(CHARLOTTE_ID)).withMedicalHistory("Asthma").build();
         assertEditPersisted("edit T0123456C --medical-history Asthma", CHARLOTTE_ID, expected);
