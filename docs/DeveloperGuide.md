@@ -367,7 +367,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1c. The given next appointment date/time is invalid.
+* 1c. One of the given appointment dates/times is invalid.
 
     * 1c1. LaiNurse shows an error message.
 
@@ -436,8 +436,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1.  Nurse <u>finds the patient (UC02)</u>
-2.  Nurse requests to edit the patient by ID with the fields to change
-3.  LaiNurse updates the patient's details
+2.  Nurse requests to edit the patient by ID with the fields to change, and any appointments to add or remove
+3.  LaiNurse updates the patient's details and appointments
 4.  LaiNurse shows the updated details of the patient
 
     Use case ends.
@@ -466,18 +466,30 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 2.
 
-* 2d. The new ID already belongs to another patient.
+* 2d. Nurse tries to change the patient's ID.
 
-    * 2d1. LaiNurse shows an error message.
+    * 2d1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
 
       Use case resumes at step 2.
+
+* 2e. An appointment to remove is not one of the patient's appointments.
+
+    * 2e1. LaiNurse shows an error message naming the appointment, and makes no changes.
+
+      Use case resumes at step 2.
+
+* 2f. An appointment to add is one the patient already has.
+
+    * 2f1. LaiNurse keeps a single copy of the appointment.
+
+      Use case resumes at step 3.
 
 **Use case: UC05 - View patients by appointment date**
 
 **MSS**
 
 1. Nurse requests to view patients with appointments on a date.
-2. LaiNurse shows patients whose next appointment is on that date.
+2. LaiNurse shows patients who have any appointment on that date.
 
    Use case ends.
 
@@ -489,7 +501,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 2a. No patients have their next appointment on the given date.
+* 2a. No patients have an appointment on the given date.
 
     * 2a1. LaiNurse indicates that there are no matching patients.
 
@@ -528,8 +540,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   true residential location, as some treatment, e.g. rehabilitation post surgery may be done outdoors.
 * **Medical History**: Free-form textual records capturing relevant chronic conditions, allergies, past diagnoses, or
   ongoing medical concerns of a patient (e.g., "dementia").
-* **Next Appointment**: The scheduled date or timestamp for the nurse's upcoming home visit to a patient. It is in valid
-  date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd hh:mm in 24-hour format.
+* **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
+  have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
+  24-hour format.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -579,14 +592,17 @@ testers are expected to do more *exploratory* testing.
 
 ### Viewing patients by appointment date
 
-1. Viewing patients whose next appointment falls on a given date
+1. Viewing patients who have an appointment on a given date
 
-    1. Prerequisites: Start with the sample data, which includes patients with the next appointments
-       `2026-10-05 09:30` (Alex Yeoh), `2026-10-06` (Bernice Yu) and `2026-10-07 14:00` (Irfan Ibrahim).
+    1. Prerequisites: Start with the sample data, which includes patients with the appointments
+       `2026-10-05 09:30` and `2026-11-02` (Alex Yeoh), `2026-10-06` (Bernice Yu) and `2026-10-07 14:00` (Irfan Ibrahim).
        If you have modified the data, delete the data file and relaunch the app to restore the sample data.
 
     1. Test case: `viewappt 2026-10-07`<br>
        Expected: Only Irfan Ibrahim is shown in the list. The status message shows `1 patient(s) with appointments on 2026-10-07`.
+
+    1. Test case: `viewappt 2026-11-02`, the date of Alex Yeoh's second appointment<br>
+       Expected: Only Alex Yeoh is shown, because every appointment of each patient is checked.
 
     1. Test case: `viewappt 2026-11-11`, a date on which no patient has an appointment<br>
        Expected: An empty list is shown. The status message shows `0 patient(s) with appointments on 2026-11-11`.
@@ -603,7 +619,7 @@ testers are expected to do more *exploratory* testing.
 1. Viewing a date-only appointment next to a timed one on the same day
 
     1. Prerequisites: Start with the sample data, then add a timed appointment on the same date as Bernice Yu's
-       date-only one: `add --id T0456789D --name Eve Tan --number 98765432 --address Blk 123 Clementi Ave 3, #05-12 --next-appointment 2026-10-06 15:00`.
+       date-only one: `add --id T0456789D --name Eve Tan --number 98765432 --address Blk 123 Clementi Ave 3, #05-12 --appt 2026-10-06 15:00`.
 
     1. Test case: `viewappt 2026-10-06`<br>
        Expected: Both Bernice Yu (appointment `2026-10-06`, no time) and Eve Tan (appointment `2026-10-06 15:00`) are shown.
@@ -612,6 +628,40 @@ testers are expected to do more *exploratory* testing.
     1. Note: the list stays filtered after a `viewappt` command. After testing, enter `list` to show all patients again.
 
 1. _{ more test cases …​ }_
+
+### Editing a patient
+
+1. Editing a patient's details by ID
+
+    1. Prerequisites: Start with the sample data. Alex Yeoh has the ID `S1234567A`.
+
+    1. Test case: `edit S1234567A --number 91234567`<br>
+       Expected: Alex Yeoh's phone number changes to `91234567`. The other details are unchanged.
+
+    1. Test case: `find bernice`, then `edit S1234567A --medical-history Hypertension`<br>
+       Expected: Alex Yeoh is edited despite not being in the filtered list, and the list shows all patients again.
+
+    1. Test case: `edit S0000000Z --number 91234567`, an ID that no patient has<br>
+       Expected: No patient is changed. The status message shows `The patient ID provided is invalid.`
+
+    1. Test case: `edit S1234567A`, with nothing to change<br>
+       Expected: No patient is changed. The status message shows `At least one field to edit must be provided.`
+
+1. Adding and removing appointments
+
+    1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `2026-10-05 09:30` and `2026-11-02`.
+
+    1. Test case: `edit S1234567A --add-appt 2026-10-20 --add-appt 2026-12-01 10:00`<br>
+       Expected: Alex Yeoh's card lists four appointments, from earliest to latest.
+
+    1. Test case: `edit S1234567A --remove-appt 2026-10-05 09:30 --add-appt 2026-10-06 09:30`<br>
+       Expected: The 5 October appointment is replaced by one on 6 October.
+
+    1. Test case: `edit S1234567A --remove-appt 2026-11-02 09:30`, which does not match the date-only appointment<br>
+       Expected: No patient is changed. The status message shows `Patient S1234567A has no appointment on 2026-11-02 09:30.`
+
+    1. Test case: `edit S1234567A --add-appt 2026-02-30`, an impossible date<br>
+       Expected: No patient is changed. The status message shows the appointment format error.
 
 ### Saving data
 
