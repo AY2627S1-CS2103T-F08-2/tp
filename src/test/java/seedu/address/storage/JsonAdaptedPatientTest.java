@@ -34,7 +34,7 @@ public class JsonAdaptedPatientTest {
     private static final String VALID_PHONE = BENSON.getPhone().toString();
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
     private static final String VALID_MEDICAL_HISTORY = BENSON.getMedicalHistory().get().toString();
-    private static final String VALID_APPOINTMENT = BENSON.getAppointments().asList().get(0).toString();
+    private static final String VALID_APPOINTMENT = BENSON.getSchedule().asList().get(0).toString();
 
     @Test
     public void toModelType_validPatientDetails_returnsPatient() throws Exception {

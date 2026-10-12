@@ -70,7 +70,7 @@ public class EditPatientDescriptorBuilder {
      * Sets the appointments to add of the {@code EditPatientDescriptor} that we are building.
      */
     public EditPatientDescriptorBuilder withAppointmentsToAdd(String... appointments) {
-        descriptor.setAppointmentsToAdd(SampleDataUtil.getAppointments(appointments));
+        descriptor.setAppointmentsToAdd(SampleDataUtil.getSchedule(appointments));
         return this;
     }
 
@@ -78,7 +78,7 @@ public class EditPatientDescriptorBuilder {
      * Sets the appointments to remove of the {@code EditPatientDescriptor} that we are building.
      */
     public EditPatientDescriptorBuilder withAppointmentsToRemove(String... appointments) {
-        descriptor.setAppointmentsToRemove(SampleDataUtil.getAppointments(appointments));
+        descriptor.setAppointmentsToRemove(SampleDataUtil.getSchedule(appointments));
         return this;
     }
 

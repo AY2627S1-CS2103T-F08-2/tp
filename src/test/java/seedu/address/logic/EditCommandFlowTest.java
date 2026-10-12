@@ -101,7 +101,7 @@ public class EditCommandFlowTest {
                 .withAppointments("2026-11-15", "2026-12-01 10:00").build();
         assertEditPersisted("edit T0123456C --add-appt 2026-12-01 10:00 --add-appt 2026-11-15",
                 CHARLOTTE_ID, expected);
-        assertEquals("2026-11-15, 2026-12-01 10:00", patient(CHARLOTTE_ID).getAppointments().toString());
+        assertEquals("2026-11-15, 2026-12-01 10:00", patient(CHARLOTTE_ID).getSchedule().toString());
     }
 
     @Test
@@ -135,7 +135,7 @@ public class EditCommandFlowTest {
                 .withAppointments("2026-10-05", "2026-10-05 08:00", "2026-10-05 09:30", "2026-11-02").build();
         assertEditPersisted("edit S1234567A --add-appt 2026-10-05 08:00 --add-appt 2026-10-05", ALEX_ID, expected);
         assertEquals("2026-10-05, 2026-10-05 08:00, 2026-10-05 09:30, 2026-11-02",
-                patient(ALEX_ID).getAppointments().toString());
+                patient(ALEX_ID).getSchedule().toString());
     }
 
     @Test

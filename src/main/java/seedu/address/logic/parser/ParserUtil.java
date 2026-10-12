@@ -14,7 +14,7 @@ import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
-import seedu.address.model.patient.Appointments;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.PatientId;
@@ -132,17 +132,17 @@ public class ParserUtil {
     }
 
     /**
-     * Parses {@code Collection<String> appointments} into an {@code Appointments}.
+     * Parses {@code Collection<String> appointments} into an {@code AppointmentSchedule}.
      *
      * @throws ParseException if any of the given appointments is invalid.
      */
-    public static Appointments parseAppointments(Collection<String> appointments) throws ParseException {
+    public static AppointmentSchedule parseAppointments(Collection<String> appointments) throws ParseException {
         requireNonNull(appointments);
         List<Appointment> appointmentList = new ArrayList<>();
         for (String appointment : appointments) {
             appointmentList.add(parseAppointment(appointment));
         }
-        return new Appointments(appointmentList);
+        return new AppointmentSchedule(appointmentList);
     }
 
     /**

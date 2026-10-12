@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
-import seedu.address.model.patient.Appointments;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
@@ -57,7 +57,7 @@ public class AddCommandParser implements Parser<AddCommand> {
                 argMultimap.getValue(PREFIX_MEDICAL_HISTORY).isPresent()
                 ? ParserUtil.parseMedicalHistory(argMultimap.getValue(PREFIX_MEDICAL_HISTORY).get())
                 : null;
-        Appointments appointments = ParserUtil.parseAppointments(argMultimap.getAllValues(PREFIX_APPOINTMENT));
+        AppointmentSchedule appointments = ParserUtil.parseAppointments(argMultimap.getAllValues(PREFIX_APPOINTMENT));
 
         Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory), appointments);
 

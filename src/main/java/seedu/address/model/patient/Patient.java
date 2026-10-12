@@ -21,21 +21,21 @@ public class Patient {
     private final Phone phone;
     private final Address address;
     private final MedicalHistory medicalHistory; // null if not given
-    private final Appointments appointments;
+    private final AppointmentSchedule schedule;
 
     /**
      * Every field must be present and not null. An absent medical history is passed as {@code Optional#empty()},
-     * and a patient with no appointments is given {@link Appointments#empty()}.
+     * and a patient with no appointments is given {@link AppointmentSchedule#empty()}.
      */
     public Patient(PatientId id, Name name, Phone phone, Address address,
-            Optional<MedicalHistory> medicalHistory, Appointments appointments) {
-        requireAllNonNull(id, name, phone, address, medicalHistory, appointments);
+            Optional<MedicalHistory> medicalHistory, AppointmentSchedule schedule) {
+        requireAllNonNull(id, name, phone, address, medicalHistory, schedule);
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.medicalHistory = medicalHistory.orElse(null);
-        this.appointments = appointments;
+        this.schedule = schedule;
     }
 
     public PatientId getId() {
@@ -61,8 +61,11 @@ public class Patient {
         return Optional.ofNullable(medicalHistory);
     }
 
-    public Appointments getAppointments() {
-        return appointments;
+    /**
+     * Returns the patient's appointments, in chronological order.
+     */
+    public AppointmentSchedule getSchedule() {
+        return schedule;
     }
 
     /**
@@ -98,13 +101,13 @@ public class Patient {
                 && phone.equals(otherPatient.phone)
                 && address.equals(otherPatient.address)
                 && Objects.equals(medicalHistory, otherPatient.medicalHistory)
-                && appointments.equals(otherPatient.appointments);
+                && schedule.equals(otherPatient.schedule);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(id, name, phone, address, medicalHistory, appointments);
+        return Objects.hash(id, name, phone, address, medicalHistory, schedule);
     }
 
     @Override
@@ -115,7 +118,7 @@ public class Patient {
                 .add("phone", phone)
                 .add("address", address)
                 .add("medicalHistory", medicalHistory)
-                .add("appointments", appointments)
+                .add("schedule", schedule)
                 .toString();
     }
 

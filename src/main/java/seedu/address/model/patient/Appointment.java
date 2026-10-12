@@ -62,6 +62,9 @@ public class Appointment implements Comparable<Appointment> {
         }
     }
 
+    /**
+     * Returns the date of the appointment.
+     */
     public LocalDate getDate() {
         return date;
     }
@@ -73,6 +76,10 @@ public class Appointment implements Comparable<Appointment> {
         return Optional.ofNullable(time);
     }
 
+    /**
+     * Compares appointments by date, then by time.
+     * An appointment with only a date comes before any appointment with a time on the same day.
+     */
     @Override
     public int compareTo(Appointment other) {
         return Comparator.comparing(Appointment::getDate)

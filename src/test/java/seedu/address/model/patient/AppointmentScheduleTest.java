@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-public class AppointmentsTest {
+public class AppointmentScheduleTest {
 
     private static final Appointment EARLY = new Appointment("2026-10-05");
     private static final Appointment MIDDLE = new Appointment("2026-10-05 09:30");
@@ -17,24 +17,24 @@ public class AppointmentsTest {
 
     @Test
     public void constructor_null_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new Appointments(null));
+        assertThrows(NullPointerException.class, () -> new AppointmentSchedule(null));
     }
 
     @Test
     public void constructor_unsortedWithDuplicates_sortedWithoutDuplicates() {
-        Appointments appointments = new Appointments(List.of(LATE, EARLY, MIDDLE, LATE));
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(LATE, EARLY, MIDDLE, LATE));
         assertEquals(List.of(EARLY, MIDDLE, LATE), appointments.asList());
     }
 
     @Test
     public void empty() {
-        assertTrue(Appointments.empty().isEmpty());
-        assertFalse(new Appointments(List.of(EARLY)).isEmpty());
+        assertTrue(AppointmentSchedule.empty().isEmpty());
+        assertFalse(new AppointmentSchedule(List.of(EARLY)).isEmpty());
     }
 
     @Test
     public void add() {
-        Appointments appointments = new Appointments(List.of(LATE));
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(LATE));
 
         // added in order
         assertEquals(List.of(EARLY, LATE), appointments.add(EARLY).asList());
@@ -48,7 +48,7 @@ public class AppointmentsTest {
 
     @Test
     public void remove() {
-        Appointments appointments = new Appointments(List.of(EARLY, LATE));
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY, LATE));
 
         assertEquals(List.of(LATE), appointments.remove(EARLY).asList());
 
@@ -61,29 +61,29 @@ public class AppointmentsTest {
 
     @Test
     public void contains() {
-        Appointments appointments = new Appointments(List.of(EARLY));
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY));
         assertTrue(appointments.contains(new Appointment("2026-10-05")));
         assertFalse(appointments.contains(MIDDLE));
     }
 
     @Test
     public void asList_modified_throwsUnsupportedOperationException() {
-        Appointments appointments = new Appointments(List.of(EARLY));
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY));
         assertThrows(UnsupportedOperationException.class, () -> appointments.asList().add(LATE));
     }
 
     @Test
     public void toStringMethod() {
-        assertEquals("", Appointments.empty().toString());
-        assertEquals("2026-10-05, 2026-11-02 14:00", new Appointments(List.of(LATE, EARLY)).toString());
+        assertEquals("", AppointmentSchedule.empty().toString());
+        assertEquals("2026-10-05, 2026-11-02 14:00", new AppointmentSchedule(List.of(LATE, EARLY)).toString());
     }
 
     @Test
     public void equals() {
-        Appointments appointments = new Appointments(List.of(EARLY, LATE));
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY, LATE));
 
         // same appointments in a different order -> returns true
-        assertTrue(appointments.equals(new Appointments(List.of(LATE, EARLY))));
+        assertTrue(appointments.equals(new AppointmentSchedule(List.of(LATE, EARLY))));
 
         // same object -> returns true
         assertTrue(appointments.equals(appointments));
@@ -95,9 +95,9 @@ public class AppointmentsTest {
         assertFalse(appointments.equals(5.0f));
 
         // different appointments -> returns false
-        assertFalse(appointments.equals(new Appointments(List.of(EARLY))));
+        assertFalse(appointments.equals(new AppointmentSchedule(List.of(EARLY))));
 
         // equal objects have equal hash codes
-        assertEquals(appointments.hashCode(), new Appointments(List.of(LATE, EARLY)).hashCode());
+        assertEquals(appointments.hashCode(), new AppointmentSchedule(List.of(LATE, EARLY)).hashCode());
     }
 }

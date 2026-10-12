@@ -37,7 +37,7 @@ public class PatientUtil {
         if (patient.getMedicalHistory().isPresent()) {
             sb.append(PREFIX_MEDICAL_HISTORY + patient.getMedicalHistory().get().value + " ");
         }
-        patient.getAppointments().asList().forEach(appointment ->
+        patient.getSchedule().asList().forEach(appointment ->
                 sb.append(PREFIX_APPOINTMENT + appointment.value + " "));
         return sb.toString();
     }

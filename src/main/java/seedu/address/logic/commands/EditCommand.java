@@ -20,7 +20,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
-import seedu.address.model.patient.Appointments;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
@@ -42,8 +42,8 @@ public class EditCommand extends Command {
             + "[" + PREFIX_PHONE + "NUMBER] "
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL_HISTORY] "
-            + "[" + PREFIX_ADD_APPOINTMENT + "APPOINTMENT]... "
-            + "[" + PREFIX_REMOVE_APPOINTMENT + "APPOINTMENT]...\n"
+            + "[" + PREFIX_ADD_APPOINTMENT + "DATE_OR_DATETIME]... "
+            + "[" + PREFIX_REMOVE_APPOINTMENT + "DATE_OR_DATETIME]...\n"
             + "Example: " + COMMAND_WORD + " T0123456B "
             + PREFIX_PHONE + "91234567 "
             + PREFIX_REMOVE_APPOINTMENT + "2026-10-20 09:30 "
@@ -99,20 +99,20 @@ public class EditCommand extends Command {
         Optional<MedicalHistory> updatedMedicalHistory = editPatientDescriptor.getMedicalHistory()
                 .or(patientToEdit::getMedicalHistory);
 
-        Appointments updatedAppointments = patientToEdit.getAppointments();
+        AppointmentSchedule updatedSchedule = patientToEdit.getSchedule();
         for (Appointment appointment : editPatientDescriptor.getAppointmentsToRemove().asList()) {
-            if (!updatedAppointments.contains(appointment)) {
+            if (!updatedSchedule.contains(appointment)) {
                 throw new CommandException(
                         String.format(MESSAGE_APPOINTMENT_NOT_FOUND, patientToEdit.getId(), appointment));
             }
-            updatedAppointments = updatedAppointments.remove(appointment);
+            updatedSchedule = updatedSchedule.remove(appointment);
         }
         for (Appointment appointment : editPatientDescriptor.getAppointmentsToAdd().asList()) {
-            updatedAppointments = updatedAppointments.add(appointment);
+            updatedSchedule = updatedSchedule.add(appointment);
         }
 
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, updatedAppointments);
+                updatedMedicalHistory, updatedSchedule);
     }
 
     @Override
@@ -147,8 +147,8 @@ public class EditCommand extends Command {
         private Phone phone;
         private Address address;
         private MedicalHistory medicalHistory;
-        private Appointments appointmentsToAdd = Appointments.empty();
-        private Appointments appointmentsToRemove = Appointments.empty();
+        private AppointmentSchedule appointmentsToAdd = AppointmentSchedule.empty();
+        private AppointmentSchedule appointmentsToRemove = AppointmentSchedule.empty();
 
         public EditPatientDescriptor() {}
 
@@ -204,19 +204,31 @@ public class EditCommand extends Command {
             return Optional.ofNullable(medicalHistory);
         }
 
-        public void setAppointmentsToAdd(Appointments appointmentsToAdd) {
+        /**
+         * Sets the appointments to add. Must not be null; use {@link AppointmentSchedule#empty()} for none.
+         */
+        public void setAppointmentsToAdd(AppointmentSchedule appointmentsToAdd) {
             this.appointmentsToAdd = requireNonNull(appointmentsToAdd);
         }
 
-        public Appointments getAppointmentsToAdd() {
+        /**
+         * Returns the appointments to add, which is empty if none were given.
+         */
+        public AppointmentSchedule getAppointmentsToAdd() {
             return appointmentsToAdd;
         }
 
-        public void setAppointmentsToRemove(Appointments appointmentsToRemove) {
+        /**
+         * Sets the appointments to remove. Must not be null; use {@link AppointmentSchedule#empty()} for none.
+         */
+        public void setAppointmentsToRemove(AppointmentSchedule appointmentsToRemove) {
             this.appointmentsToRemove = requireNonNull(appointmentsToRemove);
         }
 
-        public Appointments getAppointmentsToRemove() {
+        /**
+         * Returns the appointments to remove, which is empty if none were given.
+         */
+        public AppointmentSchedule getAppointmentsToRemove() {
             return appointmentsToRemove;
         }
 

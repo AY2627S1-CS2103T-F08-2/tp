@@ -12,25 +12,25 @@ import java.util.stream.Collectors;
  * Represents all the appointments of a Patient, in chronological order and without duplicates.
  * Guarantees: immutable; never contains null
  */
-public class Appointments {
+public class AppointmentSchedule {
 
-    private static final Appointments EMPTY = new Appointments(List.of());
+    private static final AppointmentSchedule EMPTY = new AppointmentSchedule(List.of());
 
     private final List<Appointment> appointments;
 
     /**
-     * Constructs an {@code Appointments} holding the given appointments.
+     * Constructs an {@code AppointmentSchedule} holding the given appointments.
      * Duplicates are removed and the appointments are sorted.
      */
-    public Appointments(Collection<Appointment> appointments) {
+    public AppointmentSchedule(Collection<Appointment> appointments) {
         requireNonNull(appointments);
         this.appointments = List.copyOf(new TreeSet<>(appointments));
     }
 
     /**
-     * Returns an {@code Appointments} with no appointments.
+     * Returns an {@code AppointmentSchedule} with no appointments.
      */
-    public static Appointments empty() {
+    public static AppointmentSchedule empty() {
         return EMPTY;
     }
 
@@ -38,22 +38,22 @@ public class Appointments {
      * Returns a copy of these appointments with {@code appointment} added.
      * Adding an appointment that is already present has no effect.
      */
-    public Appointments add(Appointment appointment) {
+    public AppointmentSchedule add(Appointment appointment) {
         requireNonNull(appointment);
         TreeSet<Appointment> updated = new TreeSet<>(appointments);
         updated.add(appointment);
-        return new Appointments(updated);
+        return new AppointmentSchedule(updated);
     }
 
     /**
      * Returns a copy of these appointments with {@code appointment} removed.
      * Removing an appointment that is not present has no effect.
      */
-    public Appointments remove(Appointment appointment) {
+    public AppointmentSchedule remove(Appointment appointment) {
         requireNonNull(appointment);
         TreeSet<Appointment> updated = new TreeSet<>(appointments);
         updated.remove(appointment);
-        return new Appointments(updated);
+        return new AppointmentSchedule(updated);
     }
 
     /**
@@ -63,6 +63,9 @@ public class Appointments {
         return appointments.contains(appointment);
     }
 
+    /**
+     * Returns true if there are no appointments.
+     */
     public boolean isEmpty() {
         return appointments.isEmpty();
     }
@@ -86,11 +89,11 @@ public class Appointments {
         }
 
         // instanceof handles nulls
-        if (!(other instanceof Appointments otherAppointments)) {
+        if (!(other instanceof AppointmentSchedule otherSchedule)) {
             return false;
         }
 
-        return appointments.equals(otherAppointments.appointments);
+        return appointments.equals(otherSchedule.appointments);
     }
 
     @Override

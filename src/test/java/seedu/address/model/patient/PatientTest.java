@@ -32,15 +32,15 @@ public class PatientTest {
         Address address = new Address("Jurong West");
 
         assertThrows(NullPointerException.class, () ->
-                new Patient(null, name, phone, address, Optional.empty(), Appointments.empty()));
+                new Patient(null, name, phone, address, Optional.empty(), AppointmentSchedule.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, null, phone, address, Optional.empty(), Appointments.empty()));
+                new Patient(id, null, phone, address, Optional.empty(), AppointmentSchedule.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, null, address, Optional.empty(), Appointments.empty()));
+                new Patient(id, name, null, address, Optional.empty(), AppointmentSchedule.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, phone, null, Optional.empty(), Appointments.empty()));
+                new Patient(id, name, phone, null, Optional.empty(), AppointmentSchedule.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, phone, address, null, Appointments.empty()));
+                new Patient(id, name, phone, address, null, AppointmentSchedule.empty()));
         assertThrows(NullPointerException.class, () ->
                 new Patient(id, name, phone, address, Optional.empty(), null));
     }
@@ -49,7 +49,7 @@ public class PatientTest {
     public void getOptionalFields_notGiven_returnsEmpty() {
         Patient patient = new PatientBuilder().build();
         assertEquals(Optional.empty(), patient.getMedicalHistory());
-        assertTrue(patient.getAppointments().isEmpty());
+        assertTrue(patient.getSchedule().isEmpty());
     }
 
     @Test
@@ -57,7 +57,7 @@ public class PatientTest {
         Patient patient = new PatientBuilder().withMedicalHistory(VALID_MEDICAL_HISTORY)
                 .withAppointments(VALID_APPOINTMENT).build();
         assertEquals(Optional.of(new MedicalHistory(VALID_MEDICAL_HISTORY)), patient.getMedicalHistory());
-        assertEquals(new Appointments(List.of(new Appointment(VALID_APPOINTMENT))), patient.getAppointments());
+        assertEquals(new AppointmentSchedule(List.of(new Appointment(VALID_APPOINTMENT))), patient.getSchedule());
     }
 
     @Test
@@ -148,7 +148,7 @@ public class PatientTest {
         String expected = Patient.class.getCanonicalName() + "{id=" + BENSON.getId() + ", name=" + BENSON.getName()
                 + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
                 + ", medicalHistory=" + BENSON.getMedicalHistory().get()
-                + ", appointments=" + BENSON.getAppointments() + "}";
+                + ", schedule=" + BENSON.getSchedule() + "}";
         assertEquals(expected, BENSON.toString());
     }
 }

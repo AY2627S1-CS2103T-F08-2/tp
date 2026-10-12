@@ -3,7 +3,7 @@ package seedu.address.testutil;
 import java.util.Optional;
 
 import seedu.address.model.patient.Address;
-import seedu.address.model.patient.Appointments;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
@@ -26,7 +26,7 @@ public class PatientBuilder {
     private Phone phone;
     private Address address;
     private Optional<MedicalHistory> medicalHistory;
-    private Appointments appointments;
+    private AppointmentSchedule appointments;
 
     /**
      * Creates a {@code PatientBuilder} with the default details and no optional fields.
@@ -37,7 +37,7 @@ public class PatientBuilder {
         phone = new Phone(DEFAULT_PHONE);
         address = new Address(DEFAULT_ADDRESS);
         medicalHistory = Optional.empty();
-        appointments = Appointments.empty();
+        appointments = AppointmentSchedule.empty();
     }
 
     /**
@@ -49,7 +49,7 @@ public class PatientBuilder {
         phone = patientToCopy.getPhone();
         address = patientToCopy.getAddress();
         medicalHistory = patientToCopy.getMedicalHistory();
-        appointments = patientToCopy.getAppointments();
+        appointments = patientToCopy.getSchedule();
     }
 
     /**
@@ -93,10 +93,10 @@ public class PatientBuilder {
     }
 
     /**
-     * Sets the {@code Appointments} of the {@code Patient} that we are building.
+     * Sets the {@code AppointmentSchedule} of the {@code Patient} that we are building.
      */
     public PatientBuilder withAppointments(String... appointments) {
-        this.appointments = SampleDataUtil.getAppointments(appointments);
+        this.appointments = SampleDataUtil.getSchedule(appointments);
         return this;
     }
 

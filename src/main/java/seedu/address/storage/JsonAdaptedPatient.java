@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
-import seedu.address.model.patient.Appointments;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
@@ -64,9 +64,9 @@ class JsonAdaptedPatient {
         phone = source.getPhone().value;
         address = source.getAddress().value;
         medicalHistory = source.getMedicalHistory().map(history -> history.value).orElse(null);
-        appointments = source.getAppointments().isEmpty()
+        appointments = source.getSchedule().isEmpty()
                 ? null
-                : source.getAppointments().asList().stream().map(appointment -> appointment.value).toList();
+                : source.getSchedule().asList().stream().map(appointment -> appointment.value).toList();
         nextAppointment = null;
     }
 
@@ -129,9 +129,9 @@ class JsonAdaptedPatient {
             }
             modelAppointmentList.add(new Appointment(appointment));
         }
-        final Appointments modelAppointments = new Appointments(modelAppointmentList);
+        final AppointmentSchedule modelSchedule = new AppointmentSchedule(modelAppointmentList);
 
-        return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelAppointments);
+        return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelSchedule);
     }
 
 }

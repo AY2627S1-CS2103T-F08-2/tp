@@ -35,7 +35,7 @@ public class AppointmentBetweenDatesPredicate implements Predicate<Patient> {
 
     @Override
     public boolean test(Patient patient) {
-        return patient.getAppointments().asList().stream()
+        return patient.getSchedule().asList().stream()
                 .anyMatch(a -> !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate));
     }
 

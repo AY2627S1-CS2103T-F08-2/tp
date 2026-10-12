@@ -54,7 +54,7 @@ public class PatientCard extends UiPart<Region> {
         phone.setText(patient.getPhone().value);
         address.setText(patient.getAddress().value);
         setOptionalLabel(medicalHistory, patient.getMedicalHistory().map(history -> "Medical history: " + history));
-        setOptionalLabel(appointments, Optional.of(patient.getAppointments())
+        setOptionalLabel(appointments, Optional.of(patient.getSchedule())
                 .filter(patientAppointments -> !patientAppointments.isEmpty())
                 .map(patientAppointments -> "Appointments: " + patientAppointments));
     }
