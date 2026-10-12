@@ -86,7 +86,7 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 * IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
 * Names, addresses, and medical history accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
-* Each appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted. If the same appointment is given twice, it is kept once.
+* Each appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted. If the same appointment is given twice, it is kept once. A date-only appointment and a timed one on the same day, including `00:00`, are kept as separate appointments.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
 * After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change.
 
@@ -99,7 +99,7 @@ Examples:
 ### Listing all patients: `list`
 
 Shows a list of all patients, with each patient's ID, name, phone number and address.
-Medical history and appointments are shown only if the patient has them. Appointments are listed from earliest to latest.
+Medical history and appointments are shown only if the patient has them. Appointments are listed from earliest to latest. On the same day, an appointment with only a date comes first, like an all-day event in a calendar.
 
 Format: `list`
 
@@ -117,7 +117,7 @@ Format: `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-
 * `--name`, `--number`, `--address`, and `--medical-history` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
 * `--add-appt` adds an appointment, and `--remove-appt` removes one. Both can be repeated. Appointments use the same format as in `add`.
 * `--remove-appt` must match an existing appointment exactly. For example, `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`. If any appointment to remove is not found, nothing is changed.
-* Appointments are removed before they are added, so one command can move an appointment to a new date. Adding an appointment the patient already has makes no change.
+* Appointments are removed before they are added, so one command can move an appointment to a new date. Adding an appointment the patient already has makes no change. As with `add`, a date-only appointment and a timed one on the same day are separate appointments.
 * After a patient is edited, the list shows all patients again.
 
 Examples:

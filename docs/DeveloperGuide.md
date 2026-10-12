@@ -217,6 +217,31 @@ validation used when adding those fields.
 message. This replaces the previous filter and searches the full patient collection while preserving its order.
 Filtering does not change patient records. `list` restores the full list.
 
+### Storing multiple appointments
+
+Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` objects. `add` builds it from every
+`--next-appointment` value, and `edit` changes it with `--remove-appt` and `--add-appt`. Removals are applied first, so
+one command can move an appointment. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
+so a failed `edit` leaves the patient unchanged.
+
+**Equality.** An `Appointment` stores a date and an optional time. Two appointments are equal when their normalized
+text is equal. Dates and times are parsed with strict formatters that accept only one spelling of each value, so equal
+text means the same date and the same time (or both having no time).
+
+**Order.** Appointments are ordered by date, then by time. On the same day, an appointment with only a date comes before
+any appointment with a time. A date-only appointment means "sometime that day", like an all-day event in a calendar, so
+it is listed at the top of that day. `compareTo` is consistent with `equals`, so `AppointmentSchedule` can use a
+`TreeSet` to sort the appointments and drop duplicates in one step.
+
+**Duplicates.** Only exact duplicates are dropped. `2026-10-05` and `2026-10-05 00:00` are different appointments: the
+first has no fixed time, while the second is at midnight. Merging them would lose information that the nurse entered.
+Removing an appointment through `edit` also needs an exact match, so `--remove-appt 2026-10-05` does not remove
+`2026-10-05 09:30`.
+
+**Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list, and still reads
+the single `"nextAppointment"` field from older data files. `Patient#getNextAppointment()` returns the earliest
+appointment, which lets code written for a single appointment, such as `find --next-appointment`, keep working.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
