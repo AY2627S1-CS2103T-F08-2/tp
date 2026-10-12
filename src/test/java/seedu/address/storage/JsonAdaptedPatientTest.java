@@ -6,6 +6,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.CARL;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -123,6 +124,15 @@ public class JsonAdaptedPatientTest {
     public void toModelType_invalidAppointment_throwsIllegalValueException() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_ID, VALID_NAME, VALID_PHONE, VALID_ADDRESS,
                 VALID_MEDICAL_HISTORY, List.of(VALID_APPOINTMENT, INVALID_APPOINTMENT), null);
+        String expectedMessage = Appointment.MESSAGE_CONSTRAINTS;
+        assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullAppointmentInList_throwsIllegalValueException() {
+        // a hand-edited data file can contain null in the appointments list
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_ID, VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_MEDICAL_HISTORY, Arrays.asList(VALID_APPOINTMENT, null), null);
         String expectedMessage = Appointment.MESSAGE_CONSTRAINTS;
         assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
     }
