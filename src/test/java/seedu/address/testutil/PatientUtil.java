@@ -1,10 +1,10 @@
 package seedu.address.testutil;
 
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import seedu.address.logic.commands.AddCommand;
@@ -35,9 +35,8 @@ public class PatientUtil {
         if (patient.getMedicalHistory().isPresent()) {
             sb.append(PREFIX_MEDICAL_HISTORY + patient.getMedicalHistory().get().value + " ");
         }
-        if (patient.getNextAppointment().isPresent()) {
-            sb.append(PREFIX_NEXT_APPOINTMENT + patient.getNextAppointment().get().value + " ");
-        }
+        patient.getAppointments().asList().forEach(appointment ->
+                sb.append(PREFIX_APPOINTMENT + appointment.value + " "));
         return sb.toString();
     }
 

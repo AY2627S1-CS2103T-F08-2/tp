@@ -67,22 +67,22 @@ public class AppointmentBetweenDatesPredicateTest {
         LocalDate startDate = LocalDate.of(2026, 10, 15);
         LocalDate endDate = LocalDate.of(2026, 10, 20);
         AppointmentBetweenDatesPredicate predicate = new AppointmentBetweenDatesPredicate(startDate, endDate);
-        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-15").build()));
+        assertTrue(predicate.test(new PatientBuilder().withAppointments("2026-10-15").build()));
 
         // Timed appointment on same date as start date
-        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-15 09:30").build()));
+        assertTrue(predicate.test(new PatientBuilder().withAppointments("2026-10-15 09:30").build()));
 
         // Appointment on same date as end date
-        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-20").build()));
+        assertTrue(predicate.test(new PatientBuilder().withAppointments("2026-10-20").build()));
 
         // Timed appointment on same date as end date
-        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-20 23:59").build()));
+        assertTrue(predicate.test(new PatientBuilder().withAppointments("2026-10-20 23:59").build()));
 
         // Appointment in the middle of the range
-        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-17").build()));
+        assertTrue(predicate.test(new PatientBuilder().withAppointments("2026-10-17").build()));
 
         // Timed appointment in the middle of the range
-        assertTrue(predicate.test(new PatientBuilder().withNextAppointment("2026-10-17 14:00").build()));
+        assertTrue(predicate.test(new PatientBuilder().withAppointments("2026-10-17 14:00").build()));
     }
 
     @Test
@@ -92,10 +92,17 @@ public class AppointmentBetweenDatesPredicateTest {
         AppointmentBetweenDatesPredicate predicate = new AppointmentBetweenDatesPredicate(startDate, endDate);
 
         // Appointment before start date
-        assertFalse(predicate.test(new PatientBuilder().withNextAppointment("2026-10-14").build()));
+        assertFalse(predicate.test(new PatientBuilder().withAppointments("2026-10-14").build()));
 
         // Appointment after end date
-        assertFalse(predicate.test(new PatientBuilder().withNextAppointment("2026-10-21").build()));
+        assertFalse(predicate.test(new PatientBuilder().withAppointments("2026-10-21").build()));
+
+        // one of several appointments in range -> returns true
+        assertTrue(predicate.test(new PatientBuilder().withAppointments("2026-10-01", "2026-10-16", "2026-11-01")
+                .build()));
+
+        // several appointments, none in range -> returns false
+        assertFalse(predicate.test(new PatientBuilder().withAppointments("2026-10-01", "2026-11-01").build()));
 
         // Patient with no next appointment
         assertFalse(predicate.test(new PatientBuilder().build()));

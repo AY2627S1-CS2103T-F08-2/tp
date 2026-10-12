@@ -87,7 +87,7 @@ public class EditCommand extends Command {
                 .or(patientToEdit::getMedicalHistory);
 
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, patientToEdit.getNextAppointment());
+                updatedMedicalHistory, patientToEdit.getAppointments());
     }
 
     @Override

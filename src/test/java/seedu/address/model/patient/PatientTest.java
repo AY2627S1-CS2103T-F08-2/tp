@@ -12,6 +12,7 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.BOB;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ import seedu.address.testutil.PatientBuilder;
 public class PatientTest {
 
     private static final String VALID_MEDICAL_HISTORY = "Asthma";
-    private static final String VALID_NEXT_APPOINTMENT = "2026-10-20 10:00";
+    private static final String VALID_APPOINTMENT = "2026-10-20 10:00";
 
     @Test
     public void constructor_nullField_throwsNullPointerException() {
@@ -31,15 +32,15 @@ public class PatientTest {
         Address address = new Address("Jurong West");
 
         assertThrows(NullPointerException.class, () ->
-                new Patient(null, name, phone, address, Optional.empty(), Optional.empty()));
+                new Patient(null, name, phone, address, Optional.empty(), Appointments.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, null, phone, address, Optional.empty(), Optional.empty()));
+                new Patient(id, null, phone, address, Optional.empty(), Appointments.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, null, address, Optional.empty(), Optional.empty()));
+                new Patient(id, name, null, address, Optional.empty(), Appointments.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, phone, null, Optional.empty(), Optional.empty()));
+                new Patient(id, name, phone, null, Optional.empty(), Appointments.empty()));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, phone, address, null, Optional.empty()));
+                new Patient(id, name, phone, address, null, Appointments.empty()));
         assertThrows(NullPointerException.class, () ->
                 new Patient(id, name, phone, address, Optional.empty(), null));
     }
@@ -48,15 +49,15 @@ public class PatientTest {
     public void getOptionalFields_notGiven_returnsEmpty() {
         Patient patient = new PatientBuilder().build();
         assertEquals(Optional.empty(), patient.getMedicalHistory());
-        assertEquals(Optional.empty(), patient.getNextAppointment());
+        assertTrue(patient.getAppointments().isEmpty());
     }
 
     @Test
     public void getOptionalFields_given_returnsValue() {
         Patient patient = new PatientBuilder().withMedicalHistory(VALID_MEDICAL_HISTORY)
-                .withNextAppointment(VALID_NEXT_APPOINTMENT).build();
+                .withAppointments(VALID_APPOINTMENT).build();
         assertEquals(Optional.of(new MedicalHistory(VALID_MEDICAL_HISTORY)), patient.getMedicalHistory());
-        assertEquals(Optional.of(new NextAppointment(VALID_NEXT_APPOINTMENT)), patient.getNextAppointment());
+        assertEquals(new Appointments(List.of(new Appointment(VALID_APPOINTMENT))), patient.getAppointments());
     }
 
     @Test
@@ -70,7 +71,7 @@ public class PatientTest {
         // same id, all other attributes different -> returns true
         Patient editedAlice = new PatientBuilder(ALICE).withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
                 .withAddress(VALID_ADDRESS_BOB).withMedicalHistory(VALID_MEDICAL_HISTORY)
-                .withNextAppointment(VALID_NEXT_APPOINTMENT).build();
+                .withAppointments(VALID_APPOINTMENT).build();
         assertTrue(ALICE.isSamePatient(editedAlice));
 
         // different id, all other attributes same -> returns false
@@ -128,8 +129,8 @@ public class PatientTest {
         editedAlice = new PatientBuilder(ALICE).withMedicalHistory(VALID_MEDICAL_HISTORY).build();
         assertFalse(ALICE.equals(editedAlice));
 
-        // different next appointment -> returns false
-        editedAlice = new PatientBuilder(ALICE).withNextAppointment(VALID_NEXT_APPOINTMENT).build();
+        // different appointments -> returns false
+        editedAlice = new PatientBuilder(ALICE).withAppointments(VALID_APPOINTMENT).build();
         assertFalse(ALICE.equals(editedAlice));
 
         // optional field present vs absent -> returns false
@@ -147,7 +148,7 @@ public class PatientTest {
         String expected = Patient.class.getCanonicalName() + "{id=" + BENSON.getId() + ", name=" + BENSON.getName()
                 + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
                 + ", medicalHistory=" + BENSON.getMedicalHistory().get()
-                + ", nextAppointment=" + BENSON.getNextAppointment().get() + "}";
+                + ", appointments=" + BENSON.getAppointments() + "}";
         assertEquals(expected, BENSON.toString());
     }
 }

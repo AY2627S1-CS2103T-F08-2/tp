@@ -35,9 +35,8 @@ public class AppointmentBetweenDatesPredicate implements Predicate<Patient> {
 
     @Override
     public boolean test(Patient patient) {
-        return patient.getNextAppointment()
-                .map(a -> !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate))
-                .orElse(false);
+        return patient.getAppointments().asList().stream()
+                .anyMatch(a -> !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate));
     }
 
     @Override

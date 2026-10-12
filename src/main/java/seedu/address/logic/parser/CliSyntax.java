@@ -11,6 +11,6 @@ public class CliSyntax {
     public static final Prefix PREFIX_PHONE = new Prefix("--number ");
     public static final Prefix PREFIX_ADDRESS = new Prefix("--address ");
     public static final Prefix PREFIX_MEDICAL_HISTORY = new Prefix("--medical-history ");
-    public static final Prefix PREFIX_NEXT_APPOINTMENT = new Prefix("--next-appointment ");
+    public static final Prefix PREFIX_APPOINTMENT = new Prefix("--appt ");
 
 }
