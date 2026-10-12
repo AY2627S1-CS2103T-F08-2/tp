@@ -119,22 +119,29 @@ Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st patient to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd patient to be `Betsy Crower` and clears all existing tags.
 
-### Locating patients by name: `find`
+### Locating patients by substrings: `find`
 
-Finds patients whose names contain any of the given keywords.
+Finds patients whose specified fields contain any of the supplied substrings.
 
-Format: `find KEYWORD [MORE_KEYWORDS]`
+Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY] [--next-appointment DATE_OR_TIME]`
 
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
-* The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* patients matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
+* Supply at least one option. Each supplied option must have a non-blank value and may appear only once.
+* Parameters may appear in any order. Separate options and values using spaces or tabs; values may contain spaces.
+* Values may be unquoted or enclosed in matching straight double quotes (`"Mary"`) or curly double quotes (`“Mary”`). Quotes must surround the complete value; missing or mismatched closing quotes and text after a closing quote are rejected.
+* Matching ignores case and repeated whitespace. For example, `--name han` matches `Hans`, and `--address "marina   bay"` matches `Marina Bay`.
+* Each value is one contiguous substring of its corresponding field. For example, `--address "Marina Bay"` matches that phrase, while `--address "Bay Marina"` does not match `Marina Bay`.
+* Patients matching **any** supplied option are returned (an `OR` search). For example, `--name John --address "Marina Bay"` finds patients whose name contains `John` **or** whose address contains `Marina Bay`. Each patient appears once, in the original list order.
+* Phone and appointment searches match their stored text. Partial values such as `--number 123`, `--next-appointment 2026-10`, and `--next-appointment 09:30` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
+* Patients without medical history or a next appointment do not match searches on that missing field, but may match another supplied option.
+* Whitespace-delimited words beginning with `--` are reserved for options, including within quoted values. Unknown options, misspellings, and `--name=value` syntax are rejected. Text such as `Anne--Marie` is accepted.
+* Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. Enter `list` to show all patients again.
 
 Examples:
-* `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
+
+* `find --name "John" --address "Marina Bay"` finds patients whose name contains `John` or whose address contains `Marina Bay`.
+* `find --id “T04”` finds patients whose ID contains `T04`.
+* `find --id "123"` finds patients whose ID contains `123`.
+* `find --medical-history penicillin --next-appointment 2026-10` finds patients whose medical history contains `penicillin` or whose next appointment contains `2026-10`.
 
 ### Viewing appointments: `viewappt`
 
@@ -214,7 +221,7 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **Edit** | `edit ID [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
+**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY] [--next-appointment DATE_OR_TIME]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
 **List** | `list`
 **ViewAppt** | `viewappt DATE`<br> e.g., `viewappt 2026-10-15`
 **Help** | `help`

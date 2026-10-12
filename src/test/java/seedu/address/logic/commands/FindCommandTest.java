@@ -11,13 +11,14 @@ import static seedu.address.testutil.TypicalPatients.FIONA;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.patient.NameContainsKeywordsPredicate;
+import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -28,10 +29,8 @@ public class FindCommandTest {
 
     @Test
     public void equals() {
-        NameContainsKeywordsPredicate firstPredicate =
-                new NameContainsKeywordsPredicate(List.of("first"));
-        NameContainsKeywordsPredicate secondPredicate =
-                new NameContainsKeywordsPredicate(List.of("second"));
+        PatientContainsSubstringsPredicate firstPredicate = prepareNamePredicate("first");
+        PatientContainsSubstringsPredicate secondPredicate = prepareNamePredicate("second");
 
         FindCommand findFirstCommand = new FindCommand(firstPredicate);
         FindCommand findSecondCommand = new FindCommand(secondPredicate);
@@ -54,9 +53,9 @@ public class FindCommandTest {
     }
 
     @Test
-    public void execute_zeroKeywords_noPatientFound() {
+    public void execute_noMatchingSubstring_noPatientFound() {
         String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 0);
-        NameContainsKeywordsPredicate predicate = preparePredicate(" ");
+        PatientContainsSubstringsPredicate predicate = prepareNamePredicate("Nobody");
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPatientList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
@@ -64,9 +63,10 @@ public class FindCommandTest {
     }
 
     @Test
-    public void execute_multipleKeywords_multiplePatientsFound() {
+    public void execute_multipleFields_multiplePatientsFound() {
         String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 3);
-        NameContainsKeywordsPredicate predicate = preparePredicate("Kurz Elle Kunz");
+        PatientContainsSubstringsPredicate predicate = new PatientContainsSubstringsPredicate(Optional.of("3456789"),
+                Optional.of("Elle"), Optional.empty(), Optional.of("tokyo"), Optional.empty(), Optional.empty());
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPatientList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
@@ -75,16 +75,17 @@ public class FindCommandTest {
 
     @Test
     public void toStringMethod() {
-        NameContainsKeywordsPredicate predicate = new NameContainsKeywordsPredicate(List.of("keyword"));
+        PatientContainsSubstringsPredicate predicate = prepareNamePredicate("substring");
         FindCommand findCommand = new FindCommand(predicate);
         String expected = FindCommand.class.getCanonicalName() + "{predicate=" + predicate + "}";
         assertEquals(expected, findCommand.toString());
     }
 
     /**
-     * Parses {@code userInput} into a {@code NameContainsKeywordsPredicate}.
+     * Creates a predicate that searches for a substring in patient names.
      */
-    private NameContainsKeywordsPredicate preparePredicate(String userInput) {
-        return new NameContainsKeywordsPredicate(List.of(userInput.split("\\s+")));
+    private PatientContainsSubstringsPredicate prepareNamePredicate(String substring) {
+        return new PatientContainsSubstringsPredicate(Optional.empty(), Optional.of(substring), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty());
     }
 }

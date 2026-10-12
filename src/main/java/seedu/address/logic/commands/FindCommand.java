@@ -1,28 +1,41 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
-import seedu.address.model.patient.NameContainsKeywordsPredicate;
+import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 
 /**
- * Finds and lists all patients in the address book whose name contains any of the argument keywords.
- * Keyword matching is case insensitive.
+ * Finds and lists patients whose fields contain any of the supplied substrings.
+ * Matching ignores case and repeated whitespace.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds all patients whose names contain any of "
-            + "the specified keywords (case-insensitive) and displays them as a list with index numbers.\n"
-            + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
-            + "Example: " + COMMAND_WORD + " alice bob charlie";
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds patients matching any supplied field substring "
+            + "(case-insensitive) and displays them as a list with index numbers.\n"
+            + "Parameters: [" + PREFIX_ID + "ID] [" + PREFIX_NAME + "NAME] [" + PREFIX_ADDRESS + "ADDRESS] "
+            + "[" + PREFIX_PHONE + "NUMBER] [" + PREFIX_MEDICAL_HISTORY + "HISTORY] "
+            + "[" + PREFIX_NEXT_APPOINTMENT + "DATE_OR_TIME]\n"
+            + "Supply at least one non-blank value. Double quotes around values are optional.\n"
+            + "Example: " + COMMAND_WORD + " " + PREFIX_NAME + "\"John\" " + PREFIX_ADDRESS + "\"Marina Bay\"";
 
-    private final NameContainsKeywordsPredicate predicate;
+    private final PatientContainsSubstringsPredicate predicate;
 
-    public FindCommand(NameContainsKeywordsPredicate predicate) {
+    /**
+     * Creates a find command with the supplied patient-field predicate.
+     */
+    public FindCommand(PatientContainsSubstringsPredicate predicate) {
+        requireNonNull(predicate);
         this.predicate = predicate;
     }
 
