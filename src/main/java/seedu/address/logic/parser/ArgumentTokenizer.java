@@ -3,7 +3,12 @@ package seedu.address.logic.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
  * Tokenizes arguments string of the form: {@code preamble <prefix>value <prefix>value ...}<br>
@@ -14,6 +19,32 @@ import java.util.stream.Collectors;
  *    in the above example.<br>
  */
 public class ArgumentTokenizer {
+
+    /** A whitespace-delimited word starting with "--", which is treated as an option. */
+    private static final Pattern OPTION_PATTERN = Pattern.compile("(?<!\\S)--\\S*");
+
+    /**
+     * Returns {@code args} with a single space on each side of every option, so that {@link #tokenize} recognizes
+     * options separated by tabs or other whitespace, and options with no value at the end of {@code args}.
+     * Every whitespace-delimited word starting with "--" must be one of {@code prefixes}.
+     *
+     * @param invalidOptionMessage Message of the exception thrown for an unsupported option.
+     * @throws ParseException if {@code args} contains an option that is not one of {@code prefixes}.
+     */
+    public static String normalizeOptionSeparators(String args, String invalidOptionMessage, Prefix... prefixes)
+            throws ParseException {
+        Matcher matcher = OPTION_PATTERN.matcher(args);
+        StringBuilder normalizedArgs = new StringBuilder();
+        while (matcher.find()) {
+            String option = matcher.group();
+            if (Stream.of(prefixes).noneMatch(prefix -> prefix.getPrefix().trim().equals(option))) {
+                throw new ParseException(invalidOptionMessage);
+            }
+            matcher.appendReplacement(normalizedArgs, Matcher.quoteReplacement(" " + option + " "));
+        }
+        matcher.appendTail(normalizedArgs);
+        return normalizedArgs.toString();
+    }
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their

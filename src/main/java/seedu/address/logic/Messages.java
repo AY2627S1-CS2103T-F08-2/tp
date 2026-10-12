@@ -45,8 +45,9 @@ public class Messages {
                 .append("; Address: ")
                 .append(patient.getAddress());
         patient.getMedicalHistory().ifPresent(history -> builder.append("; Medical History: ").append(history));
-        patient.getNextAppointment().ifPresent(appointment ->
-                builder.append("; Next Appointment: ").append(appointment));
+        if (!patient.getSchedule().isEmpty()) {
+            builder.append("; Appointments: ").append(patient.getSchedule());
+        }
         return builder.toString();
     }
 

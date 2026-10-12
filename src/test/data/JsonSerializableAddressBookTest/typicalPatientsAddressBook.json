@@ -12,7 +12,7 @@
     "phone" : "98765432",
     "address" : "311, CLEMENTI AVE 2, #02-25",
     "medicalHistory" : "HYPERTENSION, ALLERGIC TO PENICILLIN",
-    "nextAppointment" : "2026-10-05 09:30"
+    "appointments" : [ "2026-10-05 09:30" ]
   }, {
     "id" : "S3456789C",
     "name" : "CARL KURZ",
@@ -23,7 +23,7 @@
     "name" : "DANIEL MEIER",
     "phone" : "87652533",
     "address" : "10TH STREET",
-    "nextAppointment" : "2026-10-06"
+    "appointments" : [ "2026-10-06" ]
   }, {
     "id" : "T0123456E",
     "name" : "ELLE MEYER",

@@ -40,7 +40,7 @@ public class PatientCard extends UiPart<Region> {
     @FXML
     private Label medicalHistory;
     @FXML
-    private Label nextAppointment;
+    private Label appointments;
 
     /**
      * Creates a {@code PatientCard} with the given {@code Patient} and index to display.
@@ -54,8 +54,9 @@ public class PatientCard extends UiPart<Region> {
         phone.setText(patient.getPhone().value);
         address.setText(patient.getAddress().value);
         setOptionalLabel(medicalHistory, patient.getMedicalHistory().map(history -> "Medical history: " + history));
-        setOptionalLabel(nextAppointment,
-                patient.getNextAppointment().map(appointment -> "Next appointment: " + appointment));
+        setOptionalLabel(appointments, Optional.of(patient.getSchedule())
+                .filter(patientAppointments -> !patientAppointments.isEmpty())
+                .map(patientAppointments -> "Appointments: " + patientAppointments));
     }
 
     /**

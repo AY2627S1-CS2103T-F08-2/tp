@@ -4,15 +4,19 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
-import seedu.address.model.patient.NextAppointment;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 
@@ -113,18 +117,32 @@ public class ParserUtil {
     }
 
     /**
-     * Parses {@code String appointment} into a {@code NextAppointment}.
+     * Parses {@code String appointment} into an {@code Appointment}.
      * Leading and trailing whitespaces will be trimmed.
      *
      * @throws ParseException if the given {@code Appointment} is invalid.
      */
-    public static NextAppointment parseNextAppointment(String nextAppointment) throws ParseException {
-        requireNonNull(nextAppointment);
-        String trimmedNextAppointmentAppointment = nextAppointment.trim();
-        if (!NextAppointment.isValidNextAppointment(trimmedNextAppointmentAppointment)) {
-            throw new ParseException(NextAppointment.MESSAGE_CONSTRAINTS);
+    public static Appointment parseAppointment(String appointment) throws ParseException {
+        requireNonNull(appointment);
+        String trimmedAppointment = appointment.trim();
+        if (!Appointment.isValidAppointment(trimmedAppointment)) {
+            throw new ParseException(Appointment.MESSAGE_CONSTRAINTS);
         }
-        return new NextAppointment(trimmedNextAppointmentAppointment);
+        return new Appointment(trimmedAppointment);
+    }
+
+    /**
+     * Parses {@code Collection<String> appointments} into an {@code AppointmentSchedule}.
+     *
+     * @throws ParseException if any of the given appointments is invalid.
+     */
+    public static AppointmentSchedule parseAppointments(Collection<String> appointments) throws ParseException {
+        requireNonNull(appointments);
+        List<Appointment> appointmentList = new ArrayList<>();
+        for (String appointment : appointments) {
+            appointmentList.add(parseAppointment(appointment));
+        }
+        return new AppointmentSchedule(appointmentList);
     }
 
     /**

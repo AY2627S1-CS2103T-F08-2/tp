@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_APPOINTMENT_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_MEDICAL_HISTORY_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 
@@ -45,6 +47,18 @@ public class EditPatientDescriptorTest {
         // different address -> returns false
         editedAmy = new EditPatientDescriptorBuilder(DESC_AMY).withAddress(VALID_ADDRESS_BOB).build();
         assertFalse(DESC_AMY.equals(editedAmy));
+
+        // different medical history -> returns false
+        editedAmy = new EditPatientDescriptorBuilder(DESC_AMY).withMedicalHistory(VALID_MEDICAL_HISTORY_BOB).build();
+        assertFalse(DESC_AMY.equals(editedAmy));
+
+        // different appointments to add -> returns false
+        editedAmy = new EditPatientDescriptorBuilder(DESC_AMY).withAppointmentsToAdd(VALID_APPOINTMENT_BOB).build();
+        assertFalse(DESC_AMY.equals(editedAmy));
+
+        // different appointments to remove -> returns false
+        editedAmy = new EditPatientDescriptorBuilder(DESC_AMY).withAppointmentsToRemove(VALID_APPOINTMENT_BOB).build();
+        assertFalse(DESC_AMY.equals(editedAmy));
     }
 
     @Test
@@ -53,7 +67,10 @@ public class EditPatientDescriptorTest {
         String expected = EditPatientDescriptor.class.getCanonicalName() + "{name="
                 + editPatientDescriptor.getName().orElse(null) + ", phone="
                 + editPatientDescriptor.getPhone().orElse(null) + ", address="
-                + editPatientDescriptor.getAddress().orElse(null) + "}";
+                + editPatientDescriptor.getAddress().orElse(null) + ", medicalHistory="
+                + editPatientDescriptor.getMedicalHistory().orElse(null) + ", appointmentsToAdd="
+                + editPatientDescriptor.getAppointmentsToAdd() + ", appointmentsToRemove="
+                + editPatientDescriptor.getAppointmentsToRemove() + "}";
         assertEquals(expected, editPatientDescriptor.toString());
     }
 }

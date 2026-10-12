@@ -3,12 +3,13 @@ package seedu.address.testutil;
 import java.util.Optional;
 
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
-import seedu.address.model.patient.NextAppointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.util.SampleDataUtil;
 
 /**
  * A utility class to help with building Patient objects.
@@ -25,7 +26,7 @@ public class PatientBuilder {
     private Phone phone;
     private Address address;
     private Optional<MedicalHistory> medicalHistory;
-    private Optional<NextAppointment> nextAppointment;
+    private AppointmentSchedule appointments;
 
     /**
      * Creates a {@code PatientBuilder} with the default details and no optional fields.
@@ -36,7 +37,7 @@ public class PatientBuilder {
         phone = new Phone(DEFAULT_PHONE);
         address = new Address(DEFAULT_ADDRESS);
         medicalHistory = Optional.empty();
-        nextAppointment = Optional.empty();
+        appointments = AppointmentSchedule.empty();
     }
 
     /**
@@ -48,7 +49,7 @@ public class PatientBuilder {
         phone = patientToCopy.getPhone();
         address = patientToCopy.getAddress();
         medicalHistory = patientToCopy.getMedicalHistory();
-        nextAppointment = patientToCopy.getNextAppointment();
+        appointments = patientToCopy.getSchedule();
     }
 
     /**
@@ -92,15 +93,22 @@ public class PatientBuilder {
     }
 
     /**
-     * Sets the {@code NextAppointment} of the {@code Patient} that we are building.
+     * Sets the {@code AppointmentSchedule} of the {@code Patient} that we are building.
      */
-    public PatientBuilder withNextAppointment(String nextAppointment) {
-        this.nextAppointment = Optional.of(new NextAppointment(nextAppointment));
+    public PatientBuilder withAppointments(String... appointments) {
+        this.appointments = SampleDataUtil.getSchedule(appointments);
         return this;
     }
 
+    /**
+     * Sets the {@code Patient} that we are building to have only the given appointment.
+     */
+    public PatientBuilder withNextAppointment(String appointment) {
+        return withAppointments(appointment);
+    }
+
     public Patient build() {
-        return new Patient(id, name, phone, address, medicalHistory, nextAppointment);
+        return new Patient(id, name, phone, address, medicalHistory, appointments);
     }
 
 }

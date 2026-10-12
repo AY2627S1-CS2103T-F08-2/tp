@@ -56,7 +56,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Items followed by `…`​ can appear zero or more times.<br>
   For example, `[KEYWORD]…​` may be omitted, or written as `John` or `John Jane`.
 
-* Parameters can be in any order.<br>
+* Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --number NUMBER`, `--number NUMBER --name NAME` is also acceptable.
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
@@ -78,15 +78,15 @@ Format: `help`
 
 Adds a patient to LaiNurse.
 
-Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--next-appointment DATE_OR_DATETIME]`
+Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--next-appointment DATE_OR_DATETIME]…​`
 
 * `--id`, `--name`, `--number`, and `--address` are required. Each must have a non-blank value.
-* Medical history and next appointment are independently optional. If an option is supplied, its value must not be blank.
-* Parameters may appear in any order, and each option may appear only once. Separate options and values using spaces or tabs; values may contain spaces.
+* Medical history and appointments are independently optional. If an option is supplied, its value must not be blank.
+* Parameters may appear in any order. Each option may appear only once, except `--next-appointment`, which can be repeated to add several appointments. Separate options and values using spaces or tabs; values may contain spaces.
 * IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
 * Names, addresses, and medical history accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
-* Next appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted.
+* Each appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted. If the same appointment is given twice, it is kept once. A date-only appointment and a timed one on the same day, including `00:00`, are kept as separate appointments.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
 * After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change.
 
@@ -94,30 +94,37 @@ Examples:
 
 * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01`
 * `add --medical-history Asthma --address Block 312, Clementi Ave 2 --number 91234567 --name Betsy Crowe --id S2222222B --next-appointment 2026-11-30`
-* `add --next-appointment 2026-11-30 09:00 --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --number 22224444`
+* `add --next-appointment 2026-11-30 09:00 --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --number 22224444 --next-appointment 2026-12-14 09:00`
 
 ### Listing all patients: `list`
 
 Shows a list of all patients, with each patient's ID, name, phone number and address.
-Medical history and next appointment are shown only if the patient has them.
+Medical history and appointments are shown only if the patient has them. Appointments are listed from earliest to latest. On the same day, an appointment with only a date comes first, like an all-day event in a calendar.
 
 Format: `list`
 
 ### Editing a patient: `edit`
 
-Edits an existing patient in the address book.
+Edits the details of an existing patient, and adds or removes their appointments.
 
-Format: `edit ID [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
+Format: `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`
 
-* Edits the patient at the specified `ID`. The ID refers to the ID number shown in the displayed patient list. The ID **must be a positive integer** 1, 2, 3, …​
-* At least one of the optional fields must be provided.
-* Existing values will be updated to the input values.
-* When editing tags, all of the patient's existing tags are removed; adding tags is not cumulative.
-* To remove all of a patient's tags, enter `t/` without a tag after it.
+* Edits the patient with the given `ID`, which is the patient ID shown on their card, not their position in the list. The patient does not have to be in the list currently shown.
+* `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs.
+* As in `add`, whitespace-delimited words beginning with `--` are reserved for options. Unknown options, misspellings, and `--id` are rejected with the command usage instructions.
+* The ID itself cannot be edited. To correct a wrong ID, delete the patient and add them again.
+* At least one of the optional parameters must be provided.
+* `--name`, `--number`, `--address`, and `--medical-history` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
+* `--add-appt` adds an appointment, and `--remove-appt` removes one. Both can be repeated. Appointments use the same format as in `add`.
+* `--remove-appt` must match an existing appointment exactly. For example, `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`. If any appointment to remove is not found, nothing is changed.
+* Appointments are removed before they are added, so one command can move an appointment to a new date. Adding an appointment the patient already has makes no change. As with `add`, a date-only appointment and a timed one on the same day are separate appointments.
+* After a patient is edited, the list shows all patients again.
 
 Examples:
-*  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st patient to be `91234567` and `johndoe@example.com` respectively.
-*  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd patient to be `Betsy Crower` and clears all existing tags.
+*  `edit S1234567A --number 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.
+*  `edit S1234567A --medical-history Type 2 diabetes, hypertension` replaces the medical history of patient `S1234567A`.
+*  `edit S1234567A --add-appt 2026-12-01 10:00 --add-appt 2026-12-15` adds two appointments.
+*  `edit S1234567A --remove-appt 2026-10-05 09:30 --add-appt 2026-10-07 14:00` moves an appointment from 5 October to 7 October.
 
 ### Locating patients by substrings: `find`
 
@@ -145,13 +152,12 @@ Examples:
 
 ### Viewing appointments: `viewappt`
 
-Views patients whose next appointment is on the specified date.
+Views patients who have an appointment on the specified date.
 
 Format: `viewappt DATE`
 
 * `DATE` must be a real date in `yyyy-MM-dd` format.
-* Only each patient's next appointment is checked.
-* Patients whose next appointment is on `DATE`, with or without a time, are shown.
+* All of each patient's appointments are checked. A patient is shown if any of their appointments is on `DATE`, with or without a time.
 * If no patients have appointments on that date, an empty list is shown.
 
 Examples:
@@ -217,10 +223,10 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--next-appointment DATE_OR_DATETIME]` <br> e.g., `add --id S3333333C --name James Ho --number 22224444 --address 123, Clementi Rd, 1234665 --next-appointment 2026-11-30 09:00`
+**Add** | `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--next-appointment DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --number 22224444 --address 123, Clementi Rd, 1234665 --next-appointment 2026-11-30 09:00`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
-**Edit** | `edit ID [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
+**Edit** | `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --number 91234567 --add-appt 2026-12-01 10:00`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY] [--next-appointment DATE_OR_TIME]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
 **List** | `list`
 **ViewAppt** | `viewappt DATE`<br> e.g., `viewappt 2026-10-15`

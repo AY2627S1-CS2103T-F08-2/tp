@@ -1,5 +1,7 @@
 package seedu.address.storage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -8,9 +10,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
-import seedu.address.model.patient.NextAppointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
@@ -29,21 +32,26 @@ class JsonAdaptedPatient {
     private final String phone;
     private final String address;
     private final String medicalHistory; // null if not set
-    private final String nextAppointment; // null if not set
+    private final List<String> appointments; // null if there are none
+    private final String nextAppointment; // only set when reading a file saved before multiple appointments
 
     /**
      * Constructs a {@code JsonAdaptedPatient} with the given patient details.
+     * {@code nextAppointment} is the single appointment stored by older versions of the app;
+     * it is read as one more appointment, and is never written.
      */
     @JsonCreator
     public JsonAdaptedPatient(@JsonProperty("id") String id, @JsonProperty("name") String name,
             @JsonProperty("phone") String phone, @JsonProperty("address") String address,
             @JsonProperty("medicalHistory") String medicalHistory,
+            @JsonProperty("appointments") List<String> appointments,
             @JsonProperty("nextAppointment") String nextAppointment) {
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.medicalHistory = medicalHistory;
+        this.appointments = appointments;
         this.nextAppointment = nextAppointment;
     }
 
@@ -56,7 +64,10 @@ class JsonAdaptedPatient {
         phone = source.getPhone().value;
         address = source.getAddress().value;
         medicalHistory = source.getMedicalHistory().map(history -> history.value).orElse(null);
-        nextAppointment = source.getNextAppointment().map(appointment -> appointment.value).orElse(null);
+        appointments = source.getSchedule().isEmpty()
+                ? null
+                : source.getSchedule().asList().stream().map(appointment -> appointment.value).toList();
+        nextAppointment = null;
     }
 
     /**
@@ -104,13 +115,23 @@ class JsonAdaptedPatient {
         final Optional<MedicalHistory> modelMedicalHistory =
                 Optional.ofNullable(medicalHistory).map(MedicalHistory::new);
 
-        if (nextAppointment != null && !NextAppointment.isValidNextAppointment(nextAppointment)) {
-            throw new IllegalValueException(NextAppointment.MESSAGE_CONSTRAINTS);
+        final List<String> allAppointments = new ArrayList<>();
+        if (appointments != null) {
+            allAppointments.addAll(appointments);
         }
-        final Optional<NextAppointment> modelNextAppointment =
-                Optional.ofNullable(nextAppointment).map(NextAppointment::new);
+        if (nextAppointment != null) {
+            allAppointments.add(nextAppointment);
+        }
+        final List<Appointment> modelAppointmentList = new ArrayList<>();
+        for (String appointment : allAppointments) {
+            if (appointment == null || !Appointment.isValidAppointment(appointment)) {
+                throw new IllegalValueException(Appointment.MESSAGE_CONSTRAINTS);
+            }
+            modelAppointmentList.add(new Appointment(appointment));
+        }
+        final AppointmentSchedule modelSchedule = new AppointmentSchedule(modelAppointmentList);
 
-        return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelNextAppointment);
+        return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelSchedule);
     }
 
 }

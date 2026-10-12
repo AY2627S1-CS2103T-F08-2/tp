@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.APPOINTMENT_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.ID_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ID_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.MEDICAL_HISTORY_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.NEXT_APPOINTMENT_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_MEDICAL_HISTORY_BOB;
@@ -33,8 +33,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
-import seedu.address.model.patient.NextAppointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -77,14 +77,14 @@ public class AddCommandFlowTest {
 
     @Test
     public void execute_dateOnlyAppointment_persisted() throws Exception {
-        Patient expectedPatient = new PatientBuilder(AMY).withNextAppointment("2026-09-20").build();
+        Patient expectedPatient = new PatientBuilder(AMY).withAppointments("2026-09-20").build();
         assertAddedPatientPersisted(AddCommand.COMMAND_WORD + " --next-appointment 2026-09-20"
                 + NAME_DESC_AMY + ADDRESS_DESC_AMY + ID_DESC_AMY + PHONE_DESC_AMY, expectedPatient);
     }
 
     @Test
     public void execute_allFields_persisted() throws Exception {
-        assertAddedPatientPersisted(AddCommand.COMMAND_WORD + NEXT_APPOINTMENT_DESC_BOB + ADDRESS_DESC_BOB
+        assertAddedPatientPersisted(AddCommand.COMMAND_WORD + APPOINTMENT_DESC_BOB + ADDRESS_DESC_BOB
                 + NAME_DESC_BOB + MEDICAL_HISTORY_DESC_BOB + PHONE_DESC_BOB + ID_DESC_BOB, BOB);
     }
 
@@ -115,7 +115,7 @@ public class AddCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged(command + " --medical-history", ParseException.class,
                 MedicalHistory.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged(command + " --next-appointment", ParseException.class,
-                NextAppointment.MESSAGE_CONSTRAINTS);
+                Appointment.MESSAGE_CONSTRAINTS);
     }
 
     @Test

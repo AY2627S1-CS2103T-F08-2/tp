@@ -28,7 +28,7 @@ public class AddCommand extends Command {
             + PREFIX_PHONE + "NUMBER "
             + PREFIX_ADDRESS + "ADDRESS "
             + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL HISTORY] "
-            + "[" + PREFIX_NEXT_APPOINTMENT + "NEXT APPOINTMENT]\n"
+            + "[" + PREFIX_NEXT_APPOINTMENT + "DATE_OR_DATETIME]...\n"
             + "Example: " + COMMAND_WORD + " "
             + PREFIX_ID + "T0123456B "
             + PREFIX_NAME + "Taron Ban "
