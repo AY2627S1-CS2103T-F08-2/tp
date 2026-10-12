@@ -11,6 +11,7 @@ import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_TILL_BEFORE_
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TILL;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -30,12 +31,14 @@ public class ViewAppointmentCommand extends Command {
             + "or between two dates (inclusive).\n"
             + "Parameters: DATE, or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TILL + "END_DATE] "
             + "(dates in yyyy-MM-dd)\n"
+            + "Give a DATE, or at least one of " + PREFIX_FROM + "and " + PREFIX_TILL.getPrefix().trim() + ". "
             + "Without " + PREFIX_FROM + "the range starts today. Without " + PREFIX_TILL + "it has no end.\n"
             + "Examples: " + COMMAND_WORD + " 2026-10-15, "
             + COMMAND_WORD + " " + PREFIX_FROM + "2026-10-01 " + PREFIX_TILL + "2026-10-31";
 
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;
+    private final Clock clock; // gives today's date when no start date is given
 
     /**
      * Creates a ViewAppointmentCommand to view appointments on a single date.
@@ -52,17 +55,25 @@ public class ViewAppointmentCommand extends Command {
      * @throws IllegalArgumentException if both dates are given and {@code startDate} is after {@code endDate}.
      */
     public ViewAppointmentCommand(Optional<LocalDate> startDate, Optional<LocalDate> endDate) {
-        requireAllNonNull(startDate, endDate);
+        this(startDate, endDate, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Creates a ViewAppointmentCommand that reads today's date from {@code clock}, so that tests can fix the date.
+     */
+    ViewAppointmentCommand(Optional<LocalDate> startDate, Optional<LocalDate> endDate, Clock clock) {
+        requireAllNonNull(startDate, endDate, clock);
         checkArgument(startDate.isEmpty() || endDate.isEmpty() || !startDate.get().isAfter(endDate.get()),
                 MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TILL);
         this.startDate = startDate;
         this.endDate = endDate;
+        this.clock = clock;
     }
 
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         LocalDate start = startDate.orElse(today);
         LocalDate end = endDate.orElse(LocalDate.MAX);
         if (start.isAfter(end)) {
@@ -92,6 +103,7 @@ public class ViewAppointmentCommand extends Command {
             return false;
         }
 
+        // The clock is not compared, as it is not part of what the user asked for
         return startDate.equals(otherViewAppointmentCommand.startDate)
                 && endDate.equals(otherViewAppointmentCommand.endDate);
     }

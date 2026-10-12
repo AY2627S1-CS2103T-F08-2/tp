@@ -162,7 +162,7 @@ Format: `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`
 * `viewappt DATE` shows patients with an appointment on `DATE`.
 * With `--from` and `--till`, the range includes both dates. Give at least one of them, in any order, each at most once.
 * Without `--from`, the range starts today. Without `--till`, the range has no end.
-* `--from` must not be after `--till`. With only `--till`, its date must not be before today. To see past appointments, give `--from` too.
+* The `--from` date must not be later than the `--till` date. With only `--till`, the date must not be before today. To see past appointments, give `--from` too.
 * `DATE` cannot be combined with `--from` or `--till`.
 * All of each patient's appointments are checked. A patient is shown if any of their appointments is in the range, with or without a time. Each patient appears once, in the original list order.
 * Only dates are compared, so an appointment earlier today is still shown.

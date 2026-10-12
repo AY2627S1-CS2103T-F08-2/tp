@@ -14,7 +14,10 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.DANIEL;
 import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +34,9 @@ import seedu.address.testutil.PatientBuilder;
 
 public class ViewAppointmentCommandTest {
 
+    private static final LocalDate TODAY = LocalDate.of(2026, 10, 12);
+    private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-10-12T10:00:00Z"), ZoneOffset.UTC);
+
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
     private Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
@@ -45,6 +51,8 @@ public class ViewAppointmentCommandTest {
         assertThrows(NullPointerException.class, () -> new ViewAppointmentCommand(null));
         assertThrows(NullPointerException.class, () -> new ViewAppointmentCommand(null, Optional.empty()));
         assertThrows(NullPointerException.class, () -> new ViewAppointmentCommand(Optional.empty(), null));
+        assertThrows(NullPointerException.class, () ->
+                new ViewAppointmentCommand(Optional.empty(), Optional.empty(), null));
     }
 
     @Test
@@ -111,7 +119,7 @@ public class ViewAppointmentCommandTest {
 
     @Test
     public void execute_endOnly_appointmentsFromTodayFound() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TODAY;
         Patient yesterday = patientWithAppointment("S0000001A", today.minusDays(1));
         Patient onToday = patientWithAppointment("S0000002B", today);
         Patient inThreeDays = patientWithAppointment("S0000003C", today.plusDays(3));
@@ -122,14 +130,14 @@ public class ViewAppointmentCommandTest {
         Model expectedRelativeModel = new ModelManager(addressBook, new UserPrefs());
 
         LocalDate end = today.plusDays(3);
-        ViewAppointmentCommand command = new ViewAppointmentCommand(Optional.empty(), Optional.of(end));
+        ViewAppointmentCommand command = new ViewAppointmentCommand(Optional.empty(), Optional.of(end), FIXED_CLOCK);
         expectedRelativeModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(today, end));
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 2, today, end);
         assertCommandSuccess(command, relativeModel, expectedMessage, expectedRelativeModel);
         assertEquals(List.of(onToday, inThreeDays), relativeModel.getFilteredPatientList());
 
         // An end date of today shows only today's appointments
-        command = new ViewAppointmentCommand(Optional.empty(), Optional.of(today));
+        command = new ViewAppointmentCommand(Optional.empty(), Optional.of(today), FIXED_CLOCK);
         expectedRelativeModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(today, today));
         expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, today);
         assertCommandSuccess(command, relativeModel, expectedMessage, expectedRelativeModel);
@@ -138,11 +146,11 @@ public class ViewAppointmentCommandTest {
 
     @Test
     public void execute_endOnlyBeforeToday_throwsCommandException() {
-        LocalDate today = LocalDate.now();
-        LocalDate yesterday = today.minusDays(1);
-        ViewAppointmentCommand command = new ViewAppointmentCommand(Optional.empty(), Optional.of(yesterday));
+        LocalDate yesterday = TODAY.minusDays(1);
+        ViewAppointmentCommand command =
+                new ViewAppointmentCommand(Optional.empty(), Optional.of(yesterday), FIXED_CLOCK);
         assertCommandFailure(command, model,
-                String.format(MESSAGE_VIEW_APPOINTMENT_TILL_BEFORE_TODAY, yesterday, today));
+                String.format(MESSAGE_VIEW_APPOINTMENT_TILL_BEFORE_TODAY, yesterday, TODAY));
     }
 
     @Test
@@ -156,6 +164,10 @@ public class ViewAppointmentCommandTest {
 
         // Same values -> returns true
         assertTrue(command1.equals(command2));
+
+        // Different clocks -> returns true, as the clock is not part of the command's input
+        assertTrue(new ViewAppointmentCommand(Optional.empty(), Optional.of(date1))
+                .equals(new ViewAppointmentCommand(Optional.empty(), Optional.of(date1), FIXED_CLOCK)));
 
         // A one-day range is the same as a single date -> returns true
         assertTrue(command1.equals(new ViewAppointmentCommand(Optional.of(date1), Optional.of(date1))));
