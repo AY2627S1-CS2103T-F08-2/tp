@@ -188,7 +188,7 @@ public class EditCommandParserTest {
     public void parse_unsupportedOption_failure() {
         // misspelt option, an add-only option, and the ID, which cannot be edited
         assertParseFailure(parser, VALID_ID_AMY + " --nmae Alex", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, VALID_ID_AMY + " --next-appointment 2026-10-20", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, VALID_ID_AMY + " --appt 2026-10-20", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, VALID_ID_AMY + " --id S9999999Z", MESSAGE_INVALID_FORMAT);
     }
 

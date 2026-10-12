@@ -6,7 +6,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import java.util.Optional;
@@ -26,7 +25,7 @@ public class FindCommandParser implements Parser<FindCommand> {
 
     private static final Pattern OPTION_PATTERN = Pattern.compile("(?<!\\S)--\\S*");
     private static final Prefix[] SUPPORTED_PREFIXES = {
-        PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NEXT_APPOINTMENT
+        PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY
     };
 
     /**
@@ -48,8 +47,7 @@ public class FindCommandParser implements Parser<FindCommand> {
         return new FindCommand(new PatientContainsSubstringsPredicate(
                 parseSearchValue(argMultimap, PREFIX_ID), parseSearchValue(argMultimap, PREFIX_NAME),
                 parseSearchValue(argMultimap, PREFIX_PHONE), parseSearchValue(argMultimap, PREFIX_ADDRESS),
-                parseSearchValue(argMultimap, PREFIX_MEDICAL_HISTORY),
-                parseSearchValue(argMultimap, PREFIX_NEXT_APPOINTMENT)));
+                parseSearchValue(argMultimap, PREFIX_MEDICAL_HISTORY)));
     }
 
     /**

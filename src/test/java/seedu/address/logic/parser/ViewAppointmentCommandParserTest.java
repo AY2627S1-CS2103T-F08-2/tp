@@ -1,58 +1,117 @@
 package seedu.address.logic.parser;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static seedu.address.testutil.Assert.assertThrows;
-import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TILL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TILL;
+import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
+import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.util.DateUtil;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ViewAppointmentCommand;
-import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.Model;
-import seedu.address.model.ModelManager;
-import seedu.address.model.UserPrefs;
 
 public class ViewAppointmentCommandParserTest {
 
+    private static final String INVALID_FORMAT_MESSAGE =
+            String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAppointmentCommand.MESSAGE_USAGE);
+    private static final LocalDate START = LocalDate.of(2026, 10, 1);
+    private static final LocalDate END = LocalDate.of(2026, 10, 31);
+
     private ViewAppointmentCommandParser parser = new ViewAppointmentCommandParser();
-    private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test
-    public void parse_validDateOnly_returnsCommand() throws Exception {
-        LocalDate expectedDate = LocalDate.of(2026, 10, 15);
-        ViewAppointmentCommand expectedCommand = new ViewAppointmentCommand(expectedDate);
-
-        assertEquals(expectedCommand, parser.parse("2026-10-15"));
+    public void parse_validDateOnly_returnsCommand() {
+        assertParseSuccess(parser, "2026-10-15", new ViewAppointmentCommand(LocalDate.of(2026, 10, 15)));
     }
 
     @Test
-    public void parse_validDateWithWhitespace_returnsCommand() throws Exception {
-        LocalDate expectedDate = LocalDate.of(2026, 10, 15);
-        ViewAppointmentCommand expectedCommand = new ViewAppointmentCommand(expectedDate);
-
-        assertEquals(expectedCommand, parser.parse("  2026-10-15  "));
+    public void parse_validDateWithWhitespace_returnsCommand() {
+        assertParseSuccess(parser, "  2026-10-15  ", new ViewAppointmentCommand(LocalDate.of(2026, 10, 15)));
     }
 
     @Test
     public void parse_invalidDate_throwsParseException() {
-        String expectedMessage = DateUtil.MESSAGE_CONSTRAINTS;
-
-        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("2026/10/15"));
-        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("invalid"));
-        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("2026-13-01"));
-        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("2026-02-30"));
+        for (String date : List.of("2026/10/15", "invalid", "2026-13-01", "2026-02-30")) {
+            assertParseFailure(parser, date, DateUtil.MESSAGE_CONSTRAINTS);
+            assertParseFailure(parser, "--from " + date, DateUtil.MESSAGE_CONSTRAINTS);
+            assertParseFailure(parser, "--till " + date, DateUtil.MESSAGE_CONSTRAINTS);
+        }
     }
 
     @Test
     public void parse_emptyString_throwsParseException() {
-        assertThrows(ParseException.class, () -> parser.parse(""));
+        assertParseFailure(parser, "", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, " \t ", INVALID_FORMAT_MESSAGE);
     }
 
     @Test
     public void parse_multipleDates_throwsParseException() {
-        assertThrows(ParseException.class, () -> parser.parse("2026-10-15 2026-10-20"));
+        assertParseFailure(parser, "2026-10-15 2026-10-20", DateUtil.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_startAndEnd_returnsCommand() {
+        ViewAppointmentCommand expectedCommand = new ViewAppointmentCommand(Optional.of(START), Optional.of(END));
+        assertParseSuccess(parser, "--from 2026-10-01 --till 2026-10-31", expectedCommand);
+        assertParseSuccess(parser, " --till 2026-10-31 --from 2026-10-01 ", expectedCommand);
+        assertParseSuccess(parser, "\t--from\t2026-10-01\t--till\t2026-10-31", expectedCommand);
+    }
+
+    @Test
+    public void parse_sameStartAndEnd_returnsSingleDateCommand() {
+        assertParseSuccess(parser, "--from 2026-10-01 --till 2026-10-01", new ViewAppointmentCommand(START));
+    }
+
+    @Test
+    public void parse_startOnly_returnsCommand() {
+        assertParseSuccess(parser, "--from 2026-10-01",
+                new ViewAppointmentCommand(Optional.of(START), Optional.empty()));
+    }
+
+    @Test
+    public void parse_endOnly_returnsCommand() {
+        assertParseSuccess(parser, "--till 2026-10-31",
+                new ViewAppointmentCommand(Optional.empty(), Optional.of(END)));
+    }
+
+    @Test
+    public void parse_startAfterEnd_throwsParseException() {
+        assertParseFailure(parser, "--from 2026-10-31 --till 2026-10-01", MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TILL);
+    }
+
+    @Test
+    public void parse_missingOptionValue_throwsParseException() {
+        assertParseFailure(parser, "--from", DateUtil.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, "--till", DateUtil.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, "--from 2026-10-01 --till", DateUtil.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
+    public void parse_dateWithOptions_throwsParseException() {
+        assertParseFailure(parser, "2026-10-15 --till 2026-10-31", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, "2026-10-15 --from 2026-10-01", INVALID_FORMAT_MESSAGE);
+    }
+
+    @Test
+    public void parse_duplicateOptions_throwsParseException() {
+        assertParseFailure(parser, "--from 2026-10-01 --from 2026-10-02",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_FROM));
+        assertParseFailure(parser, "--till 2026-10-30 --till 2026-10-31",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_TILL));
+    }
+
+    @Test
+    public void parse_unknownOption_throwsParseException() {
+        for (String arguments : List.of("--to 2026-10-31", "--from 2026-10-01 --to 2026-10-31", "--from=2026-10-01",
+                "--From 2026-10-01")) {
+            assertParseFailure(parser, arguments, INVALID_FORMAT_MESSAGE);
+        }
     }
 }

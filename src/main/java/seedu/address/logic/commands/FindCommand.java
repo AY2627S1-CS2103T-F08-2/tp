@@ -5,7 +5,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -24,8 +23,7 @@ public class FindCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds patients matching any supplied field substring "
             + "(case-insensitive) and displays them as a list with index numbers.\n"
             + "Parameters: [" + PREFIX_ID + "ID] [" + PREFIX_NAME + "NAME] [" + PREFIX_ADDRESS + "ADDRESS] "
-            + "[" + PREFIX_PHONE + "NUMBER] [" + PREFIX_MEDICAL_HISTORY + "HISTORY] "
-            + "[" + PREFIX_NEXT_APPOINTMENT + "DATE_OR_TIME]\n"
+            + "[" + PREFIX_PHONE + "NUMBER] [" + PREFIX_MEDICAL_HISTORY + "HISTORY]\n"
             + "Supply at least one non-blank value. Double quotes around values are optional.\n"
             + "Example: " + COMMAND_WORD + " " + PREFIX_NAME + "\"John\" " + PREFIX_ADDRESS + "\"Marina Bay\"";
 

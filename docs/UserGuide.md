@@ -78,11 +78,11 @@ Format: `help`
 
 Adds a patient to LaiNurse.
 
-Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--next-appointment DATE_OR_DATETIME]…​`
+Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​`
 
 * `--id`, `--name`, `--number`, and `--address` are required. Each must have a non-blank value.
 * Medical history and appointments are independently optional. If an option is supplied, its value must not be blank.
-* Parameters may appear in any order. Each option may appear only once, except `--next-appointment`, which can be repeated to add several appointments. Separate options and values using spaces or tabs; values may contain spaces.
+* Parameters may appear in any order. Each option may appear only once, except `--appt`, which can be repeated to add several appointments. Separate options and values using spaces or tabs; values may contain spaces.
 * IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
 * Names, addresses, and medical history accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
@@ -93,8 +93,8 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 Examples:
 
 * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01`
-* `add --medical-history Asthma --address Block 312, Clementi Ave 2 --number 91234567 --name Betsy Crowe --id S2222222B --next-appointment 2026-11-30`
-* `add --next-appointment 2026-11-30 09:00 --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --number 22224444 --next-appointment 2026-12-14 09:00`
+* `add --medical-history Asthma --address Block 312, Clementi Ave 2 --number 91234567 --name Betsy Crowe --id S2222222B --appt 2026-11-30`
+* `add --appt 2026-11-30 09:00 --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --number 22224444 --appt 2026-12-14 09:00`
 
 ### Listing all patients: `list`
 
@@ -130,7 +130,9 @@ Examples:
 
 Finds patients whose specified fields contain any of the supplied substrings.
 
-Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY] [--next-appointment DATE_OR_TIME]`
+Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY]`
+
+* `find` searches patient details only. To search by appointment date, use [`viewappt`](#viewing-appointments-viewappt).
 
 * Supply at least one option. Each supplied option must have a non-blank value and may appear only once.
 * Parameters may appear in any order. Separate options and values using spaces or tabs; values may contain spaces.
@@ -138,8 +140,8 @@ Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--m
 * Matching ignores case and repeated whitespace. For example, `--name han` matches `Hans`, and `--address "marina   bay"` matches `Marina Bay`.
 * Each value is one contiguous substring of its corresponding field. For example, `--address "Marina Bay"` matches that phrase, while `--address "Bay Marina"` does not match `Marina Bay`.
 * Patients matching **any** supplied option are returned (an `OR` search). For example, `--name John --address "Marina Bay"` finds patients whose name contains `John` **or** whose address contains `Marina Bay`. Each patient appears once, in the original list order.
-* Phone and appointment searches match their stored text. Partial values such as `--number 123`, `--next-appointment 2026-10`, and `--next-appointment 09:30` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
-* Patients without medical history or a next appointment do not match searches on that missing field, but may match another supplied option.
+* Phone searches match the stored text, so partial values such as `--number 123` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
+* Patients without medical history do not match a `--medical-history` search, but may match another supplied option.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within quoted values. Unknown options, misspellings, and `--name=value` syntax are rejected. Text such as `Anne--Marie` is accepted.
 * Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. Enter `list` to show all patients again.
 
@@ -148,21 +150,29 @@ Examples:
 * `find --name "John" --address "Marina Bay"` finds patients whose name contains `John` or whose address contains `Marina Bay`.
 * `find --id “T04”` finds patients whose ID contains `T04`.
 * `find --id "123"` finds patients whose ID contains `123`.
-* `find --medical-history penicillin --next-appointment 2026-10` finds patients whose medical history contains `penicillin` or whose next appointment contains `2026-10`.
+* `find --medical-history penicillin --name tan` finds patients whose medical history contains `penicillin` or whose name contains `tan`.
 
 ### Viewing appointments: `viewappt`
 
-Views patients who have an appointment on the specified date.
+Views patients who have an appointment on a date, or between two dates.
 
-Format: `viewappt DATE`
+Format: `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`
 
-* `DATE` must be a real date in `yyyy-MM-dd` format.
-* All of each patient's appointments are checked. A patient is shown if any of their appointments is on `DATE`, with or without a time.
-* If no patients have appointments on that date, an empty list is shown.
+* All dates must be real dates in `yyyy-MM-dd` format.
+* `viewappt DATE` shows patients with an appointment on `DATE`.
+* With `--from` and `--till`, the range includes both dates. Give at least one of them, in any order, each at most once.
+* Without `--from`, the range starts today. Without `--till`, the range has no end.
+* `--from` must not be after `--till`. With only `--till`, its date must not be before today. To see past appointments, give `--from` too.
+* `DATE` cannot be combined with `--from` or `--till`.
+* All of each patient's appointments are checked. A patient is shown if any of their appointments is in the range, with or without a time. Each patient appears once, in the original list order.
+* Only dates are compared, so an appointment earlier today is still shown.
+* If no patients have appointments in the range, an empty list is shown.
 
 Examples:
 * `viewappt 2026-10-15` views all patients with appointments on October 15, 2026.
-* `viewappt 2026-12-25` views all patients with appointments on December 25, 2026.
+* `viewappt --from 2026-10-01 --till 2026-10-31` views all patients with appointments in October 2026.
+* `viewappt --till 2026-10-31` views all patients with appointments from today to October 31, 2026.
+* `viewappt --from 2026-12-01` views all patients with appointments on or after December 1, 2026.
 
 ### Deleting a patient: `delete`
 
@@ -223,12 +233,12 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 
 Action | Format, Examples
 --------|------------------
-**Add** | `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--next-appointment DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --number 22224444 --address 123, Clementi Rd, 1234665 --next-appointment 2026-11-30 09:00`
+**Add** | `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --number 22224444 --address 123, Clementi Rd, 1234665 --appt 2026-11-30 09:00`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **Edit** | `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --number 91234567 --add-appt 2026-12-01 10:00`
-**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY] [--next-appointment DATE_OR_TIME]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
+**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
 **List** | `list`
-**ViewAppt** | `viewappt DATE`<br> e.g., `viewappt 2026-10-15`
+**ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --till 2026-10-31`
 **Help** | `help`
 **Exit** | `exit`

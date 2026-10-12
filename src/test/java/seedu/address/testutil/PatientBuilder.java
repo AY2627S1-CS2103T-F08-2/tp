@@ -100,13 +100,6 @@ public class PatientBuilder {
         return this;
     }
 
-    /**
-     * Sets the {@code Patient} that we are building to have only the given appointment.
-     */
-    public PatientBuilder withNextAppointment(String appointment) {
-        return withAppointments(appointment);
-    }
-
     public Patient build() {
         return new Patient(id, name, phone, address, medicalHistory, appointments);
     }
