@@ -87,6 +87,7 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 * Names, addresses, and medical history accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * Each appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted. If the same appointment is given twice, it is kept once. A date-only appointment and a timed one on the same day, including `00:00`, are kept as separate appointments.
+* Appointments have no time zone. They are the local date and time of the visit, as you would write them on a calendar, so changing your computer's time zone does not change them.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
 * After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change.
 
@@ -162,6 +163,7 @@ Format: `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`
 * `viewappt DATE` shows patients with an appointment on `DATE`.
 * With `--from` and `--till`, the range includes both dates. Give at least one of them, in any order, each at most once.
 * Without `--from`, the range starts today. Without `--till`, the range has no end.
+* "Today" is the current date on your computer, in its time zone. If your computer is set to a different time zone from where you visit patients, "today" can be a day off near midnight.
 * The `--from` date must not be later than the `--till` date. With only `--till`, the date must not be before today. To see past appointments, give `--from` too.
 * `DATE` cannot be combined with `--from` or `--till`.
 * All of each patient's appointments are checked. A patient is shown if any of their appointments is in the range, with or without a time. Each patient appears once, in the original list order.

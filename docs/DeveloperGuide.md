@@ -245,6 +245,11 @@ Removing an appointment through `edit` also needs an exact match, so `--remove-a
 **Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list, and still reads
 the single `"nextAppointment"` field from older data files.
 
+**Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
+saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
+holds for home visits, so an appointment means the local date and time of the visit. The app never converts appointments
+between time zones, so changing the computer's time zone, or a daylight saving change, does not move them.
+
 ### Viewing appointments by date
 
 `viewappt` takes either one date, or a range given by `--from`, `--till`, or both. `ViewAppointmentCommandParser`
@@ -253,11 +258,13 @@ that starts and ends on that date. When both options are given, the parser rejec
 `--till` date.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
-when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Because the command
-reads the date when it runs rather than when it is parsed, it never compares against a stale day. If only `--till` is
-given and its date is before today, the range would be empty, so the command shows an error that suggests adding
-`--from`. The command then filters the list with `AppointmentBetweenDatesPredicate`, which shows a patient if any of
-their appointments falls in the range. Only dates are compared, so a timed appointment earlier today still counts.
+when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Today is
+`LocalDate.now(clock)`, where the clock is `Clock.systemDefaultZone()`, so it is the current date in the computer's
+default time zone. A package-private constructor takes another `Clock`, which lets tests fix the date. Because the
+command reads the date when it runs rather than when it is parsed, it never compares against a stale day. If only
+`--till` is given and its date is before today, the range would be empty, so the command shows an error that suggests
+adding `--from`. The command then filters the list with `AppointmentBetweenDatesPredicate`, which shows a patient if any
+of their appointments falls in the range. Only dates are compared, so a timed appointment earlier today still counts.
 
 **Design considerations: where appointment searches belong**
 
@@ -639,7 +646,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   ongoing medical concerns of a patient (e.g., "dementia").
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
-  24-hour format.
+  24-hour format, in local time with no time zone.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -780,7 +787,8 @@ testers are expected to do more *exploratory* testing.
        `2 patient(s) with appointments on or after 2026-10-07`.
 
     1. Test case: `viewappt --till 2099-12-31`<br>
-       Expected: Only patients with an appointment from today onwards are shown. The range in the status message starts with today's date.
+       Expected: Only patients with an appointment from today onwards are shown. The range in the status message starts with today's date,
+       which is the current date in your computer's time zone.
 
     1. Test case: `viewappt --till 2000-01-01`<br>
        Expected: The list is unchanged. The status message says that the `--till` date is before today.
