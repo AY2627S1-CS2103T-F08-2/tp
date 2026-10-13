@@ -103,6 +103,18 @@ public class LogicManagerTest {
         assertEquals(List.of(expectedPatient), logic.getPatientList());
     }
 
+    @Test
+    public void getCompletions_filteredList_listsDisplayedPatientsFirst() {
+        model.addPatient(new PatientBuilder().withId("S1000001A").withName("Alpha").build());
+        model.addPatient(new PatientBuilder().withId("S1000002B").withName("Bravo").build());
+        model.addPatient(new PatientBuilder().withId("S1000003C").withName("Charlie").build());
+        model.updateFilteredPatientList(patient -> patient.getId().value.equals("S1000003C"));
+
+        assertEquals(List.of("view S1000003C", "view S1000001A", "view S1000002B"),
+                logic.getCompletions("view S1"));
+        assertEquals(List.of(), logic.getCompletions("list"));
+    }
+
     /**
      * Executes the command and confirms that
      * - no exceptions are thrown <br>
