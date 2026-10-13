@@ -50,15 +50,40 @@ public class IdCompleterTest {
     }
 
     @Test
+    public void complete_editWithIdLast_completesId() {
+        assertEquals(List.of("edit S1234567A", "edit S1999999C"), IdCompleter.complete("edit s1", IDS));
+        assertEquals(List.of("edit S1234567A", "edit T7654321B", "edit S1999999C"),
+                IdCompleter.complete("edit", IDS));
+    }
+
+    @Test
+    public void complete_editWithOptionsAfterId_completesIdAndKeepsOptions() {
+        assertEquals(List.of("edit T7654321B --number 91234567 --add-appt 2026-12-01 10:00"),
+                IdCompleter.complete("edit t7 --number 91234567 --add-appt 2026-12-01 10:00", IDS));
+        // the spacing around the ID and in the options is kept
+        assertEquals(List.of("edit\tT7654321B\t--name\tAlex  Tan"),
+                IdCompleter.complete("edit\tT7\t--name\tAlex  Tan", IDS));
+        // a space after the ID, before any option is typed
+        assertEquals(List.of("edit T7654321B "), IdCompleter.complete("edit T7 ", IDS));
+    }
+
+    @Test
+    public void complete_editWithoutId_returnsEmptyList() {
+        // the options come first, so there is no ID to complete
+        assertEquals(List.of(), IdCompleter.complete("edit --number 91234567", IDS));
+        assertEquals(List.of(), IdCompleter.complete("edit X --number 91234567", IDS));
+    }
+
+    @Test
     public void complete_nothingToComplete_returnsEmptyList() {
         assertEquals(List.of(), IdCompleter.complete("", IDS));
         assertEquals(List.of(), IdCompleter.complete("   ", IDS));
-        // the ID is already followed by a space or another word
+        // view and delete take only an ID, so it must end the command
         assertEquals(List.of(), IdCompleter.complete("view S1 ", IDS));
         assertEquals(List.of(), IdCompleter.complete("view S1 extra", IDS));
+        assertEquals(List.of(), IdCompleter.complete("delete S1 extra", IDS));
         // commands that do not take the ID of an existing patient
         assertEquals(List.of(), IdCompleter.complete("add --id S1", IDS));
-        assertEquals(List.of(), IdCompleter.complete("edit S1", IDS));
         assertEquals(List.of(), IdCompleter.complete("find S1", IDS));
         // command words are case-sensitive, as in AddressBookParser
         assertEquals(List.of(), IdCompleter.complete("VIEW S1", IDS));

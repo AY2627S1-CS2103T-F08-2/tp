@@ -64,9 +64,10 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
-* After `view` or `delete`, you can press Tab to finish typing a patient ID.<br>
+* After `view`, `delete` or `edit`, you can press Tab to finish typing a patient ID.<br>
   Type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
-  For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.
+  For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
+  With `edit`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --number 91234567` becomes `edit S1234567A --number 91234567`.
 
 * Press Esc to clear the command box. If the command box is already empty, Esc shows all patients, as `list` does. For example, after `find`, press Esc to see everyone again.
 

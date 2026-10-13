@@ -103,10 +103,11 @@ patient by ID in the list of all patients from `Logic#getPatientList()`, and lis
 patient's new details after an edit, and goes back to its starting message after the patient is deleted, whatever the
 filter on the displayed list is.
 
-When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID at
-the end of the command, and replaces the text with the first one. Each further Tab gives the next one. `IdCompleter`
-in the `Logic` component holds the rules, such as which commands take a patient ID, so `CommandBox` needs no
-knowledge of the command formats. When the user presses Esc in an empty command box, `CommandBox` executes the `list`
+When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID in the
+command, and replaces the text with the first one. Each further Tab gives the next one. `IdCompleter` in the `Logic`
+component holds the rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an
+ID, so the ID must end the command. `edit` takes the ID first and options after it, so `IdCompleter` completes the word
+after `edit` and keeps the options. When the user presses Esc in an empty command box, `CommandBox` executes the `list`
 command through the same `CommandExecutor` as Enter does, so the result is the same as typing `list`. `CommandBox` also
 keeps a `CommandHistory` of the commands entered since the app started, which the Up and Down keys go through. The
 history is kept only in the UI, because no command needs it.
@@ -765,7 +766,10 @@ testers are expected to do more *exploratory* testing.
     1. Test case: type `delete S`, then press Tab several times<br>
        Expected: Each Tab shows the next ID that starts with `S`, in the order of the list, and then starts again from the first.
 
-    1. Test case: type `add --id S1`, `edit 1` or `view XYZ`, then press Tab<br>
+    1. Test case: type `edit s23 --number 91234567`, then press Tab<br>
+       Expected: The command box shows `edit S2345678B --number 91234567`. The options are kept.
+
+    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra` or `edit --number 91234567`, then press Tab<br>
        Expected: The command box does not change.
 
 1. Showing all patients again with Esc
