@@ -622,6 +622,47 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC06 - View a patient's details**
+
+**MSS**
+
+1.  Nurse <u>finds the patient (UC02)</u>
+2.  Nurse requests to view the patient by ID
+3.  LaiNurse shows all of the patient's details beside the patient list, and highlights the patient in the list if
+    the patient is shown there
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Nurse already knows the patient's ID.
+
+  Use case resumes at step 2.
+
+* 2a. The ID is missing or is not a valid ID.
+
+    * 2a1. LaiNurse shows an error message.
+
+      Use case resumes at step 2.
+
+* 2b. The given ID does not match any patient.
+
+    * 2b1. LaiNurse shows an error message, and keeps showing the details it showed before.
+
+      Use case resumes at step 2.
+
+* 3a. Nurse edits the patient while the details are shown.
+
+    * 3a1. LaiNurse shows the new details.
+
+      Use case ends.
+
+* 3b. Nurse deletes the patient while the details are shown.
+
+    * 3b1. LaiNurse stops showing the patient's details.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
