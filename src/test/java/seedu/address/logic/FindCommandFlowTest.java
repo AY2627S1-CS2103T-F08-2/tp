@@ -50,7 +50,7 @@ public class FindCommandFlowTest {
         execute("find --address “wall”");
         assertEquals(List.of(CARL), model.getFilteredPatientList());
 
-        execute("find --next-appointment 2026-10");
+        execute("viewappt --from 2026-10-01 --till 2026-10-31");
         assertEquals(List.of(BENSON, DANIEL), model.getFilteredPatientList());
     }
 
@@ -61,7 +61,7 @@ public class FindCommandFlowTest {
         List<Patient> expectedFilteredPatients = List.copyOf(model.getFilteredPatientList());
 
         for (String command : List.of("find", "find John", "find --name \"\"", "find --name Mary --unknown value",
-                "find --id 123 --id 456", "find --address “Marina Bay\"")) {
+                "find --id 123 --id 456", "find --address “Marina Bay\"", "find --next-appointment 2026-10")) {
             assertThrows(ParseException.class, () -> execute(command));
             assertEquals(expectedAddressBook, model.getAddressBook());
             assertEquals(expectedFilteredPatients, model.getFilteredPatientList());

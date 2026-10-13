@@ -23,7 +23,7 @@ public class PatientDetailPanel extends UiPart<Region> {
 
     private static final String FXML = "PatientDetailPanel.fxml";
     private static final String NO_MEDICAL_HISTORY = "None recorded";
-    private static final String NO_NEXT_APPOINTMENT = "None booked";
+    private static final String NO_NEXT_APPOINTMENT = "None upcoming";
     private static final String EMPTY_VALUE_STYLE_CLASS = "patient-detail-value-empty";
 
     private final ObservableList<Patient> allPatients;
@@ -95,8 +95,9 @@ public class PatientDetailPanel extends UiPart<Region> {
         phone.setText(patient.getPhone().value);
         address.setText(patient.getAddress().value);
         setValue(medicalHistory, patient.getMedicalHistory().map(Object::toString), NO_MEDICAL_HISTORY);
-        setValue(nextAppointment, patient.getNextAppointment()
-                .map(appointment -> AppointmentFormatter.formatFull(appointment, LocalDate.now())),
+        LocalDate today = LocalDate.now();
+        setValue(nextAppointment, patient.getSchedule().getNextOnOrAfter(today)
+                .map(appointment -> AppointmentFormatter.formatFull(appointment, today)),
                 NO_NEXT_APPOINTMENT);
         setShown(placeholder, false);
         setShown(details, true);

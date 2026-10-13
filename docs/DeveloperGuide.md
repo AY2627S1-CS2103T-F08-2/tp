@@ -17,6 +17,8 @@ title: Developer Guide
 * AI Use Declaration from Jaydon: "I used Codex and OpenCode to review and generate code.
   Based on the given levels of AI use in coding tasks, this ranges between AI-2 and AI-5".
 
+* AI Use Declaration from Yuhao: "I used Claude Code to write code, tests and documentation, and I review and test the results."
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
@@ -216,18 +218,20 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Finding patients by substrings
 
-`FindCommandParser` recognizes the six patient-field options defined in `CliSyntax`. It normalizes option separators
+`FindCommandParser` recognizes the five patient-detail options defined in `CliSyntax`: ID, name, phone number, address
+and medical history. It normalizes option separators
 using the same approach as `add`, then reuses `ArgumentTokenizer` and `ArgumentMultimap` to extract values and reject
 duplicate options. At least one option is required, and every supplied value must be non-blank. Matching straight or
 curly double quotes surrounding a complete value are removed. Unknown options, unexpected preamble text, and malformed
 quotes cause a `ParseException` before the displayed list is changed. Words beginning with `--` remain reserved for
 options, including inside quoted values.
 
-`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by `TextNormalizer`. Each criterion
+`PatientContainsSubstringsPredicate` stores five optional string criteria normalized by `TextNormalizer`. Each criterion
 is a literal, contiguous substring of its corresponding stored field. The criteria combine using OR, so a patient is
-included if any supplied criterion matches. Missing medical history or appointment contributes no match for that field.
-Phone and appointment criteria are substrings rather than complete field values, so the parser does not apply the
-validation used when adding those fields.
+included if any supplied criterion matches. Missing medical history contributes no match for that field. Phone criteria
+are substrings rather than complete phone numbers, so the parser does not apply the validation used when adding a
+patient. `find` does not search appointments. `viewappt` handles every appointment search, as described in
+[Viewing appointments by date](#viewing-appointments-by-date).
 
 `FindCommand` applies the predicate through `Model#updateFilteredPatientList()` and reports the existing patient count
 message. This replaces the previous filter and searches the full patient collection while preserving its order.
@@ -236,7 +240,7 @@ Filtering does not change patient records. `list` restores the full list.
 ### Storing multiple appointments
 
 Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` objects. `add` builds it from every
-`--next-appointment` value, and `edit` changes it with `--remove-appt` and `--add-appt`. Removals are applied first, so
+`--appt` value, and `edit` changes it with `--remove-appt` and `--add-appt`. Removals are applied first, so
 one command can move an appointment. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
 so a failed `edit` leaves the patient unchanged.
 
@@ -255,8 +259,40 @@ Removing an appointment through `edit` also needs an exact match, so `--remove-a
 `2026-10-05 09:30`.
 
 **Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list, and still reads
-the single `"nextAppointment"` field from older data files. `Patient#getNextAppointment()` returns the earliest
-appointment, which lets code written for a single appointment, such as `find --next-appointment`, keep working.
+the single `"nextAppointment"` field from older data files.
+
+**Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
+saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
+holds for home visits, so an appointment means the local date and time of the visit. The app never converts appointments
+between time zones, so changing the computer's time zone, or a daylight saving change, does not move them.
+
+### Viewing appointments by date
+
+`viewappt` takes either one date, or a range given by `--from`, `--till`, or both. `ViewAppointmentCommandParser`
+normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
+that starts and ends on that date. When both options are given, the parser rejects a `--from` date that is after the
+`--till` date.
+
+`ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
+when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Today is
+`LocalDate.now(clock)`, where the clock is `Clock.systemDefaultZone()`, so it is the current date in the computer's
+default time zone. A package-private constructor takes another `Clock`, which lets tests fix the date. Because the
+command reads the date when it runs rather than when it is parsed, it never compares against a stale day. If only
+`--till` is given and its date is before today, the range would be empty, so the command shows an error that suggests
+adding `--from`. The command then filters the list with `AppointmentBetweenDatesPredicate`, which shows a patient if any
+of their appointments falls in the range. Only dates are compared, so a timed appointment earlier today still counts.
+
+**Design considerations: where appointment searches belong**
+
+* **Alternative 1 (current choice):** Only `viewappt` searches appointments, by real dates.
+    * Pros: Each command answers one question. `find` answers "who is this patient?", and `viewappt` answers "whom do I
+      visit, and when?". Only `AppointmentBetweenDatesPredicate` matches appointments, and it checks every appointment.
+    * Cons: A search such as "Alex, or anyone with an appointment in October" needs two commands. There is no search by
+      time of day.
+* **Alternative 2:** `find` also takes an appointment option and matches it as a substring of each appointment.
+    * Pros: Appointment searches can be combined with other `find` options in one command.
+    * Cons: Substrings are ambiguous for dates. For example, `10` matches October, the 10th of any month, and 10:00.
+      Appointment matching would also live in two places.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -443,7 +479,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, medical history, or next appointment
+1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, or medical history
 2.  LaiNurse shows a list of matching patients
 
     Use case ends.
@@ -554,8 +590,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1. Nurse requests to view patients with appointments on a date.
-2. LaiNurse shows patients who have any appointment on that date.
+1. Nurse requests to view patients with appointments on a date, or between two dates.
+2. LaiNurse shows patients who have any appointment on that date or in that range.
 
    Use case ends.
 
@@ -567,7 +603,25 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 2a. No patients have an appointment on the given date.
+* 1b. The nurse gives no start date.
+
+    * 1b1. LaiNurse uses today as the start date.
+
+      Use case resumes at step 2.
+
+* 1c. The start date is after the end date, or the nurse gives only an end date that is before today.
+
+    * 1c1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1d. The nurse gives no end date.
+
+    * 1d1. LaiNurse shows patients with any appointment on or after the start date.
+
+      Use case ends.
+
+* 2a. No patients have an appointment on the given date or in the given range.
 
     * 2a1. LaiNurse indicates that there are no matching patients.
 
@@ -608,7 +662,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   ongoing medical concerns of a patient (e.g., "dementia").
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
-  24-hour format.
+  24-hour format, in local time with no time zone.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -731,12 +785,6 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `find --medical-history penicillin`<br>
        Expected: Only Bernice Yu is shown. Patients without medical history do not match this criterion.
 
-    1. Test case: `find --next-appointment 2026-10`<br>
-       Expected: Alex Yeoh, Bernice Yu and Irfan Ibrahim are shown. Both date-only and timed appointments can match.
-
-    1. Test case: `find --next-appointment "09:30"`<br>
-       Expected: Only Alex Yeoh is shown. Patients without an appointment do not match this criterion.
-
 1. Combining substrings and restoring the list
 
     1. Test case: `find --name Alex --address "Serangoon Gardens"`<br>
@@ -758,6 +806,9 @@ testers are expected to do more *exploratory* testing.
     1. Test cases: `find`, `find Alex`, `find --name ""`, `find --name "Alex`, `find --name “Alex"`,
        `find --name "Alex" trailing`, `find --unknown Alex`, and `find --name=Alex`<br>
        Expected: The displayed list and patient records are unchanged. The status message shows the command usage instructions.
+
+    1. Test case: `find --next-appointment 2026-10`<br>
+       Expected: The same as above. `find` does not search appointments; use `viewappt` instead.
 
     1. Test case: `find --name Alex --name Bernice`<br>
        Expected: The displayed list and patient records are unchanged. The status message shows a duplicate-option error.
@@ -790,10 +841,39 @@ testers are expected to do more *exploratory* testing.
     1. Other incorrect `viewappt` commands to try: `viewappt` (missing date), `viewappt 2026-10-15 2026-10-20` (more than one date)<br>
        Expected: The list is unchanged. The status message shows the correct command format or the date format error.
 
+1. Viewing patients who have an appointment in a date range
+
+    1. Prerequisites: The same sample data as above.
+
+    1. Test case: `viewappt --from 2026-10-01 --till 2026-10-31`<br>
+       Expected: Alex Yeoh, Bernice Yu and Irfan Ibrahim are shown. The status message shows
+       `3 patient(s) with appointments from 2026-10-01 to 2026-10-31`.
+
+    1. Test case: `viewappt --till 2026-10-06 --from 2026-10-06`<br>
+       Expected: Only Bernice Yu is shown. The options may be in any order, and a one-day range behaves like `viewappt 2026-10-06`.
+
+    1. Test case: `viewappt --from 2026-10-07`<br>
+       Expected: Alex Yeoh (appointment `2026-11-02`) and Irfan Ibrahim are shown. The status message shows
+       `2 patient(s) with appointments on or after 2026-10-07`.
+
+    1. Test case: `viewappt --till 2099-12-31`<br>
+       Expected: Only patients with an appointment from today onwards are shown. The range in the status message starts with today's date,
+       which is the current date in your computer's time zone.
+
+    1. Test case: `viewappt --till 2000-01-01`<br>
+       Expected: The list is unchanged. The status message says that the `--till` date is before today.
+
+    1. Test case: `viewappt --from 2026-10-31 --till 2026-10-01`<br>
+       Expected: The list is unchanged. The status message says that the `--from` date must not be after the `--till` date.
+
+    1. Other incorrect commands to try: `viewappt 2026-10-15 --till 2026-10-31` (a date and an option),
+       `viewappt --to 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated option)<br>
+       Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
+
 1. Viewing a date-only appointment next to a timed one on the same day
 
     1. Prerequisites: Start with the sample data, then add a timed appointment on the same date as Bernice Yu's
-       date-only one: `add --id T0456789D --name Eve Tan --number 98765432 --address Blk 123 Clementi Ave 3, #05-12 --next-appointment 2026-10-06 15:00`.
+       date-only one: `add --id T0456789D --name Eve Tan --number 98765432 --address Blk 123 Clementi Ave 3, #05-12 --appt 2026-10-06 15:00`.
 
     1. Test case: `viewappt 2026-10-06`<br>
        Expected: Both Bernice Yu (appointment `2026-10-06`, no time) and Eve Tan (appointment `2026-10-06 15:00`) are shown.

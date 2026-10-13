@@ -22,7 +22,6 @@ public final class PatientContainsSubstringsPredicate implements Predicate<Patie
     private final Optional<String> phone;
     private final Optional<String> address;
     private final Optional<String> medicalHistory;
-    private final Optional<String> nextAppointment;
 
     /**
      * Creates a predicate with at least one non-blank search criterion.
@@ -31,16 +30,15 @@ public final class PatientContainsSubstringsPredicate implements Predicate<Patie
      * @throws IllegalArgumentException if no criterion is supplied or any supplied criterion is blank.
      */
     public PatientContainsSubstringsPredicate(Optional<String> id, Optional<String> name, Optional<String> phone,
-            Optional<String> address, Optional<String> medicalHistory, Optional<String> nextAppointment) {
-        requireAllNonNull(id, name, phone, address, medicalHistory, nextAppointment);
-        checkArgument(Stream.of(id, name, phone, address, medicalHistory, nextAppointment)
+            Optional<String> address, Optional<String> medicalHistory) {
+        requireAllNonNull(id, name, phone, address, medicalHistory);
+        checkArgument(Stream.of(id, name, phone, address, medicalHistory)
                 .anyMatch(Optional::isPresent), "At least one search criterion must be supplied.");
         this.id = normalizeCriterion(id);
         this.name = normalizeCriterion(name);
         this.phone = normalizeCriterion(phone);
         this.address = normalizeCriterion(address);
         this.medicalHistory = normalizeCriterion(medicalHistory);
-        this.nextAppointment = normalizeCriterion(nextAppointment);
     }
 
     @Override
@@ -50,9 +48,7 @@ public final class PatientContainsSubstringsPredicate implements Predicate<Patie
                 || matches(name, patient.getName().fullName)
                 || matches(phone, patient.getPhone().value)
                 || matches(address, patient.getAddress().value)
-                || patient.getMedicalHistory().map(history -> matches(medicalHistory, history.value)).orElse(false)
-                || patient.getNextAppointment().map(appointment -> matches(nextAppointment, appointment.value))
-                        .orElse(false);
+                || patient.getMedicalHistory().map(history -> matches(medicalHistory, history.value)).orElse(false);
     }
 
     private static Optional<String> normalizeCriterion(Optional<String> criterion) {
@@ -82,13 +78,12 @@ public final class PatientContainsSubstringsPredicate implements Predicate<Patie
                 && name.equals(otherPredicate.name)
                 && phone.equals(otherPredicate.phone)
                 && address.equals(otherPredicate.address)
-                && medicalHistory.equals(otherPredicate.medicalHistory)
-                && nextAppointment.equals(otherPredicate.nextAppointment);
+                && medicalHistory.equals(otherPredicate.medicalHistory);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, phone, address, medicalHistory, nextAppointment);
+        return Objects.hash(id, name, phone, address, medicalHistory);
     }
 
     @Override
@@ -99,7 +94,6 @@ public final class PatientContainsSubstringsPredicate implements Predicate<Patie
                 .add("phone", phone)
                 .add("address", address)
                 .add("medicalHistory", medicalHistory)
-                .add("nextAppointment", nextAppointment)
                 .toString();
     }
 }

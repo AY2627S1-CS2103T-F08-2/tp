@@ -69,13 +69,6 @@ public class Patient {
     }
 
     /**
-     * Returns the earliest appointment, or {@code Optional#empty()} if the patient has none.
-     */
-    public Optional<Appointment> getNextAppointment() {
-        return schedule.asList().stream().findFirst();
-    }
-
-    /**
      * Returns true if both patients have the same patient ID.
      * This defines a weaker notion of equality between two patients.
      */

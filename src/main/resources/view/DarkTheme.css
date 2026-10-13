@@ -376,11 +376,6 @@
     -fx-text-fill: #8fbcb1;
 }
 
-.list-cell .patient-row-appointment-past {
-    -fx-font-family: "Segoe UI";
-    -fx-text-fill: #8f999e;
-}
-
 /* Patient details. Each selector names .patient-detail to win over ".patient-detail .label" below. */
 .patient-detail {
     -fx-background-color: #3c3e3f;

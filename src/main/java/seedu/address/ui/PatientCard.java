@@ -17,7 +17,6 @@ public class PatientCard extends UiPart<Region> {
 
     private static final String FXML = "PatientListCard.fxml";
     private static final String TODAY_STYLE_CLASS = "patient-row-appointment-today";
-    private static final String PAST_STYLE_CLASS = "patient-row-appointment-past";
 
     public final Patient patient;
 
@@ -49,19 +48,18 @@ public class PatientCard extends UiPart<Region> {
         index.setText(displayedIndex + ".");
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);
-        patient.getNextAppointment().ifPresentOrElse(this::showNextAppointment, () -> {
-            nextAppointment.setVisible(false);
-            nextAppointment.setManaged(false);
-        });
+        LocalDate today = LocalDate.now();
+        patient.getSchedule().getNextOnOrAfter(today)
+                .ifPresentOrElse(appointment -> showNextAppointment(appointment, today), () -> {
+                    nextAppointment.setVisible(false);
+                    nextAppointment.setManaged(false);
+                });
     }
 
-    private void showNextAppointment(Appointment appointment) {
-        LocalDate today = LocalDate.now();
+    private void showNextAppointment(Appointment appointment, LocalDate today) {
         nextAppointment.setText(AppointmentFormatter.formatShort(appointment, today));
         if (AppointmentFormatter.isToday(appointment, today)) {
             nextAppointment.getStyleClass().add(TODAY_STYLE_CLASS);
-        } else if (AppointmentFormatter.isPast(appointment, today)) {
-            nextAppointment.getStyleClass().add(PAST_STYLE_CLASS);
         }
     }
 }

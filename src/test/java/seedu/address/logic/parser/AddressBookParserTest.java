@@ -81,7 +81,7 @@ public class AddressBookParserTest {
         FindCommand command = (FindCommand) parser.parseCommand(
                 FindCommand.COMMAND_WORD + " --name \"John\" --address \"Marina Bay\" --id \"123\"");
         assertEquals(new FindCommand(new PatientContainsSubstringsPredicate(Optional.of("123"), Optional.of("John"),
-                Optional.empty(), Optional.of("Marina Bay"), Optional.empty(), Optional.empty())), command);
+                Optional.empty(), Optional.of("Marina Bay"), Optional.empty())), command);
     }
 
     @Test
@@ -100,6 +100,10 @@ public class AddressBookParserTest {
     public void parseCommand_viewAppointment() throws Exception {
         assertEquals(new ViewAppointmentCommand(LocalDate.of(2026, 10, 15)),
                 parser.parseCommand(ViewAppointmentCommand.COMMAND_WORD + " 2026-10-15"));
+        ViewAppointmentCommand rangeCommand = new ViewAppointmentCommand(Optional.of(LocalDate.of(2026, 10, 1)),
+                Optional.of(LocalDate.of(2026, 10, 31)));
+        assertEquals(rangeCommand,
+                parser.parseCommand(ViewAppointmentCommand.COMMAND_WORD + " --from 2026-10-01 --till 2026-10-31"));
     }
 
     @Test

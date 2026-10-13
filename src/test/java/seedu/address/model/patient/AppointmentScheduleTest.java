@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -70,6 +72,39 @@ public class AppointmentScheduleTest {
     public void asList_modified_throwsUnsupportedOperationException() {
         AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY));
         assertThrows(UnsupportedOperationException.class, () -> appointments.asList().add(LATE));
+    }
+
+    @Test
+    public void getNextOnOrAfter_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> AppointmentSchedule.empty().getNextOnOrAfter(null));
+    }
+
+    @Test
+    public void getNextOnOrAfter_noAppointments_returnsEmpty() {
+        assertEquals(Optional.empty(), AppointmentSchedule.empty().getNextOnOrAfter(LocalDate.of(2026, 10, 1)));
+    }
+
+    @Test
+    public void getNextOnOrAfter_allInThePast_returnsEmpty() {
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY, MIDDLE, LATE));
+        assertEquals(Optional.empty(), appointments.getNextOnOrAfter(LocalDate.of(2026, 11, 3)));
+    }
+
+    @Test
+    public void getNextOnOrAfter_pastAndFuture_returnsEarliestOnOrAfterDate() {
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY, MIDDLE, LATE));
+
+        // before all appointments -> the earliest one
+        assertEquals(Optional.of(EARLY), appointments.getNextOnOrAfter(LocalDate.of(2026, 10, 1)));
+
+        // on the same day, a date-only appointment counts and comes before a timed one
+        assertEquals(Optional.of(EARLY), appointments.getNextOnOrAfter(LocalDate.of(2026, 10, 5)));
+
+        // after some appointments -> skips the past ones
+        assertEquals(Optional.of(LATE), appointments.getNextOnOrAfter(LocalDate.of(2026, 10, 6)));
+
+        // on the day of a timed appointment -> it counts, whatever its time
+        assertEquals(Optional.of(LATE), appointments.getNextOnOrAfter(LocalDate.of(2026, 11, 2)));
     }
 
     @Test
