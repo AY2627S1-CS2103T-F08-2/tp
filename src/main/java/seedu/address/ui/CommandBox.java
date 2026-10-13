@@ -8,7 +8,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import seedu.address.logic.commands.CommandResult;
-import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -22,6 +21,7 @@ public class CommandBox extends UiPart<Region> {
 
     private final CommandExecutor commandExecutor;
     private final CommandCompleter commandCompleter;
+    private final Runnable escapeHandler;
 
     /** The completions that pressing Tab goes through, for the text that the user last typed. */
     private List<String> completions = List.of();
@@ -36,11 +36,13 @@ public class CommandBox extends UiPart<Region> {
 
     /**
      * Creates a {@code CommandBox} with the given {@code CommandExecutor} and {@code CommandCompleter}.
+     * {@code escapeHandler} runs when the user presses Esc, which leaves the text in the command box unchanged.
      */
-    public CommandBox(CommandExecutor commandExecutor, CommandCompleter commandCompleter) {
+    public CommandBox(CommandExecutor commandExecutor, CommandCompleter commandCompleter, Runnable escapeHandler) {
         super(FXML);
         this.commandExecutor = commandExecutor;
         this.commandCompleter = commandCompleter;
+        this.escapeHandler = escapeHandler;
         // calls #setStyleToDefault() whenever there is a change to the text of the command box.
         commandTextField.textProperty().addListener((unused1, unused2, unused3) -> setStyleToDefault());
         // A filter sees these keys before the text field uses them, for example to move the focus away.
@@ -50,7 +52,7 @@ public class CommandBox extends UiPart<Region> {
             }
             switch (event.getCode()) {
                 case TAB -> handleTabPressed();
-                case ESCAPE -> handleEscapePressed();
+                case ESCAPE -> escapeHandler.run();
                 case UP -> history.previous(commandTextField.getText()).ifPresent(this::replaceText);
                 case DOWN -> history.next().ifPresent(this::replaceText);
                 default -> {
@@ -100,21 +102,28 @@ public class CommandBox extends UiPart<Region> {
     }
 
     /**
-     * Clears the text if there is any. Otherwise shows all patients, as the {@code list} command does,
-     * which undoes a {@code find}.
+     * Moves the keyboard focus to the command box, with the caret after the text and nothing selected.
      */
-    private void handleEscapePressed() {
-        if (!commandTextField.getText().isEmpty()) {
-            commandTextField.setText("");
-            history.resetPosition();
-            return;
-        }
+    public void requestFocus() {
+        commandTextField.requestFocus();
+        commandTextField.positionCaret(commandTextField.getLength());
+    }
 
-        try {
-            commandExecutor.execute(ListCommand.COMMAND_WORD);
-        } catch (CommandException | ParseException e) {
-            setStyleToIndicateCommandFailure();
-        }
+    /**
+     * Moves the keyboard focus to the command box and adds {@code text} after the text that is already there,
+     * as if the user had typed it in the command box.
+     */
+    public void requestFocusAndType(String text) {
+        requestFocus();
+        commandTextField.appendText(text);
+        commandTextField.positionCaret(commandTextField.getLength());
+    }
+
+    /**
+     * Returns true if the command box has the keyboard focus.
+     */
+    public boolean isFocused() {
+        return commandTextField.isFocused();
     }
 
     /**

@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
@@ -15,6 +16,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -35,6 +37,7 @@ public class MainWindow extends UiPart<Stage> {
     // Independent Ui parts residing in this Ui container
     private PatientListPanel patientListPanel;
     private PatientDetailPanel patientDetailPanel;
+    private CommandBox commandBox;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
@@ -130,8 +133,111 @@ public class MainWindow extends UiPart<Stage> {
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand, logic::getCompletions);
+        commandBox = new CommandBox(this::executeCommand, logic::getCompletions, () -> moveFocus(true));
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+
+        // The window sees these keys before the focused part does, so it can move the focus away from it.
+        getRoot().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+        getRoot().addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
+    }
+
+    /**
+     * Handles the keys that move the focus or show all patients. In the command box, only Shift+Tab is handled
+     * here, because the command box uses the other keys itself.
+     */
+    private void handleKeyPressed(KeyEvent event) {
+        boolean isShortcutDown = event.isControlDown() || event.isAltDown() || event.isMetaDown();
+        Optional<BrowseKeys.Action> action = BrowseKeys.actionFor(event.getCode(), event.isShiftDown(),
+                isShortcutDown);
+        if (action.isEmpty()
+                || commandBox.isFocused() && action.get() != BrowseKeys.Action.FOCUS_PREVIOUS_AREA) {
+            return;
+        }
+
+        switch (action.get()) {
+            case RETURN_TO_COMMAND_BOX -> commandBox.requestFocus();
+            case SHOW_ALL_PATIENTS -> showAllPatients();
+            case FOCUS_NEXT_AREA -> moveFocus(true);
+            case FOCUS_PREVIOUS_AREA -> moveFocus(false);
+            default -> throw new AssertionError("Unknown action: " + action.get());
+        }
+        event.consume();
+    }
+
+    /**
+     * Moves the focus to the command box when the user types text outside it, and adds the text there.
+     */
+    private void handleKeyTyped(KeyEvent event) {
+        boolean isShortcutDown = event.isControlDown() || event.isAltDown() || event.isMetaDown();
+        if (commandBox.isFocused() || !BrowseKeys.isCommandText(event.getCharacter(), isShortcutDown)) {
+            return;
+        }
+        commandBox.requestFocusAndType(event.getCharacter());
+        event.consume();
+    }
+
+    /**
+     * Shows all patients, as the {@code list} command does.
+     */
+    private void showAllPatients() {
+        try {
+            executeCommand(ListCommand.COMMAND_WORD);
+        } catch (CommandException | ParseException e) {
+            // executeCommand has already shown the error to the user
+            logger.warning("Showing all patients failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Moves the focus to the next area that can take it, or to the previous one if {@code isForward} is false.
+     * An empty patient list, and the details when no patient is shown, are skipped.
+     */
+    private void moveFocus(boolean isForward) {
+        // The menu bar and the result display are not areas, so going forward from them starts at the command box
+        FocusArea area = getFocusedArea().orElse(FocusArea.PATIENT_DETAILS);
+        for (int i = 0; i < FocusArea.values().length; i++) {
+            area = isForward ? area.next() : area.previous();
+            if (requestFocus(area)) {
+                return;
+            }
+        }
+    }
+
+    private Optional<FocusArea> getFocusedArea() {
+        if (commandBox.isFocused()) {
+            return Optional.of(FocusArea.COMMAND_BOX);
+        } else if (patientListPanel.isFocused()) {
+            return Optional.of(FocusArea.PATIENT_LIST);
+        } else if (patientDetailPanel.isFocused()) {
+            return Optional.of(FocusArea.PATIENT_DETAILS);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Moves the focus to {@code area}, and returns true if it took the focus.
+     */
+    private boolean requestFocus(FocusArea area) {
+        return switch (area) {
+            case COMMAND_BOX -> {
+                commandBox.requestFocus();
+                yield true;
+            }
+            case PATIENT_LIST -> requestFocusOnPatientList();
+            case PATIENT_DETAILS -> patientDetailPanel.requestFocus();
+        };
+    }
+
+    /**
+     * Moves the focus to the patient list. If no patient in the list is selected, selects the first one and
+     * shows their details, so that the selected patient is always the one shown.
+     */
+    private boolean requestFocusOnPatientList() {
+        if (!patientListPanel.requestFocus()) {
+            return false;
+        }
+        patientListPanel.selectFirstIfNoneSelected().ifPresent(patientDetailPanel::show);
+        return true;
     }
 
     /**
