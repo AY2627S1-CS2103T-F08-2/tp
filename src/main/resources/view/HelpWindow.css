@@ -16,4 +16,19 @@
 
 #helpMessageContainer {
     -fx-background-color: derive(#1d1d1d, 20%);
+    -fx-background-radius: 4px;
+}
+
+.help-window-root {
+    -fx-background-color: derive(#1d1d1d, 10%);
+}
+
+#userGuideArea {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: #e0e0e0;
+}
+
+#userGuideArea .content {
+    -fx-background-color: #242424;
 }

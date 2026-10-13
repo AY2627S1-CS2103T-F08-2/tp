@@ -24,8 +24,11 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
-   Some example commands you can try:
+1. Type a command in the command box and press <kbd>Enter</kbd> to execute it. For example, type `help` to view the 
+   summary of all commands in the result display, type `help --add` to see help specific to adding patients, or 
+   press <kbd>F1</kbd> / select **Help** > **Help** to open the Help window with the full user guide.<br><br>
+   
+    Some example commands you can try:
 
    * `list` : Lists all patients.
 
@@ -61,23 +64,40 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --number NUMBER`, `--number NUMBER --name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
-  For example, `help 123` is interpreted as `help`.
+* Extraneous parameters for commands that take no parameters, such as `list`, `exit`, and `clear`, are ignored.<br>
+  For example, `list 123` is interpreted as `list`.
 
-* Press Esc to clear the command box. If the command box is already empty, Esc shows all patients, as `list` does. For example, after `find`, press Esc to see everyone again.
+* Press <kbd>Esc</kbd> to clear the command box. If the command box is already empty, <kbd>Esc</kbd> shows all patients, as `list` 
+  does. For example, after `find`, press <kbd>Esc</kbd> to see everyone again.
 
-* The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
+* The command box supports the usual editing keys. For example, <kbd>Shift</kbd>+<kbd>Left</kbd> and <kbd>Shift</kbd>+<kbd>Right</kbd> select text, and <kbd>Ctrl</kbd>+<kbd>C</kbd>, <kbd>Ctrl</kbd>+<kbd>X</kbd>, <kbd>Ctrl</kbd>+<kbd>V</kbd>, and <kbd>Ctrl</kbd>+<kbd>A</kbd> copy, cut, paste, and select all (<kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd> on macOS).
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </div>
 
 ### Viewing help: `help`
 
-Opens a window with a link to this user guide.
+Accesses in-app guidance through the command line or opens the full built-in User Guide window.
 
-![help message](images/helpMessage.png)
+LaiNurse offers three ways to get help:
 
-Format: `help`
+1. **Full User Guide Window (`Help` menu / <kbd>F1</kbd>)**: Opens a dedicated help window containing the 
+   complete, bundled User Guide for convenient browsing alongside your work, as well as a button to copy the link to the online guide.
+2. **Command Overview (`help`)**: Prints a concise list and summary of all available commands directly in the application's result display box.
+3. **Targeted Command Help (`help --COMMAND_FLAG`)**: Displays detailed usage rules, parameter formats, and examples 
+   for a specific command directly in the result display box.
+
+Format: `help [--COMMAND_FLAG]`
+
+- Typing `help` without arguments outputs a summary of all commands in the result display.
+- Adding a command flag (e.g., `--add`, `--edit`, `--delete`, `--find`, `--list`, `--view`, `--viewappt`, `--clear`, `--exit`) displays the syntax and practical examples for that command.
+- To open the pop-up Help Window with the complete User Guide, press `F1` or click **Help** > **Help** in the top menu bar.
+
+Examples:
+- Pressing <kbd>F1</kbd> opens the full User Guide window.
+- `help` shows a quick summary list of all available commands in the result display.
+- `help --add` shows the exact parameters and examples for adding a patient.
+- `help --edit` shows how to modify patient details and manage appointments.
 
 
 ### Adding a patient: `add`
@@ -268,5 +288,5 @@ Action | Format, Examples
 **List** | `list`
 **View** | `view ID`<br> e.g., `view S1234567A`
 **ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --till 2026-10-31`
-**Help** | `help`
+**Help** | `help [--COMMAND_FLAG]` <br> e.g. `help`, `help --edit`, `help --add`, `help --delete`
 **Exit** | `exit`
