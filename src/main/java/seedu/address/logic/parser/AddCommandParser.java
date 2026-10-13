@@ -2,10 +2,10 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_NEXT_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import java.util.Optional;
@@ -35,10 +35,10 @@ public class AddCommandParser implements Parser<AddCommand> {
     public AddCommand parse(String args) throws ParseException {
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
                 String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE),
-                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NEXT_APPOINTMENT);
+                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_APPOINTMENT);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                        PREFIX_MEDICAL_HISTORY, PREFIX_NEXT_APPOINTMENT);
+                        PREFIX_MEDICAL_HISTORY, PREFIX_APPOINTMENT);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS)
                 || !argMultimap.getPreamble().isEmpty()) {
@@ -58,7 +58,7 @@ public class AddCommandParser implements Parser<AddCommand> {
                 ? ParserUtil.parseMedicalHistory(argMultimap.getValue(PREFIX_MEDICAL_HISTORY).get())
                 : null;
         AppointmentSchedule appointments =
-                ParserUtil.parseAppointments(argMultimap.getAllValues(PREFIX_NEXT_APPOINTMENT));
+                ParserUtil.parseAppointments(argMultimap.getAllValues(PREFIX_APPOINTMENT));
 
         Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory), appointments);
 
