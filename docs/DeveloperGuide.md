@@ -91,9 +91,20 @@ The **API** of this component is specified in [
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, and
-`StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common
-behavior among classes that represent visible GUI parts.
+The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`,
+`PatientDetailPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart`
+class, which captures common behavior among classes that represent visible GUI parts.
+
+`PatientListPanel` shows each patient in the filtered list on one row, and `PatientDetailPanel` beside it shows all the
+details of one patient. When a `CommandResult` names a patient to view, as the result of `view` does, `MainWindow` tells
+`PatientDetailPanel` to show that patient. After every command, `MainWindow` highlights the shown patient's row in
+`PatientListPanel`, or no row if that patient is not in the displayed list. `PatientDetailPanel` finds the
+patient by ID in the list of all patients from `Logic#getPatientList()`, and listens to that list. So it shows a
+patient's new details after an edit, and goes back to its starting message after the patient is deleted, whatever the
+filter on the displayed list is.
+
+When the user presses Esc in an empty command box, `CommandBox` executes the `list` command through the same
+`CommandExecutor` as Enter does, so the result is the same as typing `list`.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in
 `src/main/resources/view`. For example, [
@@ -611,6 +622,47 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC06 - View a patient's details**
+
+**MSS**
+
+1.  Nurse <u>finds the patient (UC02)</u>
+2.  Nurse requests to view the patient by ID
+3.  LaiNurse shows all of the patient's details beside the patient list, and highlights the patient in the list if
+    the patient is shown there
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Nurse already knows the patient's ID.
+
+  Use case resumes at step 2.
+
+* 2a. The ID is missing or is not a valid ID.
+
+    * 2a1. LaiNurse shows an error message.
+
+      Use case resumes at step 2.
+
+* 2b. The given ID does not match any patient.
+
+    * 2b1. LaiNurse shows an error message, and keeps showing the details it showed before.
+
+      Use case resumes at step 2.
+
+* 3a. Nurse edits the patient while the details are shown.
+
+    * 3a1. LaiNurse shows the new details.
+
+      Use case ends.
+
+* 3b. Nurse deletes the patient while the details are shown.
+
+    * 3b1. LaiNurse stops showing the patient's details.
+
+      Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
@@ -676,6 +728,37 @@ testers are expected to do more *exploratory* testing.
        Expected: The most recent window size and location are retained.
 
 1. _{ more test cases …​ }_
+
+### Viewing a patient
+
+1. Viewing a patient's details
+
+    1. Prerequisites: Start with the sample data, which includes a patient with the ID `S1234567A`.
+
+    1. Test case: `view S1234567A`<br>
+       Expected: The panel beside the list shows the patient's name, ID, phone number, address, next appointment and medical history. Their row in the list is highlighted. The status message names the patient.
+
+    1. Test case: `find bernice`, then `view S1234567A`<br>
+       Expected: The panel shows the patient with the ID `S1234567A`, although the list shows only the `find` results. No row is highlighted.
+
+    1. Test case: `view S1234567A`, then `delete S1234567A`<br>
+       Expected: The panel goes back to its starting message.
+
+    1. Test case: `view S0000000Z`, where no patient has that ID<br>
+       Expected: The panel does not change. The status message shows an error.
+
+    1. Other incorrect view commands to try: `view`, `view S123-456` (not a valid ID)<br>
+       Expected: The panel does not change. The status message shows the correct command format.
+
+1. Showing all patients again with Esc
+
+    1. Prerequisites: Start with the sample data.
+
+    1. Test case: `find bernice`, then press Esc<br>
+       Expected: The list shows all patients again. The status message says that all patients are listed.
+
+    1. Test case: `find bernice`, then type `view` and press Esc<br>
+       Expected: The command box is cleared, and the list still shows only the `find` results. A second Esc shows all patients.
 
 ### Deleting a patient
 

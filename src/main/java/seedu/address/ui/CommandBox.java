@@ -3,8 +3,11 @@ package seedu.address.ui;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -29,6 +32,15 @@ public class CommandBox extends UiPart<Region> {
         this.commandExecutor = commandExecutor;
         // calls #setStyleToDefault() whenever there is a change to the text of the command box.
         commandTextField.textProperty().addListener((unused1, unused2, unused3) -> setStyleToDefault());
+        // A filter sees Esc before the text field uses it.
+        commandTextField.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() != KeyCode.ESCAPE
+                    || event.isShiftDown() || event.isControlDown() || event.isAltDown() || event.isMetaDown()) {
+                return;
+            }
+            handleEscapePressed();
+            event.consume();
+        });
     }
 
     /**
@@ -44,6 +56,23 @@ public class CommandBox extends UiPart<Region> {
         try {
             commandExecutor.execute(commandText);
             commandTextField.setText("");
+        } catch (CommandException | ParseException e) {
+            setStyleToIndicateCommandFailure();
+        }
+    }
+
+    /**
+     * Clears the text if there is any. Otherwise shows all patients, as the {@code list} command does,
+     * which undoes a {@code find}.
+     */
+    private void handleEscapePressed() {
+        if (!commandTextField.getText().isEmpty()) {
+            commandTextField.setText("");
+            return;
+        }
+
+        try {
+            commandExecutor.execute(ListCommand.COMMAND_WORD);
         } catch (CommandException | ParseException e) {
             setStyleToIndicateCommandFailure();
         }

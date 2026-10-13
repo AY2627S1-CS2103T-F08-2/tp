@@ -34,6 +34,7 @@ public class MainWindow extends UiPart<Stage> {
 
     // Independent Ui parts residing in this Ui container
     private PatientListPanel patientListPanel;
+    private PatientDetailPanel patientDetailPanel;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
@@ -45,6 +46,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private StackPane patientListPanelPlaceholder;
+
+    @FXML
+    private StackPane patientDetailPanelPlaceholder;
 
     @FXML
     private StackPane resultDisplayPlaceholder;
@@ -114,7 +118,10 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        patientListPanel = new PatientListPanel(logic.getFilteredPatientList());
+        patientDetailPanel = new PatientDetailPanel(logic.getPatientList());
+        patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
+
+        patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), patientDetailPanel::show);
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
@@ -181,6 +188,10 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+
+            commandResult.getPatientToView().ifPresent(patientDetailPanel::show);
+            // Removing or filtering rows can move the list's selection to another patient, so match it to the panel.
+            patientDetailPanel.getShownId().ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
 
             if (commandResult.isShowHelp()) {
                 handleHelp();

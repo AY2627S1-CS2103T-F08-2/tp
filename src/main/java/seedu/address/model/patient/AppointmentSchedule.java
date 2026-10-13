@@ -2,9 +2,11 @@ package seedu.address.model.patient;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -68,6 +70,15 @@ public class AppointmentSchedule {
      */
     public boolean isEmpty() {
         return appointments.isEmpty();
+    }
+
+    /**
+     * Returns the earliest appointment on or after {@code date}, or {@code Optional#empty()} if there is none.
+     * Only dates are compared, so every appointment on {@code date} counts, whatever its time.
+     */
+    public Optional<Appointment> getNextOnOrAfter(LocalDate date) {
+        requireNonNull(date);
+        return appointments.stream().filter(appointment -> !appointment.getDate().isBefore(date)).findFirst();
     }
 
     /**

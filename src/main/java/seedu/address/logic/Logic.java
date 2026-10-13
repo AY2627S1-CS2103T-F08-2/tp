@@ -23,6 +23,9 @@ public interface Logic {
     /** Returns an unmodifiable view of the filtered list of patients */
     ObservableList<Patient> getFilteredPatientList();
 
+    /** Returns an unmodifiable view of the list of all patients, whatever the current filter */
+    ObservableList<Patient> getPatientList();
+
     /**
      * Returns the user prefs' GUI settings.
      */

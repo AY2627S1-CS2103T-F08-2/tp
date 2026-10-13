@@ -1,0 +1,168 @@
+{
+  "_comment" : "Data for manual testing. Copy to data/addressbook.json in the folder you launch the app from, then start the app. Copy it again to reset.",
+  "persons" : [ {
+    "id" : "S8012345A",
+    "name" : "TAN AH KOW",
+    "phone" : "9123 4567",
+    "address" : "BLK 123 ANG MO KIO AVE 3, #05-12",
+    "medicalHistory" : "TYPE 2 DIABETES, HYPERTENSION",
+    "nextAppointment" : "2026-10-08 09:00"
+  }, {
+    "id" : "S7523456B",
+    "name" : "TAN AH KOW",
+    "phone" : "8234 5678",
+    "address" : "BLK 45 BEDOK NORTH ST 1, #02-33",
+    "medicalHistory" : "ASTHMA"
+  }, {
+    "id" : "T0234567C",
+    "name" : "TAN MEI LING",
+    "phone" : "+65 9345 6789",
+    "address" : "BLK 210 TAMPINES ST 21, #11-04",
+    "nextAppointment" : "2026-10-09"
+  }, {
+    "id" : "S6834567D",
+    "name" : "LIM WEI JIE",
+    "phone" : "9456 7890",
+    "address" : "12 JALAN BUKIT MERAH, #03-01",
+    "medicalHistory" : "POST-STROKE REHABILITATION, LEFT-SIDE WEAKNESS",
+    "nextAppointment" : "2026-10-10 14:30"
+  }, {
+    "id" : "S5945678E",
+    "name" : "LIM TAN HOCK",
+    "phone" : "6123-4567",
+    "address" : "BLK 8 TOA PAYOH LORONG 1, #07-210",
+    "medicalHistory" : "DEMENTIA (MODERATE), WANDERS AT NIGHT",
+    "nextAppointment" : "2026-10-15 10:00"
+  }, {
+    "id" : "S7056789F",
+    "name" : "MUHAMMAD HAFIZ BIN ISMAIL",
+    "phone" : "9567 8901",
+    "address" : "BLK 301 WOODLANDS ST 31, #09-88",
+    "medicalHistory" : "COPD, ON HOME OXYGEN 2L/MIN",
+    "nextAppointment" : "2026-10-08 15:00"
+  }, {
+    "id" : "T0167890G",
+    "name" : "NUR AISYAH BINTE RAHMAN",
+    "phone" : "8678 9012",
+    "address" : "BLK 512 JURONG WEST ST 52, #14-07",
+    "medicalHistory" : "PREGNANCY (32 WEEKS), GESTATIONAL DIABETES",
+    "nextAppointment" : "2026-10-13"
+  }, {
+    "id" : "S6278901H",
+    "name" : "RAVI S/O KUMAR",
+    "phone" : "9789 0123",
+    "address" : "45 SERANGOON GARDEN WAY",
+    "medicalHistory" : "CHRONIC KIDNEY DISEASE STAGE 3",
+    "nextAppointment" : "2026-09-30"
+  }, {
+    "id" : "S4389012I",
+    "name" : "MARY-ANN O'CONNOR",
+    "phone" : "+65 8890 1234",
+    "address" : "7 HOLLAND GROVE ROAD",
+    "medicalHistory" : "RIGHT HIP REPLACEMENT, 6 WEEKS POST-OP",
+    "nextAppointment" : "2026-10-12 11:00"
+  }, {
+    "id" : "S3490123J",
+    "name" : "陈大文",
+    "phone" : "9901 2345",
+    "address" : "BLK 5 BANDA STREET, #04-56",
+    "medicalHistory" : "PARKINSON'S DISEASE"
+  }, {
+    "id" : "F1234567K",
+    "name" : "JOHN SMITH",
+    "phone" : "8012 3456",
+    "address" : "22 ORCHARD BOULEVARD, #18-02",
+    "nextAppointment" : "2026-11-02 08:00"
+  }, {
+    "id" : "G2345678L",
+    "name" : "MARIA SANTOS",
+    "phone" : "9123 0987",
+    "address" : "BLK 702 YISHUN AVE 5, #06-15",
+    "medicalHistory" : "FRACTURED LEFT WRIST, CAST UNTIL 2026-10-20",
+    "nextAppointment" : "2026-10-20 09:30"
+  }, {
+    "id" : "M3456789N",
+    "name" : "KIM JI-HOON",
+    "phone" : "8234 0987",
+    "address" : "BLK 18 DOVER CRESCENT, #10-22"
+  }, {
+    "id" : "S2512345P",
+    "name" : "GOH SIEW HWA",
+    "phone" : "6345 6789",
+    "address" : "BLK 34 HOUGANG AVE 3, #01-120",
+    "medicalHistory" : "TYPE 2 DIABETES ON METFORMIN 500MG TWICE DAILY, HYPERTENSION, ALLERGIC TO PENICILLIN AND SULFA DRUGS, LIVES ALONE, DAUGHTER VISITS ON WEEKENDS, CHECK FEET FOR ULCERS AT EVERY VISIT",
+    "nextAppointment" : "2026-10-08"
+  }, {
+    "id" : "S1823456Q",
+    "name" : "KOH BENG CHOON",
+    "phone" : "9345 1111",
+    "address" : "BISHAN PARK CARPARK B (REHAB WALKS, MEET AT ENTRANCE)",
+    "medicalHistory" : "LEFT KNEE REPLACEMENT REHABILITATION",
+    "nextAppointment" : "2026-10-11 07:30"
+  }, {
+    "id" : "T0534567R",
+    "name" : "ARJUN NAIR",
+    "phone" : "9456 2222",
+    "address" : "BLK 456 SENGKANG EAST WAY, #15-31",
+    "medicalHistory" : "TYPE 1 DIABETES, INSULIN PUMP",
+    "nextAppointment" : "2027-01-15 10:00"
+  }, {
+    "id" : "S4645678S",
+    "name" : "WONG KAI MING",
+    "phone" : "8567 3333",
+    "address" : "BLK 9 KIM KEAT AVE, #08-09",
+    "nextAppointment" : "2026-12-24"
+  }, {
+    "id" : "S3756789T",
+    "name" : "SITI AMINAH BINTE YUSOF",
+    "phone" : "9678 4444",
+    "address" : "BLK 140 PASIR RIS ST 11, #03-45",
+    "medicalHistory" : "HEART FAILURE, FLUID RESTRICTION 1.5L/DAY",
+    "nextAppointment" : "2026-10-08 18:00"
+  }, {
+    "id" : "S2867890U",
+    "name" : "CHONG LI PING",
+    "phone" : "9789 5555",
+    "address" : "BLK 60 CHANGI VILLAGE ROAD",
+    "medicalHistory" : "LUNG CANCER, PALLIATIVE CARE",
+    "nextAppointment" : "2026-10-09 16:00"
+  }, {
+    "id" : "S1978901V",
+    "name" : "PATRICK LEE",
+    "phone" : "8890 6666",
+    "address" : "3 CHANCERY LANE"
+  }, {
+    "id" : "HOMECARE01",
+    "name" : "CHUA AH MOI",
+    "phone" : "6789 0000",
+    "address" : "BLK 1 HAIG ROAD, #01-01",
+    "medicalHistory" : "LEFT FOOT ULCER, DAILY WOUND DRESSING",
+    "nextAppointment" : "2028-02-29 09:00"
+  }, {
+    "id" : "P42",
+    "name" : "BABY TAN",
+    "phone" : "+65 9000 0042",
+    "address" : "BLK 210 TAMPINES ST 21, #11-04",
+    "medicalHistory" : "NEONATAL JAUNDICE FOLLOW-UP",
+    "nextAppointment" : "2026-10-10"
+  }, {
+    "id" : "S9012345W",
+    "name" : "ELIZABETH TAN",
+    "phone" : "8123 4567",
+    "address" : "BLK 77 MARINE PARADE CENTRAL, #09-301",
+    "medicalHistory" : "OSTEOPOROSIS"
+  }, {
+    "id" : "T0645678X",
+    "name" : "ADITYA KRISHNAMURTHY RAMASWAMY VENKATARAMAN",
+    "phone" : "9234 5678",
+    "address" : "BLK 600 ELIAS ROAD, #12-345",
+    "nextAppointment" : "2026-10-31 23:59"
+  }, {
+    "id" : "S5156789Y",
+    "name" : "NG BOON KIAT",
+    "phone" : "8345 6789",
+    "address" : "BLK 25 SIN MING ROAD, #05-33",
+    "medicalHistory" : "DEPRESSION, CHECK MEDICATION COMPLIANCE",
+    "nextAppointment" : "2026-10-08 00:00"
+  } ]
+}

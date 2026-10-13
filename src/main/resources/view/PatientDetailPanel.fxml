@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane styleClass="patient-detail" alignment="TOP_LEFT" xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1">
+  <Label fx:id="placeholder" styleClass="patient-detail-placeholder" wrapText="true"
+         text="To see a patient's details here, type view and their ID, for example: view S1234567A" />
+  <!-- Long details scroll down; they are never cut off, and never scroll sideways. -->
+  <ScrollPane fx:id="details" fitToWidth="true" hbarPolicy="NEVER">
+    <VBox spacing="18">
+      <padding>
+        <Insets top="20" right="22" bottom="20" left="22" />
+      </padding>
+      <HBox alignment="BASELINE_LEFT" spacing="12">
+        <Label fx:id="name" styleClass="patient-detail-name" wrapText="true">
+          <minHeight>
+            <!-- Ensures that a long name wraps instead of being cut off -->
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </Label>
+        <Label fx:id="patientId" styleClass="patient-detail-id">
+          <minWidth>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minWidth>
+        </Label>
+      </HBox>
+      <GridPane hgap="20" vgap="13">
+        <columnConstraints>
+          <ColumnConstraints minWidth="135" prefWidth="150" />
+          <ColumnConstraints hgrow="ALWAYS" />
+        </columnConstraints>
+        <Label text="Phone" styleClass="patient-detail-key"
+               GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+        <Label fx:id="phone" styleClass="patient-detail-value" wrapText="true"
+               GridPane.rowIndex="0" GridPane.columnIndex="1">
+          <minHeight>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </Label>
+        <Label text="Address" styleClass="patient-detail-key"
+               GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+        <Label fx:id="address" styleClass="patient-detail-value" wrapText="true"
+               GridPane.rowIndex="1" GridPane.columnIndex="1">
+          <minHeight>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </Label>
+        <Label text="Next appointment" styleClass="patient-detail-key"
+               GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+        <Label fx:id="nextAppointment" styleClass="patient-detail-value" wrapText="true"
+               GridPane.rowIndex="2" GridPane.columnIndex="1">
+          <minHeight>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </Label>
+        <Label text="Medical history" styleClass="patient-detail-key"
+               GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+        <Label fx:id="medicalHistory" styleClass="patient-detail-value" wrapText="true"
+               GridPane.rowIndex="3" GridPane.columnIndex="1">
+          <minHeight>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </Label>
+      </GridPane>
+    </VBox>
+  </ScrollPane>
+</StackPane>

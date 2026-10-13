@@ -13,6 +13,7 @@ import static seedu.address.testutil.TypicalPatients.AMY;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,6 +86,21 @@ public class LogicManagerTest {
     @Test
     public void getFilteredPatientList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPatientList().remove(0));
+    }
+
+    @Test
+    public void getPatientList_modifyList_throwsUnsupportedOperationException() {
+        assertThrows(UnsupportedOperationException.class, () -> logic.getPatientList().remove(0));
+    }
+
+    @Test
+    public void getPatientList_filteredList_stillHasAllPatients() throws Exception {
+        Patient expectedPatient = new PatientBuilder(AMY).build();
+        model.addPatient(expectedPatient);
+        model.updateFilteredPatientList(patient -> false);
+
+        assertEquals(0, logic.getFilteredPatientList().size());
+        assertEquals(List.of(expectedPatient), logic.getPatientList());
     }
 
     /**
