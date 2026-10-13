@@ -99,21 +99,17 @@
     -fx-padding: 0 0 0 0;
 }
 
-.list-cell:filled:even {
-    -fx-background-color: #3c3e3f;
-}
-
+/* Rows share one colour and are split by a thin line at the bottom. */
+.list-cell:filled:even,
 .list-cell:filled:odd {
-    -fx-background-color: #515658;
+    -fx-background-color: #4a5054, #3c3e3f;
+    -fx-background-insets: 0, 0 0 1 0;
 }
 
+/* The selected row gets a muted accent strip on its left. */
 .list-cell:filled:selected {
-    -fx-background-color: #424d5f;
-}
-
-.list-cell:filled:selected #cardPane {
-    -fx-border-color: #3e7b91;
-    -fx-border-width: 1;
+    -fx-background-color: #4a5054, #8fbcb1, #424d5f;
+    -fx-background-insets: 0, 0 0 1 0, 0 0 1 3;
 }
 
 .list-cell .label {
@@ -349,4 +345,78 @@
     -fx-border-radius: 2;
     -fx-background-radius: 2;
     -fx-font-size: 11;
+}
+
+/* Patient list rows. Each selector names .list-cell to win over ".list-cell .label" above. */
+.list-cell .patient-row-index {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-text-fill: #8f999e;
+}
+
+.list-cell .patient-row-name {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 14px;
+    -fx-text-fill: #e6eaec;
+}
+
+.list-cell .patient-row-id {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #b5bcc0;
+}
+
+.list-cell .patient-row-appointment {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 12px;
+    -fx-text-fill: #b5bcc0;
+}
+
+.list-cell .patient-row-appointment-today {
+    -fx-text-fill: #8fbcb1;
+}
+
+.list-cell .patient-row-appointment-past {
+    -fx-font-family: "Segoe UI";
+    -fx-text-fill: #8f999e;
+}
+
+/* Patient details. Each selector names .patient-detail to win over ".patient-detail .label" below. */
+.patient-detail {
+    -fx-background-color: #3c3e3f;
+}
+
+.patient-detail .scroll-pane,
+.patient-detail .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.patient-detail .label {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 15.5px;
+    -fx-text-fill: #d5dadc;
+}
+
+.patient-detail .patient-detail-placeholder {
+    -fx-padding: 20 22 20 22;
+    -fx-text-fill: #8f999e;
+}
+
+.patient-detail .patient-detail-name {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 24px;
+    -fx-text-fill: #e6eaec;
+}
+
+.patient-detail .patient-detail-id {
+    -fx-font-size: 16.5px;
+    -fx-text-fill: #b5bcc0;
+}
+
+.patient-detail .patient-detail-key {
+    -fx-text-fill: #8f999e;
+}
+
+.patient-detail .patient-detail-value-empty {
+    -fx-text-fill: #8f999e;
 }

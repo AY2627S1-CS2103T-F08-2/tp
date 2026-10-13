@@ -31,6 +31,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
    * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` with the ID `T0123456B`.
 
+   * `view S1234567A` : Shows the details of the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
+
    * `delete S1234567A` : Deletes the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
    * `clear` : Deletes all patients.
@@ -61,6 +63,16 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
+
+* After `view` or `delete`, you can press Tab to finish typing a patient ID.<br>
+  Type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
+  For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.
+
+* Press Esc to clear the command box. If the command box is already empty, Esc shows all patients, as `list` does. For example, after `find`, press Esc to see everyone again.
+
+* Press Up and Down to go back and forth through the commands you entered since LaiNurse started, including ones that failed. Pressing Down after the newest command gives back what you were typing.
+
+* The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </div>
@@ -98,10 +110,13 @@ Examples:
 
 ### Listing all patients: `list`
 
-Shows a list of all patients, with each patient's ID, name, phone number and address.
-Medical history and appointments are shown only if the patient has them. Appointments are listed from earliest to latest. On the same day, an appointment with only a date comes first, like an all-day event in a calendar.
+Shows a list of all patients.
 
 Format: `list`
+
+* Each row shows the patient's list number, name and ID, and their next appointment if they have one. A name too long for the row ends in `…`, and `view` shows it in full.
+* To see a patient's phone number, address and medical history, use `view`, described below.
+* Next appointments are shown relative to today: `Today 09:30`, `Tomorrow`, a weekday such as `Tue 14:00` within the next 6 days, and a date such as `30 Nov` or `5 Jan 2027` after that. Appointments in the past are dimmed.
 
 ### Editing a patient: `edit`
 
@@ -141,7 +156,7 @@ Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--m
 * Phone and appointment searches match their stored text. Partial values such as `--number 123`, `--next-appointment 2026-10`, and `--next-appointment 09:30` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
 * Patients without medical history or a next appointment do not match searches on that missing field, but may match another supplied option.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within quoted values. Unknown options, misspellings, and `--name=value` syntax are rejected. Text such as `Anne--Marie` is accepted.
-* Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. Enter `list` to show all patients again.
+* Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. To see all patients again, enter `list`, or press Esc in an empty command box.
 
 Examples:
 
@@ -163,6 +178,22 @@ Format: `viewappt DATE`
 Examples:
 * `viewappt 2026-10-15` views all patients with appointments on October 15, 2026.
 * `viewappt 2026-12-25` views all patients with appointments on December 25, 2026.
+
+### Viewing a patient's details: `view`
+
+Shows all the details of a patient in the panel beside the patient list.
+
+Format: `view ID`
+
+* Shows the patient with the specified `ID`. IDs are case-insensitive, so `s1234567a` and `S1234567A` refer to the same patient.
+* The patient does not need to be in the displayed list, because `view` searches all patients. If they are in the displayed list, their row is highlighted.
+* If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
+* The panel shows the patient's name, ID, phone number, address, next appointment and medical history. A next appointment today or tomorrow is marked `(today)` or `(tomorrow)`, and one in the past is marked `(past)`. If the details do not fit, scroll down the panel.
+* The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete all patients with `clear`, it goes back to its starting message.
+* You can also click a patient in the list to see their details.
+
+Examples:
+* `view S1234567A` shows the details of the patient with the ID `S1234567A`.
 
 ### Deleting a patient: `delete`
 
@@ -229,6 +260,7 @@ Action | Format, Examples
 **Edit** | `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --number 91234567 --add-appt 2026-12-01 10:00`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY] [--next-appointment DATE_OR_TIME]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
 **List** | `list`
+**View** | `view ID`<br> e.g., `view S1234567A`
 **ViewAppt** | `viewappt DATE`<br> e.g., `viewappt 2026-10-15`
 **Help** | `help`
 **Exit** | `exit`

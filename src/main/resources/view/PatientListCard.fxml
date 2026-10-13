@@ -2,35 +2,30 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
 
-<HBox id="cardPane" fx:id="cardPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <GridPane HBox.hgrow="ALWAYS">
-    <columnConstraints>
-      <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="150" />
-    </columnConstraints>
-    <VBox alignment="CENTER_LEFT" minHeight="105" GridPane.columnIndex="0">
-      <padding>
-        <Insets top="5" right="5" bottom="5" left="15" />
-      </padding>
-      <HBox spacing="0.5" alignment="CENTER_LEFT">
-        <Label fx:id="id" styleClass="cell_big_label">
-          <minWidth>
-            <!-- Ensures that the label text is never truncated -->
-            <Region fx:constant="USE_PREF_SIZE" />
-          </minWidth>
-        </Label>
-        <Label fx:id="name" text="\$first" styleClass="cell_big_label" />
-      </HBox>
-      <Label fx:id="patientId" styleClass="cell_small_label" text="\$patientId" />
-      <Label fx:id="phone" styleClass="cell_small_label" text="\$phone" />
-      <Label fx:id="address" styleClass="cell_small_label" text="\$address" />
-      <Label fx:id="medicalHistory" styleClass="cell_small_label" text="\$medicalHistory" />
-      <Label fx:id="appointments" styleClass="cell_small_label" text="\$appointments" />
-    </VBox>
-  </GridPane>
+<HBox id="cardPane" fx:id="cardPane" alignment="CENTER_LEFT" spacing="8" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1">
+  <padding>
+    <Insets top="8" right="12" bottom="8" left="12" />
+  </padding>
+  <Label fx:id="index" styleClass="patient-row-index">
+    <minWidth>
+      <!-- Ensures that the label text is never truncated -->
+      <Region fx:constant="USE_PREF_SIZE" />
+    </minWidth>
+  </Label>
+  <Label fx:id="name" styleClass="patient-row-name" text="\$name" />
+  <Label fx:id="patientId" styleClass="patient-row-id" text="\$patientId">
+    <minWidth>
+      <Region fx:constant="USE_PREF_SIZE" />
+    </minWidth>
+  </Label>
+  <Region HBox.hgrow="ALWAYS" />
+  <Label fx:id="nextAppointment" styleClass="patient-row-appointment" text="\$nextAppointment">
+    <minWidth>
+      <Region fx:constant="USE_PREF_SIZE" />
+    </minWidth>
+  </Label>
 </HBox>

@@ -89,9 +89,25 @@ The **API** of this component is specified in [
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`, and
-`StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common
-behavior among classes that represent visible GUI parts.
+The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PatientListPanel`,
+`PatientDetailPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart`
+class, which captures common behavior among classes that represent visible GUI parts.
+
+`PatientListPanel` shows each patient in the filtered list on one row, and `PatientDetailPanel` beside it shows all the
+details of one patient. When a `CommandResult` names a patient to view, as the result of `view` does, `MainWindow` tells
+`PatientDetailPanel` to show that patient. After every command, `MainWindow` highlights the shown patient's row in
+`PatientListPanel`, or no row if that patient is not in the displayed list. `PatientDetailPanel` finds the
+patient by ID in the list of all patients from `Logic#getPatientList()`, and listens to that list. So it shows a
+patient's new details after an edit, and goes back to its starting message after the patient is deleted, whatever the
+filter on the displayed list is.
+
+When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID at
+the end of the command, and replaces the text with the first one. Each further Tab gives the next one. `IdCompleter`
+in the `Logic` component holds the rules, such as which commands take a patient ID, so `CommandBox` needs no
+knowledge of the command formats. When the user presses Esc in an empty command box, `CommandBox` executes the `list`
+command through the same `CommandExecutor` as Enter does, so the result is the same as typing `list`. `CommandBox` also
+keeps a `CommandHistory` of the commands entered since the app started, which the Up and Down keys go through. The
+history is kept only in the UI, because no command needs it.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in
 `src/main/resources/view`. For example, [
@@ -622,6 +638,60 @@ testers are expected to do more *exploratory* testing.
        Expected: The most recent window size and location are retained.
 
 1. _{ more test cases …​ }_
+
+### Viewing a patient
+
+1. Viewing a patient's details
+
+    1. Prerequisites: Start with the sample data, which includes a patient with the ID `S1234567A`.
+
+    1. Test case: `view S1234567A`<br>
+       Expected: The panel beside the list shows the patient's name, ID, phone number, address, next appointment and medical history. Their row in the list is highlighted. The status message names the patient.
+
+    1. Test case: `find bernice`, then `view S1234567A`<br>
+       Expected: The panel shows the patient with the ID `S1234567A`, although the list shows only the `find` results. No row is highlighted.
+
+    1. Test case: `view S1234567A`, then `delete S1234567A`<br>
+       Expected: The panel goes back to its starting message.
+
+    1. Test case: `view S0000000Z`, where no patient has that ID<br>
+       Expected: The panel does not change. The status message shows an error.
+
+    1. Other incorrect view commands to try: `view`, `view S123-456` (not a valid ID)<br>
+       Expected: The panel does not change. The status message shows the correct command format.
+
+1. Completing a patient ID with Tab
+
+    1. Prerequisites: Start with the sample data, which includes patients with the IDs `S1234567A` and `S2345678B`.
+
+    1. Test case: type `view s1`, then press Tab<br>
+       Expected: The command box shows `view S1234567A`. The focus stays in the command box.
+
+    1. Test case: type `delete S`, then press Tab several times<br>
+       Expected: Each Tab shows the next ID that starts with `S`, in the order of the list, and then starts again from the first.
+
+    1. Test case: type `add --id S1`, `edit 1` or `view XYZ`, then press Tab<br>
+       Expected: The command box does not change.
+
+1. Showing all patients again with Esc
+
+    1. Prerequisites: Start with the sample data.
+
+    1. Test case: `find bernice`, then press Esc<br>
+       Expected: The list shows all patients again. The status message says that all patients are listed.
+
+    1. Test case: `find bernice`, then type `view` and press Esc<br>
+       Expected: The command box is cleared, and the list still shows only the `find` results. A second Esc shows all patients.
+
+1. Going through command history with Up and Down
+
+    1. Prerequisites: Start LaiNurse, then enter `list`, `find bernice` and `view S1234567A`.
+
+    1. Test case: type `abc`, then press Up three times<br>
+       Expected: The command box shows `view S1234567A`, then `find bernice`, then `list`. A fourth Up keeps `list`.
+
+    1. Test case: after the test case above, press Down three times<br>
+       Expected: The command box shows `find bernice`, then `view S1234567A`, then `abc` again.
 
 ### Deleting a patient
 

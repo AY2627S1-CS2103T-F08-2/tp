@@ -1,71 +1,67 @@
 package seedu.address.ui;
 
-import java.util.Optional;
+import java.time.LocalDate;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
- * A UI component that displays information of a {@code Patient}.
+ * A UI component that displays one {@code Patient} as a row of the patient list: the list number, name,
+ * patient ID and next appointment. {@link PatientDetailPanel} shows the other details.
  */
 public class PatientCard extends UiPart<Region> {
 
     private static final String FXML = "PatientListCard.fxml";
+    private static final String TODAY_STYLE_CLASS = "patient-row-appointment-today";
+    private static final String PAST_STYLE_CLASS = "patient-row-appointment-past";
 
-    /**
+    public final Patient patient;
+
+    /*
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
      * As a consequence, UI elements' variable names cannot be set to such keywords
      * or an exception will be thrown by JavaFX during runtime.
      *
-     * @see <a href="https://github.com/se-edu/addressbook-level4/issues/336">The issue on AddressBook level 4</a>
+     * See https://github.com/se-edu/addressbook-level4/issues/336 (the issue on AddressBook level 4).
      */
-
-    public final Patient patient;
 
     @FXML
     private HBox cardPane;
     @FXML
+    private Label index;
+    @FXML
     private Label name;
-    @FXML
-    private Label id;
-    @FXML
-    private Label phone;
-    @FXML
-    private Label address;
     @FXML
     private Label patientId;
     @FXML
-    private Label medicalHistory;
-    @FXML
-    private Label appointments;
+    private Label nextAppointment;
 
     /**
-     * Creates a {@code PatientCard} with the given {@code Patient} and index to display.
+     * Creates a {@code PatientCard} with the given {@code Patient} and list number to display.
      */
     public PatientCard(Patient patient, int displayedIndex) {
         super(FXML);
         this.patient = patient;
-        id.setText(displayedIndex + ". ");
+        index.setText(displayedIndex + ".");
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);
-        phone.setText(patient.getPhone().value);
-        address.setText(patient.getAddress().value);
-        setOptionalLabel(medicalHistory, patient.getMedicalHistory().map(history -> "Medical history: " + history));
-        setOptionalLabel(appointments, Optional.of(patient.getSchedule())
-                .filter(patientAppointments -> !patientAppointments.isEmpty())
-                .map(patientAppointments -> "Appointments: " + patientAppointments));
+        patient.getNextAppointment().ifPresentOrElse(this::showNextAppointment, () -> {
+            nextAppointment.setVisible(false);
+            nextAppointment.setManaged(false);
+        });
     }
 
-    /**
-     * Sets the text of {@code label}, or hides the label if {@code text} is empty.
-     */
-    private static void setOptionalLabel(Label label, Optional<String> text) {
-        text.ifPresentOrElse(label::setText, () -> {
-            label.setVisible(false);
-            label.setManaged(false);
-        });
+    private void showNextAppointment(Appointment appointment) {
+        LocalDate today = LocalDate.now();
+        nextAppointment.setText(AppointmentFormatter.formatShort(appointment, today));
+        if (AppointmentFormatter.isToday(appointment, today)) {
+            nextAppointment.getStyleClass().add(TODAY_STYLE_CLASS);
+        } else if (AppointmentFormatter.isPast(appointment, today)) {
+            nextAppointment.getStyleClass().add(PAST_STYLE_CLASS);
+        }
     }
 }
