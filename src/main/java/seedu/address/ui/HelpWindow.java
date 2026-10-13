@@ -5,19 +5,20 @@ import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.HelpBookUtil;
 
 /**
- * Controller for a help page
+ * Controller for a help page.
  */
 public class HelpWindow extends UiPart<Stage> {
 
-    public static final String USERGUIDE_URL = "https://ay2627s1-cs2103t-f08-2.github.io/tp/UserGuide.html";
+    public static final String USERGUIDE_URL = "https://se-education.org/addressbook-level3/UserGuide.html";
     public static final String HELP_MESSAGE = "Refer to the user guide: " + USERGUIDE_URL;
 
     private static final Logger logger = LogsCenter.getLogger(HelpWindow.class);
@@ -30,7 +31,10 @@ public class HelpWindow extends UiPart<Stage> {
     private Label helpMessage;
 
     @FXML
-    private TextArea userGuideArea;
+    private ScrollPane scrollPane;
+
+    @FXML
+    private VBox contentContainer;
 
     /**
      * Creates a new HelpWindow.
@@ -40,14 +44,30 @@ public class HelpWindow extends UiPart<Stage> {
     public HelpWindow(Stage root) {
         super(FXML, root);
         helpMessage.setText(HELP_MESSAGE);
-        userGuideArea.setText(HelpBookUtil.getBundledUserGuide());
     }
 
     /**
-     * Creates a new HelpWindow.
+     * Creates a new HelpWindow with a new Stage.
      */
     public HelpWindow() {
         this(new Stage());
+    }
+
+    /**
+     * Initializes the HelpWindow by loading and rendering the local bundled User Guide.
+     */
+    @FXML
+    public void initialize() {
+        try {
+            String rawMarkdown = HelpBookUtil.getBundledUserGuide();
+            VBox renderedContent = MarkdownRenderer.render(rawMarkdown);
+            contentContainer.getChildren().setAll(renderedContent.getChildren());
+        } catch (Exception e) {
+            logger.warning("Failed to load local user guide: " + e.getMessage());
+            Label errorLabel = new Label("Unable to load offline User Guide. Please use the link above.");
+            errorLabel.setStyle("-fx-text-fill: #f85149; -fx-padding: 10;");
+            contentContainer.getChildren().add(errorLabel);
+        }
     }
 
     /**
@@ -55,16 +75,10 @@ public class HelpWindow extends UiPart<Stage> {
      * @throws IllegalStateException
      *     <ul>
      *         <li>
-     *             if this method is called on a thread other than the JavaFX Application Thread.
+     *             if this method is being called on a JavaFX Application Thread.
      *         </li>
      *         <li>
-     *             if this method is called during animation or layout processing.
-     *         </li>
-     *         <li>
-     *             if this method is called on the primary stage.
-     *         </li>
-     *         <li>
-     *             if {@code dialogStage} is already showing.
+     *             if this method is being called on a graphical scene that is not initialized.
      *         </li>
      *     </ul>
      */

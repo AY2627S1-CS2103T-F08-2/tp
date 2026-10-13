@@ -81,7 +81,7 @@ Accesses in-app guidance through the command line or opens the full built-in Use
 
 LaiNurse offers three ways to get help:
 
-1. **Full User Guide Window (`Help` menu / <kbd>F1</kbd>)**: Opens a dedicated help window containing the 
+1. **Full User Guide Window (`Help` menu /** <kbd>F1</kbd>**)**: Opens a dedicated help window containing the 
    complete, bundled User Guide for convenient browsing alongside your work, as well as a button to copy the link to the online guide.
 2. **Command Overview (`help`)**: Prints a concise list and summary of all available commands directly in the application's result display box.
 3. **Targeted Command Help (`help --COMMAND_FLAG`)**: Displays detailed usage rules, parameter formats, and examples 
@@ -91,7 +91,7 @@ Format: `help [--COMMAND_FLAG]`
 
 - Typing `help` without arguments outputs a summary of all commands in the result display.
 - Adding a command flag (e.g., `--add`, `--edit`, `--delete`, `--find`, `--list`, `--view`, `--viewappt`, `--clear`, `--exit`) displays the syntax and practical examples for that command.
-- To open the pop-up Help Window with the complete User Guide, press `F1` or click **Help** > **Help** in the top menu bar.
+- To open the pop-up Help Window with the complete User Guide, press <kbd>F1</kbd> or click **Help** > **Help** in the top menu bar.
 
 Examples:
 - Pressing <kbd>F1</kbd> opens the full User Guide window.
