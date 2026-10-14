@@ -1,3 +1,7 @@
+#helpWindowRoot {
+    -fx-background-color: #0d1117;
+}
+
 #copyButton {
     -fx-background-color: #003d7c;
     -fx-text-fill: #ffffff;

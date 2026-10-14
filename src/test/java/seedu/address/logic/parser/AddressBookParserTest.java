@@ -88,10 +88,10 @@ public class AddressBookParserTest {
     public void parseCommand_help() throws Exception {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " 3") instanceof HelpCommand);
-        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " add") instanceof HelpCommand);
-        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " --add") instanceof HelpCommand);
-        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " --delete") instanceof HelpCommand);
-        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " window") instanceof HelpCommand);
+        assertEquals(new HelpCommand("add"), parser.parseCommand(HelpCommand.COMMAND_WORD + " add"));
+        assertEquals(new HelpCommand("add"), parser.parseCommand(HelpCommand.COMMAND_WORD + " --add"));
+        assertEquals(new HelpCommand("delete"), parser.parseCommand(HelpCommand.COMMAND_WORD + " --delete"));
+        assertEquals(new HelpCommand("window"), parser.parseCommand(HelpCommand.COMMAND_WORD + " window"));
     }
 
     @Test

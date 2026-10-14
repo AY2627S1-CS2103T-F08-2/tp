@@ -24,10 +24,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
-1. Type a command in the command box and press <kbd>Enter</kbd> to execute it. For example, type `help` to view the
-   summary of all commands in the result display, type `help add` to see help specific to adding patients, or
-   press <kbd>F1</kbd> / select **Help** > **Help** / `help window` to open the Help window with the full user
-   guide.<br><br>
+1. Type a command in the command box and press <kbd>Enter</kbd> to execute it. For example, type `help` to view the summary of all commands in the result display, type `help add` to see help specific to adding patients, or press <kbd>F1</kbd> / select **Help** > **Help** / `help window` to open the Help window with the full user guide.<br><br>
 
     Some example commands you can try:
 
@@ -80,9 +77,8 @@ Accesses in-app guidance through the command line or opens the full built-in Use
 
 LaiNurse offers three ways to get help:
 
-1. **Full User Guide Window** (<kbd>F1</kbd> / select **Help** > **Help** / `help window`): Opens a dedicated help 
-   window containing the 
-   complete, bundled User Guide for convenient browsing alongside your work, as well as a button to copy the link to the online guide.
+1. **Full User Guide Window** (<kbd>F1</kbd> / select **Help** > **Help** / `help window`): Opens a dedicated help
+   window containing the complete, bundled User Guide for convenient browsing alongside your work, as well as a button to copy the link to the online guide.
 2. **Command Overview** (`help`): Prints a concise list and summary of all available commands directly in the application's result display box.
 3. **Targeted Command Help** (`help COMMAND` or `help --COMMAND`): Displays detailed usage rules, parameter formats, and examples for a specific command directly in the result display box.
 

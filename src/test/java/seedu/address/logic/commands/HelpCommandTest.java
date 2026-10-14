@@ -3,7 +3,6 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 
 import org.junit.jupiter.api.Test;
@@ -49,10 +48,18 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void execute_helpUnknownTarget_throwsCommandException() {
+    public void execute_helpUnknownTarget_success() {
         String invalidTarget = "nonexistent";
         String expectedMessage = String.format(HelpCommand.MESSAGE_UNKNOWN_HELP_TARGET, invalidTarget);
-        assertCommandFailure(new HelpCommand(invalidTarget), model, expectedMessage);
+        CommandResult expectedCommandResult = new CommandResult(expectedMessage);
+        assertCommandSuccess(new HelpCommand(invalidTarget), model, expectedCommandResult, model);
+    }
+
+    @Test
+    public void execute_allCommandsPresentInSummary() {
+        for (String commandWord : HelpCommand.COMMAND_USAGE_MAP.keySet()) {
+            assertTrue(HelpCommand.SHOWING_HELP_SUMMARY.contains(commandWord));
+        }
     }
 
     @Test
