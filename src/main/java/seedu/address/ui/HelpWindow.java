@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import java.util.logging.Logger;
 
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -10,6 +11,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.HelpBookUtil;
 
@@ -18,7 +20,7 @@ import seedu.address.commons.util.HelpBookUtil;
  */
 public class HelpWindow extends UiPart<Stage> {
 
-    public static final String USERGUIDE_URL = "https://se-education.org/addressbook-level3/UserGuide.html";
+    public static final String USERGUIDE_URL = "https://ay2627s1-cs2103t-f08-2.github.io/tp/UserGuide.html";
     public static final String HELP_MESSAGE = "Refer to the user guide: " + USERGUIDE_URL;
 
     private static final Logger logger = LogsCenter.getLogger(HelpWindow.class);
@@ -75,10 +77,16 @@ public class HelpWindow extends UiPart<Stage> {
      * @throws IllegalStateException
      *     <ul>
      *         <li>
-     *             if this method is being called on a JavaFX Application Thread.
+     *             if this method is called on a thread other than the JavaFX Application Thread.
      *         </li>
      *         <li>
-     *             if this method is being called on a graphical scene that is not initialized.
+     *             if this method is called during animation or layout processing.
+     *         </li>
+     *         <li>
+     *             if this method is called on the primary stage.
+     *         </li>
+     *         <li>
+     *             if {@code dialogStage} is already showing.
      *         </li>
      *     </ul>
      */
@@ -110,7 +118,7 @@ public class HelpWindow extends UiPart<Stage> {
     }
 
     /**
-     * Copies the URL to the user guide to the clipboard.
+     * Copies the URL to the user guide to the clipboard and gives brief visual feedback.
      */
     @FXML
     private void copyUrl() {
@@ -118,5 +126,16 @@ public class HelpWindow extends UiPart<Stage> {
         final ClipboardContent url = new ClipboardContent();
         url.putString(USERGUIDE_URL);
         clipboard.setContent(url);
+
+        String originalText = copyButton.getText();
+        copyButton.setText("Copied!");
+        copyButton.setDisable(true);
+
+        PauseTransition pause = new PauseTransition(Duration.seconds(1.5));
+        pause.setOnFinished(event -> {
+            copyButton.setText(originalText);
+            copyButton.setDisable(false);
+        });
+        pause.play();
     }
 }

@@ -12,23 +12,30 @@ public class HelpCommandParser implements Parser<HelpCommand> {
 
     @Override
     public HelpCommand parse(String args) throws ParseException {
-        String trimmedArgs = args.trim();
+        String trimmed = args.strip();
 
-        // Bare "help"
-        if (trimmedArgs.isEmpty()) {
+        if (trimmed.isEmpty()) {
             return new HelpCommand();
         }
 
-        // Targeted "help --<command>"
-        if (trimmedArgs.startsWith("--")) {
-            String target = trimmedArgs.substring(2).trim();
-            if (!target.isEmpty() && !target.contains(" ")) {
-                return new HelpCommand(target);
+        String commandTarget;
+        if (trimmed.startsWith("--")) {
+            // Reject '-- add' where a space follows '--'
+            if (trimmed.length() > 2 && Character.isWhitespace(trimmed.charAt(2))) {
+                throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
             }
+            commandTarget = trimmed.substring(2).strip();
+        } else {
+            commandTarget = trimmed;
         }
 
-        // Any invalid format like "help foo" or "help --"
-        throw new ParseException(
-                String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
+        commandTarget = commandTarget.toLowerCase();
+
+        // Reject multi-token input like 'help add patient' or empty flag like 'help --'
+        if (commandTarget.isEmpty() || commandTarget.contains(" ") || commandTarget.contains("\t")) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
+        }
+
+        return new HelpCommand(commandTarget);
     }
 }

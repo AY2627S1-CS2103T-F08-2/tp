@@ -10,37 +10,46 @@ import seedu.address.logic.commands.HelpCommand;
 
 public class HelpCommandParserTest {
 
+    private static final String INVALID_FORMAT_MESSAGE =
+            String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE);
+
     private final HelpCommandParser parser = new HelpCommandParser();
 
     @Test
     public void parse_noArgs_returnsDefaultHelpCommand() {
-        // "help" or "help   "
         assertParseSuccess(parser, "", new HelpCommand());
         assertParseSuccess(parser, "   ", new HelpCommand());
     }
 
     @Test
-    public void parse_validTargetCommand_returnsTargetedHelpCommand() {
-        // "help --delete", "help --add", "help   --find   "
-        assertParseSuccess(parser, "--delete", new HelpCommand("delete"));
-        assertParseSuccess(parser, "   --delete   ", new HelpCommand("delete"));
+    public void parse_validCommandsWithoutFlag_returnsHelpCommand() {
+        assertParseSuccess(parser, "add", new HelpCommand("add"));
+        assertParseSuccess(parser, "delete", new HelpCommand("delete"));
+        assertParseSuccess(parser, "viewappt", new HelpCommand("viewappt"));
+        assertParseSuccess(parser, "window", new HelpCommand("window"));
+    }
+
+    @Test
+    public void parse_validCommandsWithFlag_returnsHelpCommand() {
         assertParseSuccess(parser, "--add", new HelpCommand("add"));
+        assertParseSuccess(parser, "--delete", new HelpCommand("delete"));
+        assertParseSuccess(parser, "--window", new HelpCommand("window"));
+    }
+
+    @Test
+    public void parse_caseInsensitive_returnsLowercaseHelpCommand() {
+        assertParseSuccess(parser, "--DELETE", new HelpCommand("delete"));
+        assertParseSuccess(parser, "ADD", new HelpCommand("add"));
+        assertParseSuccess(parser, "--ViewAppt", new HelpCommand("viewappt"));
     }
 
     @Test
     public void parse_invalidArgs_throwsParseException() {
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE);
+        // Space after '--'
+        assertParseFailure(parser, "-- add", INVALID_FORMAT_MESSAGE);
 
-        // Missing dashes: "help delete"
-        assertParseFailure(parser, "delete", expectedMessage);
-
-        // Bare dashes with no command: "help --"
-        assertParseFailure(parser, "--", expectedMessage);
-
-        // Multiple words after dashes: "help --delete patient"
-        assertParseFailure(parser, "--delete patient", expectedMessage);
-
-        // Extra stray text: "help 123"
-        assertParseFailure(parser, "123", expectedMessage);
+        // Multiple words / extra tokens
+        assertParseFailure(parser, "add patient", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, "--add patient", INVALID_FORMAT_MESSAGE);
     }
 }

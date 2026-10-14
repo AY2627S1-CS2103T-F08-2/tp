@@ -3,26 +3,30 @@ package seedu.address.ui;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javafx.animation.PauseTransition;
 import javafx.geometry.Insets;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 
 /**
  * Parses markdown text into native JavaFX nodes without external dependencies.
  */
 public class MarkdownRenderer {
 
-    // NUS Theme Palette
     private static final String NUS_ORANGE = "#ef7c00";
     private static final String NUS_BLUE = "#003d7c";
-    private static final String NUS_BLUE_BORDER = "#1f5f9e"; // Lightened tint for borders/badges
+    private static final String NUS_BLUE_BORDER = "#1f5f9e";
 
-    // Regex to capture **bold**, `code`, and <kbd>key</kbd>
+    // Matches links [text](url), <kbd>key</kbd>, **bold**, and `code`
     private static final Pattern INLINE_PATTERN =
-            Pattern.compile("(<kbd>.*?</kbd>|\\*\\*.*?\\*\\*|`.*?`)");
+            Pattern.compile("(\\[.*?\\]\\(.*?\\)|<kbd>.*?</kbd>|\\*\\*.*?\\*\\*|`.*?`)");
 
     /**
      * Renders the given markdown text string into a JavaFX {@code VBox} container.
@@ -43,25 +47,23 @@ public class MarkdownRenderer {
         for (String rawLine : lines) {
             String line = rawLine.trim();
 
-            // Skip Jekyll frontmatter (--- at top)
             if (line.equals("---")) {
                 frontmatterDashes++;
                 inFrontmatter = frontmatterDashes < 2;
                 continue;
             }
-            if (inFrontmatter || line.startsWith("{:") || line.isEmpty()) {
+            if (inFrontmatter || line.startsWith("{:") || line.isEmpty()
+                    || line.equalsIgnoreCase("Table of Contents")
+                    || line.equalsIgnoreCase("* Table of Contents")) {
                 continue;
             }
 
-            // Skip raw HTML block wrappers and alerts
-            if (line.matches("^</?div.*?>$") || line.matches("^</?span.*?>$")) {
+            if (line.matches("^</?div.*?>$") || line.matches("^</?span.*?>$")
+                    || line.matches("^!\\[.*?\\]\\(.*?\\)$")) {
                 continue;
             }
 
-            // Skip raw image tags (e.g. ![Ui](images/Ui.png))
-            if (line.matches("^!\\[.*?\\]\\(.*?\\)$")) {
-                continue;
-            }
+            line = line.replace(":information_source:", "ℹ️");
 
             // Headings
             if (line.startsWith("### ")) {
@@ -80,31 +82,28 @@ public class MarkdownRenderer {
                         + "-fx-padding: 16 0 8 0;");
                 container.getChildren().add(h1);
             } else if (line.matches("^-{3,}$")) {
-                // Horizontal divider with NUS Orange accent tint
                 Separator separator = new Separator();
                 separator.setStyle("-fx-padding: 8 0 8 0; -fx-opacity: 0.35;");
                 container.getChildren().add(separator);
+            } else if (line.matches("^[\\-\\s|:]+$") && line.contains("|")) {
+                // Table header separator (e.g. --------|------------------)
+                continue;
+            } else if (line.contains("|") && !line.startsWith("#")) {
+                // Table row
+                Label tableLine = new Label(cleanHtmlLineBreaks(line.replaceAll("\\|", "   ")));
+                tableLine.setStyle("-fx-font-family: monospace; -fx-text-fill: #ffffff; "
+                        + "-fx-background-color: " + NUS_BLUE + "; -fx-padding: 5 10; "
+                        + "-fx-border-color: " + NUS_BLUE_BORDER + "; -fx-background-radius: 4; "
+                        + "-fx-border-radius: 4;");
+                container.getChildren().add(tableLine);
             } else if (line.startsWith("* ") || line.startsWith("- ")) {
-                // Bullet point with NUS Orange bullet dot
                 String text = cleanHtmlLineBreaks(line.substring(2));
                 TextFlow bulletFlow = buildInlineTextFlow("•  " + text);
                 bulletFlow.setStyle("-fx-padding: 0 0 0 16;");
                 container.getChildren().add(bulletFlow);
             } else if (line.matches("^\\d+\\.\\s+.*")) {
-                // Numbered list item
                 container.getChildren().add(buildInlineTextFlow(cleanHtmlLineBreaks(line)));
-            } else if (line.startsWith("|") && line.endsWith("|")) {
-                // Table row in styled badge using NUS Blue background
-                if (!line.contains("---")) {
-                    Label tableLine = new Label(cleanHtmlLineBreaks(line.replaceAll("\\|", "   ")));
-                    tableLine.setStyle("-fx-font-family: monospace; -fx-text-fill: #ffffff; "
-                            + "-fx-background-color: " + NUS_BLUE + "; -fx-padding: 5 10; "
-                            + "-fx-border-color: " + NUS_BLUE_BORDER + "; -fx-background-radius: 4; "
-                            + "-fx-border-radius: 4;");
-                    container.getChildren().add(tableLine);
-                }
             } else {
-                // Standard paragraph
                 container.getChildren().add(buildInlineTextFlow(cleanHtmlLineBreaks(line)));
             }
         }
@@ -112,9 +111,6 @@ public class MarkdownRenderer {
         return container;
     }
 
-    /**
-     * Converts HTML line breaks into real newline characters.
-     */
     private static String cleanHtmlLineBreaks(String text) {
         return text.replaceAll("(?i)<br\\s*/?>", "\n");
     }
@@ -132,22 +128,56 @@ public class MarkdownRenderer {
             }
 
             String match = matcher.group();
-            if (match.startsWith("**") && match.endsWith("**")) {
-                // Bold text
+            if (match.startsWith("[") && match.contains("](") && match.endsWith(")")) {
+                int splitIndex = match.indexOf("](");
+                String label = match.substring(1, splitIndex);
+                String target = match.substring(splitIndex + 2, match.length() - 1);
+
+                if (target.startsWith("http://") || target.startsWith("https://")) {
+                    Hyperlink link = new Hyperlink(label);
+                    String defaultStyle = "-fx-text-fill: #58a6ff; -fx-padding: 0; "
+                            + "-fx-border-color: transparent; -fx-font-size: 13px; -fx-underline: true;";
+                    String copiedStyle = "-fx-text-fill: #ef7c00; -fx-padding: 0; " // vibrant success green
+                            + "-fx-border-color: transparent; -fx-font-size: 13px; -fx-underline: false;";
+
+                    link.setStyle(defaultStyle);
+
+                    link.setOnAction(e -> {
+                        Clipboard clipboard = Clipboard.getSystemClipboard();
+                        ClipboardContent content = new ClipboardContent();
+                        content.putString(target);
+                        clipboard.setContent(content);
+
+                        link.setText(label + " (Copied!)");
+                        link.setStyle(copiedStyle);
+
+                        PauseTransition pause = new PauseTransition(Duration.seconds(1.5));
+                        pause.setOnFinished(ev -> {
+                            link.setText(label);
+                            link.setStyle(defaultStyle);
+                        });
+                        pause.play();
+                    });
+
+                    flow.getChildren().add(link);
+                } else {
+                    Text internalLink = new Text(label);
+                    internalLink.setStyle("-fx-fill: #79c0ff; -fx-font-weight: bold; -fx-font-size: 13px;");
+                    flow.getChildren().add(internalLink);
+                }
+            } else if (match.startsWith("<kbd>") && match.endsWith("</kbd>")) {
+                Text kbd = new Text(" [" + match.substring(5, match.length() - 6) + "] ");
+                kbd.setStyle("-fx-fill: #79c0ff; -fx-font-family: monospace; -fx-font-size: 12px;");
+                flow.getChildren().add(kbd);
+            } else if (match.startsWith("**") && match.endsWith("**")) {
                 Text bold = new Text(match.substring(2, match.length() - 2));
                 bold.setStyle("-fx-fill: #ffffff; -fx-font-weight: bold; -fx-font-size: 13px;");
                 flow.getChildren().add(bold);
             } else if (match.startsWith("`") && match.endsWith("`")) {
-                // Inline code tag in NUS Orange
                 Text code = new Text(" " + match.substring(1, match.length() - 1) + " ");
                 code.setStyle("-fx-fill: " + NUS_ORANGE + "; -fx-font-family: monospace; "
                         + "-fx-font-size: 12px; -fx-font-weight: bold;");
                 flow.getChildren().add(code);
-            } else if (match.startsWith("<kbd>") && match.endsWith("</kbd>")) {
-                // Keyboard shortcut in light blue accent
-                Text kbd = new Text(" [" + match.substring(5, match.length() - 6) + "] ");
-                kbd.setStyle("-fx-fill: #79c0ff; -fx-font-family: monospace; -fx-font-size: 12px;");
-                flow.getChildren().add(kbd);
             }
 
             lastIdx = matcher.end();

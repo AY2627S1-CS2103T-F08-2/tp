@@ -87,12 +87,19 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_help() throws Exception {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
+        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " 3") instanceof HelpCommand);
+        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " add") instanceof HelpCommand);
+        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " --add") instanceof HelpCommand);
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " --delete") instanceof HelpCommand);
+        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " window") instanceof HelpCommand);
     }
 
     @Test
     public void parseCommand_helpInvalidFormat_throwsParseException() {
-        assertThrows(ParseException.class, () -> parser.parseCommand(HelpCommand.COMMAND_WORD + " 3"));
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand(HelpCommand.COMMAND_WORD + " -- add"));
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand(HelpCommand.COMMAND_WORD + " add patient"));
     }
 
     @Test
