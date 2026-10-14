@@ -1,5 +1,7 @@
 package seedu.address.logic;
 
+import java.util.List;
+
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
@@ -25,6 +27,12 @@ public interface Logic {
 
     /** Returns an unmodifiable view of the list of all patients, whatever the current filter */
     ObservableList<Patient> getPatientList();
+
+    /**
+     * Returns each way to complete the patient ID at the end of {@code commandText}, such as {@code view S12},
+     * with the patients in the filtered list first. Returns an empty list if there is nothing to complete.
+     */
+    List<String> getCompletions(String commandText);
 
     /**
      * Returns the user prefs' GUI settings.

@@ -73,6 +73,26 @@ public class PatientDetailPanel extends UiPart<Region> {
         return Optional.ofNullable(shownId);
     }
 
+    /**
+     * Moves the keyboard focus to the details, so that the arrow keys scroll them, unless no patient is shown.
+     *
+     * @return true if the details have the focus.
+     */
+    public boolean requestFocus() {
+        if (shownId == null) {
+            return false;
+        }
+        details.requestFocus();
+        return true;
+    }
+
+    /**
+     * Returns true if the details have the keyboard focus.
+     */
+    public boolean isFocused() {
+        return details.isFocused();
+    }
+
     private void refresh() {
         Optional<Patient> patient = Optional.ofNullable(shownId).flatMap(id -> allPatients.stream()
                 .filter(p -> p.getId().equals(id)).findFirst());

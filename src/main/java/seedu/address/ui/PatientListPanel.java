@@ -2,6 +2,8 @@ package seedu.address.ui;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -9,6 +11,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
@@ -19,27 +23,81 @@ import seedu.address.model.patient.PatientId;
  */
 public class PatientListPanel extends UiPart<Region> {
     private static final String FXML = "PatientListPanel.fxml";
+
+    /** Keys that move the selection in the list. */
+    private static final Set<KeyCode> NAVIGATION_KEYS = Set.of(KeyCode.UP, KeyCode.DOWN, KeyCode.KP_UP,
+            KeyCode.KP_DOWN, KeyCode.PAGE_UP, KeyCode.PAGE_DOWN, KeyCode.HOME, KeyCode.END);
+
     private final Logger logger = LogsCenter.getLogger(PatientListPanel.class);
 
     @FXML
     private ListView<Patient> patientListView;
 
+    /** Whether the user is holding a key that moves the selection, so that a change of selection is theirs. */
+    private boolean isNavigating;
+
     /**
      * Creates a {@code PatientListPanel} with the given {@code ObservableList}.
-     * {@code onPatientClicked} receives the ID of each patient that the user clicks.
+     * {@code onPatientChosen} receives the ID of each patient that the user clicks, or moves to with the keyboard.
      */
-    public PatientListPanel(ObservableList<Patient> patientList, Consumer<PatientId> onPatientClicked) {
+    public PatientListPanel(ObservableList<Patient> patientList, Consumer<PatientId> onPatientChosen) {
         super(FXML);
-        requireNonNull(onPatientClicked);
+        requireNonNull(onPatientChosen);
         patientListView.setItems(patientList);
         patientListView.setCellFactory(listView -> new PatientListViewCell());
         // A mouse click, unlike a change of selection, never comes from the list updating itself.
         patientListView.setOnMouseClicked(event -> {
             Patient clickedPatient = patientListView.getSelectionModel().getSelectedItem();
             if (clickedPatient != null) {
-                onPatientClicked.accept(clickedPatient.getId());
+                onPatientChosen.accept(clickedPatient.getId());
             }
         });
+        // Filtering or removing rows also moves the selection, so only a change made while the user holds
+        // a navigation key counts as the user's choice.
+        patientListView.addEventFilter(KeyEvent.KEY_PRESSED, event ->
+                isNavigating = NAVIGATION_KEYS.contains(event.getCode()));
+        patientListView.addEventFilter(KeyEvent.KEY_RELEASED, event -> isNavigating = false);
+        patientListView.focusedProperty().addListener((unused, wasFocused, isFocused) -> isNavigating = false);
+        patientListView.getSelectionModel().selectedItemProperty().addListener((unused, oldPatient, newPatient) -> {
+            if (isNavigating && newPatient != null) {
+                onPatientChosen.accept(newPatient.getId());
+            }
+        });
+    }
+
+    /**
+     * Moves the keyboard focus to the list, unless the list is empty.
+     *
+     * @return true if the list has the focus.
+     */
+    public boolean requestFocus() {
+        if (patientListView.getItems().isEmpty()) {
+            return false;
+        }
+        patientListView.requestFocus();
+        return true;
+    }
+
+    /**
+     * Returns true if the list has the keyboard focus.
+     */
+    public boolean isFocused() {
+        return patientListView.isFocused();
+    }
+
+    /**
+     * Selects the first patient if no patient is selected.
+     *
+     * @return the ID of the patient that was selected, or {@code Optional#empty()} if a patient was already
+     *         selected or the list is empty.
+     */
+    public Optional<PatientId> selectFirstIfNoneSelected() {
+        if (!patientListView.getSelectionModel().isEmpty() || patientListView.getItems().isEmpty()) {
+            return Optional.empty();
+        }
+        patientListView.getSelectionModel().selectFirst();
+        patientListView.scrollTo(0);
+        return Optional.of(patientListView.getItems().get(0).getId());
     }
 
     /**
