@@ -103,8 +103,33 @@ patient by ID in the list of all patients from `Logic#getPatientList()`, and lis
 patient's new details after an edit, and goes back to its starting message after the patient is deleted, whatever the
 filter on the displayed list is.
 
-When the user presses Esc in an empty command box, `CommandBox` executes the `list` command through the same
-`CommandExecutor` as Enter does, so the result is the same as typing `list`.
+When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID in the
+command, and replaces the text with the first one. Each further Tab gives the next one. `IdCompleter` in the `Logic`
+component holds the rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an
+ID, so the ID must end the command. `edit` takes the ID first and options after it, so `IdCompleter` completes the word
+after `edit` and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
+started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
+
+The keyboard focus is in one of three areas, given by `FocusArea` in Tab order: the command box, the patient list and
+the patient details. Esc in the command box calls back to `MainWindow`, which moves the focus to the patient list and
+leaves the typed text in place. Outside the command box, `MainWindow` handles keys with event filters on the window,
+which see each key before the focused part does. `BrowseKeys` decides what Enter, Esc, Tab and typed text do there:
+
+* Enter, and any printable character, move the focus back to the command box. A typed character is added to the text
+  there.
+* Esc shows all patients by executing `list` through the same `executeCommand` method as a typed command, so the result
+  is the same as typing `list`.
+* Tab and Shift+Tab move the focus to the next or previous `FocusArea`, skipping an empty list, and the details when no
+  patient is shown.
+
+`FocusArea` and `BrowseKeys` hold no JavaFX nodes, so unit tests cover these rules, and `MainWindow` only connects them
+to the UI parts.
+
+The selected patient in the list is always the patient whose details are shown. When the focus moves to the list and
+no row is selected, `MainWindow` selects the first patient and shows them. `PatientListPanel` shows the details of a
+newly selected patient only while the user holds a key that moves the selection, such as Up or Down, or clicks a row.
+This is because a command that filters or removes rows also moves the selection in the `ListView`, and that must not
+change the shown patient. After each command, `MainWindow` selects the shown patient's row again.
 
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in
 `src/main/resources/view`. For example, [
@@ -738,7 +763,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `view S1234567A`<br>
        Expected: The panel beside the list shows the patient's name, ID, phone number, address, next appointment and medical history. Their row in the list is highlighted. The status message names the patient.
 
-    1. Test case: `find bernice`, then `view S1234567A`<br>
+    1. Test case: `find --name bernice`, then `view S1234567A`<br>
        Expected: The panel shows the patient with the ID `S1234567A`, although the list shows only the `find` results. No row is highlighted.
 
     1. Test case: `view S1234567A`, then `delete S1234567A`<br>
@@ -750,15 +775,60 @@ testers are expected to do more *exploratory* testing.
     1. Other incorrect view commands to try: `view`, `view S123-456` (not a valid ID)<br>
        Expected: The panel does not change. The status message shows the correct command format.
 
-1. Showing all patients again with Esc
+1. Completing a patient ID with Tab
 
-    1. Prerequisites: Start with the sample data.
+    1. Prerequisites: Start with the sample data, which includes patients with the IDs `S1234567A` and `S2345678B`.
 
-    1. Test case: `find bernice`, then press Esc<br>
-       Expected: The list shows all patients again. The status message says that all patients are listed.
+    1. Test case: type `view s1`, then press Tab<br>
+       Expected: The command box shows `view S1234567A`. The focus stays in the command box.
 
-    1. Test case: `find bernice`, then type `view` and press Esc<br>
-       Expected: The command box is cleared, and the list still shows only the `find` results. A second Esc shows all patients.
+    1. Test case: type `delete S`, then press Tab several times<br>
+       Expected: Each Tab shows the next ID that starts with `S`, in the order of the list, and then starts again from the first.
+
+    1. Test case: type `edit s23 --number 91234567`, then press Tab<br>
+       Expected: The command box shows `edit S2345678B --number 91234567`. The options are kept.
+
+    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra` or `edit --number 91234567`, then press Tab<br>
+       Expected: The command box does not change.
+
+1. Moving between the command box and the patient list
+
+    1. Prerequisites: Start with the sample data. Enter `find --address serangoon`, so that the list shows Bernice Yu
+       and David Li, and no patient's details are shown.
+
+    1. Test case: type `abc` in the command box, then press Esc<br>
+       Expected: The patient list gets a green border and the command box is dimmed. `abc` stays in the command box.
+       Bernice Yu is selected, and the panel shows her details.
+
+    1. Test case: after the test case above, press Down<br>
+       Expected: David Li is selected, and the panel shows his details. Up selects and shows Bernice Yu again.
+
+    1. Test case: after the test cases above, press Esc<br>
+       Expected: The list shows all patients again, and the status message says that all patients are listed. The
+       patient shown in the panel stays selected, and the focus stays in the list.
+
+    1. Test case: press Tab three times<br>
+       Expected: The focus moves to the patient details, where Up and Down scroll, then to the command box, then back to
+       the patient list. Shift+Tab goes the other way.
+
+    1. Test case: with the focus in the list, type `l`<br>
+       Expected: The focus moves to the command box, which now shows `abcl`, with the caret at the end. Enter instead of
+       `l` also moves the focus to the command box, without adding anything.
+
+    1. Test case: `find --name zzz`, then press Esc<br>
+       Expected: The list is empty, so the focus skips it and goes to the patient details. If no patient is shown, the
+       focus stays in the command box. A second Esc shows all patients.
+
+1. Going through command history with Up and Down
+
+    1. Prerequisites: Start LaiNurse, then enter `list`, `find --name bernice` and `view S1234567A`.
+
+    1. Test case: type `abc`, then press Up three times<br>
+       Expected: The command box shows `view S1234567A`, then `find --name bernice`, then `list`. A fourth Up keeps
+       `list`.
+
+    1. Test case: after the test case above, press Down three times<br>
+       Expected: The command box shows `find --name bernice`, then `view S1234567A`, then `abc` again.
 
 ### Deleting a patient
 

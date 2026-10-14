@@ -2,7 +2,9 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
@@ -11,9 +13,11 @@ import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
+import seedu.address.logic.parser.IdCompleter;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientId;
 import seedu.address.storage.Storage;
 
 /**
@@ -67,6 +71,15 @@ public class LogicManager implements Logic {
     @Override
     public ObservableList<Patient> getPatientList() {
         return model.getAddressBook().getPatientList();
+    }
+
+    @Override
+    public List<String> getCompletions(String commandText) {
+        List<PatientId> ids = Stream.concat(getFilteredPatientList().stream(), getPatientList().stream())
+                .map(Patient::getId)
+                .distinct()
+                .toList();
+        return IdCompleter.complete(commandText, ids);
     }
 
     @Override

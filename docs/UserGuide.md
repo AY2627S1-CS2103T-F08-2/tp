@@ -64,12 +64,42 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
-* Press Esc to clear the command box. If the command box is already empty, Esc shows all patients, as `list` does. For example, after `find`, press Esc to see everyone again.
-
-* The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
+* Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </div>
+
+### Using the keyboard
+
+You can use LaiNurse without the mouse. The keyboard focus is in one of three areas: the command box, the patient list, or the patient details. The area with the focus has a green border, and the command box is dimmed while the focus is elsewhere.
+
+**In the command box:**
+
+Key | What it does
+--------|------------------
+Enter | Runs the command.
+Tab | Finishes typing a patient ID after `view`, `delete` or `edit`. See below.
+Up and Down | Go back and forth through the commands you entered since LaiNurse started, including ones that failed. Down after the newest command gives back what you were typing.
+Esc | Moves to the patient list. What you typed stays in the command box.
+Shift+Tab | Moves to the patient details, or to the patient list if no patient is shown.
+
+**In the patient list or the patient details:**
+
+Key | What it does
+--------|------------------
+Up and Down | In the list, select the previous or next patient and show their details. In the details, scroll.
+Page Up, Page Down, Home and End | Move further, in the same way as Up and Down.
+Any letter, digit or space | Goes back to the command box and types it there, after what you typed before.
+Enter | Goes back to the command box, keeping what you typed.
+Esc | Shows all patients, as `list` does.
+Tab and Shift+Tab | Move to the next or previous area, in the order: command box, patient list, patient details. An empty list, and the details when no patient is shown, are skipped.
+
+* When the focus moves to the patient list, the patient whose details are shown stays selected. If no patient in the list is selected, LaiNurse selects the first one and shows their details. So the selected patient is always the one shown.
+* For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.
+* To finish a patient ID with Tab, type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
+  For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
+  With `edit`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --number 91234567` becomes `edit S1234567A --number 91234567`.
+* The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
 
 ### Viewing help: `help`
 
@@ -153,7 +183,7 @@ Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--m
 * Phone searches match the stored text, so partial values such as `--number 123` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
 * Patients without medical history do not match a `--medical-history` search, but may match another supplied option.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within quoted values. Unknown options, misspellings, and `--name=value` syntax are rejected. Text such as `Anne--Marie` is accepted.
-* Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. To see all patients again, enter `list`, or press Esc in an empty command box.
+* Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. To see all patients again, enter `list`, or press Esc twice: once to move to the patient list, and once to show all patients.
 
 Examples:
 
@@ -196,7 +226,7 @@ Format: `view ID`
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * The panel shows the patient's name, ID, phone number, address, next appointment and medical history. As in the list, the next appointment is the earliest one today or later. One today or tomorrow is marked `(today)` or `(tomorrow)`. A patient with only past appointments shows `None upcoming`. If the details do not fit, scroll down the panel.
 * The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete all patients with `clear`, it goes back to its starting message.
-* You can also click a patient in the list to see their details.
+* You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 
 Examples:
 * `view S1234567A` shows the details of the patient with the ID `S1234567A`.
