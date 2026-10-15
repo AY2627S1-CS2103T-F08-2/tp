@@ -1,0 +1,356 @@
+package seedu.address.ui;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javafx.animation.PauseTransition;
+import javafx.geometry.Insets;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
+
+/**
+ * Parses markdown text into native JavaFX nodes without external dependencies.
+ */
+public class MarkdownRenderer {
+
+    private static final String NUS_ORANGE = "#ef7c00";
+    private static final String NUS_BLUE = "#003d7c";
+    private static final String NUS_BLUE_BORDER = "#1f5f9e";
+
+    // Matches links [text](url), <kbd>key</kbd>, **bold**, and `code`
+    private static final Pattern INLINE_PATTERN =
+            Pattern.compile("(\\[.*?\\]\\(.*?\\)|<kbd>.*?</kbd>|\\*\\*.*?\\*\\*|`.*?`)");
+
+    /**
+     * Renders the given markdown text string into a JavaFX {@code VBox} container.
+     */
+    public static VBox render(String markdown) {
+        VBox container = new VBox();
+        container.setSpacing(6);
+        container.setPadding(new Insets(15));
+        container.setFillWidth(true);
+
+        String[] lines = markdown.split("\\r?\\n");
+        boolean inFrontmatter = false;
+        int frontmatterDashes = 0;
+
+        List<String> currentTableLines = new ArrayList<>();
+        StringBuilder currentParagraph = new StringBuilder();
+        int listCounter = 0;
+
+        for (String rawLine : lines) {
+            String line = rawLine.trim();
+
+            if (line.equals("---")) {
+                flushParagraph(container, currentParagraph);
+                listCounter = 0;
+                frontmatterDashes++;
+                inFrontmatter = frontmatterDashes < 2;
+                continue;
+            }
+            if (inFrontmatter || line.startsWith("{:")
+                    || line.equalsIgnoreCase("Table of Contents")
+                    || line.equalsIgnoreCase("* Table of Contents")) {
+                continue;
+            }
+
+            // Table boundary
+            boolean isTableLine = line.contains("|") && !line.startsWith("#");
+            if (!isTableLine && !currentTableLines.isEmpty()) {
+                container.getChildren().add(renderTable(currentTableLines));
+                currentTableLines.clear();
+            }
+
+            // Blank lines flush active paragraph without inserting blank nodes
+            if (line.isEmpty()) {
+                flushParagraph(container, currentParagraph);
+                continue;
+            }
+
+            // Sanitize tags & skip image references
+            line = sanitizeLine(line);
+            if (line.isEmpty() || line.matches("^!\\[.*?\\]\\(.*?\\)$")) {
+                continue;
+            }
+
+            // Collapse repeated callout emoji clusters (e.g. [:exclamation: :exclamation: ...])
+            line = line.replaceAll("\\[?\\s*(:exclamation:(\\uFE0F)?\\s*)+\\]?\\s*(\\*\\*Caution:\\*\\*)?",
+                    "⚠ Caution: ");
+            line = line.replaceAll("\\[?\\s*(:information_source:(\\uFE0F)?\\s*)+\\]?\\s*"
+                    + "(\\*\\*Note:\\*\\*|\\*\\*Info:\\*\\*)?", "ℹ Note: ");
+
+            // Accumulate table rows
+            if (isTableLine) {
+                flushParagraph(container, currentParagraph);
+                listCounter = 0;
+                if (!line.matches("^[\\-\\s|:]+$")) {
+                    currentTableLines.add(line);
+                }
+                continue;
+            }
+
+            // Headings and section rules reset numbering
+            if (line.startsWith("### ")) {
+                flushParagraph(container, currentParagraph);
+                listCounter = 0;
+                Label h3 = new Label(cleanHtmlLineBreaks(line.substring(4)).replaceAll("`", ""));
+                h3.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: "
+                        + NUS_ORANGE + "; -fx-padding: 8 0 2 0;");
+                h3.setWrapText(true);
+                container.getChildren().add(h3);
+            } else if (line.startsWith("## ")) {
+                flushParagraph(container, currentParagraph);
+                listCounter = 0;
+                Label h2 = new Label(cleanHtmlLineBreaks(line.substring(3)).replaceAll("`", ""));
+                h2.setStyle("-fx-font-size: 19px; -fx-font-weight: bold; -fx-text-fill: "
+                        + NUS_ORANGE + "; -fx-padding: 12 0 4 0;");
+                h2.setWrapText(true);
+                container.getChildren().add(h2);
+            } else if (line.startsWith("# ")) {
+                flushParagraph(container, currentParagraph);
+                listCounter = 0;
+                Label h1 = new Label(cleanHtmlLineBreaks(line.substring(2)).replaceAll("`", ""));
+                h1.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #ffffff; "
+                        + "-fx-padding: 14 0 6 0;");
+                h1.setWrapText(true);
+                container.getChildren().add(h1);
+            } else if (line.matches("^-{3,}$")) {
+                flushParagraph(container, currentParagraph);
+                listCounter = 0;
+                Separator separator = new Separator();
+                separator.setStyle("-fx-padding: 6 0 6 0; -fx-opacity: 0.35;");
+                container.getChildren().add(separator);
+            } else if (line.startsWith(">")) {
+                // Blockquote callout box
+                flushParagraph(container, currentParagraph);
+                String calloutText = cleanHtmlLineBreaks(line.substring(1).trim());
+                TextFlow calloutFlow = buildInlineTextFlow(calloutText);
+                calloutFlow.setStyle("-fx-background-color: #161b22; "
+                        + "-fx-border-color: #30363d #30363d #30363d " + NUS_ORANGE + "; "
+                        + "-fx-border-width: 0 0 0 3px; "
+                        + "-fx-padding: 6 10 6 12; "
+                        + "-fx-background-radius: 0 4 4 0;");
+                container.getChildren().add(calloutFlow);
+            } else if (line.startsWith("* ") || line.startsWith("- ")) {
+                // Sub-bullets
+                flushParagraph(container, currentParagraph);
+                String text = cleanHtmlLineBreaks(line.substring(2));
+                TextFlow bulletFlow = buildInlineTextFlow("•  " + text);
+                int leftPadding = (listCounter > 0) ? 28 : 16;
+                bulletFlow.setStyle("-fx-padding: 0 0 0 " + leftPadding + ";");
+                container.getChildren().add(bulletFlow);
+            } else if (line.matches("^\\d+\\.\\s+.*")) {
+                // Numbered list item
+                flushParagraph(container, currentParagraph);
+                listCounter++;
+                String itemText = cleanHtmlLineBreaks(line.replaceFirst("^\\d+\\.\\s+", ""));
+                TextFlow listFlow = buildInlineTextFlow(listCounter + ".  " + itemText);
+                listFlow.setStyle("-fx-padding: 0 0 0 16;");
+                container.getChildren().add(listFlow);
+            } else {
+                // Indented notes or secondary descriptive lines
+                boolean isSecondaryNote = line.startsWith("**Mac users:**")
+                        || line.startsWith("LaiNurse keeps its data")
+                        || line.startsWith("A GUI similar")
+                        || line.startsWith("Some example commands");
+
+                if (listCounter > 0 && isSecondaryNote) {
+                    flushParagraph(container, currentParagraph);
+                    TextFlow noteFlow = buildInlineTextFlow(cleanHtmlLineBreaks(line));
+                    noteFlow.setStyle("-fx-padding: 0 0 0 28;");
+                    container.getChildren().add(noteFlow);
+                } else {
+                    if (currentParagraph.length() > 0) {
+                        currentParagraph.append(" ");
+                    }
+                    currentParagraph.append(cleanHtmlLineBreaks(line));
+                }
+            }
+        }
+
+        flushParagraph(container, currentParagraph);
+
+        if (!currentTableLines.isEmpty()) {
+            container.getChildren().add(renderTable(currentTableLines));
+            currentTableLines.clear();
+        }
+
+        return container;
+    }
+
+    private static void flushParagraph(VBox container, StringBuilder paragraph) {
+        String content = paragraph.toString().trim();
+        paragraph.setLength(0);
+        if (content.isEmpty()) {
+            return;
+        }
+        TextFlow flow = buildInlineTextFlow(content);
+        container.getChildren().add(flow);
+    }
+
+    private static String sanitizeLine(String line) {
+        return line.replaceAll("(?i)</?div[^>]*>", "")
+                .replaceAll("(?i)</?span[^>]*>", "")
+                .trim();
+    }
+
+    private static GridPane renderTable(List<String> tableLines) {
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(6);
+        grid.setPadding(new Insets(8));
+        grid.setStyle("-fx-background-color: " + NUS_BLUE + "; -fx-border-color: "
+                + NUS_BLUE_BORDER + "; -fx-background-radius: 4; -fx-border-radius: 4;");
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(28);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(72);
+        col2.setHgrow(Priority.ALWAYS);
+        grid.getColumnConstraints().addAll(col1, col2);
+
+        int rowIndex = 0;
+        for (String rawRow : tableLines) {
+            String row = rawRow.trim();
+            if (row.startsWith("|")) {
+                row = row.substring(1);
+            }
+            if (row.endsWith("|")) {
+                row = row.substring(0, row.length() - 1);
+            }
+
+            String[] cells = row.split("\\|", -1);
+            for (int colIndex = 0; colIndex < cells.length; colIndex++) {
+                String cellContent = cleanHtmlLineBreaks(cells[colIndex].trim());
+                TextFlow cellFlow = buildInlineTextFlow(cellContent);
+                cellFlow.setPadding(new Insets(2, 4, 2, 4));
+                grid.add(cellFlow, colIndex, rowIndex);
+            }
+            rowIndex++;
+        }
+
+        return grid;
+    }
+
+    private static String cleanHtmlLineBreaks(String text) {
+        // 1. Remove trailing <br> tags at the end of lines so they don't produce dangling empty newlines
+        String cleaned = text.replaceAll("(?i)(<br\\s*/?>\\s*)+$", "");
+        // 2. Replace any internal <br> tags with a single newline
+        return cleaned.replaceAll("(?i)(<br\\s*/?>\\s*)+", "\n");
+    }
+
+    private static TextFlow buildInlineTextFlow(String text) {
+        TextFlow flow = new TextFlow();
+        Matcher matcher = INLINE_PATTERN.matcher(text);
+        int lastIdx = 0;
+
+        while (matcher.find()) {
+            if (matcher.start() > lastIdx) {
+                appendFormattedText(flow, text.substring(lastIdx, matcher.start()));
+            }
+
+            String match = matcher.group();
+            if (match.startsWith("[") && match.contains("](") && match.endsWith(")")) {
+                int splitIndex = match.indexOf("](");
+                String label = match.substring(1, splitIndex);
+                String target = match.substring(splitIndex + 2, match.length() - 1);
+
+                if (target.startsWith("http://") || target.startsWith("https://")) {
+                    Hyperlink link = new Hyperlink(label);
+                    String defaultStyle = "-fx-text-fill: #58a6ff; -fx-padding: 0; "
+                            + "-fx-border-color: transparent; -fx-font-size: 13px; -fx-underline: true;";
+                    String copiedStyle = "-fx-text-fill: " + NUS_ORANGE + "; -fx-padding: 0; "
+                            + "-fx-border-color: transparent; -fx-font-size: 13px; -fx-underline: false;";
+
+                    link.setStyle(defaultStyle);
+
+                    link.setOnAction(e -> {
+                        Clipboard clipboard = Clipboard.getSystemClipboard();
+                        ClipboardContent content = new ClipboardContent();
+                        content.putString(target);
+                        clipboard.setContent(content);
+
+                        link.setText(label + " (Copied!)");
+                        link.setStyle(copiedStyle);
+
+                        PauseTransition pause = new PauseTransition(Duration.seconds(1.5));
+                        pause.setOnFinished(ev -> {
+                            link.setText(label);
+                            link.setStyle(defaultStyle);
+                        });
+                        pause.play();
+                    });
+
+                    flow.getChildren().add(link);
+                } else {
+                    Text internalLink = new Text(label);
+                    internalLink.setStyle("-fx-fill: #79c0ff; -fx-font-weight: bold; -fx-font-size: 13px;");
+                    flow.getChildren().add(internalLink);
+                }
+            } else if (match.startsWith("<kbd>") && match.endsWith("</kbd>")) {
+                Text kbd = new Text(" [" + match.substring(5, match.length() - 6) + "] ");
+                kbd.setStyle("-fx-fill: #79c0ff; -fx-font-family: monospace; -fx-font-size: 12px;");
+                flow.getChildren().add(kbd);
+            } else if (match.startsWith("**") && match.endsWith("**")) {
+                Text bold = new Text(match.substring(2, match.length() - 2));
+                bold.setStyle("-fx-fill: #ffffff; -fx-font-weight: bold; -fx-font-size: 13px;");
+                flow.getChildren().add(bold);
+            } else if (match.startsWith("`") && match.endsWith("`")) {
+                Text code = new Text(" " + match.substring(1, match.length() - 1) + " ");
+                code.setStyle("-fx-fill: " + NUS_ORANGE + "; -fx-font-family: monospace; "
+                        + "-fx-font-size: 12px; -fx-font-weight: bold;");
+                flow.getChildren().add(code);
+            }
+
+            lastIdx = matcher.end();
+        }
+
+        if (lastIdx < text.length()) {
+            appendFormattedText(flow, text.substring(lastIdx));
+        }
+
+        return flow;
+    }
+
+    private static void appendFormattedText(TextFlow flow, String text) {
+        if (text.startsWith("⚠ Caution: ")) {
+            Text cautionBadge = new Text("⚠ Caution: ");
+            cautionBadge.setStyle("-fx-fill: " + NUS_ORANGE + "; -fx-font-weight: bold; -fx-font-size: 13px;");
+            flow.getChildren().add(cautionBadge);
+
+            String remainder = text.substring("⚠ Caution: ".length());
+            if (!remainder.isEmpty()) {
+                Text plain = new Text(remainder);
+                plain.setStyle("-fx-fill: #c9d1d9; -fx-font-size: 13px;");
+                flow.getChildren().add(plain);
+            }
+        } else if (text.startsWith("ℹ Note: ")) {
+            Text infoBadge = new Text("ℹ Note: ");
+            infoBadge.setStyle("-fx-fill: #58a6ff; -fx-font-weight: bold; -fx-font-size: 13px;");
+            flow.getChildren().add(infoBadge);
+
+            String remainder = text.substring("ℹ Note: ".length());
+            if (!remainder.isEmpty()) {
+                Text plain = new Text(remainder);
+                plain.setStyle("-fx-fill: #c9d1d9; -fx-font-size: 13px;");
+                flow.getChildren().add(plain);
+            }
+        } else {
+            Text plain = new Text(text);
+            plain.setStyle("-fx-fill: #c9d1d9; -fx-font-size: 13px;");
+            flow.getChildren().add(plain);
+        }
+    }
+}

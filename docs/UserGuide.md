@@ -24,8 +24,9 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
-   Some example commands you can try:
+1. Type a command in the command box and press <kbd>Enter</kbd> to execute it. For example, type `help` to view the summary of all commands in the result display, type `help add` to see help specific to adding patients, or press <kbd>F1</kbd> / select **Help** > **Help** / `help window` to open the Help window with the full user guide.<br><br>
+
+    Some example commands you can try:
 
    * `list` : Lists all patients.
 
@@ -34,8 +35,6 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
    * `view S1234567A` : Shows the details of the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
    * `delete S1234567A` : Deletes the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
-
-   * `clear` : Deletes all patients.
 
    * `exit` : Exits the app.
 
@@ -61,8 +60,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --number NUMBER`, `--number NUMBER --name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
-  For example, `help 123` is interpreted as `help`.
+* Extraneous parameters for commands that take no parameters, such as `list`, `exit`, and `clear`, are ignored.<br>
+  For example, `list 123` is interpreted as `list`.
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
@@ -103,12 +102,27 @@ Tab and Shift+Tab | Move to the next or previous area, in the order: command box
 
 ### Viewing help: `help`
 
-Opens a window with a link to this user guide.
+Accesses in-app guidance through the command line or opens the full built-in User Guide window.
 
-![help message](images/helpMessage.png)
+LaiNurse offers three ways to get help:
 
-Format: `help`
+1. **Full User Guide Window** (<kbd>F1</kbd> / select **Help** > **Help** / `help window`): Opens a dedicated help
+   window containing the complete, bundled User Guide for convenient browsing alongside your work, as well as a button to copy the link to the online guide.
+2. **Command Overview** (`help`): Prints a concise list and summary of all available commands directly in the application's result display box.
+3. **Targeted Command Help** (`help COMMAND` or `help --COMMAND`): Displays detailed usage rules, parameter formats, and examples for a specific command directly in the result display box.
 
+Format: `help [COMMAND]` or `help [--COMMAND]`
+
+* Typing `help` without arguments outputs a summary of all commands in the result display.
+* Adding a command name or flag (e.g., `help add` or `help --add`, `help edit` or `help --edit`) displays the syntax and practical examples for that command.
+* Typing `help window` or `help --window` opens the pop-up Help Window containing the complete User Guide.
+
+Examples:
+* `help` shows a quick summary list of all available commands in the result display.
+* `help add` (or `help --add`) shows the exact parameters and examples for adding a patient.
+* `help edit` (or `help --edit`) shows how to modify patient details and manage appointments.
+* `help window` (or `help --window`) opens the full User Guide window.
+* Pressing <kbd>F1</kbd> opens the full User Guide window.
 
 ### Adding a patient: `add`
 
@@ -282,14 +296,15 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 ## Known issues
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+2. **If you minimize the Help Window** and then run the `help window` command (or `help --window`, **Help** > **Help**,
+   or the keyboard shortcut <kbd>F1</kbd>) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 
 --------------------------------------------------------------------------------------------------------------------
 
 ## Command summary
 
 Action | Format, Examples
---------|------------------
+--------|-----------------
 **Add** | `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --number 22224444 --address 123, Clementi Rd, 1234665 --appt 2026-11-30 09:00`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
@@ -298,5 +313,5 @@ Action | Format, Examples
 **List** | `list`
 **View** | `view ID`<br> e.g., `view S1234567A`
 **ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --till 2026-10-31`
-**Help** | `help`
+**Help** | `help [COMMAND]` (or `help [--COMMAND]`)<br> e.g., `help`, `help add` (or `help --add`), `help window` (or `help --window`)
 **Exit** | `exit`

@@ -12,12 +12,17 @@ title: Developer Guide
 * _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the
   originals.}_
 
+* Codebase adapted from [AddressBook-Level3 (AB3)](https://github.com/se-edu/addressbook-level3) developed by the SE-EDU initiative.
+* UI components and controls utilize native [JavaFX 17+](https://openjfx.io/) libraries.
+
 * AI Use Declaration from Qin Fangzheng: "As my career path is not related to software engineering, I choose AI-5/AI-6 as my AI use level, where I get Codex to do the tasks, and then I myself review the results, including feature behavior and partial code."
 
 * AI Use Declaration from Jaydon: "I used Codex and OpenCode to review and generate code.
   Based on the given levels of AI use in coding tasks, this ranges between AI-2 and AI-5".
 
 * AI Use Declaration from Yuhao: "I used Claude Code to write code, tests and documentation, and I review and test the results."
+
+* AI Use Declaration from Yong Kang: "I used Gemini to write and review code, tests and documentation. No automation is done and I go back and forth consistently with AI to ensure I am still largely in charge of the process. AI levels between AI-1 and AI-5."
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -153,7 +158,8 @@ Here's a (partial) class diagram of the `Logic` component:
 
 <img src="images/LogicClassDiagram.png" width="550"/>
 
-The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API
+The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete
+S1234567A")` API
 call as an example.
 
 ![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
@@ -314,6 +320,76 @@ of their appointments falls in the range. Only dates are compared, so a timed ap
     * Cons: Substrings are ambiguous for dates. For example, `10` matches October, the 10th of any month, and 10:00.
       Appointment matching would also live in two places.
 
+### Three-tier help system and offline User Guide rendering
+
+The help system provides a three-tier support model designed to give nurses immediate CLI feedback as well as complete offline reference documentation without network connectivity:
+
+1. **General CLI Overview (`help`)**: Displays a concise summary of all available command words directly in the result display box.
+2. **Targeted CLI Help (`help [COMMAND]` or `help [--COMMAND]`)**: Displays parameter formats, constraints, and syntax examples for a specific command directly in the result display box by reading canonical `MESSAGE_USAGE` definitions.
+3. **Pop-up User Guide Window (`help window`, `help --window`, menu bar, or <kbd>F1</kbd>)**: Opens a standalone non-modal window displaying the full, offline User Guide rendered using native JavaFX components.
+
+#### Implementation
+
+The help architecture spans argument parsing in `Logic`, command dispatching in `HelpCommand`, and native rendering in `UI`.
+
+##### 1. Command Parsing & Target Normalization (`HelpCommandParser`)
+
+`HelpCommandParser` processes user input according to the following rules:
+* Strips surrounding whitespace and checks for an empty argument string, returning a targetless `HelpCommand()` (Tier 1: General Help).
+* Normalizes flags: detects if the argument begins with `--` (via `TARGET_FLAG_MARKER`), strips the prefix, and ensures no whitespace exists between `--` and the target name (e.g., rejecting `help -- add`).
+* Normalizes casing using `Locale.ROOT` (`commandTarget.toLowerCase(Locale.ROOT)`) to ensure consistent parsing across system locales (avoiding locale-specific casing anomalies such as Turkish dotted 'i').
+* Rejects multi-token arguments (e.g., `help add patient`) or isolated flag markers (`help --`) by throwing a `ParseException` with `HelpCommand.MESSAGE_USAGE`.
+
+##### 2. Dynamic Command Usage Mapping (`HelpCommand`)
+
+Rather than hardcoding command names and usage strings inside `HelpCommand`:
+* A static `Map<String, String> COMMAND_USAGE_MAP` is initialized using a `TreeMap` to sort available command words alphabetically.
+* Each command registers its canonical `MESSAGE_USAGE` string dynamically (e.g., `AddCommand.COMMAND_WORD -> AddCommand.MESSAGE_USAGE`).
+* The help window target (`"window"`) is deliberately decoupled from `COMMAND_USAGE_MAP`. It is handled as a distinct navigation branch returning `new CommandResult(SHOWING_HELP_MESSAGE, true, false)`.
+* If a target matches a registered command, its usage string is returned. If unknown, `MESSAGE_UNKNOWN_HELP_TARGET` is returned listing all valid command words.
+
+##### 3. Build-Time Bundling & Extraction
+
+* Gradle's `processResources` task packages `docs/UserGuide.md` into the application JAR classpath under `/docs/UserGuide.md`, serving as the single offline source of truth.
+* `HelpBookUtil` loads the document as an input stream via `Class#getResourceAsStream("/docs/UserGuide.md")`.
+
+##### 4. Native UI Node Generation (`MarkdownRenderer`)
+
+`MarkdownRenderer` parses the sanitized Markdown sequentially into native JavaFX nodes without external third-party dependencies:
+* **Section Structure & Headings**: Tracks headers (`#`, `##`, `###`) and horizontal separators (`---`), rendering them as styled `Label` and `Separator` nodes, while resetting active list counters.
+* **List Counter Tracking across Continuations**:
+    * Tracks numbered items with monotonic counter progression (`1., 2., 3., ...`), supporting lazy markdown numbering where all raw items start with `1.`.
+    * Secondary continuation notes (e.g., `**Mac users:**`, multi-line descriptions) and sub-bullet items (`*`, `-`) are left-padded (`28px`–`32px`) without resetting the parent numbered list counter.
+    * Empty lines flush pending paragraphs but do not terminate loose list counting.
+* **Callout & Icon Normalization**:
+    * Collapses Jekyll/GitHub callout icon clusters (e.g., `[:exclamation: ... ] **Caution:**`) into unified badge components (`⚠ Caution:` in NUS Orange, `ℹ Note:` in Blue).
+    * Wraps blockquote lines (`> ...`) in styled callout cards with an NUS Orange left border.
+* **Table Layout**: Groups contiguous piped lines (`|`) into a JavaFX `GridPane` with fixed column constraints (28% label / 72% description) and dark theme styling.
+* **Inline Markup & Hyperlinks**:
+    * Uses regex pattern matching to format bold text (`**`), inline code (`` ` ``), and keyboard keys (`<kbd>`).
+    * Parses links `[text](url)` so that clicking an external URL copies it to the system clipboard and toggles the link label to `(Copied!)` for 1.5 seconds via a JavaFX `PauseTransition`, eliminating OS browser dependencies in headless testing environments.
+* **HTML `<br>` Sanitization**: Trailing `<br>` tags are stripped to eliminate excessive vertical padding, while consecutive internal `<br>` breaks are collapsed to a single `\n`.
+
+#### Design Considerations
+
+**Aspect: How command usages are maintained in `HelpCommand`**
+
+* **Alternative 1 (Current choice): Dynamic registry referencing static `COMMAND_WORD` and `MESSAGE_USAGE` from individual command classes.**
+    * *Pros:* Single source of truth. Modifying a command's syntax in its respective class automatically updates `help [COMMAND]` without code duplication.
+    * *Cons:* Requires `HelpCommand` to reference all concrete command classes.
+* **Alternative 2: Storing all usage strings inside `HelpCommand`.**
+    * *Pros:* All help-related strings are located in one file.
+    * *Cons:* High maintenance overhead; updating a command's parameters requires synchronizing two separate classes, risking documentation drift.
+
+**Aspect: How the offline User Guide is rendered**
+
+* **Alternative 1 (Current choice): Native custom Markdown renderer using standard JavaFX nodes (`TextFlow`, `VBox`, `ScrollPane`, `GridPane`).**
+    * *Pros:* Fully compliant with course constraints (zero external libraries, no `javafx-web`/`WebView`), runs reliably across platforms and headless CI test environments, and natively adopts application styling.
+    * *Cons:* Requires maintaining internal parser logic for markdown constructs.
+* **Alternative 2: JavaFX `WebView` component.**
+    * *Pros:* Renders full HTML/Markdown with complete CSS out of the box.
+    * *Cons:* Requires native WebKit binaries not bundled across all platforms, violates course external dependency rules, and is prone to crashes in headless test runners.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -342,7 +418,7 @@ saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to
 
 ![UndoRedoState1](images/UndoRedoState1.png)
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls
+Step 3. The user executes `add --id T0123456B --name David …​` to add a new person. The `add` command also calls
 `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
 
 ![UndoRedoState2](images/UndoRedoState2.png)
@@ -389,7 +465,7 @@ the `addressBookStateList` remains unchanged.
 
 Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not
 pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be
-purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern
+purged. Reason: It no longer makes sense to redo the `add --id T0123456B --name David …​` command. This is the behavior that most modern
 desktop applications follow.
 
 ![UndoRedoState5](images/UndoRedoState5.png)
@@ -454,6 +530,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | view patients with appointments on a specific date                                                   | I can plan my visits for that day                            |
 | `* `     | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
+| `* * *`  | home-based nurse | quickly check the syntax and usage examples of a specific command via the CLI                       | I can recall command arguments without breaking my typing workflow |
 
 ### Use cases
 
@@ -687,6 +764,37 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 3b1. LaiNurse stops showing the patient's details.
 
       Use case ends.
+
+**Use case: UC07 - Access in-app help**
+
+**MSS**
+
+1.  Nurse requests help for a specific command (e.g., `help add` or `help --add`).
+2.  LaiNurse displays the parameter syntax, format constraints, and usage examples for that command in the result display.
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. Nurse requests a general overview of all commands (`help`).
+    * 1a1. LaiNurse displays an alphabetical list of all available commands and general navigation guidance in the result display.
+    * Use case ends.
+
+* 1b. Nurse requests to open the full offline User Guide window (`help window`, `help --window`, press <kbd>F1</kbd>, or select **Help** > **Help**).
+    * 1b1. LaiNurse opens the Help Window containing the complete offline User Guide rendered using native JavaFX components.
+    * Use case ends.
+
+* 1c. Nurse enters an unrecognized command target (e.g., `help nonexistent` or `help --nonexistent`).
+    * 1c1. LaiNurse displays an unknown help target error message, lists all available commands in alphabetical order, and provides instructions to access the full guide window.
+    * Use case ends.
+
+* 1d. Nurse provides a malformed help argument (e.g., `help -- add`, `help --`, or multiple tokens such as `help add patient`).
+    * 1d1. LaiNurse displays an invalid command format error displaying `HelpCommand.MESSAGE_USAGE`.
+    * Use case ends.
+
+* 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW` or `help --DELETE`).
+    * 1e1. LaiNurse normalizes the target using `Locale.ROOT` and displays the syntax details for the matching command.
+    * Use case ends.
 
 *{More to be added}*
 
@@ -996,6 +1104,36 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `edit S1234567A --add-appt 2026-02-30`, an impossible date<br>
        Expected: No patient is changed. The status message shows the appointment format error.
+
+### Viewing help and command instructions
+
+1. Command overview via CLI
+    * Test case: `help`
+        * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
+
+2. Targeted command help
+    * Test case: `help add` (or `help --add`)
+        * Expected: Parameter syntax and usage examples for `add` are displayed.
+    * Test case: `help viewappt` (or `help --viewappt`)
+        * Expected: Both single-date and date-range syntax options (`--from`, `--till`) for `viewappt` are displayed.
+    * Test case: `help --DELETE` or `help VIEW`
+        * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
+
+3. Rejecting invalid help inputs
+    * Test case: `help nonexistent`
+        * Expected: Displays `Unknown help command: 'nonexistent'.` along with the list of valid commands.
+    * Test case: `help --` or `help -- add`
+        * Expected: Displays invalid command format error showing `HelpCommand.MESSAGE_USAGE`.
+    * Test case: `help add patient`
+        * Expected: Multi-token arguments are rejected; displays invalid command format error.
+
+4. Opening the full User Guide window
+    * Test case: `help window` or `help --window`
+        * Expected: The Help Window opens displaying the full bundled User Guide formatted with native JavaFX nodes. The status message confirms: `Opened help window.`.
+    * Test case: Press <kbd>F1</kbd> or click **Help** > **Help** in the menu bar.
+        * Expected: Opens the Help Window.
+    * Test case: Inside the Help Window, click any inline link or the **Copy URL** button.
+        * Expected: The target URL is copied to the system clipboard, and the label changes to indicate `(Copied!)` temporarily.
 
 ### Saving data
 
