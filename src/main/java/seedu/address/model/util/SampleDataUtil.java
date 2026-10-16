@@ -3,8 +3,8 @@ package seedu.address.model.util;
 import java.util.Arrays;
 import java.util.Optional;
 
-import seedu.address.model.AddressBook;
-import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.LaiNurse;
+import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
@@ -15,7 +15,7 @@ import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 
 /**
- * Contains utility methods for populating {@code AddressBook} with sample data.
+ * Contains utility methods for populating {@code LaiNurse} with sample data.
  */
 public class SampleDataUtil {
     public static Patient[] getSamplePatients() {
@@ -53,8 +53,8 @@ public class SampleDataUtil {
         return new AppointmentSchedule(Arrays.stream(appointments).map(Appointment::new).toList());
     }
 
-    public static ReadOnlyAddressBook getSampleAddressBook() {
-        AddressBook sampleAb = new AddressBook();
+    public static ReadOnlyLaiNurse getSampleLaiNurse() {
+        LaiNurse sampleAb = new LaiNurse();
         for (Patient samplePatient : getSamplePatients()) {
             sampleAb.addPatient(samplePatient);
         }

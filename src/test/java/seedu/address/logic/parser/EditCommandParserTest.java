@@ -171,7 +171,7 @@ public class EditCommandParserTest {
         PatientId targetId = new PatientId(VALID_ID_AMY);
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withPhone(VALID_PHONE_BOB)
                 .withAppointmentsToAdd("2026-10-20 09:30").build();
-        assertParseSuccess(parser, VALID_ID_AMY + "\t--number\t" + VALID_PHONE_BOB + "\t--add-appt\t2026-10-20 09:30",
+        assertParseSuccess(parser, VALID_ID_AMY + "\t--phone\t" + VALID_PHONE_BOB + "\t--add-appt\t2026-10-20 09:30",
                 new EditCommand(targetId, descriptor));
     }
 
@@ -180,14 +180,15 @@ public class EditCommandParserTest {
         // the option is recognized, so the error names the field instead of showing the usage
         assertParseFailure(parser, VALID_ID_AMY + " --add-appt", Appointment.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ID_AMY + " --remove-appt", Appointment.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, VALID_ID_AMY + " --number", Phone.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --phone", Phone.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ID_AMY + " --medical-history", MedicalHistory.MESSAGE_CONSTRAINTS);
     }
 
     @Test
     public void parse_unsupportedOption_failure() {
-        // misspelt option, an add-only option, and the ID, which cannot be edited
+        // misspelt option, the old name of --phone, an add-only option, and the ID, which cannot be edited
         assertParseFailure(parser, VALID_ID_AMY + " --nmae Alex", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, VALID_ID_AMY + " --number 91234567", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, VALID_ID_AMY + " --appt 2026-10-20", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, VALID_ID_AMY + " --id S9999999Z", MESSAGE_INVALID_FORMAT);
     }

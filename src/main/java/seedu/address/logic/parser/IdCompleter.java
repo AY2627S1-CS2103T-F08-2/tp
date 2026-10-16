@@ -15,7 +15,7 @@ import seedu.address.model.patient.PatientId;
 
 /**
  * Completes the patient ID in a command that expects the ID of an existing patient, such as {@code view S12},
- * or {@code edit S12 --number 91234567}.
+ * or {@code edit S12 --phone 91234567}.
  */
 public class IdCompleter {
 

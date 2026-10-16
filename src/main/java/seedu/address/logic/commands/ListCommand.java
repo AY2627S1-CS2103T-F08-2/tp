@@ -6,14 +6,14 @@ import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 import seedu.address.model.Model;
 
 /**
- * Lists all patients in the address book to the user.
+ * Lists all patients in LaiNurse to the user.
  */
 public class ListCommand extends Command {
 
     public static final String COMMAND_WORD = "list";
     public static final String MESSAGE_SUCCESS = "Listed all patients.";
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Shows a list of all patients in the address book.\n"
+            + ": Shows a list of all patients in LaiNurse.\n"
             + "Example: " + COMMAND_WORD;
 
 

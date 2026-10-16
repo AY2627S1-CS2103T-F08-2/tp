@@ -13,7 +13,7 @@ With LaiNurse, you can:
 * find patients by part of their name, ID, phone number, address or medical history
 * check the format of any command without leaving the keyboard
 
-To try LaiNurse, download the latest `addressbook.jar` from [Releases](https://github.com/AY2627S1-CS2103T-F08-2/tp/releases), and follow the [Quick start](https://ay2627s1-cs2103t-f08-2.github.io/tp/UserGuide.html#quick-start) in the User Guide.
+To try LaiNurse, download the latest `lainurse.jar` from [Releases](https://github.com/AY2627S1-CS2103T-F08-2/tp/releases), and follow the [Quick start](https://ay2627s1-cs2103t-f08-2.github.io/tp/UserGuide.html#quick-start) in the User Guide.
 
 For the detailed documentation of this project, see the **[LaiNurse product website](https://ay2627s1-cs2103t-f08-2.github.io/tp/)**, which has the [User Guide](https://ay2627s1-cs2103t-f08-2.github.io/tp/UserGuide.html) and the [Developer Guide](https://ay2627s1-cs2103t-f08-2.github.io/tp/DeveloperGuide.html).
 

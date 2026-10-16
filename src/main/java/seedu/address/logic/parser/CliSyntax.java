@@ -8,13 +8,13 @@ public class CliSyntax {
     /* Prefix definitions */
     public static final Prefix PREFIX_ID = new Prefix("--id ");
     public static final Prefix PREFIX_NAME = new Prefix("--name ");
-    public static final Prefix PREFIX_PHONE = new Prefix("--number ");
+    public static final Prefix PREFIX_PHONE = new Prefix("--phone ");
     public static final Prefix PREFIX_ADDRESS = new Prefix("--address ");
     public static final Prefix PREFIX_MEDICAL_HISTORY = new Prefix("--medical-history ");
     public static final Prefix PREFIX_APPOINTMENT = new Prefix("--appt ");
     public static final Prefix PREFIX_ADD_APPOINTMENT = new Prefix("--add-appt ");
     public static final Prefix PREFIX_REMOVE_APPOINTMENT = new Prefix("--remove-appt ");
     public static final Prefix PREFIX_FROM = new Prefix("--from ");
-    public static final Prefix PREFIX_TILL = new Prefix("--till ");
+    public static final Prefix PREFIX_TO = new Prefix("--to ");
 
 }

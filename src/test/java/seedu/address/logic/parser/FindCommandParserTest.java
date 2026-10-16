@@ -41,7 +41,7 @@ public class FindCommandParserTest {
     public void parse_eachOption_returnsFindCommand() {
         assertParseSuccess(parser, "--id 123", command("123", null, null, null, null));
         assertParseSuccess(parser, "--name Mary", command(null, "Mary", null, null, null));
-        assertParseSuccess(parser, "--number 5", command(null, null, "5", null, null));
+        assertParseSuccess(parser, "--phone 5", command(null, null, "5", null, null));
         assertParseSuccess(parser, "--address #01-", command(null, null, null, "#01-", null));
         assertParseSuccess(parser, "--medical-history diabet", command(null, null, null, null, "diabet"));
     }
@@ -49,9 +49,9 @@ public class FindCommandParserTest {
     @Test
     public void parse_allOptionsInDifferentOrders_returnsSameCommand() {
         FindCommand expectedCommand = command("123", "Mary Jane", "65", "Marina Bay", "Type 2");
-        assertParseSuccess(parser, "--id 123 --name Mary Jane --number 65 --address Marina Bay"
+        assertParseSuccess(parser, "--id 123 --name Mary Jane --phone 65 --address Marina Bay"
                 + " --medical-history Type 2", expectedCommand);
-        assertParseSuccess(parser, " --medical-history “Type 2” --address \"Marina Bay\" --number “65”"
+        assertParseSuccess(parser, " --medical-history “Type 2” --address \"Marina Bay\" --phone “65”"
                 + " --name “Mary Jane” --id \"123\"", expectedCommand);
     }
 
@@ -105,7 +105,7 @@ public class FindCommandParserTest {
     @Test
     public void parse_unknownOptions_failure() {
         for (String option : List.of("--unknown value", "--medical-histroy asthma", "--name=Mary", "--", "--Name Mary",
-                "--phone 123", "--next-appointment 2026-10", "--appt 2026-10")) {
+                "--number 123", "--next-appointment 2026-10", "--appt 2026-10")) {
             assertParseFailure(parser, option, INVALID_FORMAT_MESSAGE);
             assertParseFailure(parser, "--name Mary " + option, INVALID_FORMAT_MESSAGE);
         }

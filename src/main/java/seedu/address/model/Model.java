@@ -31,43 +31,43 @@ public interface Model {
     void setGuiSettings(GuiSettings guiSettings);
 
     /**
-     * Replaces address book data with the data in {@code addressBook}.
+     * Replaces all the data with the data in {@code laiNurse}.
      */
-    void setAddressBook(ReadOnlyAddressBook addressBook);
+    void setLaiNurse(ReadOnlyLaiNurse laiNurse);
 
     /**
-     * Returns the AddressBook
+     * Returns the LaiNurse
      */
-    ReadOnlyAddressBook getAddressBook();
+    ReadOnlyLaiNurse getLaiNurse();
 
     /**
-     * Returns true if a patient with the same identity as {@code patient} exists in the address book.
+     * Returns true if a patient with the same identity as {@code patient} exists in LaiNurse.
      */
     boolean hasPatient(Patient patient);
 
     /**
      * Returns the patient with the given {@code id}, or {@code Optional#empty()} if there is none.
-     * Searches all patients in the address book, not just those in the filtered patient list.
+     * Searches all patients in LaiNurse, not just those in the filtered patient list.
      */
     Optional<Patient> findPatientById(PatientId id);
 
     /**
      * Deletes the given patient.
-     * The patient must exist in the address book.
+     * The patient must exist in LaiNurse.
      */
     void deletePatient(Patient target);
 
     /**
      * Adds the given patient.
-     * {@code patient} must not already exist in the address book.
+     * {@code patient} must not already exist in LaiNurse.
      */
     void addPatient(Patient patient);
 
     /**
      * Replaces the given patient {@code target} with {@code editedPatient}.
-     * {@code target} must exist in the address book.
+     * {@code target} must exist in LaiNurse.
      * The patient identity of {@code editedPatient} must not be the same as another existing patient
-     * in the address book.
+     * in LaiNurse.
      */
     void setPatient(Patient target, Patient editedPatient);
 

@@ -4,9 +4,9 @@ import javafx.collections.ObservableList;
 import seedu.address.model.patient.Patient;
 
 /**
- * Unmodifiable view of an address book
+ * Unmodifiable view of the LaiNurse data
  */
-public interface ReadOnlyAddressBook {
+public interface ReadOnlyLaiNurse {
 
     /**
      * Returns an unmodifiable view of the patients list.

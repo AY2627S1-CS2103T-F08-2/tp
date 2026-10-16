@@ -28,7 +28,7 @@ import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 
 /**
- * Edits the details of an existing patient in the address book.
+ * Edits the details of an existing patient in LaiNurse.
  */
 public class EditCommand extends Command {
 
@@ -39,7 +39,7 @@ public class EditCommand extends Command {
             + "Appointments are removed first, then added, so one command can move an appointment.\n"
             + "Parameters: ID "
             + "[" + PREFIX_NAME + "NAME] "
-            + "[" + PREFIX_PHONE + "NUMBER] "
+            + "[" + PREFIX_PHONE + "PHONE] "
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL_HISTORY] "
             + "[" + PREFIX_ADD_APPOINTMENT + "DATE_OR_DATETIME]... "
@@ -71,7 +71,7 @@ public class EditCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        List<Patient> allPatients = model.getAddressBook().getPatientList();
+        List<Patient> allPatients = model.getLaiNurse().getPatientList();
 
         Patient patientToEdit = allPatients.stream().filter(patient -> patient.getId().equals(targetId))
                 .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));

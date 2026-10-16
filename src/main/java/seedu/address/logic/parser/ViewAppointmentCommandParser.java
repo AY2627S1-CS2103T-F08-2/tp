@@ -1,9 +1,9 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TILL;
+import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_TILL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -19,7 +19,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
     /**
      * Parses the given {@code String} of arguments in the context of the ViewAppointmentCommand
      * and returns a ViewAppointmentCommand object for execution.
-     * The arguments are either a single date, or a {@code --from} date, a {@code --till} date, or both.
+     * The arguments are either a single date, or a {@code --from} date, a {@code --to} date, or both.
      *
      * @throws ParseException if the user input does not conform to the expected format.
      */
@@ -27,11 +27,11 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT,
                 ViewAppointmentCommand.MESSAGE_USAGE);
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
-                PREFIX_FROM, PREFIX_TILL);
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_FROM, PREFIX_TILL);
+                PREFIX_FROM, PREFIX_TO);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_FROM, PREFIX_TO);
         String preamble = argMultimap.getPreamble();
         boolean hasRange = argMultimap.getValue(PREFIX_FROM).isPresent()
-                || argMultimap.getValue(PREFIX_TILL).isPresent();
+                || argMultimap.getValue(PREFIX_TO).isPresent();
 
         if (!hasRange) {
             if (preamble.isEmpty()) {
@@ -43,11 +43,11 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         if (!preamble.isEmpty()) {
             throw new ParseException(invalidFormatMessage);
         }
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TILL);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TO);
         Optional<LocalDate> startDate = parseOptionalDate(argMultimap, PREFIX_FROM);
-        Optional<LocalDate> endDate = parseOptionalDate(argMultimap, PREFIX_TILL);
+        Optional<LocalDate> endDate = parseOptionalDate(argMultimap, PREFIX_TO);
         if (startDate.isPresent() && endDate.isPresent() && startDate.get().isAfter(endDate.get())) {
-            throw new ParseException(MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TILL);
+            throw new ParseException(MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO);
         }
         return new ViewAppointmentCommand(startDate, endDate);
     }

@@ -58,8 +58,8 @@ public class IdCompleterTest {
 
     @Test
     public void complete_editWithOptionsAfterId_completesIdAndKeepsOptions() {
-        assertEquals(List.of("edit T7654321B --number 91234567 --add-appt 2026-12-01 10:00"),
-                IdCompleter.complete("edit t7 --number 91234567 --add-appt 2026-12-01 10:00", IDS));
+        assertEquals(List.of("edit T7654321B --phone 91234567 --add-appt 2026-12-01 10:00"),
+                IdCompleter.complete("edit t7 --phone 91234567 --add-appt 2026-12-01 10:00", IDS));
         // the spacing around the ID and in the options is kept
         assertEquals(List.of("edit\tT7654321B\t--name\tAlex  Tan"),
                 IdCompleter.complete("edit\tT7\t--name\tAlex  Tan", IDS));
@@ -70,8 +70,8 @@ public class IdCompleterTest {
     @Test
     public void complete_editWithoutId_returnsEmptyList() {
         // the options come first, so there is no ID to complete
-        assertEquals(List.of(), IdCompleter.complete("edit --number 91234567", IDS));
-        assertEquals(List.of(), IdCompleter.complete("edit X --number 91234567", IDS));
+        assertEquals(List.of(), IdCompleter.complete("edit --phone 91234567", IDS));
+        assertEquals(List.of(), IdCompleter.complete("edit X --phone 91234567", IDS));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class IdCompleterTest {
         // commands that do not take the ID of an existing patient
         assertEquals(List.of(), IdCompleter.complete("add --id S1", IDS));
         assertEquals(List.of(), IdCompleter.complete("find S1", IDS));
-        // command words are case-sensitive, as in AddressBookParser
+        // command words are case-sensitive, as in LaiNurseParser
         assertEquals(List.of(), IdCompleter.complete("VIEW S1", IDS));
     }
 

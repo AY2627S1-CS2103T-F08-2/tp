@@ -30,13 +30,13 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.AddressBook;
+import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Patient;
-import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
@@ -57,7 +57,7 @@ public class AddCommandFlowTest {
     @BeforeEach
     public void setUp() {
         model = new ModelManager();
-        storage = new StorageManager(new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json")),
+        storage = new StorageManager(new JsonLaiNurseStorage(temporaryFolder.resolve("laiNurse.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
         logic = new LogicManager(model, storage);
     }
@@ -65,7 +65,7 @@ public class AddCommandFlowTest {
     @Test
     public void execute_requiredFieldsOnly_normalizedAndPersisted() throws Exception {
         assertAddedPatientPersisted("add --address Block 312, Amy Street 1 --name Amy   Bee"
-                + " --number 11111111 --id s1111111a", AMY);
+                + " --phone 11111111 --id s1111111a", AMY);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class AddCommandFlowTest {
         logic.execute(PatientUtil.getAddCommand(AMY));
         model.updateFilteredPatientList(patient -> false);
 
-        assertRejectedCommandLeavesDataUnchanged("add --name Different Patient --number 98765432"
+        assertRejectedCommandLeavesDataUnchanged("add --name Different Patient --phone 98765432"
                 + " --address Different Address --id s1111111a", CommandException.class,
                 AddCommand.MESSAGE_DUPLICATE_PATIENT);
     }
@@ -132,22 +132,22 @@ public class AddCommandFlowTest {
 
         assertEquals(String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(expectedPatient)),
                 result.getFeedbackToUser());
-        assertEquals(List.of(expectedPatient), model.getAddressBook().getPatientList());
+        assertEquals(List.of(expectedPatient), model.getLaiNurse().getPatientList());
         assertEquals(List.of(expectedPatient), model.getFilteredPatientList());
-        assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
     }
 
     private void assertRejectedCommandLeavesDataUnchanged(String command, Class<? extends Throwable> expectedException,
             String expectedMessage) throws Exception {
-        AddressBook expectedAddressBook = new AddressBook(model.getAddressBook());
+        LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
         List<Patient> expectedFilteredList = List.copyOf(model.getFilteredPatientList());
-        String expectedJson = Files.readString(storage.getAddressBookFilePath());
+        String expectedJson = Files.readString(storage.getLaiNurseFilePath());
 
         assertThrows(expectedException, expectedMessage, () -> logic.execute(command));
 
-        assertEquals(expectedAddressBook, model.getAddressBook());
+        assertEquals(expectedLaiNurse, model.getLaiNurse());
         assertEquals(expectedFilteredList, model.getFilteredPatientList());
-        assertEquals(expectedJson, Files.readString(storage.getAddressBookFilePath()));
-        assertEquals(expectedAddressBook, storage.readAddressBook().orElseThrow());
+        assertEquals(expectedJson, Files.readString(storage.getLaiNurseFilePath()));
+        assertEquals(expectedLaiNurse, storage.readLaiNurse().orElseThrow());
     }
 }

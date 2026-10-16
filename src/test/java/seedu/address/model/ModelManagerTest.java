@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
-import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.LaiNurseBuilder;
 
 public class ModelManagerTest {
 
@@ -25,14 +25,14 @@ public class ModelManagerTest {
     public void constructor() {
         assertEquals(new UserPrefs(), modelManager.getUserPrefs());
         assertEquals(new GuiSettings(), modelManager.getGuiSettings());
-        assertEquals(new AddressBook(), new AddressBook(modelManager.getAddressBook()));
+        assertEquals(new LaiNurse(), new LaiNurse(modelManager.getLaiNurse()));
     }
 
     @Test
     public void constructor_validUserPrefs_copiesUserPrefs() {
         UserPrefs userPrefs = new UserPrefs();
         userPrefs.setGuiSettings(new GuiSettings(1, 2, 3, 4));
-        modelManager = new ModelManager(new AddressBook(), userPrefs);
+        modelManager = new ModelManager(new LaiNurse(), userPrefs);
         assertEquals(userPrefs, modelManager.getUserPrefs());
 
         // Modifying userPrefs should not modify modelManager's userPrefs
@@ -59,12 +59,12 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void hasPatient_patientNotInAddressBook_returnsFalse() {
+    public void hasPatient_patientNotInLaiNurse_returnsFalse() {
         assertFalse(modelManager.hasPatient(ALICE));
     }
 
     @Test
-    public void hasPatient_patientInAddressBook_returnsTrue() {
+    public void hasPatient_patientInLaiNurse_returnsTrue() {
         modelManager.addPatient(ALICE);
         assertTrue(modelManager.hasPatient(ALICE));
     }
@@ -75,7 +75,7 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void findPatientById_idNotInAddressBook_returnsEmpty() {
+    public void findPatientById_idNotInLaiNurse_returnsEmpty() {
         assertEquals(Optional.empty(), modelManager.findPatientById(ALICE.getId()));
     }
 
@@ -97,13 +97,13 @@ public class ModelManagerTest {
 
     @Test
     public void equals() {
-        AddressBook addressBook = new AddressBookBuilder().withPatient(ALICE).withPatient(BENSON).build();
-        AddressBook differentAddressBook = new AddressBook();
+        LaiNurse laiNurse = new LaiNurseBuilder().withPatient(ALICE).withPatient(BENSON).build();
+        LaiNurse differentLaiNurse = new LaiNurse();
         UserPrefs userPrefs = new UserPrefs();
 
         // same values -> returns true
-        modelManager = new ModelManager(addressBook, userPrefs);
-        ModelManager modelManagerCopy = new ModelManager(addressBook, userPrefs);
+        modelManager = new ModelManager(laiNurse, userPrefs);
+        ModelManager modelManagerCopy = new ModelManager(laiNurse, userPrefs);
         assertTrue(modelManager.equals(modelManagerCopy));
 
         // same object -> returns true
@@ -115,13 +115,13 @@ public class ModelManagerTest {
         // different types -> returns false
         assertFalse(modelManager.equals(5));
 
-        // different addressBook -> returns false
-        assertFalse(modelManager.equals(new ModelManager(differentAddressBook, userPrefs)));
+        // different laiNurse -> returns false
+        assertFalse(modelManager.equals(new ModelManager(differentLaiNurse, userPrefs)));
 
         // different filteredList -> returns false
         String[] keywords = ALICE.getName().fullName.split("\\s+");
         modelManager.updateFilteredPatientList(new NameContainsKeywordsPredicate(List.of(keywords)));
-        assertFalse(modelManager.equals(new ModelManager(addressBook, userPrefs)));
+        assertFalse(modelManager.equals(new ModelManager(laiNurse, userPrefs)));
 
         // resets modelManager to initial state for upcoming tests
         modelManager.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
@@ -129,6 +129,6 @@ public class ModelManagerTest {
         // different userPrefs -> returns false
         UserPrefs differentUserPrefs = new UserPrefs();
         differentUserPrefs.setGuiSettings(new GuiSettings(1, 2, 3, 4));
-        assertFalse(modelManager.equals(new ModelManager(addressBook, differentUserPrefs)));
+        assertFalse(modelManager.equals(new ModelManager(laiNurse, differentUserPrefs)));
     }
 }

@@ -169,7 +169,7 @@ call as an example.
 
 How the `Logic` component works:
 
-1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in
+1. When `Logic` is called upon to execute a command, the command is passed to a `LaiNurseParser` object, which in
    turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which
    is executed by the `LogicManager`.
@@ -184,9 +184,9 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 
 How the parsing works:
 
-* When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a
+* When called upon to parse a user command, the `LaiNurseParser` class creates an `XYZCommandParser` (`XYZ` is a
   placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to
-  parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that
+  parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `LaiNurseParser` returns that
   object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface
   so they can be treated similarly where appropriate, for example during testing.
@@ -201,7 +201,7 @@ How the parsing works:
 
 The `Model` component,
 
-* stores the address book data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
+* stores the LaiNurse data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It
   exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates
   when the list changes.
@@ -210,7 +210,7 @@ The `Model` component,
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they
   should make sense on their own without depending on other components)
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Person` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
+<div markdown="span" class="alert alert-info">:information_source: **Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `LaiNurse`, and each `Person` references tags from that list. This lets `LaiNurse` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
 
 <img src="images/BetterModelClassDiagram.png" width="450" />
 
@@ -225,9 +225,9 @@ The `Model` component,
 
 The `Storage` component,
 
-* can save both address book data and user preference data in JSON format, and read them back into corresponding
+* can save both LaiNurse data and user preference data in JSON format, and read them back into corresponding
   objects.
-* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and
+* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonLaiNurseStorage` and
   `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects
   that belong to the `Model`)
@@ -294,17 +294,17 @@ between time zones, so changing the computer's time zone, or a daylight saving c
 
 ### Viewing appointments by date
 
-`viewappt` takes either one date, or a range given by `--from`, `--till`, or both. `ViewAppointmentCommandParser`
+`viewappt` takes either one date, or a range given by `--from`, `--to`, or both. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
 that starts and ends on that date. When both options are given, the parser rejects a `--from` date that is after the
-`--till` date.
+`--to` date.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
 when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Today is
 `LocalDate.now(clock)`, where the clock is `Clock.systemDefaultZone()`, so it is the current date in the computer's
 default time zone. A package-private constructor takes another `Clock`, which lets tests fix the date. Because the
 command reads the date when it runs rather than when it is parsed, it never compares against a stale day. If only
-`--till` is given and its date is before today, the range would be empty, so the command shows an error that suggests
+`--to` is given and its date is before today, the range would be empty, so the command shows an error that suggests
 adding `--from`. The command then filters the list with `AppointmentBetweenDatesPredicate`, which shows a patient if any
 of their appointments falls in the range. Only dates are compared, so a timed appointment earlier today still counts.
 
@@ -394,46 +394,46 @@ Rather than hardcoding command names and usage strings inside `HelpCommand`:
 
 #### Proposed Implementation
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo
-history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the
+The proposed undo/redo mechanism is facilitated by `VersionedLaiNurse`. It extends `LaiNurse` with an undo/redo
+history, stored internally as a `laiNurseStateList` and `currentStatePointer`. Additionally, it implements the
 following operations:
 
-* `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
+* `VersionedLaiNurse#commit()` — Saves the current LaiNurse state in its history.
+* `VersionedLaiNurse#undo()` — Restores the previous LaiNurse state from its history.
+* `VersionedLaiNurse#redo()` — Restores a previously undone LaiNurse state from its history.
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and
-`Model#redoAddressBook()` respectively.
+These operations are exposed in the `Model` interface as `Model#commitLaiNurse()`, `Model#undoLaiNurse()` and
+`Model#redoLaiNurse()` respectively.
 
 Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
 
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the
-initial address book state, and the `currentStatePointer` pointing to that single address book state.
+Step 1. The user launches the application for the first time. The `VersionedLaiNurse` will be initialized with the
+initial LaiNurse state, and the `currentStatePointer` pointing to that single LaiNurse state.
 
 ![UndoRedoState0](images/UndoRedoState0.png)
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls
-`Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be
-saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+Step 2. The user executes `delete 5` command to delete the 5th person in LaiNurse. The `delete` command calls
+`Model#commitLaiNurse()`, causing the modified state of LaiNurse after the `delete 5` command executes to be
+saved in the `laiNurseStateList`, and the `currentStatePointer` is shifted to the newly inserted LaiNurse state.
 
 ![UndoRedoState1](images/UndoRedoState1.png)
 
 Step 3. The user executes `add --id T0123456B --name David …​` to add a new person. The `add` command also calls
-`Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+`Model#commitLaiNurse()`, causing another modified LaiNurse state to be saved into the `laiNurseStateList`.
 
 ![UndoRedoState2](images/UndoRedoState2.png)
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
+<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitLaiNurse()`, so the LaiNurse state will not be saved into the `laiNurseStateList`.
 
 </div>
 
 Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the
-`undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once
-to the left, pointing it to the previous address book state, and restores the address book to that state.
+`undo` command. The `undo` command will call `Model#undoLaiNurse()`, which will shift the `currentStatePointer` once
+to the left, pointing it to the previous LaiNurse state, and restores LaiNurse to that state.
 
 ![UndoRedoState3](images/UndoRedoState3.png)
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
+<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial LaiNurse state, then there are no previous LaiNurse states to restore. The `undo` command uses `Model#canUndoLaiNurse()` to check if this is the case. If so, it will return an error to the user rather
 than attempting to perform the undo.
 
 </div>
@@ -450,21 +450,21 @@ Similarly, how an undo operation goes through the `Model` component is shown bel
 
 ![UndoSequenceDiagram](images/UndoSequenceDiagram-Model.png)
 
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once
-to the right, pointing to the previously undone state, and restores the address book to that state.
+The `redo` command does the opposite — it calls `Model#redoLaiNurse()`, which shifts the `currentStatePointer` once
+to the right, pointing to the previously undone state, and restores LaiNurse to that state.
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
+<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `laiNurseStateList.size() - 1`, pointing to the latest LaiNurse state, then there are no undone LaiNurse states to restore. The `redo` command uses `Model#canRedoLaiNurse()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
 
 </div>
 
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as
-`list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus,
-the `addressBookStateList` remains unchanged.
+Step 5. The user then decides to execute the command `list`. Commands that do not modify LaiNurse, such as
+`list`, will usually not call `Model#commitLaiNurse()`, `Model#undoLaiNurse()` or `Model#redoLaiNurse()`. Thus,
+the `laiNurseStateList` remains unchanged.
 
 ![UndoRedoState4](images/UndoRedoState4.png)
 
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not
-pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be
+Step 6. The user executes `clear`, which calls `Model#commitLaiNurse()`. Since the `currentStatePointer` is not
+pointing at the end of the `laiNurseStateList`, all LaiNurse states after the `currentStatePointer` will be
 purged. Reason: It no longer makes sense to redo the `add --id T0123456B --name David …​` command. This is the behavior that most modern
 desktop applications follow.
 
@@ -478,7 +478,7 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 **Aspect: How undo & redo execute:**
 
-* **Alternative 1 (current choice):** Saves the entire address book.
+* **Alternative 1 (current choice):** Saves the entire LaiNurse state.
     * Pros: Easy to implement.
     * Cons: May have performance issues in terms of memory usage.
 
@@ -900,10 +900,10 @@ testers are expected to do more *exploratory* testing.
     1. Test case: type `delete S`, then press Tab several times<br>
        Expected: Each Tab shows the next ID that starts with `S`, in the order of the list, and then starts again from the first.
 
-    1. Test case: type `edit s23 --number 91234567`, then press Tab<br>
-       Expected: The command box shows `edit S2345678B --number 91234567`. The options are kept.
+    1. Test case: type `edit s23 --phone 91234567`, then press Tab<br>
+       Expected: The command box shows `edit S2345678B --phone 91234567`. The options are kept.
 
-    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra` or `edit --number 91234567`, then press Tab<br>
+    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra` or `edit --phone 91234567`, then press Tab<br>
        Expected: The command box does not change.
 
 1. Moving between the command box and the patient list
@@ -977,7 +977,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `find --address “  sErAnGoOn   gArDeNs ”`<br>
        Expected: Bernice Yu and David Li are shown. Matching ignores case and repeated whitespace, and accepts curly quotes.
 
-    1. Test case: `find --number 4388`<br>
+    1. Test case: `find --phone 4388`<br>
        Expected: Only Alex Yeoh is shown, because his phone number contains `4388`.
 
     1. Test case: `find --medical-history penicillin`<br>
@@ -1043,35 +1043,35 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: The same sample data as above.
 
-    1. Test case: `viewappt --from 2026-10-01 --till 2026-10-31`<br>
+    1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`<br>
        Expected: Alex Yeoh, Bernice Yu and Irfan Ibrahim are shown. The status message shows
        `3 patient(s) with appointments from 2026-10-01 to 2026-10-31`.
 
-    1. Test case: `viewappt --till 2026-10-06 --from 2026-10-06`<br>
+    1. Test case: `viewappt --to 2026-10-06 --from 2026-10-06`<br>
        Expected: Only Bernice Yu is shown. The options may be in any order, and a one-day range behaves like `viewappt 2026-10-06`.
 
     1. Test case: `viewappt --from 2026-10-07`<br>
        Expected: Alex Yeoh (appointment `2026-11-02`) and Irfan Ibrahim are shown. The status message shows
        `2 patient(s) with appointments on or after 2026-10-07`.
 
-    1. Test case: `viewappt --till 2099-12-31`<br>
+    1. Test case: `viewappt --to 2099-12-31`<br>
        Expected: Only patients with an appointment from today onwards are shown. The range in the status message starts with today's date,
        which is the current date in your computer's time zone.
 
-    1. Test case: `viewappt --till 2000-01-01`<br>
-       Expected: The list is unchanged. The status message says that the `--till` date is before today.
+    1. Test case: `viewappt --to 2000-01-01`<br>
+       Expected: The list is unchanged. The status message says that the `--to` date is before today.
 
-    1. Test case: `viewappt --from 2026-10-31 --till 2026-10-01`<br>
-       Expected: The list is unchanged. The status message says that the `--from` date must not be after the `--till` date.
+    1. Test case: `viewappt --from 2026-10-31 --to 2026-10-01`<br>
+       Expected: The list is unchanged. The status message says that the `--from` date must not be after the `--to` date.
 
-    1. Other incorrect commands to try: `viewappt 2026-10-15 --till 2026-10-31` (a date and an option),
+    1. Other incorrect commands to try: `viewappt 2026-10-15 --to 2026-10-31` (a date and an option),
        `viewappt --to 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated option)<br>
        Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
 
 1. Viewing a date-only appointment next to a timed one on the same day
 
     1. Prerequisites: Start with the sample data, then add a timed appointment on the same date as Bernice Yu's
-       date-only one: `add --id T0456789D --name Eve Tan --number 98765432 --address Blk 123 Clementi Ave 3, #05-12 --appt 2026-10-06 15:00`.
+       date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123 Clementi Ave 3, #05-12 --appt 2026-10-06 15:00`.
 
     1. Test case: `viewappt 2026-10-06`<br>
        Expected: Both Bernice Yu (appointment `2026-10-06`, no time) and Eve Tan (appointment `2026-10-06 15:00`) are shown.
@@ -1087,10 +1087,10 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data. Alex Yeoh has the ID `S1234567A`.
 
-    1. Test case: `edit S1234567A --number 91234567`<br>
+    1. Test case: `edit S1234567A --phone 91234567`<br>
        Expected: Alex Yeoh's phone number changes to `91234567`. The other details are unchanged.
 
-    1. Test case: `edit S0000000Z --number 91234567`, an ID that no patient has<br>
+    1. Test case: `edit S0000000Z --phone 91234567`, an ID that no patient has<br>
        Expected: No patient is changed. The status message shows `The patient ID provided is invalid.`
 
     1. Test case: `edit S1234567A`, with nothing to change<br>
@@ -1122,7 +1122,7 @@ testers are expected to do more *exploratory* testing.
     * Test case: `help add` (or `help --add`)
         * Expected: Parameter syntax and usage examples for `add` are displayed.
     * Test case: `help viewappt` (or `help --viewappt`)
-        * Expected: Both single-date and date-range syntax options (`--from`, `--till`) for `viewappt` are displayed.
+        * Expected: Both single-date and date-range syntax options (`--from`, `--to`) for `viewappt` are displayed.
     * Test case: `help --DELETE` or `help VIEW`
         * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
 
