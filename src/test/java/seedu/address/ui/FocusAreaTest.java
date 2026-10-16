@@ -8,16 +8,18 @@ public class FocusAreaTest {
 
     @Test
     public void next_eachArea_followsTabOrderAndWraps() {
-        assertEquals(FocusArea.PATIENT_LIST, FocusArea.COMMAND_BOX.next());
-        assertEquals(FocusArea.PATIENT_DETAILS, FocusArea.PATIENT_LIST.next());
-        assertEquals(FocusArea.COMMAND_BOX, FocusArea.PATIENT_DETAILS.next());
+        assertEquals(FocusArea.VIEW_TABS, FocusArea.COMMAND_BOX.next());
+        assertEquals(FocusArea.LIST, FocusArea.VIEW_TABS.next());
+        assertEquals(FocusArea.DETAILS, FocusArea.LIST.next());
+        assertEquals(FocusArea.COMMAND_BOX, FocusArea.DETAILS.next());
     }
 
     @Test
     public void previous_eachArea_reversesTabOrderAndWraps() {
-        assertEquals(FocusArea.PATIENT_DETAILS, FocusArea.COMMAND_BOX.previous());
-        assertEquals(FocusArea.COMMAND_BOX, FocusArea.PATIENT_LIST.previous());
-        assertEquals(FocusArea.PATIENT_LIST, FocusArea.PATIENT_DETAILS.previous());
+        assertEquals(FocusArea.DETAILS, FocusArea.COMMAND_BOX.previous());
+        assertEquals(FocusArea.COMMAND_BOX, FocusArea.VIEW_TABS.previous());
+        assertEquals(FocusArea.VIEW_TABS, FocusArea.LIST.previous());
+        assertEquals(FocusArea.LIST, FocusArea.DETAILS.previous());
     }
 
     @Test

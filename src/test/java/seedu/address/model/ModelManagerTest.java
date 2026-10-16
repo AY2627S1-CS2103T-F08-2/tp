@@ -7,6 +7,7 @@ import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
+import static seedu.address.testutil.TypicalPatients.DANIEL;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,8 +15,12 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.NameContainsKeywordsPredicate;
+import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.testutil.LaiNurseBuilder;
+import seedu.address.testutil.PatientBuilder;
 
 public class ModelManagerTest {
 
@@ -93,6 +98,40 @@ public class ModelManagerTest {
     @Test
     public void getFilteredPatientList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> modelManager.getFilteredPatientList().remove(0));
+    }
+
+    @Test
+    public void getAppointmentList_followsPatientsInTimeOrder() {
+        // Daniel's appointment is the day after Benson's, so adding Daniel first still lists Benson first
+        modelManager = new ModelManager(new LaiNurseBuilder().withPatient(DANIEL).withPatient(ALICE).build(),
+                new UserPrefs());
+        modelManager.addPatient(BENSON);
+        assertEquals(List.of(entry(BENSON, "2026-10-05 09:30"), entry(DANIEL, "2026-10-06")),
+                modelManager.getAppointmentList());
+
+        // filtering the patient list does not hide appointments
+        modelManager.updateFilteredPatientList(patient -> patient.equals(ALICE));
+        assertEquals(2, modelManager.getAppointmentList().size());
+
+        Patient movedDaniel = new PatientBuilder(DANIEL).withAppointments("2026-10-01", "2026-10-31 10:00").build();
+        modelManager.setPatient(DANIEL, movedDaniel);
+        assertEquals(List.of(entry(movedDaniel, "2026-10-01"), entry(BENSON, "2026-10-05 09:30"),
+                entry(movedDaniel, "2026-10-31 10:00")), modelManager.getAppointmentList());
+
+        modelManager.deletePatient(BENSON);
+        modelManager.setLaiNurse(new LaiNurseBuilder().withPatient(movedDaniel).build());
+        assertEquals(List.of(entry(movedDaniel, "2026-10-01"), entry(movedDaniel, "2026-10-31 10:00")),
+                modelManager.getAppointmentList());
+    }
+
+    @Test
+    public void getAppointmentList_modifyList_throwsUnsupportedOperationException() {
+        modelManager.addPatient(BENSON);
+        assertThrows(UnsupportedOperationException.class, () -> modelManager.getAppointmentList().remove(0));
+    }
+
+    private static PatientAppointment entry(Patient patient, String appointment) {
+        return new PatientAppointment(patient, new Appointment(appointment));
     }
 
     @Test

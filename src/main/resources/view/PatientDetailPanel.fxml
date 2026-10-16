@@ -12,13 +12,12 @@
 
 <StackPane styleClass="patient-detail" alignment="TOP_LEFT" xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1">
-  <Label fx:id="placeholder" styleClass="patient-detail-placeholder" wrapText="true"
-         text="To see a patient's details here, type view and their ID, for example: view S1234567A" />
+  <Label fx:id="placeholder" styleClass="patient-detail-placeholder" wrapText="true" />
   <!-- Long details scroll down; they are never cut off, and never scroll sideways. -->
   <ScrollPane fx:id="details" fitToWidth="true" hbarPolicy="NEVER">
-    <VBox spacing="18">
+    <VBox spacing="20">
       <padding>
-        <Insets top="20" right="22" bottom="20" left="22" />
+        <Insets top="20" right="24" bottom="20" left="24" />
       </padding>
       <HBox alignment="BASELINE_LEFT" spacing="12">
         <Label fx:id="name" styleClass="patient-detail-name" wrapText="true">
@@ -54,23 +53,29 @@
             <Region fx:constant="USE_PREF_SIZE" />
           </minHeight>
         </Label>
-        <Label text="Next appointment" styleClass="patient-detail-key"
+        <Label text="Medical history" styleClass="patient-detail-key"
                GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.valignment="TOP" />
-        <Label fx:id="nextAppointment" styleClass="patient-detail-value" wrapText="true"
+        <Label fx:id="medicalHistory" styleClass="patient-detail-value" wrapText="true"
                GridPane.rowIndex="2" GridPane.columnIndex="1">
           <minHeight>
             <Region fx:constant="USE_PREF_SIZE" />
           </minHeight>
         </Label>
-        <Label text="Medical history" styleClass="patient-detail-key"
-               GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.valignment="TOP" />
-        <Label fx:id="medicalHistory" styleClass="patient-detail-value" wrapText="true"
-               GridPane.rowIndex="3" GridPane.columnIndex="1">
-          <minHeight>
-            <Region fx:constant="USE_PREF_SIZE" />
-          </minHeight>
-        </Label>
       </GridPane>
+      <VBox>
+        <HBox styleClass="detail-section-header" alignment="BASELINE_LEFT" spacing="10">
+          <Label text="Appointments" styleClass="detail-section-title" />
+          <Label fx:id="upcomingNote" styleClass="detail-section-note" />
+        </HBox>
+        <VBox fx:id="upcomingRows" />
+        <VBox fx:id="pastSection">
+          <HBox styleClass="detail-past-header" alignment="BASELINE_LEFT" spacing="10">
+            <Label text="Past" styleClass="detail-past-title" />
+            <Label fx:id="pastNote" styleClass="detail-section-note" />
+          </HBox>
+          <VBox fx:id="pastRows" />
+        </VBox>
+      </VBox>
     </VBox>
   </ScrollPane>
 </StackPane>

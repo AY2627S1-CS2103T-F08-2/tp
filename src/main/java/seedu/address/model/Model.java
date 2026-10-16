@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -82,4 +83,10 @@ public interface Model {
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate);
+
+    /**
+     * Returns an unmodifiable list of every appointment of every patient, in time order. It follows the patients,
+     * so it changes when a patient is added, edited or deleted, but not when the filtered patient list changes.
+     */
+    ObservableList<PatientAppointment> getAppointmentList();
 }

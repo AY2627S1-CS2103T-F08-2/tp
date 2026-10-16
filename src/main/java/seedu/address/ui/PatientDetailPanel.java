@@ -1,8 +1,9 @@
 package seedu.address.ui;
 
-import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import javafx.collections.ListChangeListener;
@@ -11,25 +12,36 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 
 /**
- * Panel that shows all the details of one patient. It follows the list of all patients, so it shows the
- * new details after the patient is edited, and goes back to its starting message after they are deleted.
+ * Panel that shows all the details of one patient, including their upcoming and latest past appointments.
+ * It follows the list of all patients, so it shows the new details after the patient is edited, and goes back
+ * to its starting message after they are deleted. One appointment can be marked, as the appointment view does
+ * for the appointment selected there.
  */
 public class PatientDetailPanel extends UiPart<Region> {
 
     private static final String FXML = "PatientDetailPanel.fxml";
     private static final String NO_MEDICAL_HISTORY = "None recorded";
-    private static final String NO_NEXT_APPOINTMENT = "None upcoming";
     private static final String EMPTY_VALUE_STYLE_CLASS = "patient-detail-value-empty";
+    private static final String ROW_STYLE_CLASS = "detail-appointment-row";
+    private static final String TODAY_STYLE_CLASS = "detail-appointment-today";
+    private static final String PAST_STYLE_CLASS = "detail-appointment-past";
+    private static final String MARKED_STYLE_CLASS = "detail-appointment-marked";
 
     private final ObservableList<Patient> allPatients;
 
     /** The ID of the patient being shown, or null if no patient is shown. */
     private PatientId shownId;
+    /** The appointment of the shown patient to mark, or null to mark none. */
+    private Appointment markedAppointment;
 
     @FXML
     private Label placeholder;
@@ -46,23 +58,53 @@ public class PatientDetailPanel extends UiPart<Region> {
     @FXML
     private Label medicalHistory;
     @FXML
-    private Label nextAppointment;
+    private Label upcomingNote;
+    @FXML
+    private VBox upcomingRows;
+    @FXML
+    private VBox pastSection;
+    @FXML
+    private Label pastNote;
+    @FXML
+    private VBox pastRows;
 
     /**
-     * Creates a {@code PatientDetailPanel} that looks patients up in {@code allPatients}.
+     * Creates a {@code PatientDetailPanel} that looks patients up in {@code allPatients}, and shows
+     * {@code placeholderText} while no patient is shown.
      */
-    public PatientDetailPanel(ObservableList<Patient> allPatients) {
+    public PatientDetailPanel(ObservableList<Patient> allPatients, String placeholderText) {
         super(FXML);
-        this.allPatients = requireNonNull(allPatients);
+        requireAllNonNull(allPatients, placeholderText);
+        this.allPatients = allPatients;
+        placeholder.setText(placeholderText);
         allPatients.addListener((ListChangeListener<Patient>) change -> refresh());
         refresh();
     }
 
     /**
-     * Shows the details of the patient with {@code id}.
+     * Shows the details of the patient with {@code id}, with no appointment marked.
      */
     public void show(PatientId id) {
-        shownId = requireNonNull(id);
+        show(id, Optional.empty());
+    }
+
+    /**
+     * Shows the details of the patient with {@code id}, and marks {@code appointment} among their appointments
+     * if it is given.
+     */
+    public void show(PatientId id, Optional<Appointment> appointment) {
+        requireAllNonNull(id, appointment);
+        shownId = id;
+        markedAppointment = appointment.orElse(null);
+        refresh();
+    }
+
+    /**
+     * Stops showing a patient, and shows the starting message.
+     */
+    public void clear() {
+        shownId = null;
+        markedAppointment = null;
         refresh();
     }
 
@@ -100,6 +142,7 @@ public class PatientDetailPanel extends UiPart<Region> {
             fill(patient.get());
         } else {
             shownId = null;
+            markedAppointment = null;
             setShown(placeholder, true);
             setShown(details, false);
         }
@@ -115,12 +158,55 @@ public class PatientDetailPanel extends UiPart<Region> {
         phone.setText(patient.getPhone().value);
         address.setText(patient.getAddress().value);
         setValue(medicalHistory, patient.getMedicalHistory().map(Object::toString), NO_MEDICAL_HISTORY);
+
+        // An edit can remove the marked appointment
+        if (markedAppointment != null && !patient.getSchedule().contains(markedAppointment)) {
+            markedAppointment = null;
+        }
         LocalDate today = LocalDate.now();
-        setValue(nextAppointment, patient.getSchedule().getNextOnOrAfter(today)
-                .map(appointment -> AppointmentFormatter.formatFull(appointment, today)),
-                NO_NEXT_APPOINTMENT);
+        DetailAppointments appointments = DetailAppointments.of(patient.getSchedule(), today,
+                Optional.ofNullable(markedAppointment));
+        upcomingNote.setText(appointments.describeUpcoming());
+        upcomingRows.getChildren().setAll(createRows(appointments.getUpcoming(), today));
+        pastNote.setText(appointments.describePast());
+        pastRows.getChildren().setAll(createRows(appointments.getPastShown(), today));
+        setShown(pastSection, appointments.getPastCount() > 0);
+
         setShown(placeholder, false);
         setShown(details, true);
+    }
+
+    private List<Node> createRows(List<Appointment> appointments, LocalDate today) {
+        return appointments.stream().map(appointment -> createRow(appointment, today)).toList();
+    }
+
+    /**
+     * Returns one row of the appointments: the date, then the time. A later field for the appointment's
+     * details fills the rest of the row.
+     */
+    private Node createRow(Appointment appointment, LocalDate today) {
+        Label date = new Label(AppointmentFormatter.formatDetailDate(appointment.getDate(), today));
+        date.getStyleClass().add("detail-appointment-date");
+        date.setMinWidth(Region.USE_PREF_SIZE);
+        date.setPrefWidth(150);
+        Label time = new Label(AppointmentFormatter.formatTime(appointment));
+        time.getStyleClass().add(appointment.getTime().isPresent()
+                ? "detail-appointment-time" : "detail-appointment-no-time");
+        time.setMinWidth(Region.USE_PREF_SIZE);
+        Region filler = new Region();
+        HBox.setHgrow(filler, Priority.ALWAYS);
+
+        HBox row = new HBox(20, date, time, filler);
+        row.getStyleClass().add(ROW_STYLE_CLASS);
+        if (AppointmentFormatter.isToday(appointment, today)) {
+            row.getStyleClass().add(TODAY_STYLE_CLASS);
+        } else if (AppointmentFormatter.isPast(appointment, today)) {
+            row.getStyleClass().add(PAST_STYLE_CLASS);
+        }
+        if (appointment.equals(markedAppointment)) {
+            row.getStyleClass().add(MARKED_STYLE_CLASS);
+        }
+        return row;
     }
 
     /**

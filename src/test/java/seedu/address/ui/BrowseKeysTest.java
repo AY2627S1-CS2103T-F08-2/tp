@@ -18,16 +18,16 @@ public class BrowseKeysTest {
     @Test
     public void actionFor_browseKeys_returnsTheirActions() {
         assertEquals(Optional.of(Action.RETURN_TO_COMMAND_BOX), BrowseKeys.actionFor(KeyCode.ENTER, false, false));
-        assertEquals(Optional.of(Action.SHOW_ALL_PATIENTS), BrowseKeys.actionFor(KeyCode.ESCAPE, false, false));
+        assertEquals(Optional.of(Action.RESET_VIEW), BrowseKeys.actionFor(KeyCode.ESCAPE, false, false));
         assertEquals(Optional.of(Action.FOCUS_NEXT_AREA), BrowseKeys.actionFor(KeyCode.TAB, false, false));
         assertEquals(Optional.of(Action.FOCUS_PREVIOUS_AREA), BrowseKeys.actionFor(KeyCode.TAB, true, false));
     }
 
     @Test
     public void actionFor_otherKeys_keepTheirUsualEffect() {
-        // Up and Down move the selection in the patient list, and Page Up and Page Down scroll
-        for (KeyCode key : List.of(KeyCode.UP, KeyCode.DOWN, KeyCode.PAGE_UP, KeyCode.PAGE_DOWN, KeyCode.A,
-                KeyCode.SPACE, KeyCode.F1)) {
+        // The arrow keys move the selection in a list or switch the view tab, and Page Up and Page Down scroll
+        for (KeyCode key : List.of(KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT, KeyCode.PAGE_UP,
+                KeyCode.PAGE_DOWN, KeyCode.A, KeyCode.SPACE, KeyCode.F1)) {
             assertEquals(Optional.empty(), BrowseKeys.actionFor(key, false, false), key.toString());
         }
     }

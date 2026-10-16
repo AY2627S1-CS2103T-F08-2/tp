@@ -23,6 +23,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 import seedu.address.testutil.PatientBuilder;
 
@@ -146,6 +147,11 @@ public class AddCommandTest {
 
         @Override
         public void updateFilteredPatientList(Predicate<Patient> predicate) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ObservableList<PatientAppointment> getAppointmentList() {
             throw new AssertionError("This method should not be called.");
         }
     }

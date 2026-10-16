@@ -2,11 +2,13 @@ package seedu.address.ui;
 
 /**
  * The parts of the main window that the keyboard focus moves between with Tab, in Tab order.
+ * The list and the details are those of the view that is shown: patients or appointments.
  */
 public enum FocusArea {
     COMMAND_BOX,
-    PATIENT_LIST,
-    PATIENT_DETAILS;
+    VIEW_TABS,
+    LIST,
+    DETAILS;
 
     /**
      * Returns the area after this one, which Tab moves the focus to. The last area is followed by the first.

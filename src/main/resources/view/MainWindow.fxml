@@ -3,14 +3,17 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Scene?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
 
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
          title="LaiNurse" minWidth="680" minHeight="600" onCloseRequest="#handleExit">
@@ -47,14 +50,61 @@
           </padding>
         </StackPane>
 
-        <HBox styleClass="pane-with-border" spacing="10" VBox.vgrow="ALWAYS">
+        <!-- One view shows at a time. Commands switch the tab, and so do Left and Right with the focus here. -->
+        <HBox fx:id="viewTabs" styleClass="view-tabs" alignment="CENTER_LEFT" VBox.vgrow="NEVER">
           <padding>
-            <Insets top="10" right="10" bottom="10" left="10" />
+            <Insets right="20" left="10" />
           </padding>
-          <StackPane fx:id="patientListPanelPlaceholder" minWidth="300" prefWidth="360" maxWidth="420" />
-          <!-- A small preferred width makes the details take only the space that the list leaves. -->
-          <StackPane fx:id="patientDetailPanelPlaceholder" minWidth="300" prefWidth="300" HBox.hgrow="ALWAYS" />
+          <!-- The tabs take the focus only from the keyboard, so a click leaves the focus where it was. -->
+          <Button fx:id="patientsTab" styleClass="view-tab" text="Patients" focusTraversable="false"
+                  mnemonicParsing="false" onAction="#handlePatientsTab">
+            <graphic>
+              <SVGPath styleClass="view-tab-icon"
+                       content="M8 2.75 A2.75 2.75 0 1 1 7.99 2.75 Z M2.75 14 C2.75 11.1 5.1 9.25 8 9.25 C10.9 9.25 13.25 11.1 13.25 14" />
+            </graphic>
+          </Button>
+          <Button fx:id="appointmentsTab" styleClass="view-tab" text="Appointments" focusTraversable="false"
+                  mnemonicParsing="false" onAction="#handleAppointmentsTab">
+            <graphic>
+              <SVGPath styleClass="view-tab-icon"
+                       content="M3.75 3.25 H12.25 A1.5 1.5 0 0 1 13.75 4.75 V12.25 A1.5 1.5 0 0 1 12.25 13.75 H3.75 A1.5 1.5 0 0 1 2.25 12.25 V4.75 A1.5 1.5 0 0 1 3.75 3.25 Z M2.25 6.75 H13.75 M5.25 1.75 V4.75 M10.75 1.75 V4.75" />
+            </graphic>
+          </Button>
+          <HBox fx:id="tabKeysHint" styleClass="view-tabs-hint" alignment="CENTER_LEFT" spacing="6"
+                visible="false" managed="false">
+            <padding>
+              <Insets left="18" />
+            </padding>
+            <Label styleClass="view-tabs-key" text="Left" />
+            <Label styleClass="view-tabs-key" text="Right" />
+            <Label styleClass="view-tabs-hint-text" text="switch views" />
+          </HBox>
+          <Region HBox.hgrow="ALWAYS" />
+          <Label fx:id="viewSummary" styleClass="view-summary">
+            <minWidth>
+              <Region fx:constant="USE_PREF_SIZE" />
+            </minWidth>
+          </Label>
         </HBox>
+
+        <StackPane styleClass="pane-with-border" VBox.vgrow="ALWAYS">
+          <HBox fx:id="patientView" spacing="10">
+            <padding>
+              <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+            <StackPane fx:id="patientListPanelPlaceholder" minWidth="300" prefWidth="360" maxWidth="420" />
+            <!-- A small preferred width makes the details take only the space that the list leaves. -->
+            <StackPane fx:id="patientDetailPanelPlaceholder" minWidth="300" prefWidth="300" HBox.hgrow="ALWAYS" />
+          </HBox>
+          <HBox fx:id="appointmentView" spacing="10" visible="false" managed="false">
+            <padding>
+              <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+            <StackPane fx:id="appointmentListPanelPlaceholder" minWidth="340" prefWidth="480" maxWidth="560" />
+            <StackPane fx:id="appointmentDetailPanelPlaceholder" minWidth="300" prefWidth="300"
+                       HBox.hgrow="ALWAYS" />
+          </HBox>
+        </StackPane>
 
         <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />
       </VBox>

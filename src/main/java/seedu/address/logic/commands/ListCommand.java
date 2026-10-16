@@ -3,6 +3,8 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 
+import java.util.Optional;
+
 import seedu.address.model.Model;
 
 /**
@@ -22,5 +24,10 @@ public class ListCommand extends Command {
         requireNonNull(model);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
         return new CommandResult(MESSAGE_SUCCESS);
+    }
+
+    @Override
+    public Optional<CommandResult.View> getView() {
+        return Optional.of(CommandResult.View.PATIENTS);
     }
 }

@@ -7,11 +7,14 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -23,6 +26,7 @@ public class ModelManager implements Model {
     private final LaiNurse laiNurse;
     private final UserPrefs userPrefs;
     private final FilteredList<Patient> filteredPatients;
+    private final ObservableList<PatientAppointment> appointments = FXCollections.observableArrayList();
 
     /**
      * Initializes a ModelManager with the given laiNurse and userPrefs.
@@ -35,6 +39,8 @@ public class ModelManager implements Model {
         this.laiNurse = new LaiNurse(laiNurse);
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPatients = new FilteredList<>(this.laiNurse.getPatientList());
+        this.laiNurse.getPatientList().addListener((ListChangeListener<Patient>) change -> refreshAppointments());
+        refreshAppointments();
     }
 
     public ModelManager() {
@@ -116,6 +122,25 @@ public class ModelManager implements Model {
     public void updateFilteredPatientList(Predicate<Patient> predicate) {
         requireNonNull(predicate);
         filteredPatients.setPredicate(predicate);
+    }
+
+    //=========== Appointment List Accessors ==================================================================
+
+    @Override
+    public ObservableList<PatientAppointment> getAppointmentList() {
+        return FXCollections.unmodifiableObservableList(appointments);
+    }
+
+    /**
+     * Rebuilds the appointment list from the patients. A patient has few appointments, so rebuilding the whole
+     * list on each change is fast enough, and simpler than following each change.
+     */
+    private void refreshAppointments() {
+        appointments.setAll(laiNurse.getPatientList().stream()
+                .flatMap(patient -> patient.getSchedule().asList().stream()
+                        .map(appointment -> new PatientAppointment(patient, appointment)))
+                .sorted()
+                .toList());
     }
 
     @Override

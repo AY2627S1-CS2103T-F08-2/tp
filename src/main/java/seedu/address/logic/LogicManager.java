@@ -17,6 +17,7 @@ import seedu.address.logic.parser.LaiNurseParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 import seedu.address.storage.Storage;
 
@@ -51,6 +52,8 @@ public class LogicManager implements Logic {
         CommandResult commandResult;
         Command command = laiNurseParser.parseCommand(commandText);
         commandResult = command.execute(model);
+        // Each command declares the view it shows, so a command's own result never has to name it
+        commandResult = command.getView().map(commandResult::withView).orElse(commandResult);
 
         try {
             storage.saveLaiNurse(model.getLaiNurse());
@@ -71,6 +74,11 @@ public class LogicManager implements Logic {
     @Override
     public ObservableList<Patient> getPatientList() {
         return model.getLaiNurse().getPatientList();
+    }
+
+    @Override
+    public ObservableList<PatientAppointment> getAppointmentList() {
+        return model.getAppointmentList();
     }
 
     @Override

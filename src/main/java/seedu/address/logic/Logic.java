@@ -8,6 +8,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 
 /**
  * API of the Logic component
@@ -27,6 +28,9 @@ public interface Logic {
 
     /** Returns an unmodifiable view of the list of all patients, whatever the current filter */
     ObservableList<Patient> getPatientList();
+
+    /** Returns an unmodifiable view of every appointment of every patient, in time order */
+    ObservableList<PatientAppointment> getAppointmentList();
 
     /**
      * Returns each way to complete the patient ID at the end of {@code commandText}, such as {@code view S12},

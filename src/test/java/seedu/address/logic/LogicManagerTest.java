@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -28,7 +30,9 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -91,6 +95,27 @@ public class LogicManagerTest {
     @Test
     public void getPatientList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getPatientList().remove(0));
+    }
+
+    @Test
+    public void execute_eachCommand_resultNamesTheViewItShows() throws Exception {
+        // commands that list or change patients show the patient view
+        assertEquals(Optional.of(View.PATIENTS), logic.execute(ListCommand.COMMAND_WORD).getView());
+        assertEquals(Optional.of(View.PATIENTS), logic.execute("find --name Amy").getView());
+        // a command word that ends in "appt" shows the appointment view
+        assertEquals(Optional.of(View.APPOINTMENTS), logic.execute("viewappt 2026-10-06").getView());
+        // other commands keep the view that is shown
+        assertEquals(Optional.empty(), logic.execute("help").getView());
+        assertEquals(Optional.empty(), logic.execute("clear").getView());
+    }
+
+    @Test
+    public void getAppointmentList_followsModel() {
+        Patient patient = new PatientBuilder(AMY).withAppointments("2026-10-06").build();
+        model.addPatient(patient);
+        assertEquals(List.of(new PatientAppointment(patient, new Appointment("2026-10-06"))),
+                logic.getAppointmentList());
+        assertThrows(UnsupportedOperationException.class, () -> logic.getAppointmentList().remove(0));
     }
 
     @Test

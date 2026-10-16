@@ -8,7 +8,8 @@ import javafx.scene.input.KeyCode;
 
 /**
  * Decides what a key does while the keyboard focus is outside the command box, for example in the patient list.
- * Inside the command box, {@link CommandBox} handles the keys itself.
+ * Inside the command box, {@link CommandBox} handles the keys itself. The arrow keys keep their usual effect
+ * here; the view tabs and the appointment list give them their own meaning.
  */
 public final class BrowseKeys {
 
@@ -18,8 +19,11 @@ public final class BrowseKeys {
     public enum Action {
         /** Moves the focus back to the command box, keeping the text in it. */
         RETURN_TO_COMMAND_BOX,
-        /** Shows all patients again, as the {@code list} command does. */
-        SHOW_ALL_PATIENTS,
+        /**
+         * Shows the current view from its start: all patients again, as the {@code list} command does,
+         * or this week's appointments.
+         */
+        RESET_VIEW,
         /** Moves the focus to the next area, as given by {@link FocusArea#next()}. */
         FOCUS_NEXT_AREA,
         /** Moves the focus to the previous area, as given by {@link FocusArea#previous()}. */
@@ -43,7 +47,7 @@ public final class BrowseKeys {
         return switch (key) {
             case TAB -> Optional.of(isShiftDown ? Action.FOCUS_PREVIOUS_AREA : Action.FOCUS_NEXT_AREA);
             case ENTER -> isShiftDown ? Optional.empty() : Optional.of(Action.RETURN_TO_COMMAND_BOX);
-            case ESCAPE -> isShiftDown ? Optional.empty() : Optional.of(Action.SHOW_ALL_PATIENTS);
+            case ESCAPE -> isShiftDown ? Optional.empty() : Optional.of(Action.RESET_VIEW);
             default -> Optional.empty();
         };
     }

@@ -22,6 +22,7 @@ public class CommandBox extends UiPart<Region> {
     private final CommandExecutor commandExecutor;
     private final CommandCompleter commandCompleter;
     private final Runnable escapeHandler;
+    private final Runnable emptyTabHandler;
 
     /** The completions that pressing Tab goes through, for the text that the user last typed. */
     private List<String> completions = List.of();
@@ -37,12 +38,16 @@ public class CommandBox extends UiPart<Region> {
     /**
      * Creates a {@code CommandBox} with the given {@code CommandExecutor} and {@code CommandCompleter}.
      * {@code escapeHandler} runs when the user presses Esc, which leaves the text in the command box unchanged.
+     * {@code emptyTabHandler} runs when the user presses Tab with no text to complete, so that Tab can move the
+     * focus on.
      */
-    public CommandBox(CommandExecutor commandExecutor, CommandCompleter commandCompleter, Runnable escapeHandler) {
+    public CommandBox(CommandExecutor commandExecutor, CommandCompleter commandCompleter, Runnable escapeHandler,
+            Runnable emptyTabHandler) {
         super(FXML);
         this.commandExecutor = commandExecutor;
         this.commandCompleter = commandCompleter;
         this.escapeHandler = escapeHandler;
+        this.emptyTabHandler = emptyTabHandler;
         // calls #setStyleToDefault() whenever there is a change to the text of the command box.
         commandTextField.textProperty().addListener((unused1, unused2, unused3) -> setStyleToDefault());
         // A filter sees these keys before the text field uses them, for example to move the focus away.
@@ -85,9 +90,14 @@ public class CommandBox extends UiPart<Region> {
     /**
      * Replaces the text with its next completion. The first Tab after typing gives the first completion,
      * and each further Tab gives the next one, going back to the first after the last.
+     * In an empty command box, Tab runs the {@code emptyTabHandler} instead.
      */
     private void handleTabPressed() {
         String commandText = commandTextField.getText();
+        if (commandText.isBlank()) {
+            emptyTabHandler.run();
+            return;
+        }
         if (!commandText.equals(lastCompletion)) {
             completions = commandCompleter.complete(commandText);
             completionIndex = -1;
@@ -117,6 +127,13 @@ public class CommandBox extends UiPart<Region> {
         requestFocus();
         commandTextField.appendText(text);
         commandTextField.positionCaret(commandTextField.getLength());
+    }
+
+    /**
+     * Sets the hint that the empty command box shows.
+     */
+    public void setPromptText(String promptText) {
+        commandTextField.setPromptText(promptText);
     }
 
     /**

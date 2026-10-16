@@ -8,6 +8,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
+import java.util.Optional;
+
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -60,6 +62,11 @@ public class AddCommand extends Command {
 
         model.addPatient(toAdd);
         return new CommandResult(String.format(MESSAGE_SUCCESS, Messages.format(toAdd)));
+    }
+
+    @Override
+    public Optional<CommandResult.View> getView() {
+        return Optional.of(CommandResult.View.PATIENTS);
     }
 
     @Override

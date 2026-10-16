@@ -5,14 +5,23 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalPatients.BENSON;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.CommandResult.View;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 public class CommandResultTest {
+
+    private static final LocalDate DATE = LocalDate.of(2026, 10, 5);
+    private static final PatientAppointment BENSON_APPOINTMENT =
+            new PatientAppointment(BENSON, BENSON.getSchedule().asList().get(0));
+
     @Test
     public void equals() {
         CommandResult commandResult = new CommandResult("feedback");
@@ -89,15 +98,67 @@ public class CommandResultTest {
     }
 
     @Test
+    public void withView_setsViewAndKeepsOtherFields() {
+        CommandResult viewResult = new CommandResult("feedback", new PatientId("S1234567A"));
+        CommandResult withView = viewResult.withView(View.PATIENTS);
+
+        assertEquals(Optional.of(View.PATIENTS), withView.getView());
+        assertEquals(viewResult.getPatientToView(), withView.getPatientToView());
+        assertEquals(viewResult.getFeedbackToUser(), withView.getFeedbackToUser());
+        // the original is unchanged
+        assertEquals(Optional.empty(), viewResult.getView());
+
+        assertFalse(viewResult.equals(withView));
+        assertFalse(withView.equals(viewResult.withView(View.APPOINTMENTS)));
+        assertTrue(withView.equals(viewResult.withView(View.PATIENTS)));
+        assertEquals(withView.hashCode(), viewResult.withView(View.PATIENTS).hashCode());
+        assertThrows(NullPointerException.class, () -> viewResult.withView(null));
+    }
+
+    @Test
+    public void appointmentToShow_dateAndOptionalSelection() {
+        CommandResult dateOnly = new CommandResult("feedback", DATE, Optional.empty());
+        assertEquals(Optional.of(DATE), dateOnly.getAppointmentDateToShow());
+        assertEquals(Optional.empty(), dateOnly.getAppointmentToSelect());
+
+        CommandResult withSelection = new CommandResult("feedback", DATE, Optional.of(BENSON_APPOINTMENT));
+        assertEquals(Optional.of(BENSON_APPOINTMENT), withSelection.getAppointmentToSelect());
+
+        // a plain result shows no date
+        assertEquals(Optional.empty(), new CommandResult("feedback").getAppointmentDateToShow());
+        assertEquals(Optional.empty(), new CommandResult("feedback").getAppointmentToSelect());
+
+        assertTrue(dateOnly.equals(new CommandResult("feedback", DATE, Optional.empty())));
+        assertFalse(dateOnly.equals(new CommandResult("feedback")));
+        assertFalse(dateOnly.equals(new CommandResult("feedback", DATE.plusDays(1), Optional.empty())));
+        assertFalse(dateOnly.equals(withSelection));
+        assertNotEquals(dateOnly.hashCode(), withSelection.hashCode());
+    }
+
+    @Test
+    public void constructor_nullAppointmentToShow_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new CommandResult("feedback", null, Optional.empty()));
+        assertThrows(NullPointerException.class, () -> new CommandResult("feedback", DATE, null));
+    }
+
+    @Test
     public void toStringMethod() {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName()
-                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null}";
+                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null, view=null, "
+                + "appointmentDateToShow=null, appointmentToSelect=null}";
         assertEquals(expected, commandResult.toString());
 
-        CommandResult viewResult = new CommandResult("feedback", new PatientId("S1234567A"));
+        CommandResult viewResult = new CommandResult("feedback", new PatientId("S1234567A")).withView(View.PATIENTS);
         String expectedView = CommandResult.class.getCanonicalName()
-                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=S1234567A}";
+                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=S1234567A, view=PATIENTS, "
+                + "appointmentDateToShow=null, appointmentToSelect=null}";
         assertEquals(expectedView, viewResult.toString());
+
+        CommandResult appointmentResult = new CommandResult("feedback", DATE, Optional.of(BENSON_APPOINTMENT));
+        String expectedAppointment = CommandResult.class.getCanonicalName()
+                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null, view=null, "
+                + "appointmentDateToShow=" + DATE + ", appointmentToSelect=" + BENSON_APPOINTMENT + "}";
+        assertEquals(expectedAppointment, appointmentResult.toString());
     }
 }

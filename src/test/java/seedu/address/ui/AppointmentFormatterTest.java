@@ -58,15 +58,33 @@ public class AppointmentFormatterTest {
     }
 
     @Test
-    public void formatFull_variousDays_showsFullDateAndTag() {
-        assertEquals("Mon 12 Oct 2026, 09:30 (today)",
-                AppointmentFormatter.formatFull(new Appointment("2026-10-12 09:30"), TODAY));
-        assertEquals("Tue 13 Oct 2026, no time set (tomorrow)",
-                AppointmentFormatter.formatFull(new Appointment("2026-10-13"), TODAY));
-        assertEquals("Mon 5 Oct 2026, 08:00 (past)",
-                AppointmentFormatter.formatFull(new Appointment("2026-10-05 08:00"), TODAY));
-        assertEquals("Mon 30 Nov 2026, no time set",
-                AppointmentFormatter.formatFull(new Appointment("2026-11-30"), TODAY));
+    public void formatTime_withAndWithoutTime() {
+        assertEquals("09:30", AppointmentFormatter.formatTime(new Appointment("2026-10-12 09:30")));
+        assertEquals("00:00", AppointmentFormatter.formatTime(new Appointment("2026-10-12 00:00")));
+        assertEquals(AppointmentFormatter.NO_TIME, AppointmentFormatter.formatTime(new Appointment("2026-10-12")));
+    }
+
+    @Test
+    public void formatDetailDate_variousDays() {
+        assertEquals("Today", AppointmentFormatter.formatDetailDate(TODAY, TODAY));
+        assertEquals("Tomorrow", AppointmentFormatter.formatDetailDate(TODAY.plusDays(1), TODAY));
+        // unlike formatShort, a day within the week still shows its date
+        assertEquals("Wed 14 Oct", AppointmentFormatter.formatDetailDate(TODAY.plusDays(2), TODAY));
+        assertEquals("Sun 11 Oct", AppointmentFormatter.formatDetailDate(TODAY.minusDays(1), TODAY));
+        assertEquals("Mon 2 Nov", AppointmentFormatter.formatDetailDate(LocalDate.of(2026, 11, 2), TODAY));
+        assertEquals("Mon 4 Jan 2027", AppointmentFormatter.formatDetailDate(LocalDate.of(2027, 1, 4), TODAY));
+        assertEquals("Wed 31 Dec 2025", AppointmentFormatter.formatDetailDate(LocalDate.of(2025, 12, 31), TODAY));
+    }
+
+    @Test
+    public void formatDayHeading_variousDays() {
+        assertEquals("Today · Mon 12 Oct", AppointmentFormatter.formatDayHeading(TODAY, TODAY));
+        assertEquals("Tomorrow · Tue 13 Oct", AppointmentFormatter.formatDayHeading(TODAY.plusDays(1), TODAY));
+        assertEquals("Wed 14 Oct", AppointmentFormatter.formatDayHeading(TODAY.plusDays(2), TODAY));
+        assertEquals("Sun 11 Oct · past", AppointmentFormatter.formatDayHeading(TODAY.minusDays(1), TODAY));
+        assertEquals("Fri 1 Jan 2027", AppointmentFormatter.formatDayHeading(LocalDate.of(2027, 1, 1), TODAY));
+        assertEquals("Wed 31 Dec 2025 · past",
+                AppointmentFormatter.formatDayHeading(LocalDate.of(2025, 12, 31), TODAY));
     }
 
     @Test
@@ -89,7 +107,10 @@ public class AppointmentFormatterTest {
         Appointment appointment = new Appointment("2026-10-12");
         assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatShort(null, TODAY));
         assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatShort(appointment, null));
-        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatFull(null, TODAY));
-        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatFull(appointment, null));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatTime(null));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDetailDate(null, TODAY));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDetailDate(TODAY, null));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDayHeading(null, TODAY));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDayHeading(TODAY, null));
     }
 }
