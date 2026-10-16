@@ -1,28 +1,35 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
+
 /**
- * The parts of the main window that the keyboard focus moves between with Tab, in Tab order.
- * The list and the details are those of the view that is shown: patients or appointments.
+ * The parts of the main window that the keyboard focus moves between. Tab goes back and forth between the command
+ * box and the view, and in the view, Up and Down move between the view tabs and the list. The list is that of the
+ * view that is shown: patients or appointments. The details beside the list are not among these parts.
  */
 public enum FocusArea {
     COMMAND_BOX,
     VIEW_TABS,
-    LIST,
-    DETAILS;
+    LIST;
 
     /**
-     * Returns the area after this one, which Tab moves the focus to. The last area is followed by the first.
+     * Returns true for the parts of the view: the view tabs and the list.
      */
-    public FocusArea next() {
-        FocusArea[] areas = values();
-        return areas[(ordinal() + 1) % areas.length];
+    public boolean isInView() {
+        return this != COMMAND_BOX;
     }
 
     /**
-     * Returns the area before this one, which Shift+Tab moves the focus to. The first area is preceded by the last.
+     * Returns the area that Tab, or Shift+Tab, moves the focus to from this area. From the view, Tab goes to the
+     * command box. From the command box, it goes back to {@code lastViewArea}, the part of the view that last had
+     * the focus.
+     *
+     * @throws IllegalArgumentException if {@code lastViewArea} is not in the view.
      */
-    public FocusArea previous() {
-        FocusArea[] areas = values();
-        return areas[(ordinal() + areas.length - 1) % areas.length];
+    public FocusArea afterTab(FocusArea lastViewArea) {
+        requireNonNull(lastViewArea);
+        checkArgument(lastViewArea.isInView(), "The last view area must be in the view.");
+        return this == COMMAND_BOX ? lastViewArea : COMMAND_BOX;
     }
 }

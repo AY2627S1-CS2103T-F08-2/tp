@@ -24,10 +24,11 @@ public final class BrowseKeys {
          * or this week's appointments.
          */
         RESET_VIEW,
-        /** Moves the focus to the next area, as given by {@link FocusArea#next()}. */
-        FOCUS_NEXT_AREA,
-        /** Moves the focus to the previous area, as given by {@link FocusArea#previous()}. */
-        FOCUS_PREVIOUS_AREA
+        /**
+         * Moves the focus between the command box and the view, as given by {@link FocusArea#afterTab}.
+         * Tab and Shift+Tab both do this, as there are only two places to go between.
+         */
+        SWITCH_AREA
     }
 
     private BrowseKeys() {}
@@ -45,7 +46,7 @@ public final class BrowseKeys {
             return Optional.empty();
         }
         return switch (key) {
-            case TAB -> Optional.of(isShiftDown ? Action.FOCUS_PREVIOUS_AREA : Action.FOCUS_NEXT_AREA);
+            case TAB -> Optional.of(Action.SWITCH_AREA);
             case ENTER -> isShiftDown ? Optional.empty() : Optional.of(Action.RETURN_TO_COMMAND_BOX);
             case ESCAPE -> isShiftDown ? Optional.empty() : Optional.of(Action.RESET_VIEW);
             default -> Optional.empty();

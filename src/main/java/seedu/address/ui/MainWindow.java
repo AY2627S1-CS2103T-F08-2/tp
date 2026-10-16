@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
@@ -52,6 +53,8 @@ public class MainWindow extends UiPart<Stage> {
 
     /** The view that is shown. */
     private View shownView = View.PATIENTS;
+    /** The part of the view, the tabs or the list, that last had the focus, which Tab goes back to. */
+    private FocusArea lastViewArea = FocusArea.VIEW_TABS;
 
     // Independent Ui parts residing in this Ui container
     private PatientListPanel patientListPanel;
@@ -172,13 +175,15 @@ public class MainWindow extends UiPart<Stage> {
         patientDetailPanel = new PatientDetailPanel(logic.getPatientList(), PATIENT_PLACEHOLDER);
         patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
-        patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), patientDetailPanel::show);
+        patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), patientDetailPanel::show,
+                this::focusViewTabs);
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
 
         appointmentDetailPanel = new PatientDetailPanel(logic.getPatientList(), APPOINTMENT_PLACEHOLDER);
         appointmentDetailPanelPlaceholder.getChildren().add(appointmentDetailPanel.getRoot());
 
-        appointmentListPanel = new AppointmentListPanel(logic.getAppointmentList(), this::showAppointmentDetails);
+        appointmentListPanel = new AppointmentListPanel(logic.getAppointmentList(), this::showAppointmentDetails,
+                this::focusViewTabs);
         appointmentListPanelPlaceholder.getChildren().add(appointmentListPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
@@ -188,7 +193,7 @@ public class MainWindow extends UiPart<Stage> {
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
         commandBox = new CommandBox(this::executeCommand, logic::getCompletions, this::focusViewList,
-                this::focusNextArea);
+                this::switchFocusArea);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
 
         // The window sees these keys before the focused part does, so it can move the focus away from it.
@@ -196,8 +201,21 @@ public class MainWindow extends UiPart<Stage> {
         getRoot().addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
 
         viewTabs.addEventFilter(KeyEvent.KEY_PRESSED, this::handleTabKeyPressed);
-        patientsTab.focusedProperty().addListener((unused1, unused2, unused3) -> updateTabKeysHint());
-        appointmentsTab.focusedProperty().addListener((unused1, unused2, unused3) -> updateTabKeysHint());
+        ChangeListener<Boolean> tabFocusListener = (unused, wasFocused, isFocused) -> {
+            updateTabKeysHint();
+            if (isFocused) {
+                lastViewArea = FocusArea.VIEW_TABS;
+            }
+        };
+        patientsTab.focusedProperty().addListener(tabFocusListener);
+        appointmentsTab.focusedProperty().addListener(tabFocusListener);
+        ChangeListener<Boolean> listFocusListener = (unused, wasFocused, isFocused) -> {
+            if (isFocused) {
+                lastViewArea = FocusArea.LIST;
+            }
+        };
+        patientListPanel.focusedProperty().addListener(listFocusListener);
+        appointmentListPanel.focusedProperty().addListener(listFocusListener);
         logic.getFilteredPatientList().addListener((ListChangeListener<Object>) change -> updateViewSummary());
         logic.getPatientList().addListener((ListChangeListener<Object>) change -> updateViewSummary());
         showView(View.PATIENTS);
@@ -234,20 +252,28 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Switches the view with Left and Right while the focus is on a tab, and moves the focus to the tab shown.
+     * Handles the arrow keys while the focus is on a tab. Left and Right switch the view and keep the focus on
+     * the tab shown. Down moves the focus to the list below the tabs, and Up to the command box above them.
      */
     private void handleTabKeyPressed(KeyEvent event) {
         if (event.isShiftDown() || event.isControlDown() || event.isAltDown() || event.isMetaDown()) {
             return;
         }
         switch (event.getCode()) {
-            case LEFT, KP_LEFT -> showView(View.PATIENTS);
-            case RIGHT, KP_RIGHT -> showView(View.APPOINTMENTS);
+            case LEFT, KP_LEFT -> {
+                showView(View.PATIENTS);
+                getTab(shownView).requestFocus();
+            }
+            case RIGHT, KP_RIGHT -> {
+                showView(View.APPOINTMENTS);
+                getTab(shownView).requestFocus();
+            }
+            case DOWN, KP_DOWN -> requestFocus(FocusArea.LIST);
+            case UP, KP_UP -> commandBox.requestFocus();
             default -> {
                 return;
             }
         }
-        getTab(shownView).requestFocus();
         event.consume();
     }
 
@@ -280,22 +306,21 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Handles the keys that move the focus or reset the view. In the command box, only Shift+Tab is handled
-     * here, because the command box uses the other keys itself.
+     * here, because the command box uses the other keys itself, such as Tab to complete an ID.
      */
     private void handleKeyPressed(KeyEvent event) {
         boolean isShortcutDown = event.isControlDown() || event.isAltDown() || event.isMetaDown();
         Optional<BrowseKeys.Action> action = BrowseKeys.actionFor(event.getCode(), event.isShiftDown(),
                 isShortcutDown);
-        if (action.isEmpty()
-                || commandBox.isFocused() && action.get() != BrowseKeys.Action.FOCUS_PREVIOUS_AREA) {
+        boolean isShiftTab = action.equals(Optional.of(BrowseKeys.Action.SWITCH_AREA)) && event.isShiftDown();
+        if (action.isEmpty() || commandBox.isFocused() && !isShiftTab) {
             return;
         }
 
         switch (action.get()) {
             case RETURN_TO_COMMAND_BOX -> commandBox.requestFocus();
             case RESET_VIEW -> resetView();
-            case FOCUS_NEXT_AREA -> moveFocus(true);
-            case FOCUS_PREVIOUS_AREA -> moveFocus(false);
+            case SWITCH_AREA -> switchFocusArea();
             default -> throw new AssertionError("Unknown action: " + action.get());
         }
         event.consume();
@@ -332,30 +357,30 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Moves the focus from the command box to the list of the view that is shown, as Esc does there, or to
-     * the details if the list cannot take it.
+     * the tabs if the list is empty.
      */
     private void focusViewList() {
         if (!requestFocus(FocusArea.LIST)) {
-            requestFocus(FocusArea.DETAILS);
+            requestFocus(FocusArea.VIEW_TABS);
         }
     }
 
-    private void focusNextArea() {
-        moveFocus(true);
+    /**
+     * Moves the focus to the tab of the view that is shown, as Up does at the top of a list.
+     */
+    private void focusViewTabs() {
+        requestFocus(FocusArea.VIEW_TABS);
     }
 
     /**
-     * Moves the focus to the next area that can take it, or to the previous one if {@code isForward} is false.
-     * An empty patient list, and the details when no patient is shown, are skipped.
+     * Moves the focus between the command box and the view, as Tab and Shift+Tab do. From the command box, the
+     * focus goes back to the part of the view that had it last, or to the tabs if that list is now empty.
      */
-    private void moveFocus(boolean isForward) {
-        // The menu bar and the result display are not areas, so going forward from them starts at the command box
-        FocusArea area = getFocusedArea().orElse(FocusArea.DETAILS);
-        for (int i = 0; i < FocusArea.values().length; i++) {
-            area = isForward ? area.next() : area.previous();
-            if (requestFocus(area)) {
-                return;
-            }
+    private void switchFocusArea() {
+        // The menu bar, the result display and the details are not areas, so Tab from them goes to the command box
+        FocusArea area = getFocusedArea().orElse(FocusArea.LIST).afterTab(lastViewArea);
+        if (!requestFocus(area)) {
+            requestFocus(FocusArea.VIEW_TABS);
         }
     }
 
@@ -366,8 +391,6 @@ public class MainWindow extends UiPart<Stage> {
             return Optional.of(FocusArea.VIEW_TABS);
         } else if (shownView == View.PATIENTS ? patientListPanel.isFocused() : appointmentListPanel.isFocused()) {
             return Optional.of(FocusArea.LIST);
-        } else if (getShownDetailPanel().isFocused()) {
-            return Optional.of(FocusArea.DETAILS);
         }
         return Optional.empty();
     }
@@ -386,12 +409,7 @@ public class MainWindow extends UiPart<Stage> {
                 yield true;
             }
             case LIST -> shownView == View.PATIENTS ? requestFocusOnPatientList() : requestFocusOnAppointmentList();
-            case DETAILS -> getShownDetailPanel().requestFocus();
         };
-    }
-
-    private PatientDetailPanel getShownDetailPanel() {
-        return shownView == View.PATIENTS ? patientDetailPanel : appointmentDetailPanel;
     }
 
     /**

@@ -116,20 +116,7 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
-     * Moves the keyboard focus to the details, so that the arrow keys scroll them, unless no patient is shown.
-     *
-     * @return true if the details have the focus.
-     */
-    public boolean requestFocus() {
-        if (shownId == null) {
-            return false;
-        }
-        details.requestFocus();
-        return true;
-    }
-
-    /**
-     * Returns true if the details have the keyboard focus.
+     * Returns true if the details have the keyboard focus, as they do after the user clicks them.
      */
     public boolean isFocused() {
         return details.isFocused();

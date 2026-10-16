@@ -130,18 +130,24 @@ ID, so the ID must end the command. `edit` takes the ID first and options after 
 after `edit` and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
 started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
-The keyboard focus is in one of four areas, given by `FocusArea` in Tab order: the command box, the view tabs, and the
-list and the details of the view that is shown. Esc in the command box calls back to `MainWindow`, which moves the
-focus to the list and leaves the typed text in place. Tab in an empty command box calls back too, and moves the focus
-to the tabs. Outside the command box, `MainWindow` handles keys with event filters on the window, which see each key
-before the focused part does. `BrowseKeys` decides what Enter, Esc, Tab and typed text do there:
+The keyboard focus is in one of three areas, given by `FocusArea`: the command box, and in the view that is shown, the
+view tabs or the list. The details beside the list are not an area, so the keyboard never moves the focus there. Tab
+goes back and forth between the command box and the view. `MainWindow` remembers which part of the view, the tabs or
+the list, last had the focus, and `FocusArea#afterTab` sends the focus back there from the command box. In the view, Up
+and Down move between the tabs and the list: each list calls back to `MainWindow` when Up is pressed at its first row,
+and `MainWindow` handles Down and Up on the tabs.
+
+Esc in the command box calls back to `MainWindow`, which moves the focus to the list, or to the tabs if the patient list
+is empty, and leaves the typed text in place. Tab in an empty command box calls back too. Outside the command box,
+`MainWindow` handles keys with event filters on the window, which see each key before the focused part does.
+`BrowseKeys` decides what Enter, Esc, Tab and typed text do there:
 
 * Enter, and any printable character, move the focus back to the command box. A typed character is added to the text
   there.
 * Esc resets the view. In the patient view, it executes `list` through the same `executeCommand` method as a typed
   command, so the result is the same as typing `list`. In the appointment view, it shows this week again.
-* Tab and Shift+Tab move the focus to the next or previous `FocusArea`, skipping an empty patient list, and the details
-  when no patient is shown. The appointment list always takes the focus, so that Left and Right can leave an empty week.
+* Tab and Shift+Tab move the focus to the command box. With only two places to go between, both keys do the same. The
+  appointment list always takes the focus, so that Left and Right can leave an empty week.
 
 `FocusArea`, `BrowseKeys`, `AppointmentWeek`, `AppointmentPage`, `DetailAppointments` and `AppointmentFormatter` hold
 no JavaFX nodes, so unit tests cover these rules, and the UI parts only connect them to JavaFX.
@@ -987,21 +993,28 @@ testers are expected to do more *exploratory* testing.
     1. Test case: after the test case above, press Down<br>
        Expected: David Li is selected, and the panel shows his details. Up selects and shows Bernice Yu again.
 
+    1. Test case: with Bernice Yu selected at the top of the list, press Up<br>
+       Expected: The **Patients** tab gets a green border, and a hint `Left Right switch views` appears beside the tabs.
+       Down moves the focus back to the list, with Bernice Yu still selected.
+
     1. Test case: after the test cases above, press Esc<br>
        Expected: The list shows all patients again, and the status message says that all patients are listed. The
        patient shown in the panel stays selected, and the focus stays in the list.
 
-    1. Test case: press Tab four times<br>
-       Expected: The focus moves to the patient details, where Up and Down scroll, then to the command box, then to the
-       view tabs, then back to the patient list. Shift+Tab goes the other way.
+    1. Test case: with the focus in the list, press Tab twice<br>
+       Expected: The focus moves to the command box, then back to the patient list. The patient details never get the
+       focus. Shift+Tab does the same as Tab.
+
+    1. Test case: press Up until the focus is on the **Patients** tab, then press Tab twice<br>
+       Expected: The focus moves to the command box, then back to the tab, because Tab goes back to where the focus
+       last was in the view.
 
     1. Test case: with the focus in the list, type `l`<br>
        Expected: The focus moves to the command box, which now shows `abcl`, with the caret at the end. Enter instead of
        `l` also moves the focus to the command box, without adding anything.
 
     1. Test case: `find --name zzz`, then press Esc<br>
-       Expected: The list is empty, so the focus skips it and goes to the patient details. If no patient is shown, the
-       focus stays in the command box. A second Esc shows all patients.
+       Expected: The list is empty, so the focus goes to the **Patients** tab instead. A second Esc shows all patients.
 
 1. Going through command history with Up and Down
 
@@ -1188,9 +1201,9 @@ testers are expected to do more *exploratory* testing.
 
 1. Switching views without a command
 
-    1. Prerequisites: The same as above, with `viewappt 2026-10-05` entered and the focus in the command box.
+    1. Prerequisites: Start with the sample data, and enter `viewappt 2026-10-05`.
 
-    1. Test case: with the command box empty, press Tab<br>
+    1. Test case: press Esc, so that Alex Yeoh's appointment, the first of the week, is selected, then press Up<br>
        Expected: The **Appointments** tab gets a green border, and a hint `Left Right switch views` appears beside the
        tabs.
 
@@ -1198,6 +1211,10 @@ testers are expected to do more *exploratory* testing.
        Expected: The **Patients** tab is selected. The list shows only Alex Yeoh, as `viewappt` left it, and the right end
        of the tabs says `1 of 6 patients`. The status message does not change. Right shows the appointment view again,
        with the same week and selection as before.
+
+    1. Test case: after the test cases above, press Down, then Up twice<br>
+       Expected: Down moves the focus to the appointment list, with Alex Yeoh's appointment still selected. The first
+       Up moves it back to the **Appointments** tab, and the second to the command box.
 
     1. Test case: click the **Patients** tab, then the **Appointments** tab<br>
        Expected: The same as with Left and Right, and the focus does not move.

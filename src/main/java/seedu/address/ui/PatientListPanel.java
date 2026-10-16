@@ -1,12 +1,14 @@
 package seedu.address.ui;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListCell;
@@ -39,10 +41,12 @@ public class PatientListPanel extends UiPart<Region> {
     /**
      * Creates a {@code PatientListPanel} with the given {@code ObservableList}.
      * {@code onPatientChosen} receives the ID of each patient that the user clicks, or moves to with the keyboard.
+     * {@code onUpAtTop} runs when the user presses Up at the first patient, so that the focus can move on.
      */
-    public PatientListPanel(ObservableList<Patient> patientList, Consumer<PatientId> onPatientChosen) {
+    public PatientListPanel(ObservableList<Patient> patientList, Consumer<PatientId> onPatientChosen,
+            Runnable onUpAtTop) {
         super(FXML);
-        requireNonNull(onPatientChosen);
+        requireAllNonNull(onPatientChosen, onUpAtTop);
         patientListView.setItems(patientList);
         patientListView.setCellFactory(listView -> new PatientListViewCell());
         // A mouse click, unlike a change of selection, never comes from the list updating itself.
@@ -54,8 +58,15 @@ public class PatientListPanel extends UiPart<Region> {
         });
         // Filtering or removing rows also moves the selection, so only a change made while the user holds
         // a navigation key counts as the user's choice.
-        patientListView.addEventFilter(KeyEvent.KEY_PRESSED, event ->
-                isNavigating = NAVIGATION_KEYS.contains(event.getCode()));
+        patientListView.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (isUpAtTop(event)) {
+                isNavigating = false;
+                onUpAtTop.run();
+                event.consume();
+                return;
+            }
+            isNavigating = NAVIGATION_KEYS.contains(event.getCode());
+        });
         patientListView.addEventFilter(KeyEvent.KEY_RELEASED, event -> isNavigating = false);
         patientListView.focusedProperty().addListener((unused, wasFocused, isFocused) -> isNavigating = false);
         patientListView.getSelectionModel().selectedItemProperty().addListener((unused, oldPatient, newPatient) -> {
@@ -83,6 +94,23 @@ public class PatientListPanel extends UiPart<Region> {
      */
     public boolean isFocused() {
         return patientListView.isFocused();
+    }
+
+    /**
+     * Returns the property that is true while the list has the keyboard focus.
+     */
+    public ReadOnlyBooleanProperty focusedProperty() {
+        return patientListView.focusedProperty();
+    }
+
+    /**
+     * Returns true if {@code event} is Up, without Ctrl, Alt or Cmd, while the first patient or no patient is
+     * selected, so that the list cannot move up any further.
+     */
+    private boolean isUpAtTop(KeyEvent event) {
+        boolean isUp = event.getCode() == KeyCode.UP || event.getCode() == KeyCode.KP_UP;
+        boolean isShortcutDown = event.isControlDown() || event.isAltDown() || event.isMetaDown();
+        return isUp && !isShortcutDown && patientListView.getSelectionModel().getSelectedIndex() <= 0;
     }
 
     /**

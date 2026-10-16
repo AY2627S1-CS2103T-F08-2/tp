@@ -87,37 +87,40 @@ To see another week in the appointment view, click the arrow buttons above the l
 
 ### Using the keyboard
 
-You can use LaiNurse without the mouse. The keyboard focus is in one of four areas: the command box, the view tabs, or the list or the details of the view that is shown. The area with the focus has a green border, and the command box is dimmed while the focus is elsewhere.
+You can use LaiNurse without the mouse. The keyboard focus is in the command box or in the view that is shown. In the view, it is on the view tabs or in the list below them. Tab goes back and forth between the command box and the view, and Up and Down go between the tabs and the list. The part with the focus has a green border, and the command box is dimmed while the focus is elsewhere. The details beside the list do not take the focus. To scroll them, use the mouse.
 
 **In the command box:**
 
 Key | What it does
 --------|------------------
 Enter | Runs the command.
-Tab | Finishes typing a patient ID after `view`, `delete` or `edit`. See below. In an empty command box, moves to the view tabs.
+Tab | Finishes typing a patient ID after `view`, `delete` or `edit`. See below. In an empty command box, moves back to the view, where the focus was last: the tabs or the list. The first time, it moves to the tabs.
 Up and Down | Go back and forth through the commands you entered since LaiNurse started, including ones that failed. Down after the newest command gives back what you were typing.
-Esc | Moves to the list of the view that is shown. What you typed stays in the command box.
-Shift+Tab | Moves to the details, or to the list if no patient is shown.
+Esc | Moves to the list of the view that is shown, or to the tabs if the patient list is empty. What you typed stays in the command box.
+Shift+Tab | Moves back to the view, as Tab does in an empty command box.
 
 **On the view tabs:**
 
 Key | What it does
 --------|------------------
 Left and Right | Show the **Patients** or the **Appointments** view. While the focus is on the tabs, a hint beside them shows these keys.
+Down | Moves to the list below the tabs.
+Up | Moves to the command box.
 Other keys | Work as they do in a list, below.
 
-**In a list or the details:**
+**In a list:**
 
 Key | What it does
 --------|------------------
-Up and Down | In the patient list, select the previous or next patient and show their details. In the appointment list, select the previous or next appointment and show its patient's details. In the details, scroll.
+Up and Down | In the patient list, select the previous or next patient and show their details. In the appointment list, select the previous or next appointment and show its patient's details. Up at the first patient, or at the first appointment of the week, moves to the view tabs.
 Page Up, Page Down, Home and End | In the patient list, move further, in the same way as Up and Down. In the appointment list, select the first or last appointment of the week.
 Left and Right | In the appointment list, show the previous or next week, and select its first appointment.
 Any letter, digit or space | Goes back to the command box and types it there, after what you typed before.
 Enter | Goes back to the command box, keeping what you typed.
 Esc | In the patient view, shows all patients, as `list` does. In the appointment view, goes back to this week.
-Tab and Shift+Tab | Move to the next or previous area, in the order: command box, view tabs, list, details. An empty patient list, and the details when no patient is shown, are skipped. The appointment list takes the focus even in a week with no appointments, so that Left and Right still work.
+Tab and Shift+Tab | Move to the command box. Tab there brings you back to the list.
 
+* The appointment list takes the focus even in a week with no appointments, so that Left and Right still work. Up there moves to the view tabs.
 * When the focus moves to the patient list, the patient whose details are shown stays selected. If no patient in the list is selected, LaiNurse selects the first one and shows their details. So the selected patient is always the one shown.
 * When the focus moves to the appointment list and no appointment is selected, LaiNurse selects the first appointment from today on in this week, or the first appointment of another week, and shows its patient's details.
 * For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.

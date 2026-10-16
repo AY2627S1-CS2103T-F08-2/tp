@@ -19,8 +19,9 @@ public class BrowseKeysTest {
     public void actionFor_browseKeys_returnsTheirActions() {
         assertEquals(Optional.of(Action.RETURN_TO_COMMAND_BOX), BrowseKeys.actionFor(KeyCode.ENTER, false, false));
         assertEquals(Optional.of(Action.RESET_VIEW), BrowseKeys.actionFor(KeyCode.ESCAPE, false, false));
-        assertEquals(Optional.of(Action.FOCUS_NEXT_AREA), BrowseKeys.actionFor(KeyCode.TAB, false, false));
-        assertEquals(Optional.of(Action.FOCUS_PREVIOUS_AREA), BrowseKeys.actionFor(KeyCode.TAB, true, false));
+        // Tab and Shift+Tab both go between the command box and the view
+        assertEquals(Optional.of(Action.SWITCH_AREA), BrowseKeys.actionFor(KeyCode.TAB, false, false));
+        assertEquals(Optional.of(Action.SWITCH_AREA), BrowseKeys.actionFor(KeyCode.TAB, true, false));
     }
 
     @Test

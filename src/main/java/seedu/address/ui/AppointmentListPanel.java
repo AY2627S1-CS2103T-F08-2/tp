@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
 
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -40,6 +41,7 @@ public class AppointmentListPanel extends UiPart<Region> {
 
     private final ObservableList<PatientAppointment> allAppointments;
     private final Consumer<Optional<PatientAppointment>> onAppointmentChosen;
+    private final Runnable onUpAtTop;
     private final ObservableList<AppointmentPage.Row> rows = FXCollections.observableArrayList();
 
     private AppointmentPage page;
@@ -56,14 +58,16 @@ public class AppointmentListPanel extends UiPart<Region> {
     /**
      * Creates an {@code AppointmentListPanel} that shows the appointments in {@code allAppointments}, starting
      * with this week. {@code onAppointmentChosen} receives each appointment that the user selects, or
-     * {@code Optional#empty()} when no appointment is selected any more.
+     * {@code Optional#empty()} when no appointment is selected any more. {@code onUpAtTop} runs when the user
+     * presses Up at the first appointment of the week, or in a week with none, so that the focus can move on.
      */
     public AppointmentListPanel(ObservableList<PatientAppointment> allAppointments,
-            Consumer<Optional<PatientAppointment>> onAppointmentChosen) {
+            Consumer<Optional<PatientAppointment>> onAppointmentChosen, Runnable onUpAtTop) {
         super(FXML);
-        requireAllNonNull(allAppointments, onAppointmentChosen);
+        requireAllNonNull(allAppointments, onAppointmentChosen, onUpAtTop);
         this.allAppointments = allAppointments;
         this.onAppointmentChosen = onAppointmentChosen;
+        this.onUpAtTop = onUpAtTop;
         appointmentListView.setItems(rows);
         appointmentListView.setCellFactory(listView -> new RowCell());
         appointmentListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
@@ -112,6 +116,13 @@ public class AppointmentListPanel extends UiPart<Region> {
     }
 
     /**
+     * Returns the property that is true while the list has the keyboard focus.
+     */
+    public ReadOnlyBooleanProperty focusedProperty() {
+        return appointmentListView.focusedProperty();
+    }
+
+    /**
      * Selects the appointment to start from, if no appointment is selected: in this week, the first one from
      * today on, and in another week, its first one.
      */
@@ -142,7 +153,7 @@ public class AppointmentListPanel extends UiPart<Region> {
         }
         int selected = appointmentListView.getSelectionModel().getSelectedIndex();
         switch (event.getCode()) {
-            case UP, KP_UP -> page.entryIndexBefore(selected).ifPresentOrElse(this::select, this::scrollToTop);
+            case UP, KP_UP -> page.entryIndexBefore(selected).ifPresentOrElse(this::select, this::leaveTop);
             case DOWN, KP_DOWN -> (selected < 0 ? page.firstEntryIndex() : page.entryIndexAfter(selected))
                     .ifPresent(this::select);
             case HOME, PAGE_UP -> page.firstEntryIndex().ifPresent(this::select);
@@ -160,10 +171,12 @@ public class AppointmentListPanel extends UiPart<Region> {
     }
 
     /**
-     * Shows the top of the week, such as the earlier days above its first appointment.
+     * Shows the top of the week, such as the days before its first appointment, and lets the focus move on,
+     * as Up does at the first appointment.
      */
-    private void scrollToTop() {
+    private void leaveTop() {
         appointmentListView.scrollTo(0);
+        onUpAtTop.run();
     }
 
     private void showPageAndSelectFirst(AppointmentWeek week) {
