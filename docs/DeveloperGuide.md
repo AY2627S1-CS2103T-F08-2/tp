@@ -1065,7 +1065,7 @@ testers are expected to do more *exploratory* testing.
        Expected: The list is unchanged. The status message says that the `--from` date must not be after the `--to` date.
 
     1. Other incorrect commands to try: `viewappt 2026-10-15 --to 2026-10-31` (a date and an option),
-       `viewappt --to 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated option)<br>
+       `viewappt --till 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated option)<br>
        Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
 
 1. Viewing a date-only appointment next to a timed one on the same day
