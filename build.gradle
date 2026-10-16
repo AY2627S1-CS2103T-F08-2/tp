@@ -78,7 +78,7 @@ dependencies {
 }
 
 shadowJar {
-    archiveFileName = 'addressbook.jar'
+    archiveFileName = 'lainurse.jar'
 }
 
 defaultTasks 'clean', 'test'

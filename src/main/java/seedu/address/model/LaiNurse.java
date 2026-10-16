@@ -12,19 +12,19 @@ import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.UniquePatientList;
 
 /**
- * Wraps all data at the address-book level.
+ * Wraps all data at the LaiNurse level.
  * Duplicates are not allowed (by .isSamePatient comparison).
  */
-public class AddressBook implements ReadOnlyAddressBook {
+public class LaiNurse implements ReadOnlyLaiNurse {
 
     private final UniquePatientList patients = new UniquePatientList();
 
-    public AddressBook() {}
+    public LaiNurse() {}
 
     /**
-     * Creates an AddressBook using the Patients in the {@code toBeCopied}
+     * Creates a LaiNurse using the Patients in the {@code toBeCopied}
      */
-    public AddressBook(ReadOnlyAddressBook toBeCopied) {
+    public LaiNurse(ReadOnlyLaiNurse toBeCopied) {
         this();
         resetData(toBeCopied);
     }
@@ -40,9 +40,9 @@ public class AddressBook implements ReadOnlyAddressBook {
     }
 
     /**
-     * Resets the existing data of this {@code AddressBook} with {@code newData}.
+     * Resets the existing data of this {@code LaiNurse} with {@code newData}.
      */
-    public void resetData(ReadOnlyAddressBook newData) {
+    public void resetData(ReadOnlyLaiNurse newData) {
         requireNonNull(newData);
 
         setPatients(newData.getPatientList());
@@ -51,7 +51,7 @@ public class AddressBook implements ReadOnlyAddressBook {
     //// patient-level operations
 
     /**
-     * Returns true if a patient with the same identity as {@code patient} exists in the address book.
+     * Returns true if a patient with the same identity as {@code patient} exists in LaiNurse.
      */
     public boolean hasPatient(Patient patient) {
         requireNonNull(patient);
@@ -67,8 +67,8 @@ public class AddressBook implements ReadOnlyAddressBook {
     }
 
     /**
-     * Adds a patient to the address book.
-     * The patient must not already exist in the address book.
+     * Adds a patient to LaiNurse.
+     * The patient must not already exist in LaiNurse.
      */
     public void addPatient(Patient p) {
         patients.add(p);
@@ -76,9 +76,9 @@ public class AddressBook implements ReadOnlyAddressBook {
 
     /**
      * Replaces the given patient {@code target} in the list with {@code editedPatient}.
-     * {@code target} must exist in the address book.
+     * {@code target} must exist in LaiNurse.
      * The patient identity of {@code editedPatient} must not be the same as another existing patient
-     * in the address book.
+     * in LaiNurse.
      */
     public void setPatient(Patient target, Patient editedPatient) {
         requireNonNull(editedPatient);
@@ -87,8 +87,8 @@ public class AddressBook implements ReadOnlyAddressBook {
     }
 
     /**
-     * Removes {@code key} from this {@code AddressBook}.
-     * {@code key} must exist in the address book.
+     * Removes {@code key} from this {@code LaiNurse}.
+     * {@code key} must exist in LaiNurse.
      */
     public void removePatient(Patient key) {
         patients.remove(key);
@@ -115,11 +115,11 @@ public class AddressBook implements ReadOnlyAddressBook {
         }
 
         // instanceof handles nulls
-        if (!(other instanceof AddressBook otherAddressBook)) {
+        if (!(other instanceof LaiNurse otherLaiNurse)) {
             return false;
         }
 
-        return patients.equals(otherAddressBook.patients);
+        return patients.equals(otherLaiNurse.patients);
     }
 
     @Override

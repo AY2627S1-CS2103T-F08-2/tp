@@ -17,7 +17,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.AddressBook;
+import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -27,7 +27,7 @@ import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 import seedu.address.model.util.SampleDataUtil;
-import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
@@ -54,23 +54,23 @@ public class EditCommandFlowTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        model = new ModelManager(SampleDataUtil.getSampleAddressBook(), new UserPrefs());
-        storage = new StorageManager(new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json")),
+        model = new ModelManager(SampleDataUtil.getSampleLaiNurse(), new UserPrefs());
+        storage = new StorageManager(new JsonLaiNurseStorage(temporaryFolder.resolve("laiNurse.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
-        storage.saveAddressBook(model.getAddressBook());
+        storage.saveLaiNurse(model.getLaiNurse());
         logic = new LogicManager(model, storage);
     }
 
     @Test
     public void execute_editPhone_onlyPhoneChanged() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withPhone("91234567").build();
-        assertEditPersisted("edit S1234567A --number 91234567", ALEX_ID, expected);
+        assertEditPersisted("edit S1234567A --phone 91234567", ALEX_ID, expected);
     }
 
     @Test
     public void execute_tabSeparatedOptions_edited() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withPhone("71234567").build();
-        assertEditPersisted("edit S1234567A\t--number\t71234567", ALEX_ID, expected);
+        assertEditPersisted("edit S1234567A\t--phone\t71234567", ALEX_ID, expected);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class EditCommandFlowTest {
     public void execute_removeAppointmentAndEditPhone_bothApplied() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withPhone("99999999")
                 .withAppointments("2026-10-05 09:30").build();
-        assertEditPersisted("edit S1234567A --remove-appt 2026-11-02 --number 99999999", ALEX_ID, expected);
+        assertEditPersisted("edit S1234567A --remove-appt 2026-11-02 --phone 99999999", ALEX_ID, expected);
     }
 
     @Test
@@ -137,7 +137,7 @@ public class EditCommandFlowTest {
 
     @Test
     public void execute_unknownId_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("edit S0000000Z --number 91234567", CommandException.class,
+        assertRejectedCommandLeavesDataUnchanged("edit S0000000Z --phone 91234567", CommandException.class,
                 Messages.MESSAGE_INVALID_PATIENT_ID);
 
         // a list number is read as an ID, which no patient has
@@ -148,7 +148,7 @@ public class EditCommandFlowTest {
     @Test
     public void execute_removeMissingAppointment_rejectedWithoutChanges() throws Exception {
         // the date-only appointment on 2026-11-02 does not match a timed one, and the phone is not changed either
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --number 99999999 --remove-appt 2026-11-02 09:30",
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone 99999999 --remove-appt 2026-11-02 09:30",
                 CommandException.class,
                 String.format(EditCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-11-02 09:30"));
     }
@@ -167,7 +167,7 @@ public class EditCommandFlowTest {
                 Appointment.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --remove-appt 2026-10-05 9:30",
                 ParseException.class, Appointment.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --number 12", ParseException.class,
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone 12", ParseException.class,
                 Phone.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --medical-history  --name Alex",
                 ParseException.class, MedicalHistory.MESSAGE_CONSTRAINTS);
@@ -175,7 +175,7 @@ public class EditCommandFlowTest {
         // option with no value at the end of the command
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt", ParseException.class,
                 Appointment.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --number", ParseException.class,
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone", ParseException.class,
                 Phone.MESSAGE_CONSTRAINTS);
     }
 
@@ -206,7 +206,7 @@ public class EditCommandFlowTest {
      */
     private Patient patient(String id) {
         PatientId patientId = new PatientId(id);
-        return model.getAddressBook().getPatientList().stream()
+        return model.getLaiNurse().getPatientList().stream()
                 .filter(patient -> patient.getId().equals(patientId)).findFirst().orElseThrow();
     }
 
@@ -215,16 +215,16 @@ public class EditCommandFlowTest {
      * and that the change is saved to the data file.
      */
     private void assertEditPersisted(String command, String id, Patient expected) throws Exception {
-        AddressBook expectedAddressBook = new AddressBook(model.getAddressBook());
-        expectedAddressBook.setPatient(patient(id), expected);
+        LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
+        expectedLaiNurse.setPatient(patient(id), expected);
 
         CommandResult result = logic.execute(command);
 
         assertEquals(String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS, Messages.format(expected)),
                 result.getFeedbackToUser());
-        assertEquals(expectedAddressBook, model.getAddressBook());
-        assertEquals(model.getAddressBook().getPatientList(), model.getFilteredPatientList());
-        assertEquals(expectedAddressBook, storage.readAddressBook().orElseThrow());
+        assertEquals(expectedLaiNurse, model.getLaiNurse());
+        assertEquals(model.getLaiNurse().getPatientList(), model.getFilteredPatientList());
+        assertEquals(expectedLaiNurse, storage.readLaiNurse().orElseThrow());
     }
 
     /**
@@ -233,14 +233,14 @@ public class EditCommandFlowTest {
      */
     private void assertRejectedCommandLeavesDataUnchanged(String command, Class<? extends Throwable> expectedException,
             String expectedMessage) throws Exception {
-        AddressBook expectedAddressBook = new AddressBook(model.getAddressBook());
+        LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
         List<Patient> expectedFilteredList = List.copyOf(model.getFilteredPatientList());
-        String expectedJson = Files.readString(storage.getAddressBookFilePath());
+        String expectedJson = Files.readString(storage.getLaiNurseFilePath());
 
         assertThrows(expectedException, expectedMessage, () -> logic.execute(command));
 
-        assertEquals(expectedAddressBook, model.getAddressBook());
+        assertEquals(expectedLaiNurse, model.getLaiNurse());
         assertEquals(expectedFilteredList, model.getFilteredPatientList());
-        assertEquals(expectedJson, Files.readString(storage.getAddressBookFilePath()));
+        assertEquals(expectedJson, Files.readString(storage.getLaiNurseFilePath()));
     }
 }

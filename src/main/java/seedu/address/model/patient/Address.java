@@ -6,7 +6,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
- * Represents a Patient's address in the address book.
+ * Represents a Patient's address in LaiNurse.
  * The address is stored in upper case with whitespace normalized.
  * Guarantees: immutable; is valid as declared in {@link #isValidAddress(String)}
  */

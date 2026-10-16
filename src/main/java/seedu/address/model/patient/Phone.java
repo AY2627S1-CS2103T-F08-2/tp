@@ -6,7 +6,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
- * Represents a Patient's phone number in the address book.
+ * Represents a Patient's phone number in LaiNurse.
  * The number is stored with leading, trailing and repeated whitespace removed.
  * Guarantees: immutable; is valid as declared in {@link #isValidPhone(String)}
  */

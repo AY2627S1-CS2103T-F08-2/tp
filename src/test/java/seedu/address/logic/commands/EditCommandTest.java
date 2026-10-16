@@ -17,13 +17,13 @@ import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
 import static seedu.address.testutil.TypicalPatients.BENSON;
-import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
+import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
-import seedu.address.model.AddressBook;
+import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -37,7 +37,7 @@ import seedu.address.testutil.PatientBuilder;
  */
 public class EditCommandTest {
 
-    private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+    private Model model = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
 
     @Test
     public void execute_allFieldsSpecified_success() {
@@ -51,7 +51,7 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(editedPatient));
 
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(firstPatient, editedPatient);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
@@ -71,7 +71,7 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(editedPatient));
 
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(lastPatient, editedPatient);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
@@ -89,7 +89,7 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(editedPatient));
 
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(firstPatient, editedPatient);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
@@ -151,7 +151,7 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(firstPatient));
 
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
@@ -161,7 +161,7 @@ public class EditCommandTest {
         // Patients are found by ID, so a patient hidden by a filter can still be edited,
         // and the list is reset to show every patient afterwards
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
-        Patient secondPatient = model.getAddressBook().getPatientList().get(INDEX_SECOND_PATIENT.getZeroBased());
+        Patient secondPatient = model.getLaiNurse().getPatientList().get(INDEX_SECOND_PATIENT.getZeroBased());
         Patient editedPatient = new PatientBuilder(secondPatient).withName(VALID_NAME_BOB).build();
         EditCommand editCommand = new EditCommand(secondPatient.getId(),
                 new EditPatientDescriptorBuilder().withName(VALID_NAME_BOB).build());
@@ -169,7 +169,7 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(editedPatient));
 
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(secondPatient, editedPatient);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
@@ -192,7 +192,7 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(editedPatient));
 
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(secondPatient, editedPatient);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
@@ -200,7 +200,7 @@ public class EditCommandTest {
 
     @Test
     public void execute_idNotFound_failure() {
-        // VALID_ID_AMY is not in the typical address book
+        // VALID_ID_AMY is not one of the typical patients
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withName(VALID_NAME_BOB).build();
         EditCommand editCommand = new EditCommand(new PatientId(VALID_ID_AMY), descriptor);
 
@@ -216,7 +216,7 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
                 Messages.format(editedPatient));
 
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(patientToEdit, editedPatient);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);

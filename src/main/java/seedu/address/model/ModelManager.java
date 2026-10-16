@@ -15,30 +15,30 @@ import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 
 /**
- * Represents the in-memory model of the address book data.
+ * Represents the in-memory model of the LaiNurse data.
  */
 public class ModelManager implements Model {
     private static final Logger logger = LogsCenter.getLogger(ModelManager.class);
 
-    private final AddressBook addressBook;
+    private final LaiNurse laiNurse;
     private final UserPrefs userPrefs;
     private final FilteredList<Patient> filteredPatients;
 
     /**
-     * Initializes a ModelManager with the given addressBook and userPrefs.
+     * Initializes a ModelManager with the given laiNurse and userPrefs.
      */
-    public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
-        requireAllNonNull(addressBook, userPrefs);
+    public ModelManager(ReadOnlyLaiNurse laiNurse, ReadOnlyUserPrefs userPrefs) {
+        requireAllNonNull(laiNurse, userPrefs);
 
-        logger.fine("Initializing with address book: " + addressBook + " and user prefs " + userPrefs);
+        logger.fine("Initializing with LaiNurse: " + laiNurse + " and user prefs " + userPrefs);
 
-        this.addressBook = new AddressBook(addressBook);
+        this.laiNurse = new LaiNurse(laiNurse);
         this.userPrefs = new UserPrefs(userPrefs);
-        filteredPatients = new FilteredList<>(this.addressBook.getPatientList());
+        filteredPatients = new FilteredList<>(this.laiNurse.getPatientList());
     }
 
     public ModelManager() {
-        this(new AddressBook(), new UserPrefs());
+        this(new LaiNurse(), new UserPrefs());
     }
 
     //=========== UserPrefs ==================================================================================
@@ -59,38 +59,38 @@ public class ModelManager implements Model {
         userPrefs.setGuiSettings(guiSettings);
     }
 
-    //=========== AddressBook ================================================================================
+    //=========== LaiNurse ================================================================================
 
     @Override
-    public void setAddressBook(ReadOnlyAddressBook addressBook) {
-        this.addressBook.resetData(addressBook);
+    public void setLaiNurse(ReadOnlyLaiNurse laiNurse) {
+        this.laiNurse.resetData(laiNurse);
     }
 
     @Override
-    public ReadOnlyAddressBook getAddressBook() {
-        return addressBook;
+    public ReadOnlyLaiNurse getLaiNurse() {
+        return laiNurse;
     }
 
     @Override
     public boolean hasPatient(Patient patient) {
         requireNonNull(patient);
-        return addressBook.hasPatient(patient);
+        return laiNurse.hasPatient(patient);
     }
 
     @Override
     public Optional<Patient> findPatientById(PatientId id) {
         requireNonNull(id);
-        return addressBook.findPatientById(id);
+        return laiNurse.findPatientById(id);
     }
 
     @Override
     public void deletePatient(Patient target) {
-        addressBook.removePatient(target);
+        laiNurse.removePatient(target);
     }
 
     @Override
     public void addPatient(Patient patient) {
-        addressBook.addPatient(patient);
+        laiNurse.addPatient(patient);
         updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
     }
 
@@ -98,14 +98,14 @@ public class ModelManager implements Model {
     public void setPatient(Patient target, Patient editedPatient) {
         requireAllNonNull(target, editedPatient);
 
-        addressBook.setPatient(target, editedPatient);
+        laiNurse.setPatient(target, editedPatient);
     }
 
     //=========== Filtered Patient List Accessors =============================================================
 
     /**
      * Returns an unmodifiable view of the list of {@code Patient} backed by the internal list of
-     * {@code addressBook}
+     * {@code laiNurse}
      */
     @Override
     public ObservableList<Patient> getFilteredPatientList() {
@@ -129,7 +129,7 @@ public class ModelManager implements Model {
             return false;
         }
 
-        return addressBook.equals(otherModelManager.addressBook)
+        return laiNurse.equals(otherModelManager.laiNurse)
                 && userPrefs.equals(otherModelManager.userPrefs)
                 && filteredPatients.equals(otherModelManager.filteredPatients);
     }

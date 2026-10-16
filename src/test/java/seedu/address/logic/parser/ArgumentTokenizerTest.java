@@ -154,11 +154,11 @@ public class ArgumentTokenizerTest {
     @Test
     public void normalizeOptionSeparators_knownOptions_spacedOut() throws Exception {
         Prefix name = new Prefix("--name ");
-        Prefix phone = new Prefix("--number ");
+        Prefix phone = new Prefix("--phone ");
 
         // tab-separated options
-        assertEquals("S1  --name  Alex  --number  9123", ArgumentTokenizer.normalizeOptionSeparators(
-                "S1\t--name\tAlex\t--number\t9123", "invalid", name, phone).replace("\t", " "));
+        assertEquals("S1  --name  Alex  --phone  9123", ArgumentTokenizer.normalizeOptionSeparators(
+                "S1\t--name\tAlex\t--phone\t9123", "invalid", name, phone).replace("\t", " "));
 
         // option with no value at the end is followed by a space, so tokenize recognizes it
         String normalized = ArgumentTokenizer.normalizeOptionSeparators("S1 --name", "invalid", name);

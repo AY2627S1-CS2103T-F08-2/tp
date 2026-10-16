@@ -8,7 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PATIENT;
-import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
+import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +25,7 @@ import seedu.address.model.patient.PatientId;
  */
 public class DeleteCommandTest {
 
-    private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+    private Model model = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
 
     @Test
     public void execute_validIdUnfilteredList_success() {
@@ -35,7 +35,7 @@ public class DeleteCommandTest {
         String expectedMessage = String.format(DeleteCommand.MESSAGE_DELETE_PATIENT_SUCCESS,
                 Messages.format(patientToDelete));
 
-        ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        ModelManager expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
         expectedModel.deletePatient(patientToDelete);
 
         assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
@@ -53,14 +53,14 @@ public class DeleteCommandTest {
     public void execute_validIdFilteredListNoRestrict_success() {
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
 
-        Patient hiddenFromListPatient = model.getAddressBook().getPatientList()
+        Patient hiddenFromListPatient = model.getLaiNurse().getPatientList()
                 .get(INDEX_SECOND_PATIENT.getZeroBased());
         DeleteCommand deleteCommand = new DeleteCommand(hiddenFromListPatient.getId());
 
         String expectedMessage = String.format(DeleteCommand.MESSAGE_DELETE_PATIENT_SUCCESS,
                 Messages.format(hiddenFromListPatient));
 
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
         expectedModel.deletePatient(hiddenFromListPatient);
         showPatientAtIndex(expectedModel, INDEX_FIRST_PATIENT);
 

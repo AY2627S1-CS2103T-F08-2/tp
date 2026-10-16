@@ -50,7 +50,7 @@ public class AddCommandParserValidationTest {
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
 
     private final AddCommandParser parser = new AddCommandParser();
-    private final AddressBookParser commandParser = new AddressBookParser();
+    private final LaiNurseParser commandParser = new LaiNurseParser();
 
     @Test
     public void parse_optionalFieldCombinationsInDifferentOrders_success() {
@@ -78,7 +78,7 @@ public class AddCommandParserValidationTest {
 
     @Test
     public void parse_tabSeparatedOptions_success() {
-        String arguments = "\t--medical-history\tdementia\t--number\t22222222\t--id\tS2222222B"
+        String arguments = "\t--medical-history\tdementia\t--phone\t22222222\t--id\tS2222222B"
                 + "\t--address\tBlock 123, Bobby Street 3\t--appt\t2026-11-30 09:00\t--name\tBob Choo";
         assertParseSuccess(parser, arguments, new AddCommand(BOB));
     }
@@ -94,7 +94,7 @@ public class AddCommandParserValidationTest {
                 PatientId.MESSAGE_CONSTRAINTS);
         assertCommandParseFailure(ID_DESC_AMY + PHONE_DESC_AMY + ADDRESS_DESC_AMY + " --name",
                 Name.MESSAGE_CONSTRAINTS);
-        assertCommandParseFailure(ID_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY + " --number",
+        assertCommandParseFailure(ID_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY + " --phone",
                 Phone.MESSAGE_CONSTRAINTS);
         assertCommandParseFailure(ID_DESC_AMY + NAME_DESC_AMY + PHONE_DESC_AMY + " --address",
                 Address.MESSAGE_CONSTRAINTS);
@@ -110,7 +110,8 @@ public class AddCommandParserValidationTest {
 
     @Test
     public void parse_unknownOptions_failure() {
-        for (String option : List.of("--medical-histroy dementia", "--name=Bob", "--unknown value", "--")) {
+        for (String option : List.of("--medical-histroy dementia", "--name=Bob", "--unknown value", "--",
+                "--number 91234567")) {
             assertParseFailure(parser, REQUIRED_ARGUMENTS + " " + option, INVALID_FORMAT_MESSAGE);
         }
 

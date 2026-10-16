@@ -1,5 +1,5 @@
 {
-  "_comment": "AddressBook save file which contains the same Patient values as in TypicalPatients#getTypicalAddressBook()",
+  "_comment": "LaiNurse save file which contains the same Patient values as in TypicalPatients#getTypicalLaiNurse()",
   "persons" : [ {
     "id" : "S1234567A",
     "name" : "ALICE PAULINE",

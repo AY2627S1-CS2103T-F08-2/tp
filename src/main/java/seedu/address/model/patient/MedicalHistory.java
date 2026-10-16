@@ -6,7 +6,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
- * Represents a Patient's medical history in the address book, as free-form notes.
+ * Represents a Patient's medical history in LaiNurse, as free-form notes.
  * The notes are stored in upper case with whitespace normalized.
  * Guarantees: immutable; is valid as declared in {@link #isValidMedicalHistory(String)}
  */

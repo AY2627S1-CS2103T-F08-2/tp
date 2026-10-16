@@ -12,7 +12,7 @@ import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 
 /**
- * Deletes the patient with the given ID from the address book.
+ * Deletes the patient with the given ID from LaiNurse.
  */
 public class DeleteCommand extends Command {
 
@@ -38,7 +38,7 @@ public class DeleteCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        List<Patient> listAllPatients = model.getAddressBook().getPatientList();
+        List<Patient> listAllPatients = model.getLaiNurse().getPatientList();
 
         Patient patientToDelete = listAllPatients.stream().filter(patient -> patient.getId().equals(targetId))
                         .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));

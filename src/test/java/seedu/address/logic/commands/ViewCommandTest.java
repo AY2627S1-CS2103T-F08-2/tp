@@ -7,12 +7,12 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
-import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
+import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
-import seedu.address.model.AddressBook;
+import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -24,13 +24,13 @@ import seedu.address.model.patient.PatientId;
  */
 public class ViewCommandTest {
 
-    private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+    private Model model = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
 
     @Test
     public void execute_existingId_showsPatient() {
         PatientId bensonId = new PatientId("S2345678B");
         CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)", bensonId);
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
 
         assertCommandSuccess(new ViewCommand(bensonId), model, expectedResult, expectedModel);
     }
@@ -40,7 +40,7 @@ public class ViewCommandTest {
         PatientId bensonId = new PatientId("s2345678b");
         CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)",
                 new PatientId("S2345678B"));
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
 
         assertCommandSuccess(new ViewCommand(bensonId), model, expectedResult, expectedModel);
     }
@@ -50,7 +50,7 @@ public class ViewCommandTest {
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
         PatientId bensonId = new PatientId("S2345678B");
         CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)", bensonId);
-        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
         showPatientAtIndex(expectedModel, INDEX_FIRST_PATIENT);
 
         assertCommandSuccess(new ViewCommand(bensonId), model, expectedResult, expectedModel);
@@ -64,8 +64,8 @@ public class ViewCommandTest {
     }
 
     @Test
-    public void execute_emptyAddressBook_throwsCommandException() {
-        Model emptyModel = new ModelManager(new AddressBook(), new UserPrefs());
+    public void execute_emptyLaiNurse_throwsCommandException() {
+        Model emptyModel = new ModelManager(new LaiNurse(), new UserPrefs());
         ViewCommand viewCommand = new ViewCommand(new PatientId("S2345678B"));
 
         assertCommandFailure(viewCommand, emptyModel, Messages.MESSAGE_INVALID_PATIENT_ID);

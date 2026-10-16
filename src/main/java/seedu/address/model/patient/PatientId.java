@@ -6,7 +6,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
- * Represents a Patient's unique patient ID in the address book.
+ * Represents a Patient's unique patient ID in LaiNurse.
  * The ID is stored in upper case, so IDs that differ only in case are equal.
  * Guarantees: immutable; is valid as declared in {@link #isValidId(String)}
  */

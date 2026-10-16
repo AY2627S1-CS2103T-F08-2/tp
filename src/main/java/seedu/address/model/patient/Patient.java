@@ -8,7 +8,7 @@ import java.util.Optional;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
- * Represents a patient in the address book.
+ * Represents a patient in LaiNurse.
  * Guarantees: details are present and not null, field values are validated, immutable.
  */
 public class Patient {

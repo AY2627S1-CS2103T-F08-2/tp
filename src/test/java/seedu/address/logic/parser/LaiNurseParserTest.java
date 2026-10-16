@@ -30,9 +30,9 @@ import seedu.address.testutil.EditPatientDescriptorBuilder;
 import seedu.address.testutil.PatientBuilder;
 import seedu.address.testutil.PatientUtil;
 
-public class AddressBookParserTest {
+public class LaiNurseParserTest {
 
-    private final AddressBookParser parser = new AddressBookParser();
+    private final LaiNurseParser parser = new LaiNurseParser();
 
     @Test
     public void parseCommand_add() throws Exception {
@@ -115,7 +115,7 @@ public class AddressBookParserTest {
         ViewAppointmentCommand rangeCommand = new ViewAppointmentCommand(Optional.of(LocalDate.of(2026, 10, 1)),
                 Optional.of(LocalDate.of(2026, 10, 31)));
         assertEquals(rangeCommand,
-                parser.parseCommand(ViewAppointmentCommand.COMMAND_WORD + " --from 2026-10-01 --till 2026-10-31"));
+                parser.parseCommand(ViewAppointmentCommand.COMMAND_WORD + " --from 2026-10-01 --to 2026-10-31"));
     }
 
     @Test

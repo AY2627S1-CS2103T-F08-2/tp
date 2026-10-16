@@ -19,7 +19,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 1. Copy the file to the folder you want to use as the _home folder_ for LaiNurse.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
+1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar lainurse.jar`.<br>
    LaiNurse keeps its data in the folder you launch it from, so always launch it from this folder.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    ![Ui](images/Ui.png)
@@ -30,7 +30,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
    * `list` : Lists all patients.
 
-   * `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` with the ID `T0123456B`.
+   * `add --id T0123456B --name John Doe --phone 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` with the ID `T0123456B`.
 
    * `view S1234567A` : Shows the details of the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
@@ -58,7 +58,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
   For example, `[KEYWORD]…​` may be omitted, or written as `John` or `John Jane`.
 
 * Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
-  For example, if the command specifies `--name NAME --number NUMBER`, `--number NUMBER --name NAME` is also acceptable.
+  For example, if the command specifies `--name NAME --phone PHONE`, `--phone PHONE --name NAME` is also acceptable.
 
 * Extraneous parameters for commands that take no parameters, such as `list`, `exit`, and `clear`, are ignored.<br>
   For example, `list 123` is interpreted as `list`.
@@ -97,7 +97,7 @@ Tab and Shift+Tab | Move to the next or previous area, in the order: command box
 * For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.
 * To finish a patient ID with Tab, type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
   For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
-  With `edit`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --number 91234567` becomes `edit S1234567A --number 91234567`.
+  With `edit`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`.
 * The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
 
 ### Viewing help: `help`
@@ -128,9 +128,9 @@ Examples:
 
 Adds a patient to LaiNurse.
 
-Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​`
+Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​`
 
-* `--id`, `--name`, `--number`, and `--address` are required. Each must have a non-blank value.
+* `--id`, `--name`, `--phone`, and `--address` are required. Each must have a non-blank value.
 * Medical history and appointments are independently optional. If an option is supplied, its value must not be blank.
 * Parameters may appear in any order. Each option may appear only once, except `--appt`, which can be repeated to add several appointments. Separate options and values using spaces or tabs; values may contain spaces.
 * IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
@@ -143,9 +143,9 @@ Format: `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-hi
 
 Examples:
 
-* `add --id T0123456B --name John Doe --number 98765432 --address John street, block 123, #01-01`
-* `add --medical-history Asthma --address Block 312, Clementi Ave 2 --number 91234567 --name Betsy Crowe --id S2222222B --appt 2026-11-30`
-* `add --appt 2026-11-30 09:00 --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --number 22224444 --appt 2026-12-14 09:00`
+* `add --id T0123456B --name John Doe --phone 98765432 --address John street, block 123, #01-01`
+* `add --medical-history Asthma --address Block 312, Clementi Ave 2 --phone 91234567 --name Betsy Crowe --id S2222222B --appt 2026-11-30`
+* `add --appt 2026-11-30 09:00 --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --phone 22224444 --appt 2026-12-14 09:00`
 
 ### Listing all patients: `list`
 
@@ -161,21 +161,21 @@ Format: `list`
 
 Edits the details of an existing patient, and adds or removes their appointments.
 
-Format: `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`
+Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`
 
 * Edits the patient with the given `ID`, which is the patient ID shown on their card, not their position in the list. The patient does not have to be in the list currently shown.
 * `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs.
 * As in `add`, whitespace-delimited words beginning with `--` are reserved for options. Unknown options, misspellings, and `--id` are rejected with the command usage instructions.
 * The ID itself cannot be edited. To correct a wrong ID, delete the patient and add them again.
 * At least one of the optional parameters must be provided.
-* `--name`, `--number`, `--address`, and `--medical-history` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
+* `--name`, `--phone`, `--address`, and `--medical-history` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
 * `--add-appt` adds an appointment, and `--remove-appt` removes one. Both can be repeated. Appointments use the same format as in `add`.
 * `--remove-appt` must match an existing appointment exactly. For example, `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`. If any appointment to remove is not found, nothing is changed.
 * Appointments are removed before they are added, so one command can move an appointment to a new date. Adding an appointment the patient already has makes no change. As with `add`, a date-only appointment and a timed one on the same day are separate appointments.
 * After a patient is edited, the list shows all patients again.
 
 Examples:
-*  `edit S1234567A --number 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.
+*  `edit S1234567A --phone 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.
 *  `edit S1234567A --medical-history Type 2 diabetes, hypertension` replaces the medical history of patient `S1234567A`.
 *  `edit S1234567A --add-appt 2026-12-01 10:00 --add-appt 2026-12-15` adds two appointments.
 *  `edit S1234567A --remove-appt 2026-10-05 09:30 --add-appt 2026-10-07 14:00` moves an appointment from 5 October to 7 October.
@@ -184,7 +184,7 @@ Examples:
 
 Finds patients whose specified fields contain any of the supplied substrings.
 
-Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY]`
+Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY]`
 
 * `find` searches patient details only. To search by appointment date, use [`viewappt`](#viewing-appointments-viewappt).
 
@@ -194,7 +194,7 @@ Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--m
 * Matching ignores case and repeated whitespace. For example, `--name han` matches `Hans`, and `--address "marina   bay"` matches `Marina Bay`.
 * Each value is one contiguous substring of its corresponding field. For example, `--address "Marina Bay"` matches that phrase, while `--address "Bay Marina"` does not match `Marina Bay`.
 * Patients matching **any** supplied option are returned (an `OR` search). For example, `--name John --address "Marina Bay"` finds patients whose name contains `John` **or** whose address contains `Marina Bay`. Each patient appears once, in the original list order.
-* Phone searches match the stored text, so partial values such as `--number 123` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
+* Phone searches match the stored text, so partial values such as `--phone 123` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
 * Patients without medical history do not match a `--medical-history` search, but may match another supplied option.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within quoted values. Unknown options, misspellings, and `--name=value` syntax are rejected. Text such as `Anne--Marie` is accepted.
 * Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. To see all patients again, enter `list`, or press Esc twice: once to move to the patient list, and once to show all patients.
@@ -210,23 +210,23 @@ Examples:
 
 Views patients who have an appointment on a date, or between two dates.
 
-Format: `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`
+Format: `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`
 
 * All dates must be real dates in `yyyy-MM-dd` format.
 * `viewappt DATE` shows patients with an appointment on `DATE`.
-* With `--from` and `--till`, the range includes both dates. Give at least one of them, in any order, each at most once.
-* Without `--from`, the range starts today. Without `--till`, the range has no end.
+* With `--from` and `--to`, the range includes both dates. Give at least one of them, in any order, each at most once.
+* Without `--from`, the range starts today. Without `--to`, the range has no end.
 * "Today" is the current date on your computer, in its time zone. If your computer is set to a different time zone from where you visit patients, "today" can be a day off near midnight.
-* The `--from` date must not be later than the `--till` date. With only `--till`, the date must not be before today. To see past appointments, give `--from` too.
-* `DATE` cannot be combined with `--from` or `--till`.
+* The `--from` date must not be later than the `--to` date. With only `--to`, the date must not be before today. To see past appointments, give `--from` too.
+* `DATE` cannot be combined with `--from` or `--to`.
 * All of each patient's appointments are checked. A patient is shown if any of their appointments is in the range, with or without a time. Each patient appears once, in the original list order.
 * Only dates are compared, so an appointment earlier today is still shown.
 * If no patients have appointments in the range, an empty list is shown.
 
 Examples:
 * `viewappt 2026-10-15` views all patients with appointments on October 15, 2026.
-* `viewappt --from 2026-10-01 --till 2026-10-31` views all patients with appointments in October 2026.
-* `viewappt --till 2026-10-31` views all patients with appointments from today to October 31, 2026.
+* `viewappt --from 2026-10-01 --to 2026-10-31` views all patients with appointments in October 2026.
+* `viewappt --to 2026-10-31` views all patients with appointments from today to October 31, 2026.
 * `viewappt --from 2026-12-01` views all patients with appointments on or after December 1, 2026.
 
 ### Viewing a patient's details: `view`
@@ -277,7 +277,7 @@ LaiNurse saves your data automatically after every command that succeeds. You do
 
 ### Editing the data file
 
-LaiNurse saves its data as a JSON file, `data/addressbook.json`, inside the folder you launched it from. If you followed the [Quick start](#quick-start), that is the folder containing the JAR file. Advanced users are welcome to update data directly by editing that data file.
+LaiNurse saves its data as a JSON file, `data/lainurse.json`, inside the folder you launched it from. If you followed the [Quick start](#quick-start), that is the folder containing the JAR file. Advanced users are welcome to update data directly by editing that data file.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 If your changes make the data file invalid, LaiNurse starts with an empty patient list the next time it launches. The next command that succeeds, even `list` or `help`, then overwrites the invalid file with the empty list, and the data in it is lost. Back up the file before you edit it. If LaiNurse starts empty after an edit, close the window without running any command (the `exit` command also saves), and restore your backup.<br>
@@ -289,7 +289,7 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 ## FAQ
 
 **Q**: How do I transfer my data to another computer?<br>
-**A**: Install LaiNurse on the other computer. Then copy `data/addressbook.json` from your old LaiNurse home folder into a `data` folder next to the JAR file on the new computer, replacing the file there if there is one.
+**A**: Install LaiNurse on the other computer. Then copy `data/lainurse.json` from your old LaiNurse home folder into a `data` folder next to the JAR file on the new computer, replacing the file there if there is one.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -305,13 +305,13 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 
 Action | Format, Examples
 --------|-----------------
-**Add** | `add --id ID --name NAME --number NUMBER --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --number 22224444 --address 123, Clementi Rd, 1234665 --appt 2026-11-30 09:00`
+**Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --appt 2026-11-30 09:00`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
-**Edit** | `edit ID [--name NAME] [--number NUMBER] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --number 91234567 --add-appt 2026-12-01 10:00`
-**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--number NUMBER] [--medical-history HISTORY]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
+**Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --phone 91234567 --add-appt 2026-12-01 10:00`
+**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
 **List** | `list`
 **View** | `view ID`<br> e.g., `view S1234567A`
-**ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--till END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --till 2026-10-31`
+**ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --to 2026-10-31`
 **Help** | `help [COMMAND]` (or `help [--COMMAND]`)<br> e.g., `help`, `help add` (or `help --add`), `help window` (or `help --window`)
 **Exit** | `exit`

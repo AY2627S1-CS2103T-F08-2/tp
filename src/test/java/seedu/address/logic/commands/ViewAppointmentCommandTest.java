@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW;
 import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW;
 import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_TILL_BEFORE_TODAY;
+import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.DANIEL;
-import static seedu.address.testutil.TypicalPatients.getTypicalAddressBook;
+import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -23,13 +23,13 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import seedu.address.model.AddressBook;
+import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 import seedu.address.model.patient.Patient;
-import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.LaiNurseBuilder;
 import seedu.address.testutil.PatientBuilder;
 
 public class ViewAppointmentCommandTest {
@@ -37,8 +37,8 @@ public class ViewAppointmentCommandTest {
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 12);
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-10-12T10:00:00Z"), ZoneOffset.UTC);
 
-    private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-    private Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+    private Model model = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
+    private Model expectedModel = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
 
     @Test
     public void constructor_startAfterEnd_throwsIllegalArgumentException() {
@@ -124,10 +124,10 @@ public class ViewAppointmentCommandTest {
         Patient onToday = patientWithAppointment("S0000002B", today);
         Patient inThreeDays = patientWithAppointment("S0000003C", today.plusDays(3));
         Patient inAMonth = patientWithAppointment("S0000004D", today.plusDays(30));
-        AddressBook addressBook = new AddressBookBuilder().withPatient(yesterday).withPatient(onToday)
+        LaiNurse laiNurse = new LaiNurseBuilder().withPatient(yesterday).withPatient(onToday)
                 .withPatient(inThreeDays).withPatient(inAMonth).build();
-        Model relativeModel = new ModelManager(addressBook, new UserPrefs());
-        Model expectedRelativeModel = new ModelManager(addressBook, new UserPrefs());
+        Model relativeModel = new ModelManager(laiNurse, new UserPrefs());
+        Model expectedRelativeModel = new ModelManager(laiNurse, new UserPrefs());
 
         LocalDate end = today.plusDays(3);
         ViewAppointmentCommand command = new ViewAppointmentCommand(Optional.empty(), Optional.of(end), FIXED_CLOCK);
@@ -150,7 +150,7 @@ public class ViewAppointmentCommandTest {
         ViewAppointmentCommand command =
                 new ViewAppointmentCommand(Optional.empty(), Optional.of(yesterday), FIXED_CLOCK);
         assertCommandFailure(command, model,
-                String.format(MESSAGE_VIEW_APPOINTMENT_TILL_BEFORE_TODAY, yesterday, TODAY));
+                String.format(MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY, yesterday, TODAY));
     }
 
     @Test
