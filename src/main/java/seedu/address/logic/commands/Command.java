@@ -1,5 +1,8 @@
 package seedu.address.logic.commands;
 
+import java.util.Optional;
+
+import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 
@@ -16,5 +19,14 @@ public abstract class Command {
      * @throws CommandException If an error occurs during command execution.
      */
     public abstract CommandResult execute(Model model) throws CommandException;
+
+    /**
+     * Returns the view that the main window switches to after this command succeeds, or
+     * {@code Optional#empty()} to keep the current view. Commands whose words end in "appt" show
+     * {@link View#APPOINTMENTS}, and the commands that list or change patients show {@link View#PATIENTS}.
+     */
+    public Optional<View> getView() {
+        return Optional.empty();
+    }
 
 }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox styleClass="list-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <HBox styleClass="list-header" alignment="CENTER_LEFT" spacing="6">
+    <padding>
+      <Insets top="6" right="12" bottom="6" left="8" />
+    </padding>
+    <!-- The buttons never take the focus. With the focus in the list, Left and Right do the same. They show only in the weekly view. -->
+    <Button fx:id="previousWeekButton" styleClass="nav-arrow-button" focusTraversable="false"
+            accessibleText="Previous week" onAction="#handlePreviousWeek">
+      <graphic>
+        <SVGPath styleClass="nav-arrow-icon" content="M10 3.5 L5.5 8 L10 12.5" />
+      </graphic>
+    </Button>
+    <Button fx:id="nextWeekButton" styleClass="nav-arrow-button" focusTraversable="false"
+            accessibleText="Next week" onAction="#handleNextWeek">
+      <graphic>
+        <SVGPath styleClass="nav-arrow-icon" content="M6 3.5 L10.5 8 L6 12.5" />
+      </graphic>
+    </Button>
+    <Label fx:id="weekDates" styleClass="list-header-title">
+      <padding>
+        <Insets left="6" />
+      </padding>
+      <minWidth>
+        <Region fx:constant="USE_PREF_SIZE" />
+      </minWidth>
+    </Label>
+    <!-- In a narrow list, this note and the count give up their room first, so that the dates stay whole. -->
+    <Label fx:id="weekRelative" styleClass="list-header-note" minWidth="0" />
+    <Region HBox.hgrow="ALWAYS" />
+    <!-- The count has a fixed width in the style sheet, so that it stays in one place from week to week. -->
+    <Label fx:id="weekCount" styleClass="list-header-count" />
+  </HBox>
+  <ListView fx:id="appointmentListView" VBox.vgrow="ALWAYS" />
+</VBox>

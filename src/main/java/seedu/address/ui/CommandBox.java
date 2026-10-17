@@ -85,9 +85,13 @@ public class CommandBox extends UiPart<Region> {
     /**
      * Replaces the text with its next completion. The first Tab after typing gives the first completion,
      * and each further Tab gives the next one, going back to the first after the last.
+     * Tab never moves the focus, so with nothing to complete, such as in an empty command box, it does nothing.
      */
     private void handleTabPressed() {
         String commandText = commandTextField.getText();
+        if (commandText.isBlank()) {
+            return;
+        }
         if (!commandText.equals(lastCompletion)) {
             completions = commandCompleter.complete(commandText);
             completionIndex = -1;
@@ -117,6 +121,13 @@ public class CommandBox extends UiPart<Region> {
         requestFocus();
         commandTextField.appendText(text);
         commandTextField.positionCaret(commandTextField.getLength());
+    }
+
+    /**
+     * Sets the hint that the empty command box shows.
+     */
+    public void setPromptText(String promptText) {
+        commandTextField.setPromptText(promptText);
     }
 
     /**

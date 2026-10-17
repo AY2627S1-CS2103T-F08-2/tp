@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -44,6 +45,11 @@ public class ViewCommand extends Command {
                 .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
         return new CommandResult(String.format(MESSAGE_VIEW_PATIENT_SUCCESS, patientToView.getName(),
                 patientToView.getId()), patientToView.getId());
+    }
+
+    @Override
+    public Optional<CommandResult.View> getView() {
+        return Optional.of(CommandResult.View.PATIENTS);
     }
 
     @Override

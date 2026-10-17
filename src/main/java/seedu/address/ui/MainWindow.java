@@ -1,32 +1,50 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.PatientAppointment;
 
 /**
  * The Main Window. Provides the basic application layout containing
  * a menu bar and space where other JavaFX elements can be placed.
+ * It shows one view at a time, patients or appointments, on two tabs.
  */
 public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
+    private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
+    private static final String PATIENT_PLACEHOLDER =
+            "To see a patient's details here, type view and their ID, for example: view S1234567A";
+    private static final String APPOINTMENT_PLACEHOLDER =
+            "To see a patient's details here, select one of their appointments.";
+    private static final String PATIENT_PROMPT = "Type a command, or press Esc to browse patients";
+    private static final String APPOINTMENT_PROMPT = "Type a command, or press Esc to browse appointments";
+    /** The share of a view's width that its list takes. The details beside it take the rest. */
+    private static final double LIST_SHARE = 0.45;
 
     private final Logger logger = LogsCenter.getLogger(getClass());
 
@@ -34,12 +52,18 @@ public class MainWindow extends UiPart<Stage> {
     private Logic logic;
     private Path dataFilePath;
 
+    /** The view that is shown. */
+    private View shownView = View.PATIENTS;
+
     // Independent Ui parts residing in this Ui container
     private PatientListPanel patientListPanel;
     private PatientDetailPanel patientDetailPanel;
+    private AppointmentListPanel appointmentListPanel;
+    private PatientDetailPanel appointmentDetailPanel;
     private CommandBox commandBox;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
+    private MinuteClock clock;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -48,10 +72,31 @@ public class MainWindow extends UiPart<Stage> {
     private MenuItem helpMenuItem;
 
     @FXML
+    private HBox viewTabs;
+
+    @FXML
+    private Button patientsTab;
+
+    @FXML
+    private Button appointmentsTab;
+
+    @FXML
+    private HBox patientView;
+
+    @FXML
+    private HBox appointmentView;
+
+    @FXML
     private StackPane patientListPanelPlaceholder;
 
     @FXML
     private StackPane patientDetailPanelPlaceholder;
+
+    @FXML
+    private StackPane appointmentListPanelPlaceholder;
+
+    @FXML
+    private StackPane appointmentDetailPanelPlaceholder;
 
     @FXML
     private StackPane resultDisplayPlaceholder;
@@ -121,11 +166,19 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        patientDetailPanel = new PatientDetailPanel(logic.getPatientList());
+        patientDetailPanel = new PatientDetailPanel(logic.getPatientList(), PATIENT_PLACEHOLDER);
         patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
-        patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), patientDetailPanel::show);
+        patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), logic.getPatientList(),
+                patientDetailPanel::show, this::focusViewTabs);
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
+
+        appointmentDetailPanel = new PatientDetailPanel(logic.getPatientList(), APPOINTMENT_PLACEHOLDER);
+        appointmentDetailPanelPlaceholder.getChildren().add(appointmentDetailPanel.getRoot());
+
+        appointmentListPanel = new AppointmentListPanel(logic.getAppointmentList(), this::showAppointmentDetails,
+                this::focusViewTabs);
+        appointmentListPanelPlaceholder.getChildren().add(appointmentListPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -133,35 +186,131 @@ public class MainWindow extends UiPart<Stage> {
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        commandBox = new CommandBox(this::executeCommand, logic::getCompletions, () -> moveFocus(true));
+        commandBox = new CommandBox(this::executeCommand, logic::getCompletions, this::focusViewList);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
 
         // The window sees these keys before the focused part does, so it can move the focus away from it.
         getRoot().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
         getRoot().addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
+
+        viewTabs.addEventFilter(KeyEvent.KEY_PRESSED, this::handleTabKeyPressed);
+        shareWidth(patientView, patientListPanelPlaceholder);
+        shareWidth(appointmentView, appointmentListPanelPlaceholder);
+        showView(View.PATIENTS);
+
+        clock = new MinuteClock(this::handleMinuteChanged);
+        clock.start();
     }
 
     /**
-     * Handles the keys that move the focus or show all patients. In the command box, only Shift+Tab is handled
-     * here, because the command box uses the other keys itself.
+     * Shows the views again as of now if, since {@code previousMinute}, an appointment has passed or a new day has
+     * begun. The lists and details decide what has passed, and what is today, only when they are drawn, so without
+     * this they would go out of date while the window is left open.
+     */
+    private void handleMinuteChanged(LocalDateTime previousMinute, LocalDateTime minute) {
+        if (!AppointmentFormatter.hasChangedBetween(logic.getAppointmentList(), previousMinute, minute)) {
+            return;
+        }
+        logger.fine("Refreshing the views at " + minute + ", as an appointment has passed or a new day has begun");
+        patientListPanel.refresh();
+        patientDetailPanel.refresh();
+        appointmentListPanel.refresh();
+        appointmentDetailPanel.refresh();
+    }
+
+    /**
+     * Shows {@code view} and hides the other view. Each view keeps its state while it is hidden.
+     */
+    private void showView(View view) {
+        // A hidden part must not keep the focus, or the keys would go to it unseen
+        boolean isFocusInHiddenView = view == View.PATIENTS
+                ? appointmentListPanel.isFocused() || appointmentDetailPanel.isFocused()
+                : patientListPanel.isFocused() || patientDetailPanel.isFocused();
+        // A click on a tab takes no focus, so the focus moves with the view here
+        boolean isFocusOnTabs = patientsTab.isFocused() || appointmentsTab.isFocused();
+        shownView = view;
+        setShown(patientView, view == View.PATIENTS);
+        setShown(appointmentView, view == View.APPOINTMENTS);
+        patientsTab.pseudoClassStateChanged(SELECTED, view == View.PATIENTS);
+        appointmentsTab.pseudoClassStateChanged(SELECTED, view == View.APPOINTMENTS);
+        commandBox.setPromptText(view == View.PATIENTS ? PATIENT_PROMPT : APPOINTMENT_PROMPT);
+        if (isFocusInHiddenView || isFocusOnTabs) {
+            getTab(view).requestFocus();
+        }
+    }
+
+    @FXML
+    private void handlePatientsTab() {
+        showView(View.PATIENTS);
+    }
+
+    @FXML
+    private void handleAppointmentsTab() {
+        showView(View.APPOINTMENTS);
+    }
+
+    /**
+     * Handles the arrow keys while the focus is on a tab. Left and Right switch the view and keep the focus on
+     * the tab shown. Down moves the focus to the list below the tabs. Up does nothing, so that the focus stays
+     * on the tabs.
+     */
+    private void handleTabKeyPressed(KeyEvent event) {
+        if (event.isShiftDown() || event.isControlDown() || event.isAltDown() || event.isMetaDown()) {
+            return;
+        }
+        switch (event.getCode()) {
+            case LEFT, KP_LEFT -> showView(View.PATIENTS);
+            case RIGHT, KP_RIGHT -> showView(View.APPOINTMENTS);
+            case DOWN, KP_DOWN -> requestFocus(FocusArea.LIST);
+            case UP, KP_UP -> {
+                // Consumed below, so that JavaFX does not move the focus to another part of the window
+            }
+            default -> {
+                return;
+            }
+        }
+        event.consume();
+    }
+
+    private Button getTab(View view) {
+        return view == View.PATIENTS ? patientsTab : appointmentsTab;
+    }
+
+    private void showAppointmentDetails(Optional<PatientAppointment> appointment) {
+        appointment.ifPresentOrElse(entry -> appointmentDetailPanel.show(entry.getPatient().getId(),
+                Optional.of(entry.getAppointment())), appointmentDetailPanel::clear);
+    }
+
+    /**
+     * Handles the keys that move the focus, reset the view or scroll the details. In the command box, only
+     * Shift+Tab is handled here, because the command box uses the other keys itself, such as Tab to complete
+     * an ID.
      */
     private void handleKeyPressed(KeyEvent event) {
         boolean isShortcutDown = event.isControlDown() || event.isAltDown() || event.isMetaDown();
         Optional<BrowseKeys.Action> action = BrowseKeys.actionFor(event.getCode(), event.isShiftDown(),
                 isShortcutDown);
-        if (action.isEmpty()
-                || commandBox.isFocused() && action.get() != BrowseKeys.Action.FOCUS_PREVIOUS_AREA) {
+        boolean isIgnored = action.equals(Optional.of(BrowseKeys.Action.IGNORE));
+        if (action.isEmpty() || commandBox.isFocused() && !isIgnored) {
             return;
         }
 
         switch (action.get()) {
             case RETURN_TO_COMMAND_BOX -> commandBox.requestFocus();
-            case SHOW_ALL_PATIENTS -> showAllPatients();
-            case FOCUS_NEXT_AREA -> moveFocus(true);
-            case FOCUS_PREVIOUS_AREA -> moveFocus(false);
+            case RESET_VIEW -> resetView();
+            case SWITCH_AREA -> switchFocusArea();
+            case SCROLL_DETAILS_UP -> getShownDetailPanel().scroll(-1);
+            case SCROLL_DETAILS_DOWN -> getShownDetailPanel().scroll(1);
+            case IGNORE -> {
+                // Consumed below, so that JavaFX does not move the focus on its own
+            }
             default -> throw new AssertionError("Unknown action: " + action.get());
         }
         event.consume();
+    }
+
+    private PatientDetailPanel getShownDetailPanel() {
+        return shownView == View.PATIENTS ? patientDetailPanel : appointmentDetailPanel;
     }
 
     /**
@@ -177,9 +326,14 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Shows all patients, as the {@code list} command does.
+     * Resets the current view: shows all patients, as the {@code list} command does, or goes back from the
+     * appointments of a range to the weekly view, and from the weekly view to this week.
      */
-    private void showAllPatients() {
+    private void resetView() {
+        if (shownView == View.APPOINTMENTS) {
+            appointmentListPanel.reset();
+            return;
+        }
         try {
             executeCommand(ListCommand.COMMAND_WORD);
         } catch (CommandException | ParseException e) {
@@ -189,33 +343,47 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Moves the focus to the next area that can take it, or to the previous one if {@code isForward} is false.
-     * An empty patient list, and the details when no patient is shown, are skipped.
+     * Moves the focus from the command box to the list of the view that is shown, as Esc does there, or to
+     * the tabs if the list is empty.
      */
-    private void moveFocus(boolean isForward) {
-        // The menu bar and the result display are not areas, so going forward from them starts at the command box
-        FocusArea area = getFocusedArea().orElse(FocusArea.PATIENT_DETAILS);
-        for (int i = 0; i < FocusArea.values().length; i++) {
-            area = isForward ? area.next() : area.previous();
-            if (requestFocus(area)) {
-                return;
-            }
+    private void focusViewList() {
+        if (!requestFocus(FocusArea.LIST)) {
+            requestFocus(FocusArea.VIEW_TABS);
+        }
+    }
+
+    /**
+     * Moves the focus to the tab of the view that is shown, as Up does at the top of a list.
+     */
+    private void focusViewTabs() {
+        requestFocus(FocusArea.VIEW_TABS);
+    }
+
+    /**
+     * Moves the focus between the tabs and the list of the view, as Tab does. If the list is empty, the focus
+     * stays on the tabs.
+     */
+    private void switchFocusArea() {
+        // The menu bar, the result display and the details are not areas, so Tab from them goes to the list
+        FocusArea area = getFocusedArea().orElse(FocusArea.VIEW_TABS).afterTab();
+        if (!requestFocus(area)) {
+            requestFocus(FocusArea.VIEW_TABS);
         }
     }
 
     private Optional<FocusArea> getFocusedArea() {
         if (commandBox.isFocused()) {
             return Optional.of(FocusArea.COMMAND_BOX);
-        } else if (patientListPanel.isFocused()) {
-            return Optional.of(FocusArea.PATIENT_LIST);
-        } else if (patientDetailPanel.isFocused()) {
-            return Optional.of(FocusArea.PATIENT_DETAILS);
+        } else if (patientsTab.isFocused() || appointmentsTab.isFocused()) {
+            return Optional.of(FocusArea.VIEW_TABS);
+        } else if (shownView == View.PATIENTS ? patientListPanel.isFocused() : appointmentListPanel.isFocused()) {
+            return Optional.of(FocusArea.LIST);
         }
         return Optional.empty();
     }
 
     /**
-     * Moves the focus to {@code area}, and returns true if it took the focus.
+     * Moves the focus to {@code area} of the view that is shown, and returns true if it took the focus.
      */
     private boolean requestFocus(FocusArea area) {
         return switch (area) {
@@ -223,8 +391,11 @@ public class MainWindow extends UiPart<Stage> {
                 commandBox.requestFocus();
                 yield true;
             }
-            case PATIENT_LIST -> requestFocusOnPatientList();
-            case PATIENT_DETAILS -> patientDetailPanel.requestFocus();
+            case VIEW_TABS -> {
+                getTab(shownView).requestFocus();
+                yield true;
+            }
+            case LIST -> shownView == View.PATIENTS ? requestFocusOnPatientList() : requestFocusOnAppointmentList();
         };
     }
 
@@ -238,6 +409,31 @@ public class MainWindow extends UiPart<Stage> {
         }
         patientListPanel.selectFirstIfNoneSelected().ifPresent(patientDetailPanel::show);
         return true;
+    }
+
+    /**
+     * Moves the focus to the appointment list. If no appointment is selected, selects the one to start from,
+     * which also shows its patient's details.
+     */
+    private boolean requestFocusOnAppointmentList() {
+        appointmentListPanel.requestFocus();
+        appointmentListPanel.selectDefaultIfNoneSelected();
+        return true;
+    }
+
+    /**
+     * Makes {@code list} take {@link #LIST_SHARE} of the room in {@code view}, so that the list and the details
+     * beside it grow and shrink together as the window is resized. The minimum widths of both still hold.
+     */
+    private static void shareWidth(HBox view, Region list) {
+        list.prefWidthProperty().bind(view.widthProperty()
+                .subtract(view.getPadding().getLeft() + view.getPadding().getRight() + view.getSpacing())
+                .multiply(LIST_SHARE));
+    }
+
+    private static void setShown(Node node, boolean isShown) {
+        node.setVisible(isShown);
+        node.setManaged(isShown);
     }
 
     /**
@@ -276,6 +472,7 @@ public class MainWindow extends UiPart<Stage> {
         GuiSettings guiSettings = new GuiSettings(primaryStage.getWidth(), primaryStage.getHeight(),
                 (int) primaryStage.getX(), (int) primaryStage.getY());
         logic.setGuiSettings(guiSettings);
+        clock.stop();
         helpWindow.hide();
         primaryStage.hide();
     }
@@ -294,6 +491,9 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+
+            commandResult.getView().ifPresent(this::showView);
+            commandResult.getAppointmentRange().ifPresent(appointmentListPanel::showRange);
 
             commandResult.getPatientToView().ifPresent(patientDetailPanel::show);
             // Removing or filtering rows can move the list's selection to another patient, so match it to the panel.

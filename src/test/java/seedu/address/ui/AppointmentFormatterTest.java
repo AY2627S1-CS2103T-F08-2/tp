@@ -6,10 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
+import seedu.address.testutil.PatientBuilder;
 
 public class AppointmentFormatterTest {
 
@@ -58,15 +64,93 @@ public class AppointmentFormatterTest {
     }
 
     @Test
-    public void formatFull_variousDays_showsFullDateAndTag() {
-        assertEquals("Mon 12 Oct 2026, 09:30 (today)",
-                AppointmentFormatter.formatFull(new Appointment("2026-10-12 09:30"), TODAY));
-        assertEquals("Tue 13 Oct 2026, no time set (tomorrow)",
-                AppointmentFormatter.formatFull(new Appointment("2026-10-13"), TODAY));
-        assertEquals("Mon 5 Oct 2026, 08:00 (past)",
-                AppointmentFormatter.formatFull(new Appointment("2026-10-05 08:00"), TODAY));
-        assertEquals("Mon 30 Nov 2026, no time set",
-                AppointmentFormatter.formatFull(new Appointment("2026-11-30"), TODAY));
+    public void formatTime_withAndWithoutTime() {
+        assertEquals("09:30", AppointmentFormatter.formatTime(new Appointment("2026-10-12 09:30")));
+        assertEquals("00:00", AppointmentFormatter.formatTime(new Appointment("2026-10-12 00:00")));
+        // figure dashes, as wide as digits
+        assertEquals("\u2012\u2012:\u2012\u2012", AppointmentFormatter.formatTime(new Appointment("2026-10-12")));
+    }
+
+    @Test
+    public void formatDetailTime_withAndWithoutTime() {
+        assertEquals("09:30", AppointmentFormatter.formatDetailTime(new Appointment("2026-10-12 09:30")));
+        assertEquals("No time specified", AppointmentFormatter.formatDetailTime(new Appointment("2026-10-12")));
+    }
+
+    @Test
+    public void findFirstNotPassed_skipsPassedAppointments() {
+        List<Appointment> appointments = List.of(new Appointment("2026-10-13 08:00"),
+                new Appointment("2026-10-12 09:00"), new Appointment("2026-10-11"));
+        // at 10:00, today's 09:00 has passed, so the next is tomorrow's
+        assertEquals(Optional.of(new Appointment("2026-10-13 08:00")),
+                AppointmentFormatter.findFirstNotPassed(appointments, LocalDateTime.of(2026, 10, 12, 10, 0)));
+        assertEquals(Optional.of(new Appointment("2026-10-12 09:00")),
+                AppointmentFormatter.findFirstNotPassed(appointments, LocalDateTime.of(2026, 10, 12, 8, 0)));
+        assertEquals(Optional.empty(),
+                AppointmentFormatter.findFirstNotPassed(appointments, LocalDateTime.of(2026, 10, 13, 9, 0)));
+    }
+
+    @Test
+    public void findFirstNotPassed_todayWithoutTime_comesFirst() {
+        List<Appointment> appointments = List.of(new Appointment("2026-10-12 14:00"),
+                new Appointment("2026-10-12"), new Appointment("2026-10-12 09:00"));
+        assertEquals(Optional.of(new Appointment("2026-10-12")),
+                AppointmentFormatter.findFirstNotPassed(appointments, LocalDateTime.of(2026, 10, 12, 10, 0)));
+    }
+
+    @Test
+    public void hasPassed_earlierDayOrEarlierToday_returnsTrue() {
+        LocalDateTime now = LocalDateTime.of(2026, 10, 12, 13, 45, 30);
+        assertTrue(AppointmentFormatter.hasPassed(new Appointment("2026-10-11"), now));
+        assertTrue(AppointmentFormatter.hasPassed(new Appointment("2026-10-11 23:59"), now));
+        assertTrue(AppointmentFormatter.hasPassed(new Appointment("2026-10-12 09:30"), now));
+        assertTrue(AppointmentFormatter.hasPassed(new Appointment("2026-10-12 13:44"), now));
+    }
+
+    @Test
+    public void hasPassed_laterOrTodayWithoutTime_returnsFalse() {
+        LocalDateTime now = LocalDateTime.of(2026, 10, 12, 13, 45, 30);
+        // an appointment in the current minute, or today with no time, has not passed yet
+        assertFalse(AppointmentFormatter.hasPassed(new Appointment("2026-10-12 13:45"), now));
+        assertFalse(AppointmentFormatter.hasPassed(new Appointment("2026-10-12"), now));
+        assertFalse(AppointmentFormatter.hasPassed(new Appointment("2026-10-12 14:00"), now));
+        assertFalse(AppointmentFormatter.hasPassed(new Appointment("2026-10-13 08:00"), now));
+    }
+
+    @Test
+    public void formatDetailDate_variousDays() {
+        assertEquals("Today", AppointmentFormatter.formatDetailDate(TODAY, TODAY));
+        assertEquals("Tomorrow", AppointmentFormatter.formatDetailDate(TODAY.plusDays(1), TODAY));
+        // unlike formatShort, a day within the week still shows its date
+        assertEquals("Wed 14 Oct", AppointmentFormatter.formatDetailDate(TODAY.plusDays(2), TODAY));
+        assertEquals("Sun 11 Oct", AppointmentFormatter.formatDetailDate(TODAY.minusDays(1), TODAY));
+        assertEquals("Mon 2 Nov", AppointmentFormatter.formatDetailDate(LocalDate.of(2026, 11, 2), TODAY));
+        assertEquals("Mon 4 Jan 2027", AppointmentFormatter.formatDetailDate(LocalDate.of(2027, 1, 4), TODAY));
+        assertEquals("Wed 31 Dec 2025", AppointmentFormatter.formatDetailDate(LocalDate.of(2025, 12, 31), TODAY));
+    }
+
+    @Test
+    public void formatDayHeading_variousDays() {
+        assertEquals("Today · Mon 12 Oct", AppointmentFormatter.formatDayHeading(TODAY, TODAY));
+        assertEquals("Tomorrow · Tue 13 Oct", AppointmentFormatter.formatDayHeading(TODAY.plusDays(1), TODAY));
+        assertEquals("Wed 14 Oct", AppointmentFormatter.formatDayHeading(TODAY.plusDays(2), TODAY));
+        assertEquals("Sun 11 Oct · past", AppointmentFormatter.formatDayHeading(TODAY.minusDays(1), TODAY));
+        assertEquals("Fri 1 Jan 2027", AppointmentFormatter.formatDayHeading(LocalDate.of(2027, 1, 1), TODAY));
+        assertEquals("Wed 31 Dec 2025 · past",
+                AppointmentFormatter.formatDayHeading(LocalDate.of(2025, 12, 31), TODAY));
+    }
+
+    @Test
+    public void formatRange_variousRanges() {
+        LocalDate friday = LocalDate.of(2026, 10, 16);
+        assertEquals("Fri 16 Oct 2026", AppointmentFormatter.formatRange(friday, friday));
+        assertEquals("Thu 1 Oct – Sat 31 Oct 2026",
+                AppointmentFormatter.formatRange(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)));
+        assertEquals("Mon 28 Dec 2026 – Fri 1 Jan 2027",
+                AppointmentFormatter.formatRange(LocalDate.of(2026, 12, 28), LocalDate.of(2027, 1, 1)));
+        assertEquals("From Fri 16 Oct 2026", AppointmentFormatter.formatRange(friday, LocalDate.MAX));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatRange(null, friday));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatRange(friday, null));
     }
 
     @Test
@@ -89,7 +173,45 @@ public class AppointmentFormatterTest {
         Appointment appointment = new Appointment("2026-10-12");
         assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatShort(null, TODAY));
         assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatShort(appointment, null));
-        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatFull(null, TODAY));
-        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatFull(appointment, null));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatTime(null));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDetailDate(null, TODAY));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDetailDate(TODAY, null));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDayHeading(null, TODAY));
+        assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDayHeading(TODAY, null));
+    }
+
+    @Test
+    public void hasChangedBetween_appointmentPassed_returnsTrue() {
+        List<PatientAppointment> appointments = appointmentsOf("2026-10-12 10:00", "2026-10-13");
+        // 10:00 passes once the clock reaches 10:01
+        assertTrue(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 10, 0), LocalDateTime.of(2026, 10, 12, 10, 1)));
+        // after hours away, as after the computer sleeps
+        assertTrue(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 8, 0), LocalDateTime.of(2026, 10, 12, 15, 0)));
+    }
+
+    @Test
+    public void hasChangedBetween_newDay_returnsTrue() {
+        // no appointment passes at midnight, but "today" moves on
+        assertTrue(AppointmentFormatter.hasChangedBetween(List.of(),
+                LocalDateTime.of(2026, 10, 12, 23, 59), LocalDateTime.of(2026, 10, 13, 0, 0)));
+    }
+
+    @Test
+    public void hasChangedBetween_nothingPassed_returnsFalse() {
+        List<PatientAppointment> appointments = appointmentsOf("2026-10-12 10:00", "2026-10-12");
+        assertFalse(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 9, 58), LocalDateTime.of(2026, 10, 12, 9, 59)));
+        // 10:00 has not passed during 10:00
+        assertFalse(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 9, 59), LocalDateTime.of(2026, 10, 12, 10, 0)));
+    }
+
+    private static List<PatientAppointment> appointmentsOf(String... appointments) {
+        Patient patient = new PatientBuilder().withAppointments(appointments).build();
+        return patient.getSchedule().asList().stream()
+                .map(appointment -> new PatientAppointment(patient, appointment))
+                .toList();
     }
 }

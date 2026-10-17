@@ -1,3 +1,13 @@
+/*
+ * Two highlight colours, each with one meaning. Orange marks urgency: today. A lightened NUS blue marks
+ * selection: the keyboard focus, and the selected tab, row and appointment. NUS blue itself is too dark to see
+ * on the dark greys.
+ */
+.root {
+    -lainurse-urgent: #f7b26a;
+    -lainurse-selection: #466e97;
+}
+
 .background {
     -fx-background-color: derive(#1d1d1d, 20%);
     background-color: #383838; /* Used in the default.html file */
@@ -98,7 +108,7 @@
 /* A border shows which part has the keyboard focus. The width is always 1, so the layout does not move. */
 .list-view:focused,
 .patient-detail .scroll-pane:focused {
-    -fx-border-color: #8fbcb1;
+    -fx-border-color: -lainurse-selection;
     -fx-border-width: 1;
 }
 
@@ -115,9 +125,9 @@
     -fx-background-insets: 0, 0 0 1 0;
 }
 
-/* The selected row gets a muted accent strip on its left. */
+/* The selected row gets a strip on its left. */
 .list-cell:filled:selected {
-    -fx-background-color: #4a5054, #8fbcb1, #424d5f;
+    -fx-background-color: #4a5054, -lainurse-selection, #4d4f51;
     -fx-background-insets: 0, 0 0 1 0, 0 0 1 3;
 }
 
@@ -151,10 +161,11 @@
     -fx-background-color: derive(#1d1d1d, 30%);
 }
 
+/* AB3's thin "Segoe UI Light" blurs on screen, so the text outside the views uses "Segoe UI" in whole pixels. */
 .result-display {
     -fx-background-color: transparent;
-    -fx-font-family: "Segoe UI Light";
-    -fx-font-size: 13pt;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 15px;
     -fx-text-fill: white;
 }
 
@@ -163,7 +174,8 @@
 }
 
 .status-bar .label {
-    -fx-font-family: "Segoe UI Light";
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
     -fx-text-fill: white;
     -fx-padding: 4px;
     -fx-pref-height: 30px;
@@ -202,10 +214,10 @@
 }
 
 .menu-bar .label {
-    -fx-font-size: 14pt;
-    -fx-font-family: "Segoe UI Light";
+    -fx-font-size: 14px;
+    -fx-font-family: "Segoe UI";
     -fx-text-fill: white;
-    -fx-opacity: 0.9;
+    -fx-opacity: 1;
 }
 
 .menu .left-container {
@@ -312,7 +324,7 @@
     -fx-padding: 8 1 8 1;
 }
 
-#cardPane {
+#rowPane {
     -fx-background-color: transparent;
     -fx-border-width: 0;
 }
@@ -328,8 +340,8 @@
     -fx-border-color: #383838 #383838 #6d6d6d #383838;
     -fx-border-insets: 0;
     -fx-border-width: 1;
-    -fx-font-family: "Segoe UI Light";
-    -fx-font-size: 13pt;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 16px;
     -fx-text-fill: #9e9e9e;
 }
 
@@ -366,7 +378,7 @@
 .list-cell .patient-row-index {
     -fx-font-family: "Segoe UI";
     -fx-font-size: 13px;
-    -fx-text-fill: #8f999e;
+    -fx-text-fill: #a3adb2;
 }
 
 .list-cell .patient-row-name {
@@ -388,7 +400,7 @@
 }
 
 .list-cell .patient-row-appointment-today {
-    -fx-text-fill: #8fbcb1;
+    -fx-text-fill: -lainurse-urgent;
 }
 
 /* Patient details. Each selector names .patient-detail to win over ".patient-detail .label" below. */
@@ -414,7 +426,7 @@
 
 .patient-detail .patient-detail-placeholder {
     -fx-padding: 20 22 20 22;
-    -fx-text-fill: #8f999e;
+    -fx-text-fill: #a3adb2;
 }
 
 .patient-detail .patient-detail-name {
@@ -429,9 +441,278 @@
 }
 
 .patient-detail .patient-detail-key {
-    -fx-text-fill: #8f999e;
+    -fx-text-fill: #a3adb2;
 }
 
 .patient-detail .patient-detail-value-empty {
-    -fx-text-fill: #8f999e;
+    -fx-text-fill: #a3adb2;
+}
+
+/* Keys, notes and dimmed text use #a3adb2, which has a 4.5:1 contrast on the panels. */
+
+/* View tabs. One view shows at a time; the selected tab joins the panel below it. */
+.view-tabs {
+    -fx-background-color: #383838;
+    -fx-min-height: 40px;
+    -fx-pref-height: 40px;
+}
+
+/* Each property that the Metro button style above sets is set again here. */
+.view-tabs .view-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 2 1 1 1;
+    -fx-border-style: solid;
+    -fx-border-insets: 0;
+    -fx-border-radius: 0;
+    -fx-padding: 0 18 0 18;
+    -fx-pref-height: 40px;
+    -fx-graphic-text-gap: 8;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-text-fill: #a3adb2;
+}
+
+.view-tabs .view-tab:hover {
+    -fx-background-color: #3f3f3f;
+}
+
+.view-tabs .view-tab:selected,
+.view-tabs .view-tab:selected:hover,
+.view-tabs .view-tab:pressed {
+    -fx-background-color: derive(#1d1d1d, 20%);
+    -fx-border-color: -lainurse-selection transparent transparent transparent;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-text-fill: #e6eaec;
+}
+
+/* A tab with the keyboard focus gets a thin outline, as the focused list does. */
+.view-tabs .view-tab:focused {
+    -fx-border-color: -lainurse-selection;
+}
+
+.view-tabs .view-tab-icon {
+    -fx-fill: transparent;
+    -fx-stroke: #a3adb2;
+    -fx-stroke-width: 1.5;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.view-tabs .view-tab:selected .view-tab-icon {
+    -fx-stroke: #e6eaec;
+}
+
+/*
+ * The patient and appointment lists share a header: what the list shows, a note such as a hint for Esc, and
+ * a count. The header keeps the height of the week's arrow buttons, also where it has none.
+ */
+.list-panel {
+    -fx-background-color: #3c3e3f;
+}
+
+.list-header {
+    -fx-background-color: #2f3132;
+    -fx-border-color: transparent transparent #4a5054 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 43px;
+}
+
+/* The arrow buttons of the week header. They take no focus. */
+.nav-arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-border-color: #5a5f62;
+    -fx-border-width: 1;
+    -fx-border-style: solid;
+    -fx-border-insets: 0;
+    -fx-border-radius: 4;
+    -fx-padding: 0;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+}
+
+.nav-arrow-button:hover {
+    -fx-background-color: #3a3d3f;
+}
+
+.nav-arrow-button:pressed {
+    -fx-background-color: #4a5054;
+}
+
+.nav-arrow-button .nav-arrow-icon {
+    -fx-fill: transparent;
+    -fx-stroke: #d5dadc;
+    -fx-stroke-width: 1.75;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.list-header .label {
+    -fx-opacity: 1;
+}
+
+.list-header .list-header-title {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 15px;
+    -fx-text-fill: #e6eaec;
+}
+
+.list-header .list-header-note {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-text-fill: #b5bcc0;
+}
+
+.list-header .list-header-note-this {
+    -fx-text-fill: -lainurse-urgent;
+}
+
+.list-view .list-placeholder {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-text-fill: #a3adb2;
+    -fx-opacity: 1;
+}
+
+/*
+ * The count sits in a slot of fixed width, as wide as "999 appointments", with its text at the left. Its text then
+ * starts in the same place whatever its length, so it does not move as the week or the filter changes. In a list
+ * too narrow for the whole header, the slot may shrink, so that the header still fits.
+ */
+.list-header .list-header-count {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #a3adb2;
+    -fx-min-width: 0;
+    -fx-pref-width: 100px;
+    -fx-alignment: center-left;
+}
+
+/* A day's heading is darker than the appointments under it, and is never selected. */
+.list-cell.appointment-day-cell:filled:even,
+.list-cell.appointment-day-cell:filled:odd {
+    -fx-background-color: #4a5054, #343637;
+    -fx-background-insets: 0, 0 0 1 0;
+}
+
+.appointment-day-box {
+    -fx-padding: 10 22 7 14;
+}
+
+.appointment-entry-box {
+    -fx-padding: 9 22 9 14;
+}
+
+.list-cell .appointment-day {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 13px;
+    -fx-text-fill: #d5dadc;
+}
+
+.list-cell .appointment-day-today {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 13px;
+    -fx-text-fill: -lainurse-urgent;
+}
+
+.list-cell .appointment-day-count,
+.list-cell .appointment-entry-number {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #a3adb2;
+}
+
+.list-cell .appointment-entry-number {
+    -fx-font-size: 13px;
+}
+
+.list-cell .appointment-entry-time,
+.list-cell .appointment-entry-name {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 14px;
+    -fx-text-fill: #e6eaec;
+}
+
+/* The same font as a time, so that the placeholder is as wide as one. */
+.list-cell .appointment-entry-no-time {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 14px;
+    -fx-text-fill: #a3adb2;
+}
+
+/* An appointment that has passed is greyed out. A selected one is less so, to stay readable on its row. */
+.list-cell .appointment-entry-passed .label {
+    -fx-text-fill: #a3adb2;
+}
+
+.list-cell:filled:selected .appointment-entry-passed .label {
+    -fx-text-fill: #bcc3c7;
+}
+
+.list-cell .appointment-entry-id {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #b5bcc0;
+}
+
+/* Appointments in the patient details: every upcoming one, then the latest past ones, dimmed. */
+.patient-detail .detail-section-header,
+.patient-detail .detail-past-header {
+    -fx-border-color: transparent transparent #4a5054 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 8 0;
+}
+
+.patient-detail .detail-past-header {
+    -fx-padding: 18 0 8 0;
+}
+
+.patient-detail .detail-section-title {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 16px;
+    -fx-text-fill: #e6eaec;
+}
+
+.patient-detail .detail-past-title {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 14px;
+    -fx-text-fill: #a3adb2;
+}
+
+.patient-detail .detail-section-note {
+    -fx-font-size: 13px;
+    -fx-text-fill: #a3adb2;
+}
+
+.patient-detail .detail-appointment-row {
+    -fx-padding: 9 10 9 10;
+    -fx-border-color: transparent transparent #4a5054 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.patient-detail .detail-appointment-no-time,
+.patient-detail .detail-appointment-past .label {
+    -fx-text-fill: #a3adb2;
+}
+
+.patient-detail .detail-appointment-today .label {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-text-fill: -lainurse-urgent;
+}
+
+/* The appointment selected in the appointment view, marked as the list marks its selected row. */
+.patient-detail .detail-appointment-marked {
+    -fx-background-color: -lainurse-selection, #4d4f51;
+    -fx-background-insets: 0, 0 0 0 3;
+}
+
+/* Orange text means urgency, so the mark keeps the row's own colours, such as the orange of today. */
+.patient-detail .detail-appointment-marked .label {
+    -fx-font-family: "Segoe UI Semibold";
 }

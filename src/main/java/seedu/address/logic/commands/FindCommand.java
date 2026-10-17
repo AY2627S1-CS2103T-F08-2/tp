@@ -7,6 +7,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
+import java.util.Optional;
+
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
@@ -43,6 +45,11 @@ public class FindCommand extends Command {
         model.updateFilteredPatientList(predicate);
         return new CommandResult(
                 String.format(Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW, model.getFilteredPatientList().size()));
+    }
+
+    @Override
+    public Optional<CommandResult.View> getView() {
+        return Optional.of(CommandResult.View.PATIENTS);
     }
 
     @Override

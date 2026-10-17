@@ -21,14 +21,15 @@ import seedu.address.model.Model;
 import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 
 /**
- * Views patients with appointments on a date, or between two dates (inclusive).
+ * Views the appointments on a date, or between two dates (inclusive), in the appointment view, and lists the
+ * patients who have one.
  */
 public class ViewAppointmentCommand extends Command {
 
     public static final String COMMAND_WORD = "viewappt";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Views patients with appointments on a date, "
-            + "or between two dates (inclusive).\n"
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Shows the appointments on a date, "
+            + "or between two dates (inclusive), in the appointment view, and lists the patients who have one.\n"
             + "Parameters: DATE, or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE] "
             + "(dates in yyyy-MM-dd)\n"
             + "Give a DATE, or at least one of " + PREFIX_FROM + "and " + PREFIX_TO.getPrefix().trim() + ". "
@@ -83,13 +84,21 @@ public class ViewAppointmentCommand extends Command {
 
         model.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(start, end));
         int count = model.getFilteredPatientList().size();
+        String message;
         if (endDate.isEmpty()) {
-            return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW, count, start));
+            message = String.format(MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW, count, start);
+        } else if (start.equals(end)) {
+            message = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, count, start);
+        } else {
+            message = String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, count, start, end);
         }
-        if (start.equals(end)) {
-            return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, count, start));
-        }
-        return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, count, start, end));
+        // The appointment view shows the appointments in the range on one page
+        return new CommandResult(message, new CommandResult.AppointmentRange(start, end));
+    }
+
+    @Override
+    public Optional<CommandResult.View> getView() {
+        return Optional.of(CommandResult.View.APPOINTMENTS);
     }
 
     @Override

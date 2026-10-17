@@ -1,26 +1,31 @@
 package seedu.address.ui;
 
 /**
- * The parts of the main window that the keyboard focus moves between with Tab, in Tab order.
+ * The parts of the main window that the keyboard focus moves between. In the view, Tab and Up and Down move
+ * between the view tabs and the list. The list is that of the view that is shown: patients or appointments.
+ * In the command box, Tab completes a patient ID instead. The details beside the list are not among these parts.
  */
 public enum FocusArea {
     COMMAND_BOX,
-    PATIENT_LIST,
-    PATIENT_DETAILS;
+    VIEW_TABS,
+    LIST;
 
     /**
-     * Returns the area after this one, which Tab moves the focus to. The last area is followed by the first.
+     * Returns true for the parts of the view: the view tabs and the list.
      */
-    public FocusArea next() {
-        FocusArea[] areas = values();
-        return areas[(ordinal() + 1) % areas.length];
+    public boolean isInView() {
+        return this != COMMAND_BOX;
     }
 
     /**
-     * Returns the area before this one, which Shift+Tab moves the focus to. The first area is preceded by the last.
+     * Returns the area that Tab moves the focus to from this area: from the view tabs to the list, and back.
+     * The command box keeps the focus, as Tab completes a patient ID there.
      */
-    public FocusArea previous() {
-        FocusArea[] areas = values();
-        return areas[(ordinal() + areas.length - 1) % areas.length];
+    public FocusArea afterTab() {
+        return switch (this) {
+            case VIEW_TABS -> LIST;
+            case LIST -> VIEW_TABS;
+            case COMMAND_BOX -> COMMAND_BOX;
+        };
     }
 }

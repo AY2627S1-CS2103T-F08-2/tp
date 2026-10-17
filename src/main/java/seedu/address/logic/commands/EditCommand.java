@@ -116,6 +116,11 @@ public class EditCommand extends Command {
     }
 
     @Override
+    public Optional<CommandResult.View> getView() {
+        return Optional.of(CommandResult.View.PATIENTS);
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (other == this) {
             return true;

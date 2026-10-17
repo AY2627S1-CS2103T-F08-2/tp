@@ -1,29 +1,36 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 public class FocusAreaTest {
 
     @Test
-    public void next_eachArea_followsTabOrderAndWraps() {
-        assertEquals(FocusArea.PATIENT_LIST, FocusArea.COMMAND_BOX.next());
-        assertEquals(FocusArea.PATIENT_DETAILS, FocusArea.PATIENT_LIST.next());
-        assertEquals(FocusArea.COMMAND_BOX, FocusArea.PATIENT_DETAILS.next());
+    public void isInView_onlyTabsAndList() {
+        assertFalse(FocusArea.COMMAND_BOX.isInView());
+        assertTrue(FocusArea.VIEW_TABS.isInView());
+        assertTrue(FocusArea.LIST.isInView());
     }
 
     @Test
-    public void previous_eachArea_reversesTabOrderAndWraps() {
-        assertEquals(FocusArea.PATIENT_DETAILS, FocusArea.COMMAND_BOX.previous());
-        assertEquals(FocusArea.COMMAND_BOX, FocusArea.PATIENT_LIST.previous());
-        assertEquals(FocusArea.PATIENT_LIST, FocusArea.PATIENT_DETAILS.previous());
+    public void afterTab_inView_movesBetweenTabsAndList() {
+        assertEquals(FocusArea.LIST, FocusArea.VIEW_TABS.afterTab());
+        assertEquals(FocusArea.VIEW_TABS, FocusArea.LIST.afterTab());
     }
 
     @Test
-    public void nextThenPrevious_eachArea_returnsSameArea() {
+    public void afterTab_commandBox_staysInCommandBox() {
+        // Tab completes a patient ID in the command box, so it never moves the focus from there
+        assertEquals(FocusArea.COMMAND_BOX, FocusArea.COMMAND_BOX.afterTab());
+    }
+
+    @Test
+    public void afterTab_twice_returnsToStart() {
         for (FocusArea area : FocusArea.values()) {
-            assertEquals(area, area.next().previous());
+            assertEquals(area, area.afterTab().afterTab());
         }
     }
 }
