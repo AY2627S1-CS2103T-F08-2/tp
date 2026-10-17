@@ -15,6 +15,7 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
@@ -42,6 +43,8 @@ public class MainWindow extends UiPart<Stage> {
             "To see a patient's details here, select one of their appointments.";
     private static final String PATIENT_PROMPT = "Type a command, or press Esc to browse patients";
     private static final String APPOINTMENT_PROMPT = "Type a command, or press Esc to browse appointments";
+    /** The share of a view's width that its list takes. The details beside it take the rest. */
+    private static final double LIST_SHARE = 0.45;
 
     private final Logger logger = LogsCenter.getLogger(getClass());
 
@@ -191,6 +194,8 @@ public class MainWindow extends UiPart<Stage> {
         getRoot().addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
 
         viewTabs.addEventFilter(KeyEvent.KEY_PRESSED, this::handleTabKeyPressed);
+        shareWidth(patientView, patientListPanelPlaceholder);
+        shareWidth(appointmentView, appointmentListPanelPlaceholder);
         showView(View.PATIENTS);
 
         clock = new MinuteClock(this::handleMinuteChanged);
@@ -414,6 +419,16 @@ public class MainWindow extends UiPart<Stage> {
         appointmentListPanel.requestFocus();
         appointmentListPanel.selectDefaultIfNoneSelected();
         return true;
+    }
+
+    /**
+     * Makes {@code list} take {@link #LIST_SHARE} of the room in {@code view}, so that the list and the details
+     * beside it grow and shrink together as the window is resized. The minimum widths of both still hold.
+     */
+    private static void shareWidth(HBox view, Region list) {
+        list.prefWidthProperty().bind(view.widthProperty()
+                .subtract(view.getPadding().getLeft() + view.getPadding().getRight() + view.getSpacing())
+                .multiply(LIST_SHARE));
     }
 
     private static void setShown(Node node, boolean isShown) {

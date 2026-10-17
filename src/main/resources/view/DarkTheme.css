@@ -582,13 +582,14 @@
 
 /*
  * The count sits in a slot of fixed width, as wide as "999 appointments", with its text at the left. Its text then
- * starts in the same place whatever its length, so it does not move as the week or the filter changes.
+ * starts in the same place whatever its length, so it does not move as the week or the filter changes. In a list
+ * too narrow for the whole header, the slot may shrink, so that the header still fits.
  */
 .list-header .list-header-count {
     -fx-font-family: "Segoe UI";
     -fx-font-size: 12px;
     -fx-text-fill: #a3adb2;
-    -fx-min-width: 100px;
+    -fx-min-width: 0;
     -fx-pref-width: 100px;
     -fx-alignment: center-left;
 }

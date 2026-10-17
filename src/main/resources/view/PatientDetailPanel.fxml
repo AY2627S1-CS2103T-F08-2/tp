@@ -33,9 +33,11 @@
         </Label>
       </HBox>
       <GridPane hgap="20" vgap="13">
+        <!-- In a narrow panel, the values shrink first, to the width of a long word such as "OSTEOARTHRITIS",
+             and then the keys, to the width of "Medical history", so that words are not broken. -->
         <columnConstraints>
-          <ColumnConstraints minWidth="135" prefWidth="150" />
-          <ColumnConstraints hgrow="ALWAYS" />
+          <ColumnConstraints minWidth="110" prefWidth="150" />
+          <ColumnConstraints hgrow="ALWAYS" minWidth="120" prefWidth="120" />
         </columnConstraints>
         <Label text="Phone" styleClass="patient-detail-key"
                GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.valignment="TOP" />

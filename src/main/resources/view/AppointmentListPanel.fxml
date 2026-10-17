@@ -35,7 +35,8 @@
         <Region fx:constant="USE_PREF_SIZE" />
       </minWidth>
     </Label>
-    <Label fx:id="weekRelative" styleClass="list-header-note" />
+    <!-- In a narrow list, this note and the count give up their room first, so that the dates stay whole. -->
+    <Label fx:id="weekRelative" styleClass="list-header-note" minWidth="0" />
     <Region HBox.hgrow="ALWAYS" />
     <!-- The count has a fixed width in the style sheet, so that it stays in one place from week to week. -->
     <Label fx:id="weekCount" styleClass="list-header-count" />

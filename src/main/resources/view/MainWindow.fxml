@@ -15,7 +15,7 @@
 <?import javafx.scene.shape.SVGPath?>
 
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-         title="LaiNurse" minWidth="680" minHeight="600" onCloseRequest="#handleExit">
+         title="LaiNurse" minWidth="710" minHeight="600" onCloseRequest="#handleExit">
   <icons>
     <Image url="@/images/lainurse_32.png" />
   </icons>
@@ -76,16 +76,17 @@
             <padding>
               <Insets top="10" right="10" bottom="10" left="10" />
             </padding>
-            <StackPane fx:id="patientListPanelPlaceholder" minWidth="340" prefWidth="480" maxWidth="560" />
-            <!-- A small preferred width makes the details take only the space that the list leaves. -->
-            <StackPane fx:id="patientDetailPanelPlaceholder" minWidth="300" prefWidth="300" HBox.hgrow="ALWAYS" />
+            <!-- The list's preferred width is a share of the view's width, set in MainWindow. A small preferred
+                 width makes the details take the rest, so that both grow and shrink with the window. -->
+            <StackPane fx:id="patientListPanelPlaceholder" minWidth="340" />
+            <StackPane fx:id="patientDetailPanelPlaceholder" minWidth="320" prefWidth="320" HBox.hgrow="ALWAYS" />
           </HBox>
           <HBox fx:id="appointmentView" spacing="10" visible="false" managed="false">
             <padding>
               <Insets top="10" right="10" bottom="10" left="10" />
             </padding>
-            <StackPane fx:id="appointmentListPanelPlaceholder" minWidth="340" prefWidth="480" maxWidth="560" />
-            <StackPane fx:id="appointmentDetailPanelPlaceholder" minWidth="300" prefWidth="300"
+            <StackPane fx:id="appointmentListPanelPlaceholder" minWidth="340" />
+            <StackPane fx:id="appointmentDetailPanelPlaceholder" minWidth="320" prefWidth="320"
                        HBox.hgrow="ALWAYS" />
           </HBox>
         </StackPane>

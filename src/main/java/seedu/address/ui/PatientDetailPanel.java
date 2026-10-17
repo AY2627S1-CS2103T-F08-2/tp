@@ -4,9 +4,12 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -36,10 +39,20 @@ public class PatientDetailPanel extends UiPart<Region> {
     private static final String TODAY_STYLE_CLASS = "detail-appointment-today";
     private static final String PAST_STYLE_CLASS = "detail-appointment-past";
     private static final String MARKED_STYLE_CLASS = "detail-appointment-marked";
+    /** The width of an appointment's date, the same as the keys above it. */
+    private static final double DATE_WIDTH = 150;
+    /** The space between an appointment's date and its time. */
+    private static final double ROW_SPACING = 20;
+    /** The width that a date may shrink to in a narrow panel: just enough for one such as "Mon 28 Dec 2026". */
+    private static final double DATE_MIN_WIDTH = 125;
     /** How far one Shift+Up or Shift+Down scrolls the details, in pixels: about as far as a mouse wheel step. */
     private static final double SCROLL_STEP = 40;
 
     private final ObservableList<Patient> allPatients;
+    /** The width of the date in every appointment row, so that the times line up. */
+    private final DoubleProperty dateWidth = new SimpleDoubleProperty(DATE_WIDTH);
+    /** The times of the appointment rows shown, whose widest decides {@link #dateWidth}. */
+    private final List<Label> timeLabels = new ArrayList<>();
 
     /** The ID of the patient being shown, or null if no patient is shown. */
     private PatientId shownId;
@@ -81,6 +94,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         this.allPatients = allPatients;
         placeholder.setText(placeholderText);
         allPatients.addListener((ListChangeListener<Patient>) change -> refresh());
+        upcomingRows.widthProperty().addListener((unused, oldWidth, width) -> updateDateWidth());
         refresh();
     }
 
@@ -176,9 +190,14 @@ public class PatientDetailPanel extends UiPart<Region> {
         DetailAppointments appointments = DetailAppointments.of(patient.getSchedule(), now,
                 Optional.ofNullable(markedAppointment));
         upcomingNote.setText(appointments.describeUpcoming());
+        timeLabels.clear();
         upcomingRows.getChildren().setAll(createRows(appointments.getUpcoming(), now));
         pastNote.setText(appointments.describePast());
         pastRows.getChildren().setAll(createRows(appointments.getPastShown(), now));
+        // The new rows need their styles, such as the font of today's rows, before their times can be measured
+        upcomingRows.applyCss();
+        pastRows.applyCss();
+        updateDateWidth();
         setShown(pastSection, appointments.getPastCount() > 0);
 
         setShown(placeholder, false);
@@ -192,21 +211,26 @@ public class PatientDetailPanel extends UiPart<Region> {
     /**
      * Returns one row of the appointments: the date, then the time. A later field for the appointment's
      * details fills the rest of the row. An appointment that has passed is dimmed, also one earlier today.
+     * In a narrow panel, the dates of all rows shrink together, but never below the width of a long date, and the
+     * time wraps, so that the row is never wider than the panel.
      */
     private Node createRow(Appointment appointment, LocalDateTime now) {
         LocalDate today = now.toLocalDate();
         Label date = new Label(AppointmentFormatter.formatDetailDate(appointment.getDate(), today));
         date.getStyleClass().add("detail-appointment-date");
-        date.setMinWidth(Region.USE_PREF_SIZE);
-        date.setPrefWidth(150);
+        date.minWidthProperty().bind(dateWidth);
+        date.prefWidthProperty().bind(dateWidth);
         Label time = new Label(AppointmentFormatter.formatDetailTime(appointment));
         time.getStyleClass().add(appointment.getTime().isPresent()
                 ? "detail-appointment-time" : "detail-appointment-no-time");
-        time.setMinWidth(Region.USE_PREF_SIZE);
+        time.setWrapText(true);
+        time.setMinWidth(0);
+        time.setMinHeight(Region.USE_PREF_SIZE);
+        timeLabels.add(time);
         Region filler = new Region();
         HBox.setHgrow(filler, Priority.ALWAYS);
 
-        HBox row = new HBox(20, date, time, filler);
+        HBox row = new HBox(ROW_SPACING, date, time, filler);
         row.getStyleClass().add(ROW_STYLE_CLASS);
         if (AppointmentFormatter.hasPassed(appointment, now)) {
             row.getStyleClass().add(PAST_STYLE_CLASS);
@@ -217,6 +241,24 @@ public class PatientDetailPanel extends UiPart<Region> {
             row.getStyleClass().add(MARKED_STYLE_CLASS);
         }
         return row;
+    }
+
+    /**
+     * Sets the width of the appointments' dates: the full width if the rows have room for it and their widest time
+     * on one line, and otherwise less, down to the width of a long date, so that a time that wraps keeps whole
+     * words. All rows get the same width, so that their times line up.
+     */
+    private void updateDateWidth() {
+        double widestTime = timeLabels.stream().mapToDouble(label -> label.prefWidth(-1)).max().orElse(0);
+        double rowPadding = upcomingRows.getChildren().isEmpty() && pastRows.getChildren().isEmpty() ? 0
+                : rowPadding(upcomingRows.getChildren().isEmpty() ? pastRows : upcomingRows);
+        double room = upcomingRows.getWidth() - rowPadding - ROW_SPACING - widestTime;
+        dateWidth.set(Math.clamp(room, DATE_MIN_WIDTH, DATE_WIDTH));
+    }
+
+    private static double rowPadding(VBox rows) {
+        Region row = (Region) rows.getChildren().get(0);
+        return row.snappedLeftInset() + row.snappedRightInset();
     }
 
     /**
