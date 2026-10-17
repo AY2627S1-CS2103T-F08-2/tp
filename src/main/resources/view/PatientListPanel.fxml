@@ -23,11 +23,8 @@
     </Label>
     <Label fx:id="listHint" styleClass="list-header-note" />
     <Region HBox.hgrow="ALWAYS" />
-    <Label fx:id="listCount" styleClass="list-header-count">
-      <minWidth>
-        <Region fx:constant="USE_PREF_SIZE" />
-      </minWidth>
-    </Label>
+    <!-- The count has a fixed width in the style sheet, so that it stays in one place as the list changes. -->
+    <Label fx:id="listCount" styleClass="list-header-count" />
   </HBox>
   <ListView fx:id="patientListView" VBox.vgrow="ALWAYS" />
 </VBox>

@@ -37,11 +37,8 @@
     </Label>
     <Label fx:id="weekRelative" styleClass="list-header-note" />
     <Region HBox.hgrow="ALWAYS" />
-    <Label fx:id="weekCount" styleClass="list-header-count">
-      <minWidth>
-        <Region fx:constant="USE_PREF_SIZE" />
-      </minWidth>
-    </Label>
+    <!-- The count has a fixed width in the style sheet, so that it stays in one place from week to week. -->
+    <Label fx:id="weekCount" styleClass="list-header-count" />
   </HBox>
   <ListView fx:id="appointmentListView" VBox.vgrow="ALWAYS" />
 </VBox>
