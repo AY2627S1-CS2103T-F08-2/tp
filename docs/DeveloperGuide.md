@@ -338,41 +338,29 @@ Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` 
 one command can move an appointment. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
 so a failed `edit` leaves the patient unchanged.
 
-**Identity and equality.** An `Appointment` stores a date, an optional time and optional details. Its date and time
-identify it, as its ID identifies a patient: `Appointment#isSameAppointment` is true for two appointments at the same
-date and time, whatever their details. `equals` also compares the details, as `Patient#equals` compares every field.
-Dates and times are parsed with strict formatters that accept only one spelling of each value, so equal text means the
-same date and the same time (or both having no time).
+**Equality.** An `Appointment` stores a date, an optional time and optional details. Its date and time identify it, as
+`Appointment#isSameAppointment` gives, while `equals` also compares the details. Dates and times are parsed with strict
+formatters that accept only one spelling of each value, so equal text means the same date and the same time (or both
+having no time).
 
 **Order.** Appointments are ordered by date, then by time. On the same day, an appointment with only a date comes before
 any appointment with a time. A date-only appointment means "sometime that day", like an all-day event in a calendar, so
-it is listed at the top of that day. `compareTo` ignores the details, so it agrees with `isSameAppointment` rather than
-with `equals`. `AppointmentSchedule` relies on this: it sorts the appointments in a `TreeSet`, which keeps one
-appointment at each date and time, and its `add`, `remove` and `contains` match by date and time. So
-`--remove-appt 2026-10-05 09:30` removes the appointment at that time whatever its details, and code that keeps an older
-copy of an appointment, such as the appointment marked in the patient details, still finds it after its details change.
+it is listed at the top of that day. `compareTo` ignores the details, as `isSameAppointment` does, so
+`AppointmentSchedule` can use a `TreeSet` to sort the appointments and keep one at each date and time.
 
-**Duplicates.** Only appointments at the same date and time count as duplicates, and the schedule keeps the first of
-them. `2026-10-05` and `2026-10-05 00:00` are different appointments: the first has no fixed time, while the second is
-at midnight. Merging them would lose information that the nurse entered. Removing an appointment through `edit` also
-needs an exact date and time, so `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`.
+**Duplicates.** Only appointments at the same date and time are duplicates. `2026-10-05` and `2026-10-05 00:00` are
+different appointments: the first has no fixed time, while the second is at midnight. Merging them would lose
+information that the nurse entered. Removing an appointment through `edit` also needs the same date and time, so
+`--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`.
 
-**Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of
-`JsonAdaptedAppointment` objects, such as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`, with no
-`"details"` for an appointment that has none. Earlier versions saved each appointment as a plain string, such as
-`"2026-10-05 09:30"`. `JsonAdaptedAppointment` reads both: Jackson uses its constructor for an object and its
-`fromString` method for a string. `JsonAdaptedPatient` also still reads the single `"nextAppointment"` field from older
-data files. A file from an earlier version therefore loads, and is saved in the new form after the next command.
+**Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of objects, such
+as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings,
+and the single `"nextAppointment"` field, from older data files.
 
-**Design considerations: how an appointment is saved**
-
-* **Alternative 1 (current choice):** As an object, always, with its details only if it has any.
-    * Pros: Every appointment in the file has the same shape, so the file is easy to edit by hand, and a later field,
-      such as an end time, fits in the same object.
-    * Cons: Files from earlier versions change shape when they are next saved, and each entry is longer.
-* **Alternative 2:** As a plain string if it has no details, and as an object only if it has.
-    * Pros: Files from earlier versions keep their shape until a patient gets details.
-    * Cons: One list holds two shapes, which is harder to edit by hand and to explain in the User Guide.
+**Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
+saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
+holds for home visits, so an appointment means the local date and time of the visit. The app never converts appointments
+between time zones, so changing the computer's time zone, or a daylight saving change, does not move them.
 
 ### Patient notes and appointment details
 
@@ -381,19 +369,14 @@ call. An appointment has optional `AppointmentDetails`, free text about the visi
 follow `MedicalHistory`: `TextNormalizer` trims the text, collapses its whitespace and stores it in upper case, and
 blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
 
-The details panel shows the notes under the medical history, and each appointment's details beside its time, or
-under it in a narrow panel.
-`AppointmentRow` shows an appointment's details on a second line under its patient, and only when it has some.
+The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
+in a narrow panel. `AppointmentRow` shows an appointment's details on a second line under its patient, and only when it
+has some.
 
 No command sets the notes or the details yet. `add` creates a patient without notes. `edit` keeps a patient's notes, and
 `--add-appt` and `--remove-appt` keep the details of the appointments that they do not remove. A command that sets them
 needs a `Prefix` in `CliSyntax`, a parser that builds `Notes` or `AppointmentDetails` with the matching `isValid`
 method, and a `Patient` or `Appointment` built with the new value.
-
-**Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
-saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
-holds for home visits, so an appointment means the local date and time of the visit. The app never converts appointments
-between time zones, so changing the computer's time zone, or a daylight saving change, does not move them.
 
 ### Viewing appointments by date
 
@@ -1433,30 +1416,5 @@ testers are expected to do more *exploratory* testing.
 1. Dealing with missing/corrupted data files
 
     1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
-
-1. Notes and appointment details
-
-    1. Prerequisites: Start with the sample data. Alex Yeoh has notes, and details for both of their appointments.
-
-    1. Test case: `view S1234567A`<br>
-       Expected: The panel shows `Notes` under `Medical history`, with `DAUGHTER MEI LING (91234567) IS THE MAIN
-       CONTACT`. The appointment on Mon 5 Oct shows `INSULIN REVIEW` beside its time, or under it in a narrow
-       window, and the one on Mon 2 Nov shows `MONTHLY BLOOD TEST`. In the appointment view,
-       `viewappt --from 2026-10-01 --to 2026-11-30` shows the same details under Alex Yeoh's name.
-
-    1. Test case: `edit S1234567A --phone 91234567`, then `view S1234567A`<br>
-       Expected: The notes and both details are unchanged.
-
-    1. Test case: close LaiNurse and open `data/lainurse.json`<br>
-       Expected: Alex Yeoh has a `"notes"` field. Each of their appointments is an object with `"dateTime"` and
-       `"details"`, and Bernice Yu's appointment is an object with only `"dateTime"`.
-
-    1. Test case: in the file, change Bernice Yu's appointments to `[ "2026-10-06" ]`, as earlier versions save them,
-       then launch LaiNurse and enter `list`<br>
-       Expected: LaiNurse loads all patients, and `view S2345678B` lists their appointment on Tue 6 Oct. After `list`,
-       the file holds the appointment as `{ "dateTime" : "2026-10-06" }`.
-
-    1. Test case: in the file, give Bernice Yu `"notes" : " "`, then launch LaiNurse<br>
-       Expected: The data file is invalid, so LaiNurse starts with an empty patient list, as for any invalid field.
 
 1. _{ more test cases …​ }_
