@@ -35,16 +35,8 @@ public class AppointmentBetweenDatesPredicate implements Predicate<Patient> {
 
     @Override
     public boolean test(Patient patient) {
-        return patient.getSchedule().asList().stream().anyMatch(this::isInRange);
-    }
-
-    /**
-     * Returns true if {@code appointment} is on a date within the range. Only dates are compared, so an
-     * appointment earlier on the start date is still in the range.
-     */
-    public boolean isInRange(Appointment appointment) {
-        LocalDate date = appointment.getDate();
-        return !date.isBefore(startDate) && !date.isAfter(endDate);
+        return patient.getSchedule().asList().stream()
+                .anyMatch(a -> !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate));
     }
 
     @Override

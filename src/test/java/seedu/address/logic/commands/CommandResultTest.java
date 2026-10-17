@@ -5,22 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
-import static seedu.address.testutil.TypicalPatients.BENSON;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.logic.commands.CommandResult.View;
-import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 public class CommandResultTest {
 
-    private static final LocalDate DATE = LocalDate.of(2026, 10, 5);
-    private static final PatientAppointment BENSON_APPOINTMENT =
-            new PatientAppointment(BENSON, BENSON.getSchedule().asList().get(0));
+    private static final LocalDate START = LocalDate.of(2026, 10, 1);
+    private static final LocalDate END = LocalDate.of(2026, 10, 31);
+    private static final AppointmentRange RANGE = new AppointmentRange(START, END);
 
     @Test
     public void equals() {
@@ -116,29 +115,38 @@ public class CommandResultTest {
     }
 
     @Test
-    public void appointmentToShow_dateAndOptionalSelection() {
-        CommandResult dateOnly = new CommandResult("feedback", DATE, Optional.empty());
-        assertEquals(Optional.of(DATE), dateOnly.getAppointmentDateToShow());
-        assertEquals(Optional.empty(), dateOnly.getAppointmentToSelect());
+    public void appointmentRange_heldAndCompared() {
+        CommandResult rangeResult = new CommandResult("feedback", RANGE);
+        assertEquals(Optional.of(RANGE), rangeResult.getAppointmentRange());
 
-        CommandResult withSelection = new CommandResult("feedback", DATE, Optional.of(BENSON_APPOINTMENT));
-        assertEquals(Optional.of(BENSON_APPOINTMENT), withSelection.getAppointmentToSelect());
+        // a plain result shows no range
+        assertEquals(Optional.empty(), new CommandResult("feedback").getAppointmentRange());
 
-        // a plain result shows no date
-        assertEquals(Optional.empty(), new CommandResult("feedback").getAppointmentDateToShow());
-        assertEquals(Optional.empty(), new CommandResult("feedback").getAppointmentToSelect());
-
-        assertTrue(dateOnly.equals(new CommandResult("feedback", DATE, Optional.empty())));
-        assertFalse(dateOnly.equals(new CommandResult("feedback")));
-        assertFalse(dateOnly.equals(new CommandResult("feedback", DATE.plusDays(1), Optional.empty())));
-        assertFalse(dateOnly.equals(withSelection));
-        assertNotEquals(dateOnly.hashCode(), withSelection.hashCode());
+        assertTrue(rangeResult.equals(new CommandResult("feedback", new AppointmentRange(START, END))));
+        assertEquals(rangeResult.hashCode(),
+                new CommandResult("feedback", new AppointmentRange(START, END)).hashCode());
+        assertFalse(rangeResult.equals(new CommandResult("feedback")));
+        assertFalse(rangeResult.equals(new CommandResult("feedback", new AppointmentRange(START, START))));
+        assertNotEquals(rangeResult.hashCode(), new CommandResult("feedback").hashCode());
+        assertThrows(NullPointerException.class, () -> new CommandResult("feedback", (AppointmentRange) null));
     }
 
     @Test
-    public void constructor_nullAppointmentToShow_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new CommandResult("feedback", null, Optional.empty()));
-        assertThrows(NullPointerException.class, () -> new CommandResult("feedback", DATE, null));
+    public void appointmentRangeContains_boundariesIncluded() {
+        assertFalse(RANGE.contains(START.minusDays(1)));
+        assertTrue(RANGE.contains(START));
+        assertTrue(RANGE.contains(END));
+        assertFalse(RANGE.contains(END.plusDays(1)));
+        // a range with no end
+        assertTrue(new AppointmentRange(START, LocalDate.MAX).contains(LocalDate.of(9999, 12, 31)));
+        assertThrows(NullPointerException.class, () -> RANGE.contains(null));
+    }
+
+    @Test
+    public void appointmentRangeConstructor_invalid_throws() {
+        assertThrows(NullPointerException.class, () -> new AppointmentRange(null, END));
+        assertThrows(NullPointerException.class, () -> new AppointmentRange(START, null));
+        assertThrows(IllegalArgumentException.class, () -> new AppointmentRange(END, START));
     }
 
     @Test
@@ -146,19 +154,19 @@ public class CommandResultTest {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName()
                 + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null, view=null, "
-                + "appointmentDateToShow=null, appointmentToSelect=null}";
+                + "appointmentRange=null}";
         assertEquals(expected, commandResult.toString());
 
         CommandResult viewResult = new CommandResult("feedback", new PatientId("S1234567A")).withView(View.PATIENTS);
         String expectedView = CommandResult.class.getCanonicalName()
                 + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=S1234567A, view=PATIENTS, "
-                + "appointmentDateToShow=null, appointmentToSelect=null}";
+                + "appointmentRange=null}";
         assertEquals(expectedView, viewResult.toString());
 
-        CommandResult appointmentResult = new CommandResult("feedback", DATE, Optional.of(BENSON_APPOINTMENT));
+        CommandResult appointmentResult = new CommandResult("feedback", RANGE);
         String expectedAppointment = CommandResult.class.getCanonicalName()
                 + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null, view=null, "
-                + "appointmentDateToShow=" + DATE + ", appointmentToSelect=" + BENSON_APPOINTMENT + "}";
+                + "appointmentRange=" + RANGE + "}";
         assertEquals(expectedAppointment, appointmentResult.toString());
     }
 }

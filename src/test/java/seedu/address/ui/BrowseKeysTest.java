@@ -19,9 +19,17 @@ public class BrowseKeysTest {
     public void actionFor_browseKeys_returnsTheirActions() {
         assertEquals(Optional.of(Action.RETURN_TO_COMMAND_BOX), BrowseKeys.actionFor(KeyCode.ENTER, false, false));
         assertEquals(Optional.of(Action.RESET_VIEW), BrowseKeys.actionFor(KeyCode.ESCAPE, false, false));
-        // Tab and Shift+Tab both go between the command box and the view
+        // Tab goes between the view tabs and the list, and Shift+Tab does nothing
         assertEquals(Optional.of(Action.SWITCH_AREA), BrowseKeys.actionFor(KeyCode.TAB, false, false));
-        assertEquals(Optional.of(Action.SWITCH_AREA), BrowseKeys.actionFor(KeyCode.TAB, true, false));
+        assertEquals(Optional.of(Action.IGNORE), BrowseKeys.actionFor(KeyCode.TAB, true, false));
+    }
+
+    @Test
+    public void actionFor_shiftUpOrDown_scrollsDetails() {
+        assertEquals(Optional.of(Action.SCROLL_DETAILS_UP), BrowseKeys.actionFor(KeyCode.UP, true, false));
+        assertEquals(Optional.of(Action.SCROLL_DETAILS_UP), BrowseKeys.actionFor(KeyCode.KP_UP, true, false));
+        assertEquals(Optional.of(Action.SCROLL_DETAILS_DOWN), BrowseKeys.actionFor(KeyCode.DOWN, true, false));
+        assertEquals(Optional.of(Action.SCROLL_DETAILS_DOWN), BrowseKeys.actionFor(KeyCode.KP_DOWN, true, false));
     }
 
     @Test
@@ -34,14 +42,15 @@ public class BrowseKeysTest {
     }
 
     @Test
-    public void actionFor_withShift_onlyTabChanges() {
+    public void actionFor_withShift_enterAndEscapeKeepUsualEffect() {
         assertEquals(Optional.empty(), BrowseKeys.actionFor(KeyCode.ENTER, true, false));
         assertEquals(Optional.empty(), BrowseKeys.actionFor(KeyCode.ESCAPE, true, false));
     }
 
     @Test
     public void actionFor_withShortcutKey_keepsUsualEffect() {
-        for (KeyCode key : List.of(KeyCode.ENTER, KeyCode.ESCAPE, KeyCode.TAB)) {
+        // Ctrl+Up and Ctrl+Down jump to the ends of a list, so the shortcut key also leaves Up and Down alone
+        for (KeyCode key : List.of(KeyCode.ENTER, KeyCode.ESCAPE, KeyCode.TAB, KeyCode.UP, KeyCode.DOWN)) {
             assertEquals(Optional.empty(), BrowseKeys.actionFor(key, false, true), key.toString());
             assertEquals(Optional.empty(), BrowseKeys.actionFor(key, true, true), key.toString());
         }

@@ -1,12 +1,9 @@
 package seedu.address.ui;
 
-import static java.util.Objects.requireNonNull;
-import static seedu.address.commons.util.AppUtil.checkArgument;
-
 /**
- * The parts of the main window that the keyboard focus moves between. Tab goes back and forth between the command
- * box and the view, and in the view, Up and Down move between the view tabs and the list. The list is that of the
- * view that is shown: patients or appointments. The details beside the list are not among these parts.
+ * The parts of the main window that the keyboard focus moves between. In the view, Tab and Up and Down move
+ * between the view tabs and the list. The list is that of the view that is shown: patients or appointments.
+ * In the command box, Tab completes a patient ID instead. The details beside the list are not among these parts.
  */
 public enum FocusArea {
     COMMAND_BOX,
@@ -21,15 +18,14 @@ public enum FocusArea {
     }
 
     /**
-     * Returns the area that Tab, or Shift+Tab, moves the focus to from this area. From the view, Tab goes to the
-     * command box. From the command box, it goes back to {@code lastViewArea}, the part of the view that last had
-     * the focus.
-     *
-     * @throws IllegalArgumentException if {@code lastViewArea} is not in the view.
+     * Returns the area that Tab moves the focus to from this area: from the view tabs to the list, and back.
+     * The command box keeps the focus, as Tab completes a patient ID there.
      */
-    public FocusArea afterTab(FocusArea lastViewArea) {
-        requireNonNull(lastViewArea);
-        checkArgument(lastViewArea.isInView(), "The last view area must be in the view.");
-        return this == COMMAND_BOX ? lastViewArea : COMMAND_BOX;
+    public FocusArea afterTab() {
+        return switch (this) {
+            case VIEW_TABS -> LIST;
+            case LIST -> VIEW_TABS;
+            case COMMAND_BOX -> COMMAND_BOX;
+        };
     }
 }

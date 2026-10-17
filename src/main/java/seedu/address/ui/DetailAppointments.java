@@ -2,7 +2,7 @@ package seedu.address.ui;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +13,8 @@ import seedu.address.model.patient.AppointmentSchedule;
 
 /**
  * The appointments that the patient details list: every upcoming appointment, in time order, and the latest
- * past appointments, latest first. An appointment on today's date counts as upcoming.
+ * past appointments, latest first. An appointment earlier today counts as past once it has passed, and one today
+ * with no time counts as upcoming.
  * Guarantees: immutable.
  */
 public final class DetailAppointments {
@@ -35,19 +36,19 @@ public final class DetailAppointments {
     }
 
     /**
-     * Splits {@code schedule} into the appointments to list on {@code today}. A {@code marked} past appointment,
+     * Splits {@code schedule} into the appointments to list at {@code now}. A {@code marked} past appointment,
      * such as the one selected in the appointment view, is listed even if it is older than the latest ones.
      */
-    public static DetailAppointments of(AppointmentSchedule schedule, LocalDate today,
+    public static DetailAppointments of(AppointmentSchedule schedule, LocalDateTime now,
             Optional<Appointment> marked) {
-        requireAllNonNull(schedule, today, marked);
+        requireAllNonNull(schedule, now, marked);
         List<Appointment> all = schedule.asList();
         List<Appointment> upcoming = all.stream()
-                .filter(appointment -> !AppointmentFormatter.isPast(appointment, today))
+                .filter(appointment -> !AppointmentFormatter.hasPassed(appointment, now))
                 .sorted()
                 .toList();
         List<Appointment> pastLatestFirst = all.stream()
-                .filter(appointment -> AppointmentFormatter.isPast(appointment, today))
+                .filter(appointment -> AppointmentFormatter.hasPassed(appointment, now))
                 .sorted(Comparator.reverseOrder())
                 .toList();
         List<Appointment> pastShown = IntStream.range(0, pastLatestFirst.size())

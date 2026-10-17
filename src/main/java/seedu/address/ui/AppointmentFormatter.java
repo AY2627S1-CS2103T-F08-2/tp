@@ -3,18 +3,29 @@ package seedu.address.ui;
 import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import seedu.address.model.patient.Appointment;
 
 /**
- * Formats appointments and their dates for display, relative to a given day.
+ * Formats appointments and their dates for display, relative to a given day, and decides which appointments
+ * have passed.
  */
 public final class AppointmentFormatter {
 
-    /** The text shown in place of the time of an appointment that has only a date. */
-    public static final String NO_TIME = "No time";
+    /**
+     * The text shown in the appointment list in place of the time of an appointment that has only a date. It is
+     * written with figure dashes, each as wide as a digit, so that it is as wide as a time such as "09:30".
+     */
+    public static final String NO_TIME = "\u2012\u2012:\u2012\u2012";
+    /** The text shown in the patient details in place of the time of an appointment that has only a date. */
+    public static final String NO_TIME_DETAIL = "No time specified";
 
     /** Appointments up to this many days ahead are shown by weekday, such as "Tue". */
     private static final int DAYS_SHOWN_AS_WEEKDAY = 6;
@@ -42,11 +53,32 @@ public final class AppointmentFormatter {
     }
 
     /**
-     * Returns the time of {@code appointment}, such as "09:30", or {@link #NO_TIME} if it has only a date.
+     * Returns the time of {@code appointment} for the appointment list, such as "09:30", or {@link #NO_TIME}
+     * if it has only a date.
      */
     public static String formatTime(Appointment appointment) {
         requireNonNull(appointment);
         return appointment.getTime().map(time -> time.format(TIME)).orElse(NO_TIME);
+    }
+
+    /**
+     * Returns the time of {@code appointment} for the patient details, such as "09:30", or
+     * {@link #NO_TIME_DETAIL} if it has only a date.
+     */
+    public static String formatDetailTime(Appointment appointment) {
+        requireNonNull(appointment);
+        return appointment.getTime().map(time -> time.format(TIME)).orElse(NO_TIME_DETAIL);
+    }
+
+    /**
+     * Returns the earliest appointment in {@code appointments} that has not passed at {@code now}, or
+     * {@code Optional#empty()} if all have passed. On the same day, one with no time comes before one with a
+     * time, as {@link Appointment#compareTo} orders them.
+     */
+    public static Optional<Appointment> findFirstNotPassed(List<Appointment> appointments, LocalDateTime now) {
+        requireNonNull(appointments);
+        requireNonNull(now);
+        return appointments.stream().filter(appointment -> !hasPassed(appointment, now)).sorted().findFirst();
     }
 
     /**
@@ -86,6 +118,27 @@ public final class AppointmentFormatter {
     }
 
     /**
+     * Returns the dates of a range of appointments, both included, for the header of the appointment view:
+     * "Fri 16 Oct 2026" for one day, "Thu 1 Oct – Sat 31 Oct 2026", "Mon 28 Dec 2026 – Fri 1 Jan 2027" across
+     * two years, or "From Fri 16 Oct 2026" for a range with no end, whose end is {@code LocalDate.MAX}.
+     */
+    public static String formatRange(LocalDate start, LocalDate end) {
+        requireNonNull(start);
+        requireNonNull(end);
+        if (end.equals(LocalDate.MAX)) {
+            return "From " + start.format(WEEKDAY_DAY_MONTH_YEAR);
+        }
+        String endText = end.format(WEEKDAY_DAY_MONTH_YEAR);
+        if (start.equals(end)) {
+            return endText;
+        }
+        if (start.getYear() == end.getYear()) {
+            return start.format(WEEKDAY_DAY_MONTH) + " – " + endText;
+        }
+        return start.format(WEEKDAY_DAY_MONTH_YEAR) + " – " + endText;
+    }
+
+    /**
      * Returns true if {@code appointment} is on {@code today}.
      */
     public static boolean isToday(Appointment appointment, LocalDate today) {
@@ -97,6 +150,22 @@ public final class AppointmentFormatter {
      */
     public static boolean isPast(Appointment appointment, LocalDate today) {
         return appointment.getDate().isBefore(today);
+    }
+
+    /**
+     * Returns true if {@code appointment} has passed at {@code now}: it is on an earlier day, or earlier today at
+     * a time before the minute of {@code now}. An appointment today with no time has not passed, as it can still
+     * be at any time of the day.
+     */
+    public static boolean hasPassed(Appointment appointment, LocalDateTime now) {
+        requireNonNull(appointment);
+        requireNonNull(now);
+        LocalDate today = now.toLocalDate();
+        if (!isToday(appointment, today)) {
+            return isPast(appointment, today);
+        }
+        LocalTime thisMinute = now.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
+        return appointment.getTime().map(time -> time.isBefore(thisMinute)).orElse(false);
     }
 
     private static String formatWeekdayDate(LocalDate date, LocalDate today) {

@@ -3,6 +3,7 @@ package seedu.address.ui;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +36,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private static final String TODAY_STYLE_CLASS = "detail-appointment-today";
     private static final String PAST_STYLE_CLASS = "detail-appointment-past";
     private static final String MARKED_STYLE_CLASS = "detail-appointment-marked";
+    /** How far one Shift+Up or Shift+Down scrolls the details, in pixels: about as far as a mouse wheel step. */
+    private static final double SCROLL_STEP = 40;
 
     private final ObservableList<Patient> allPatients;
 
@@ -116,6 +119,21 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
+     * Scrolls the details by {@code steps} steps, up if it is negative and down if it is positive. Does nothing
+     * if no patient is shown, or if the details fit without scrolling.
+     */
+    public void scroll(int steps) {
+        double scrollableHeight = details.getContent().getLayoutBounds().getHeight()
+                - details.getViewportBounds().getHeight();
+        if (!details.isVisible() || scrollableHeight <= 0) {
+            return;
+        }
+        double range = details.getVmax() - details.getVmin();
+        double vvalue = details.getVvalue() + steps * SCROLL_STEP / scrollableHeight * range;
+        details.setVvalue(Math.clamp(vvalue, details.getVmin(), details.getVmax()));
+    }
+
+    /**
      * Returns true if the details have the keyboard focus, as they do after the user clicks them.
      */
     public boolean isFocused() {
@@ -150,33 +168,34 @@ public class PatientDetailPanel extends UiPart<Region> {
         if (markedAppointment != null && !patient.getSchedule().contains(markedAppointment)) {
             markedAppointment = null;
         }
-        LocalDate today = LocalDate.now();
-        DetailAppointments appointments = DetailAppointments.of(patient.getSchedule(), today,
+        LocalDateTime now = LocalDateTime.now();
+        DetailAppointments appointments = DetailAppointments.of(patient.getSchedule(), now,
                 Optional.ofNullable(markedAppointment));
         upcomingNote.setText(appointments.describeUpcoming());
-        upcomingRows.getChildren().setAll(createRows(appointments.getUpcoming(), today));
+        upcomingRows.getChildren().setAll(createRows(appointments.getUpcoming(), now));
         pastNote.setText(appointments.describePast());
-        pastRows.getChildren().setAll(createRows(appointments.getPastShown(), today));
+        pastRows.getChildren().setAll(createRows(appointments.getPastShown(), now));
         setShown(pastSection, appointments.getPastCount() > 0);
 
         setShown(placeholder, false);
         setShown(details, true);
     }
 
-    private List<Node> createRows(List<Appointment> appointments, LocalDate today) {
-        return appointments.stream().map(appointment -> createRow(appointment, today)).toList();
+    private List<Node> createRows(List<Appointment> appointments, LocalDateTime now) {
+        return appointments.stream().map(appointment -> createRow(appointment, now)).toList();
     }
 
     /**
      * Returns one row of the appointments: the date, then the time. A later field for the appointment's
-     * details fills the rest of the row.
+     * details fills the rest of the row. An appointment that has passed is dimmed, also one earlier today.
      */
-    private Node createRow(Appointment appointment, LocalDate today) {
+    private Node createRow(Appointment appointment, LocalDateTime now) {
+        LocalDate today = now.toLocalDate();
         Label date = new Label(AppointmentFormatter.formatDetailDate(appointment.getDate(), today));
         date.getStyleClass().add("detail-appointment-date");
         date.setMinWidth(Region.USE_PREF_SIZE);
         date.setPrefWidth(150);
-        Label time = new Label(AppointmentFormatter.formatTime(appointment));
+        Label time = new Label(AppointmentFormatter.formatDetailTime(appointment));
         time.getStyleClass().add(appointment.getTime().isPresent()
                 ? "detail-appointment-time" : "detail-appointment-no-time");
         time.setMinWidth(Region.USE_PREF_SIZE);
@@ -185,10 +204,10 @@ public class PatientDetailPanel extends UiPart<Region> {
 
         HBox row = new HBox(20, date, time, filler);
         row.getStyleClass().add(ROW_STYLE_CLASS);
-        if (AppointmentFormatter.isToday(appointment, today)) {
-            row.getStyleClass().add(TODAY_STYLE_CLASS);
-        } else if (AppointmentFormatter.isPast(appointment, today)) {
+        if (AppointmentFormatter.hasPassed(appointment, now)) {
             row.getStyleClass().add(PAST_STYLE_CLASS);
+        } else if (AppointmentFormatter.isToday(appointment, today)) {
+            row.getStyleClass().add(TODAY_STYLE_CLASS);
         }
         if (appointment.equals(markedAppointment)) {
             row.getStyleClass().add(MARKED_STYLE_CLASS);

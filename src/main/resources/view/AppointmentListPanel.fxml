@@ -9,25 +9,25 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
 
-<VBox styleClass="appointment-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <HBox styleClass="week-header" alignment="CENTER_LEFT" spacing="6">
+<VBox styleClass="list-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <HBox styleClass="list-header" alignment="CENTER_LEFT" spacing="6">
     <padding>
       <Insets top="6" right="12" bottom="6" left="8" />
     </padding>
-    <!-- The buttons never take the focus; with the focus in the list, Left and Right do the same. -->
-    <Button fx:id="previousWeekButton" styleClass="week-nav-button" focusTraversable="false"
+    <!-- The buttons never take the focus. With the focus in the list, Left and Right do the same. They show only in the weekly view. -->
+    <Button fx:id="previousWeekButton" styleClass="nav-arrow-button" focusTraversable="false"
             accessibleText="Previous week" onAction="#handlePreviousWeek">
       <graphic>
-        <SVGPath styleClass="week-nav-icon" content="M10 3.5 L5.5 8 L10 12.5" />
+        <SVGPath styleClass="nav-arrow-icon" content="M10 3.5 L5.5 8 L10 12.5" />
       </graphic>
     </Button>
-    <Button fx:id="nextWeekButton" styleClass="week-nav-button" focusTraversable="false"
+    <Button fx:id="nextWeekButton" styleClass="nav-arrow-button" focusTraversable="false"
             accessibleText="Next week" onAction="#handleNextWeek">
       <graphic>
-        <SVGPath styleClass="week-nav-icon" content="M6 3.5 L10.5 8 L6 12.5" />
+        <SVGPath styleClass="nav-arrow-icon" content="M6 3.5 L10.5 8 L6 12.5" />
       </graphic>
     </Button>
-    <Label fx:id="weekDates" styleClass="week-dates">
+    <Label fx:id="weekDates" styleClass="list-header-title">
       <padding>
         <Insets left="6" />
       </padding>
@@ -35,9 +35,9 @@
         <Region fx:constant="USE_PREF_SIZE" />
       </minWidth>
     </Label>
-    <Label fx:id="weekRelative" styleClass="week-relative" />
+    <Label fx:id="weekRelative" styleClass="list-header-note" />
     <Region HBox.hgrow="ALWAYS" />
-    <Label fx:id="weekCount" styleClass="week-count">
+    <Label fx:id="weekCount" styleClass="list-header-count">
       <minWidth>
         <Region fx:constant="USE_PREF_SIZE" />
       </minWidth>

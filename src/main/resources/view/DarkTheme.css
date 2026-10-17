@@ -1,3 +1,13 @@
+/*
+ * Two highlight colours, each with one meaning. Orange marks urgency: today. A greyed NUS blue marks selection:
+ * the keyboard focus, and the selected tab, row and appointment. It is light enough to stand out on the dark
+ * greys, as NUS blue itself does not.
+ */
+.root {
+    -lainurse-urgent: #f7b26a;
+    -lainurse-selection: #8b9eb1;
+}
+
 .background {
     -fx-background-color: derive(#1d1d1d, 20%);
     background-color: #383838; /* Used in the default.html file */
@@ -98,7 +108,7 @@
 /* A border shows which part has the keyboard focus. The width is always 1, so the layout does not move. */
 .list-view:focused,
 .patient-detail .scroll-pane:focused {
-    -fx-border-color: #8fbcb1;
+    -fx-border-color: -lainurse-selection;
     -fx-border-width: 1;
 }
 
@@ -115,9 +125,9 @@
     -fx-background-insets: 0, 0 0 1 0;
 }
 
-/* The selected row gets a muted accent strip on its left. */
+/* The selected row gets a strip on its left. */
 .list-cell:filled:selected {
-    -fx-background-color: #4a5054, #8fbcb1, #424d5f;
+    -fx-background-color: #4a5054, -lainurse-selection, #4d4f51;
     -fx-background-insets: 0, 0 0 1 0, 0 0 1 3;
 }
 
@@ -151,10 +161,11 @@
     -fx-background-color: derive(#1d1d1d, 30%);
 }
 
+/* AB3's thin "Segoe UI Light" blurs on screen, so the text outside the views uses "Segoe UI" in whole pixels. */
 .result-display {
     -fx-background-color: transparent;
-    -fx-font-family: "Segoe UI Light";
-    -fx-font-size: 13pt;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 15px;
     -fx-text-fill: white;
 }
 
@@ -163,7 +174,8 @@
 }
 
 .status-bar .label {
-    -fx-font-family: "Segoe UI Light";
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
     -fx-text-fill: white;
     -fx-padding: 4px;
     -fx-pref-height: 30px;
@@ -202,10 +214,10 @@
 }
 
 .menu-bar .label {
-    -fx-font-size: 14pt;
-    -fx-font-family: "Segoe UI Light";
+    -fx-font-size: 14px;
+    -fx-font-family: "Segoe UI";
     -fx-text-fill: white;
-    -fx-opacity: 0.9;
+    -fx-opacity: 1;
 }
 
 .menu .left-container {
@@ -328,8 +340,8 @@
     -fx-border-color: #383838 #383838 #6d6d6d #383838;
     -fx-border-insets: 0;
     -fx-border-width: 1;
-    -fx-font-family: "Segoe UI Light";
-    -fx-font-size: 13pt;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 16px;
     -fx-text-fill: #9e9e9e;
 }
 
@@ -388,7 +400,7 @@
 }
 
 .list-cell .patient-row-appointment-today {
-    -fx-text-fill: #8fbcb1;
+    -fx-text-fill: -lainurse-urgent;
 }
 
 /* Patient details. Each selector names .patient-detail to win over ".patient-detail .label" below. */
@@ -471,14 +483,14 @@
 .view-tabs .view-tab:selected:hover,
 .view-tabs .view-tab:pressed {
     -fx-background-color: derive(#1d1d1d, 20%);
-    -fx-border-color: #8fbcb1 transparent transparent transparent;
+    -fx-border-color: -lainurse-selection transparent transparent transparent;
     -fx-font-family: "Segoe UI Semibold";
     -fx-text-fill: #e6eaec;
 }
 
-/* A tab with the keyboard focus gets a thin accent outline, as the focused list does. */
+/* A tab with the keyboard focus gets a thin outline, as the focused list does. */
 .view-tabs .view-tab:focused {
-    -fx-border-color: #8fbcb1;
+    -fx-border-color: -lainurse-selection;
 }
 
 .view-tabs .view-tab-icon {
@@ -493,36 +505,23 @@
     -fx-stroke: #e6eaec;
 }
 
-.view-tabs .view-summary,
-.view-tabs .view-tabs-hint-text {
-    -fx-font-family: "Segoe UI";
-    -fx-font-size: 13px;
-    -fx-text-fill: #b5bcc0;
-    -fx-opacity: 1;
-}
-
-.view-tabs .view-tabs-key {
-    -fx-font-family: "Segoe UI";
-    -fx-font-size: 12px;
-    -fx-text-fill: #b5bcc0;
-    -fx-opacity: 1;
-    -fx-padding: 0 6 0 6;
-    -fx-border-color: #6a6f72;
-    -fx-border-radius: 3;
-}
-
-/* Appointment view: a header for the week, then each day's heading and appointments. */
-.appointment-panel {
+/*
+ * The patient and appointment lists share a header: what the list shows, a note such as a hint for Esc, and
+ * a count. The header keeps the height of the week's arrow buttons, also where it has none.
+ */
+.list-panel {
     -fx-background-color: #3c3e3f;
 }
 
-.week-header {
+.list-header {
     -fx-background-color: #2f3132;
     -fx-border-color: transparent transparent #4a5054 transparent;
     -fx-border-width: 0 0 1 0;
+    -fx-min-height: 43px;
 }
 
-.week-header .week-nav-button {
+/* The arrow buttons of the week header. They take no focus. */
+.nav-arrow-button {
     -fx-background-color: transparent;
     -fx-background-radius: 4;
     -fx-background-insets: 0;
@@ -538,15 +537,15 @@
     -fx-pref-height: 30px;
 }
 
-.week-header .week-nav-button:hover {
+.nav-arrow-button:hover {
     -fx-background-color: #3a3d3f;
 }
 
-.week-header .week-nav-button:pressed {
+.nav-arrow-button:pressed {
     -fx-background-color: #4a5054;
 }
 
-.week-header .week-nav-icon {
+.nav-arrow-button .nav-arrow-icon {
     -fx-fill: transparent;
     -fx-stroke: #d5dadc;
     -fx-stroke-width: 1.75;
@@ -554,27 +553,34 @@
     -fx-stroke-line-join: round;
 }
 
-.week-header .label {
+.list-header .label {
     -fx-opacity: 1;
 }
 
-.week-header .week-dates {
+.list-header .list-header-title {
     -fx-font-family: "Segoe UI Semibold";
     -fx-font-size: 15px;
     -fx-text-fill: #e6eaec;
 }
 
-.week-header .week-relative {
+.list-header .list-header-note {
     -fx-font-family: "Segoe UI";
     -fx-font-size: 13px;
     -fx-text-fill: #b5bcc0;
 }
 
-.week-header .week-relative-this {
-    -fx-text-fill: #8fbcb1;
+.list-header .list-header-note-this {
+    -fx-text-fill: -lainurse-urgent;
 }
 
-.week-header .week-count {
+.list-view .list-placeholder {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-text-fill: #a3adb2;
+    -fx-opacity: 1;
+}
+
+.list-header .list-header-count {
     -fx-font-family: "Segoe UI";
     -fx-font-size: 12px;
     -fx-text-fill: #a3adb2;
@@ -604,7 +610,7 @@
 .list-cell .appointment-day-today {
     -fx-font-family: "Segoe UI Semibold";
     -fx-font-size: 13px;
-    -fx-text-fill: #8fbcb1;
+    -fx-text-fill: -lainurse-urgent;
 }
 
 .list-cell .appointment-day-count,
@@ -625,10 +631,20 @@
     -fx-text-fill: #e6eaec;
 }
 
+/* The same font as a time, so that the placeholder is as wide as one. */
 .list-cell .appointment-entry-no-time {
-    -fx-font-family: "Segoe UI";
+    -fx-font-family: "Segoe UI Semibold";
     -fx-font-size: 14px;
     -fx-text-fill: #a3adb2;
+}
+
+/* An appointment that has passed is greyed out. A selected one is less so, to stay readable on its row. */
+.list-cell .appointment-entry-passed .label {
+    -fx-text-fill: #a3adb2;
+}
+
+.list-cell:filled:selected .appointment-entry-passed .label {
+    -fx-text-fill: #bcc3c7;
 }
 
 .list-cell .appointment-entry-id {
@@ -679,16 +695,16 @@
 
 .patient-detail .detail-appointment-today .label {
     -fx-font-family: "Segoe UI Semibold";
-    -fx-text-fill: #8fbcb1;
+    -fx-text-fill: -lainurse-urgent;
 }
 
 /* The appointment selected in the appointment view, marked as the list marks its selected row. */
 .patient-detail .detail-appointment-marked {
-    -fx-background-color: #8fbcb1, #424d5f;
+    -fx-background-color: -lainurse-selection, #4d4f51;
     -fx-background-insets: 0, 0 0 0 3;
 }
 
+/* Orange text means urgency, so the mark keeps the row's own colours, such as the orange of today. */
 .patient-detail .detail-appointment-marked .label {
     -fx-font-family: "Segoe UI Semibold";
-    -fx-text-fill: #8fbcb1;
 }

@@ -19,7 +19,6 @@ import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
-import seedu.address.model.patient.PatientAppointment;
 
 /**
  * Views the appointments on a date, or between two dates (inclusive), in the appointment view, and lists the
@@ -83,8 +82,7 @@ public class ViewAppointmentCommand extends Command {
             throw new CommandException(String.format(MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY, end, today));
         }
 
-        AppointmentBetweenDatesPredicate predicate = new AppointmentBetweenDatesPredicate(start, end);
-        model.updateFilteredPatientList(predicate);
+        model.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(start, end));
         int count = model.getFilteredPatientList().size();
         String message;
         if (endDate.isEmpty()) {
@@ -94,13 +92,8 @@ public class ViewAppointmentCommand extends Command {
         } else {
             message = String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, count, start, end);
         }
-
-        // The appointment view opens at the first appointment in the range, or at the start if there is none
-        Optional<PatientAppointment> firstInRange = model.getAppointmentList().stream()
-                .filter(entry -> predicate.isInRange(entry.getAppointment()))
-                .findFirst();
-        LocalDate dateToShow = firstInRange.map(entry -> entry.getAppointment().getDate()).orElse(start);
-        return new CommandResult(message, dateToShow, firstInRange);
+        // The appointment view shows the appointments in the range on one page
+        return new CommandResult(message, new CommandResult.AppointmentRange(start, end));
     }
 
     @Override

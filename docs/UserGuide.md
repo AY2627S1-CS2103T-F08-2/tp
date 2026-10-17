@@ -34,7 +34,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
    * `view S1234567A` : Shows the details of the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
-   * `viewappt 2026-10-05` : Switches to the **Appointments** view, at the week of October 5, 2026, with Alex Yeoh's appointment on that day selected.
+   * `viewappt 2026-10-05` : Switches to the **Appointments** view, and shows only the appointments on October 5, 2026, with the first one selected.
 
    * `delete S1234567A` : Deletes the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
@@ -74,55 +74,63 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 LaiNurse shows one view at a time. The tabs under the result display switch between them:
 
-* **Patients**: the list of patients, each with their next appointment, and beside it the details of one patient. The details list every upcoming appointment of the patient, in time order, and their last two past appointments, dimmed.
-* **Appointments**: the appointments of one week, from Monday to Sunday, and beside them the details of the selected appointment's patient, with that appointment marked. Each day has a heading with its number of appointments, and the appointments are numbered from 1 across the week. An appointment with no time shows `No time`, and comes first in its day.
+* **Patients**: the list of patients, each with their next appointment, and beside it the details of one patient.
+  * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. A filtered list also shows `Esc to show all patients`. An empty list says `No patients yet.` or `No patients match the filter.`
+  * The next appointment of a patient is their first appointment that has not passed.
+  * The details list every upcoming appointment of the patient, in time order, and their last two past appointments, dimmed.
+* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page.
+  * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
+  * The appointments that have passed are greyed out.
+  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates, and `Esc to show the weekly view`.
 
-![The appointment view after viewappt, with today's first appointment selected](images/AppointmentView.png)
+An appointment has passed once its time today has gone by, or once its day is over if it has no time. Orange marks what is today, such as today's heading and today's appointments. A grey-blue marks what is selected, and what has the keyboard focus.
+
+![The weekly appointment view, with today's first appointment selected](images/AppointmentView.png)
 
 Commands switch the view. `viewappt` shows **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. You can also click a tab, or move to the tabs with the keyboard and press Left or Right. Switching views this way runs no command, so each view still shows what it showed before.
 
-The right end of the tabs says what the view shows: the number of patients in the list, such as `12 patients`, or `3 of 12 patients` after `find`. The appointment view shows the appointments of every patient, so it says `All patients`.
-
-To see another week in the appointment view, click the arrow buttons above the list, or press Left or Right with the focus in the list. Esc goes back to this week.
+In the weekly view, click the arrow buttons above the list to see another week, or press Left or Right with the focus in the list. The arrows show only in the weekly view. Esc in the list goes back from a `viewappt` page to the weekly view, and from the weekly view to this week.
 
 ### Using the keyboard
 
-You can use LaiNurse without the mouse. The keyboard focus is in the command box or in the view that is shown. In the view, it is on the view tabs or in the list below them. Tab goes back and forth between the command box and the view, and Up and Down go between the tabs and the list. The part with the focus has a green border, and the command box is dimmed while the focus is elsewhere. The details beside the list do not take the focus. To scroll them, use the mouse.
+You can use LaiNurse without the mouse. The keyboard focus is in the command box or in the view that is shown. In the view, it is on the view tabs or in the list below them, and Tab, Up and Down move between the two. Esc moves from the command box to the view, and typing or Enter moves back. The part with the focus has a grey-blue border, and the command box is dimmed while the focus is elsewhere. The details beside the list do not take the focus. To scroll them, press Shift+Up and Shift+Down in the view, or use the mouse.
 
 **In the command box:**
 
 Key | What it does
 --------|------------------
 Enter | Runs the command.
-Tab | Finishes typing a patient ID after `view`, `delete` or `edit`. See below. In an empty command box, moves back to the view, where the focus was last: the tabs or the list. The first time, it moves to the tabs.
+Tab | Finishes typing a patient ID after `view`, `delete` or `edit`. See below. With nothing to finish, such as in an empty command box, it does nothing.
 Up and Down | Go back and forth through the commands you entered since LaiNurse started, including ones that failed. Down after the newest command gives back what you were typing.
 Esc | Moves to the list of the view that is shown, or to the tabs if the patient list is empty. What you typed stays in the command box.
-Shift+Tab | Moves back to the view, as Tab does in an empty command box.
 
 **On the view tabs:**
 
 Key | What it does
 --------|------------------
-Left and Right | Show the **Patients** or the **Appointments** view. While the focus is on the tabs, a hint beside them shows these keys.
-Down | Moves to the list below the tabs.
-Up | Moves to the command box.
+Left and Right | Show the **Patients** or the **Appointments** view.
+Down and Tab | Move to the list below the tabs.
+Up | Does nothing, so the focus stays on the tabs.
 Other keys | Work as they do in a list, below.
 
 **In a list:**
 
 Key | What it does
 --------|------------------
-Up and Down | In the patient list, select the previous or next patient and show their details. In the appointment list, select the previous or next appointment and show its patient's details. Up at the first patient, or at the first appointment of the week, moves to the view tabs.
-Page Up, Page Down, Home and End | In the patient list, move further, in the same way as Up and Down. In the appointment list, select the first or last appointment of the week.
-Left and Right | In the appointment list, show the previous or next week, and select its first appointment.
+Up and Down | In the patient list, select the previous or next patient and show their details. In the appointment list, select the previous or next appointment and show its patient's details. Up at the first patient, or at the first appointment of the page, moves to the view tabs.
+Ctrl+Up and Ctrl+Down (Cmd+Up and Cmd+Down on macOS) | Select the first or last patient in the patient list, or the first or last appointment of the page in the appointment list.
+Page Up, Page Down, Home and End | In the patient list, move further, in the same way as Up and Down. In the appointment list, select the first or last appointment of the page.
+Left and Right | In the weekly appointment view, show the previous or next week, and select its first appointment. On a `viewappt` page, they do nothing.
+Shift+Up and Shift+Down | Scroll the details beside the list.
+Tab | Moves to the view tabs.
 Any letter, digit or space | Goes back to the command box and types it there, after what you typed before.
 Enter | Goes back to the command box, keeping what you typed.
-Esc | In the patient view, shows all patients, as `list` does. In the appointment view, goes back to this week.
-Tab and Shift+Tab | Move to the command box. Tab there brings you back to the list.
+Esc | In the patient view, shows all patients, as `list` does. In the appointment view, goes back from a `viewappt` page to the weekly view, and from the weekly view to this week.
 
+* Shift+Tab does nothing, in the command box or in the view.
 * The appointment list takes the focus even in a week with no appointments, so that Left and Right still work. Up there moves to the view tabs.
 * When the focus moves to the patient list, the patient whose details are shown stays selected. If no patient in the list is selected, LaiNurse selects the first one and shows their details. So the selected patient is always the one shown.
-* When the focus moves to the appointment list and no appointment is selected, LaiNurse selects the first appointment from today on in this week, or the first appointment of another week, and shows its patient's details.
+* When the focus moves to the appointment list and no appointment is selected, LaiNurse selects the first appointment that has not passed, on a page that includes today, or the first appointment of another page, and shows its patient's details.
 * For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.
 * To finish a patient ID with Tab, type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
   For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
@@ -237,7 +245,7 @@ Examples:
 
 ### Viewing appointments: `viewappt`
 
-Shows the appointments on a date, or between two dates, in the appointment view, and lists the patients who have one.
+Shows only the appointments on a date, or between two dates, in the appointment view, and lists the patients who have one.
 
 Format: `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`
 
@@ -248,16 +256,16 @@ Format: `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`
 * "Today" is the current date on your computer, in its time zone. If your computer is set to a different time zone from where you visit patients, "today" can be a day off near midnight.
 * The `--from` date must not be later than the `--to` date. With only `--to`, the date must not be before today. To see past appointments, give `--from` too.
 * `DATE` cannot be combined with `--from` or `--to`.
-* LaiNurse switches to the **Appointments** view, at the week of the first appointment in the range. That appointment is selected, and its patient's details are shown. If no appointment is in the range, the view shows the week of `DATE`, or of the start of the range, with nothing selected.
-* The appointment view shows every appointment of that week, including any outside the range. To see other weeks, press Left or Right with the focus in the list, or click the arrow buttons. See [The patient and appointment views](#the-patient-and-appointment-views).
+* LaiNurse switches to the **Appointments** view, and shows the appointments in the range on one page, in place of the weekly view. The first one is selected, and its patient's details are shown. If no appointment is in the range, the page says `No appointments in this range.`
+* To go back to the weekly view, press Esc with the focus in the appointment list. The weekly view shows the week that it showed before. See [The patient and appointment views](#the-patient-and-appointment-views).
 * The patient list, on the **Patients** tab, shows the patients with an appointment in the range. All of each patient's appointments are checked, with or without a time. Each patient appears once, in the original list order. If no patient has an appointment in the range, the patient list is empty.
 * Only dates are compared, so an appointment earlier today still counts.
 
 Examples:
-* `viewappt 2026-10-15` shows the week of October 15, 2026, and lists the patients with appointments on that day.
-* `viewappt --from 2026-10-01 --to 2026-10-31` lists the patients with appointments in October 2026, and shows the week of the first one.
-* `viewappt --to 2026-10-31` lists the patients with appointments from today to October 31, 2026, and shows the week of the first one.
-* `viewappt --from 2026-12-01` lists the patients with appointments on or after December 1, 2026, and shows the week of the first one.
+* `viewappt 2026-10-15` shows the appointments on October 15, 2026.
+* `viewappt --from 2026-10-01 --to 2026-10-31` shows the appointments in October 2026.
+* `viewappt --to 2026-10-31` shows the appointments from today to October 31, 2026.
+* `viewappt --from 2026-12-01` shows the appointments on or after December 1, 2026.
 
 ### Viewing a patient's details: `view`
 
@@ -269,7 +277,7 @@ Format: `view ID`
 * The patient does not need to be in the displayed list, because `view` searches all patients. If they are in the displayed list, their row is highlighted.
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * LaiNurse switches to the **Patients** view.
-* The panel shows the patient's name, ID, phone number, address, medical history and appointments. Under **Appointments**, it lists every appointment today or later, in time order. Under **Past**, it lists the last two past appointments, latest first and dimmed. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `No time`. A patient with no appointment today or later shows `None upcoming`. If the details do not fit, scroll down the panel.
+* The panel shows the patient's name, ID, phone number, address, medical history and appointments. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last two that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `No time specified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
 * The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete all patients with `clear`, it goes back to its starting message.
 * You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 

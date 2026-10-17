@@ -23,14 +23,13 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 import seedu.address.model.patient.Patient;
-import seedu.address.model.patient.PatientAppointment;
 import seedu.address.testutil.LaiNurseBuilder;
 import seedu.address.testutil.PatientBuilder;
 
@@ -66,8 +65,8 @@ public class ViewAppointmentCommandTest {
         expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(date, date));
 
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 0, date.toString());
-        // the appointment view still opens at the date's week, with nothing selected
-        assertCommandSuccess(command, model, new CommandResult(expectedMessage, date, Optional.empty()),
+        // the appointment view shows the range on one page, here with no appointments
+        assertCommandSuccess(command, model, new CommandResult(expectedMessage, new AppointmentRange(date, date)),
                 expectedModel);
     }
 
@@ -81,8 +80,8 @@ public class ViewAppointmentCommandTest {
         expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(date, date));
 
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date.toString());
-        assertCommandSuccess(command, model,
-                new CommandResult(expectedMessage, date, Optional.of(entry(DANIEL, "2026-10-06"))), expectedModel);
+        assertCommandSuccess(command, model, new CommandResult(expectedMessage, new AppointmentRange(date, date)),
+                expectedModel);
         assertEquals(List.of(DANIEL), model.getFilteredPatientList());
     }
 
@@ -95,9 +94,8 @@ public class ViewAppointmentCommandTest {
 
         expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(start, end));
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 2, start, end);
-        // the appointment view opens at the first appointment in the range, not at the start of the range
-        assertCommandSuccess(command, model, new CommandResult(expectedMessage, LocalDate.of(2026, 10, 5),
-                Optional.of(entry(BENSON, "2026-10-05 09:30"))), expectedModel);
+        assertCommandSuccess(command, model, new CommandResult(expectedMessage, new AppointmentRange(start, end)),
+                expectedModel);
         assertEquals(List.of(BENSON, DANIEL), model.getFilteredPatientList());
     }
 
@@ -109,8 +107,8 @@ public class ViewAppointmentCommandTest {
 
         expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(start, end));
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 1, start, end);
-        assertCommandSuccess(command, model, new CommandResult(expectedMessage, end,
-                Optional.of(entry(BENSON, "2026-10-05 09:30"))), expectedModel);
+        assertCommandSuccess(command, model, new CommandResult(expectedMessage, new AppointmentRange(start, end)),
+                expectedModel);
         assertEquals(List.of(BENSON), model.getFilteredPatientList());
     }
 
@@ -121,9 +119,9 @@ public class ViewAppointmentCommandTest {
 
         expectedModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(start, LocalDate.MAX));
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW, 1, start);
-        // Benson's appointment is before the start, so Daniel's is the first one in the range
+        // a range with no end ends at LocalDate.MAX
         assertCommandSuccess(command, model,
-                new CommandResult(expectedMessage, start, Optional.of(entry(DANIEL, "2026-10-06"))), expectedModel);
+                new CommandResult(expectedMessage, new AppointmentRange(start, LocalDate.MAX)), expectedModel);
         assertEquals(List.of(DANIEL), model.getFilteredPatientList());
     }
 
@@ -143,8 +141,8 @@ public class ViewAppointmentCommandTest {
         ViewAppointmentCommand command = new ViewAppointmentCommand(Optional.empty(), Optional.of(end), FIXED_CLOCK);
         expectedRelativeModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(today, end));
         String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 2, today, end);
-        CommandResult expectedResult = new CommandResult(expectedMessage, today,
-                Optional.of(new PatientAppointment(onToday, onToday.getSchedule().asList().get(0))));
+        // a range with no start starts today
+        CommandResult expectedResult = new CommandResult(expectedMessage, new AppointmentRange(today, end));
         assertCommandSuccess(command, relativeModel, expectedResult, expectedRelativeModel);
         assertEquals(List.of(onToday, inThreeDays), relativeModel.getFilteredPatientList());
 
@@ -152,7 +150,7 @@ public class ViewAppointmentCommandTest {
         command = new ViewAppointmentCommand(Optional.empty(), Optional.of(today), FIXED_CLOCK);
         expectedRelativeModel.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(today, today));
         expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, today);
-        expectedResult = new CommandResult(expectedMessage, today, expectedResult.getAppointmentToSelect());
+        expectedResult = new CommandResult(expectedMessage, new AppointmentRange(today, today));
         assertCommandSuccess(command, relativeModel, expectedResult, expectedRelativeModel);
         assertEquals(List.of(onToday), relativeModel.getFilteredPatientList());
     }
@@ -208,10 +206,6 @@ public class ViewAppointmentCommandTest {
         String expected = ViewAppointmentCommand.class.getCanonicalName()
                 + "{startDate=Optional.empty, endDate=Optional[" + date + "]}";
         assertEquals(expected, command.toString());
-    }
-
-    private static PatientAppointment entry(Patient patient, String appointment) {
-        return new PatientAppointment(patient, new Appointment(appointment));
     }
 
     private static Patient patientWithAppointment(String id, LocalDate date) {

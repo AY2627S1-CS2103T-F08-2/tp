@@ -106,48 +106,75 @@ from the abstract `UiPart` class, which captures common behavior among classes t
 show (see [Patient and appointment views](#patient-and-appointment-views)), and clicking a tab, or Left and Right with the
 focus on the tabs, switch the view without running a command.
 
-`PatientListPanel` shows each patient in the filtered list on one row, and its `PatientDetailPanel` shows all the
-details of one patient. When a `CommandResult` names a patient to view, as the result of `view` does, `MainWindow` tells
-that `PatientDetailPanel` to show the patient. After every command, `MainWindow` highlights the shown patient's row in
-`PatientListPanel`, or no row if that patient is not in the displayed list. `PatientDetailPanel` finds the
-patient by ID in the list of all patients from `Logic#getPatientList()`, and listens to that list. So it shows a
-patient's new details after an edit, and goes back to its starting message after the patient is deleted, whatever the
-filter on the displayed list is. `DetailAppointments` picks the appointments that the panel lists: every one from today
-on, and the latest two past ones, plus a marked older one.
+`PatientListPanel` shows each patient in the filtered list on one row, with their next appointment, and its
+`PatientDetailPanel` shows all the details of one patient. Above the rows, a header says whether the list is filtered,
+and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
+as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. When a
+`CommandResult` names a patient to view, as the result of `view` does, `MainWindow` tells that `PatientDetailPanel` to
+show the patient. After every command, `MainWindow` highlights the shown patient's row in `PatientListPanel`, or no row if
+that patient is not in the displayed list. `PatientDetailPanel` finds the patient by ID in the list of all patients from
+`Logic#getPatientList()`, and listens to that list. So it shows a patient's new details after an edit, and goes back to
+its starting message after the patient is deleted, whatever the filter on the displayed list is.
 
-`AppointmentListPanel` shows one week of `Logic#getAppointmentList()`, which holds every appointment of every patient.
-`AppointmentWeek` is a week from Monday to Sunday, and `AppointmentPage` turns a week and the appointments into rows: a
-heading for each day, followed by that day's appointments, numbered across the week. The panel listens to the
-appointment list and rebuilds the page after a change, keeping the selected appointment if it is still there. Only
-appointment rows can be selected, so the panel handles Up, Down, Home, End, Left and Right itself, with the moves that
-`AppointmentPage` finds, and headings ignore the mouse. When the selection changes, the panel tells `MainWindow`, which
-shows the appointment's patient in the second `PatientDetailPanel` with that appointment marked.
+An appointment has passed once its time today has gone by, or once its day is over if it has no time.
+`AppointmentFormatter#hasPassed` holds this rule, and the three places that show appointments use it:
+
+* A patient's row shows their first appointment that has not passed, from `AppointmentFormatter#findFirstNotPassed`.
+* `DetailAppointments` picks the appointments that the details list: every one that has not passed, and the latest two
+  that have, plus a marked older one.
+* The appointment list greys out the appointments that have passed.
+
+`AppointmentListPanel` shows the appointments of `Logic#getAppointmentList()`, which holds every appointment of every
+patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek`, from Monday to Sunday. After
+`viewappt`, the panel shows only the appointments in the command's range, on one page, and hides the week's arrow
+buttons. `AppointmentPage#ofWeek` and `AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
+of the week, or for each day in the range that has an appointment, followed by that day's appointments, numbered down
+the page. An appointment with no time comes first in its day, except today, where it comes after the appointments that
+have passed, right above the next one. A page is built as at the time given to it, so the page and the appointment that
+it selects first agree, and unit tests can fix the time. While a range is shown, the panel keeps the week of the weekly
+view, so that Esc goes back to it. The panel listens to the appointment list and rebuilds the page after a change,
+keeping the selected appointment if it is still there. Only appointment rows can be selected, so the panel handles Up,
+Down, Home, End, Left and Right itself, with the moves that `AppointmentPage` finds, and headings ignore the mouse. When
+the selection changes, the panel tells `MainWindow`, which shows the appointment's patient in the second
+`PatientDetailPanel` with that appointment marked.
+
+`DarkTheme.css` gives each highlight colour one meaning, as two named colours at its top: orange for urgency, which is
+whatever is today, and a grey-blue for selection, which is the keyboard focus and the selected tab, row and
+appointment. So the marked appointment in the details is orange only if it is today.
 
 When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID in the
-command, and replaces the text with the first one. Each further Tab gives the next one. `IdCompleter` in the `Logic`
-component holds the rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an
-ID, so the ID must end the command. `edit` takes the ID first and options after it, so `IdCompleter` completes the word
-after `edit` and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
-started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
+command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
+does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
+rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
+end the command. `edit` takes the ID first and options after it, so `IdCompleter` completes the word after `edit` and
+keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app started, which the
+Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
 The keyboard focus is in one of three areas, given by `FocusArea`: the command box, and in the view that is shown, the
-view tabs or the list. The details beside the list are not an area, so the keyboard never moves the focus there. Tab
-goes back and forth between the command box and the view. `MainWindow` remembers which part of the view, the tabs or
-the list, last had the focus, and `FocusArea#afterTab` sends the focus back there from the command box. In the view, Up
-and Down move between the tabs and the list: each list calls back to `MainWindow` when Up is pressed at its first row,
-and `MainWindow` handles Down and Up on the tabs.
+view tabs or the list. The details beside the list are not an area, so the keyboard never moves the focus there. In the
+view, Tab moves between the tabs and the list, as `FocusArea#afterTab` gives. Up and Down move between them too: each
+list calls back to `MainWindow` when Up is pressed at its first row, and `MainWindow` handles Down on the tabs. Up on
+the tabs does nothing: `MainWindow` consumes it, so that JavaFX does not move the focus to another node. In both lists,
+Ctrl+Up and Ctrl+Down (Cmd on macOS, as given by `KeyEvent#isShortcutDown`) select the first and last row. The tabs
+take the focus only from the keyboard, so a click on a tab does not move the focus. If a tab has the focus when the view
+changes, `MainWindow` moves the focus to the tab of the view being shown.
 
 Esc in the command box calls back to `MainWindow`, which moves the focus to the list, or to the tabs if the patient list
-is empty, and leaves the typed text in place. Tab in an empty command box calls back too. Outside the command box,
-`MainWindow` handles keys with event filters on the window, which see each key before the focused part does.
-`BrowseKeys` decides what Enter, Esc, Tab and typed text do there:
+is empty, and leaves the typed text in place. Outside the command box, `MainWindow` handles keys with event filters on
+the window, which see each key before the focused part does. `BrowseKeys` decides what Enter, Esc, Tab, Shift+Up,
+Shift+Down and typed text do there:
 
 * Enter, and any printable character, move the focus back to the command box. A typed character is added to the text
   there.
 * Esc resets the view. In the patient view, it executes `list` through the same `executeCommand` method as a typed
-  command, so the result is the same as typing `list`. In the appointment view, it shows this week again.
-* Tab and Shift+Tab move the focus to the command box. With only two places to go between, both keys do the same. The
-  appointment list always takes the focus, so that Left and Right can leave an empty week.
+  command, so the result is the same as typing `list`. In the appointment view, it goes back from a `viewappt` page to
+  the weekly view, and from the weekly view to this week.
+* Tab moves the focus between the tabs and the list. The appointment list always takes the focus, so that Left and
+  Right can leave an empty week.
+* Shift+Up and Shift+Down scroll the details beside the list, with `PatientDetailPanel#scroll`, as the details never
+  take the focus.
+* Shift+Tab does nothing, also in the command box. `MainWindow` consumes it, or JavaFX would move the focus to another
+  node.
 
 `FocusArea`, `BrowseKeys`, `AppointmentWeek`, `AppointmentPage`, `DetailAppointments` and `AppointmentFormatter` hold
 no JavaFX nodes, so unit tests cover these rules, and the UI parts only connect them to JavaFX.
@@ -333,10 +360,9 @@ command reads the date when it runs rather than when it is parsed, it never comp
 adding `--from`. The command then filters the list with `AppointmentBetweenDatesPredicate`, which shows a patient if any
 of their appointments falls in the range. Only dates are compared, so a timed appointment earlier today still counts.
 
-The command also finds the first appointment in the range in `Model#getAppointmentList()`, with the same predicate's
-`isInRange`, and returns it in the `CommandResult` with its date. If the range has no appointment, the result holds the
-start of the range and no appointment. `MainWindow` then shows the appointment view at the week of that date, with that
-appointment selected. The appointment view shows every appointment of the week, not only those in the range.
+The command also returns the range in its `CommandResult`, as a `CommandResult.AppointmentRange` whose end is
+`LocalDate.MAX` if the range has no end. `MainWindow` then tells `AppointmentListPanel` to show only the appointments in
+that range, on one page, and to select the first one.
 
 **Design considerations: where appointment searches belong**
 
@@ -358,12 +384,11 @@ Other commands keep the view that is shown.
 
 Each `Command` declares the view it shows by overriding `Command#getView()`, which returns `Optional.empty()` by default.
 `LogicManager#execute` adds that view to the command's `CommandResult` with `CommandResult#withView`, and
-`MainWindow#executeCommand` switches to it. A `CommandResult` can also hold a date and an appointment for the
-appointment view, as the result of `viewappt` does. Then `MainWindow` tells `AppointmentListPanel` to show the week of
-that date and to select that appointment.
+`MainWindow#executeCommand` switches to it. A `CommandResult` can also hold an `AppointmentRange`, as the result of
+`viewappt` does. Then `MainWindow` tells `AppointmentListPanel` to show the appointments in that range on one page.
 
 Switching the tab by mouse or key runs no command and changes no model state. So the result display, the filtered
-patient list and the shown week all keep their state. If the keyboard focus is in the view being hidden, `MainWindow`
+patient list and the shown page of appointments all keep their state. If the keyboard focus is in the view being hidden, `MainWindow`
 moves it to the tab of the view being shown.
 
 **Design considerations: where the view of a command is decided**
@@ -380,15 +405,17 @@ moves it to the tab of the view being shown.
 
 **Design considerations: what the appointment view lists**
 
-* **Alternative 1 (current choice):** It lists every appointment, a week at a time, and `viewappt` only chooses the week
-  and the selected appointment.
-    * Pros: A week always shows all the visits of that week, so a nurse sees the whole week while moving between
-      weeks. The model needs no second filter.
-    * Cons: After `viewappt` with a range, appointments outside the range still show in the weeks at its ends.
-* **Alternative 2:** `viewappt` also filters the appointment view to the range.
-    * Pros: The view shows exactly the appointments that the command found.
-    * Cons: Days outside the range look empty although they have appointments, and moving to another week needs a way
-      to clear the filter.
+* **Alternative 1 (current choice):** The weekly view lists every appointment, a week at a time. `viewappt` shows only
+  the appointments in its range, on one page with a heading for each day that has one, and Esc goes back to the weekly
+  view.
+    * Pros: The view shows exactly the appointments that the command found, however many weeks the range covers, and
+      no day looks empty because of a filter. The filter lives in the UI, so the model needs no second filtered list.
+    * Cons: The panel has two kinds of page, and the user presses Esc to get back to the weekly view.
+* **Alternative 2:** The view always shows one week of every appointment, and `viewappt` only chooses the week and the
+  selected appointment.
+    * Pros: There is one kind of page, and a week always shows all the visits of that week.
+    * Cons: After `viewappt` with a range, appointments outside the range still show, and a range of several weeks
+      needs paging to see.
 
 ### Three-tier help system and offline User Guide rendering
 
@@ -765,12 +792,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1. Nurse requests to view appointments on a date, or between two dates.
-2. LaiNurse shows the week of the first appointment in that range, with that appointment and its patient's details,
-   and lists the patients who have any appointment in the range.
-3. Nurse requests to see another week.
-4. LaiNurse shows that week's appointments.
+2. LaiNurse shows only the appointments in that range, with the first appointment and its patient's details, and
+   lists the patients who have any appointment in the range.
+3. Nurse requests to go back to the weekly view.
+4. LaiNurse shows the week that it showed before.
 
-   Steps 3-4 are repeated until the nurse has seen the weeks they need.<br>
    Use case ends.
 
 **Extensions**
@@ -801,8 +827,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. No patients have an appointment on the given date or in the given range.
 
-    * 2a1. LaiNurse shows the week of the start date with no appointment selected, and indicates that there are no
-      matching patients.
+    * 2a1. LaiNurse shows that the range has no appointments, and indicates that there are no matching patients.
 
       Use case resumes at step 3.
 
@@ -951,7 +976,7 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data, which includes a patient with the ID `S1234567A`.
 
     1. Test case: `view S1234567A`<br>
-       Expected: The **Patients** tab is selected. The panel beside the list shows the patient's name, ID, phone number, address and medical history, then their appointments from today on, then up to two past appointments, dimmed. Their row in the list is highlighted. The status message names the patient.
+       Expected: The **Patients** tab is selected. The panel beside the list shows the patient's name, ID, phone number, address and medical history, then their appointments that have not passed, then up to two that have, dimmed. Their row in the list is highlighted. The status message names the patient.
 
     1. Test case: `find --name bernice`, then `view S1234567A`<br>
        Expected: The panel shows the patient with the ID `S1234567A`, although the list shows only the `find` results. No row is highlighted.
@@ -986,35 +1011,43 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data. Enter `find --address serangoon`, so that the list shows Bernice Yu
        and David Li, and no patient's details are shown.
 
+    1. Test case: the result of the prerequisite<br>
+       Expected: The header above the list shows `Filtered patients`, `Esc to show all patients` and `2 of 6`.
+
     1. Test case: type `abc` in the command box, then press Esc<br>
-       Expected: The patient list gets a green border and the command box is dimmed. `abc` stays in the command box.
+       Expected: The patient list gets a grey-blue border and the command box is dimmed. `abc` stays in the command box.
        Bernice Yu is selected, and the panel shows her details.
 
     1. Test case: after the test case above, press Down<br>
        Expected: David Li is selected, and the panel shows his details. Up selects and shows Bernice Yu again.
 
     1. Test case: with Bernice Yu selected at the top of the list, press Up<br>
-       Expected: The **Patients** tab gets a green border, and a hint `Left Right switch views` appears beside the tabs.
-       Down moves the focus back to the list, with Bernice Yu still selected.
+       Expected: The **Patients** tab gets a grey-blue border. A second Up does nothing. Down moves the focus back to the
+       list, with Bernice Yu still selected.
 
     1. Test case: after the test cases above, press Esc<br>
-       Expected: The list shows all patients again, and the status message says that all patients are listed. The
-       patient shown in the panel stays selected, and the focus stays in the list.
+       Expected: The list shows all patients again, and the header shows `All patients` and `6 patients`. The status
+       message says that all patients are listed. The patient shown in the panel stays selected, and the focus stays in
+       the list.
 
     1. Test case: with the focus in the list, press Tab twice<br>
-       Expected: The focus moves to the command box, then back to the patient list. The patient details never get the
-       focus. Shift+Tab does the same as Tab.
+       Expected: The focus moves to the **Patients** tab, then back to the list. It never moves to the command box or to
+       the patient details. Shift+Tab does nothing.
 
-    1. Test case: press Up until the focus is on the **Patients** tab, then press Tab twice<br>
-       Expected: The focus moves to the command box, then back to the tab, because Tab goes back to where the focus
-       last was in the view.
+    1. Test case: make the window short enough that the details do not fit, then, with the focus in the list, press
+       Shift+Down, then Shift+Up<br>
+       Expected: The details scroll down, then back up. The selection in the list does not move.
 
     1. Test case: with the focus in the list, type `l`<br>
        Expected: The focus moves to the command box, which now shows `abcl`, with the caret at the end. Enter instead of
        `l` also moves the focus to the command box, without adding anything.
 
+    1. Test case: clear the command box, then press Tab<br>
+       Expected: Nothing happens, and the focus stays in the command box.
+
     1. Test case: `find --name zzz`, then press Esc<br>
-       Expected: The list is empty, so the focus goes to the **Patients** tab instead. A second Esc shows all patients.
+       Expected: The list says `No patients match the filter.`, so the focus goes to the **Patients** tab instead. A
+       second Esc shows all patients.
 
 1. Going through command history with Up and Down
 
@@ -1104,19 +1137,18 @@ testers are expected to do more *exploratory* testing.
        If you have modified the data, delete the data file and relaunch the app to restore the sample data.
 
     1. Test case: `viewappt 2026-10-07`<br>
-       Expected: The **Appointments** tab is selected, and shows the week `Mon 5 – Sun 11 Oct 2026`. Irfan Ibrahim's
-       appointment at 14:00 on Wed 7 Oct is selected, and the panel beside the list shows his details with that
-       appointment marked. The status message shows `1 patient(s) with appointments on 2026-10-07`. On the
-       **Patients** tab, only Irfan Ibrahim is listed.
+       Expected: The **Appointments** tab is selected. Above the list are `Wed 7 Oct 2026` and `Esc to show the weekly
+       view`, and no arrow buttons. The list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
+       panel beside the list shows his details with that appointment marked. The status message shows
+       `1 patient(s) with appointments on 2026-10-07`. On the **Patients** tab, only Irfan Ibrahim is listed.
 
     1. Test case: `viewappt 2026-11-02`, the date of Alex Yeoh's second appointment<br>
-       Expected: The week `Mon 2 – Sun 8 Nov 2026` is shown, with Alex Yeoh's appointment selected. On the **Patients**
-       tab, only Alex Yeoh is listed, because every appointment of each patient is checked.
+       Expected: Only Alex Yeoh's appointment on Mon 2 Nov is shown, and it is selected. On the **Patients** tab, only
+       Alex Yeoh is listed, because every appointment of each patient is checked.
 
     1. Test case: `viewappt 2026-11-11`, a date on which no patient has an appointment<br>
-       Expected: The week `Mon 9 – Sun 15 Nov 2026` is shown, with `None` beside each day and nothing selected. The
-       status message shows `0 patient(s) with appointments on 2026-11-11`. The patient list on the **Patients** tab is
-       empty.
+       Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
+       `0 patient(s) with appointments on 2026-11-11`. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
        Expected: The list is unchanged. The status message shows an error: `Dates should be a real date in the format yyyy-MM-dd`.
@@ -1132,22 +1164,24 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: The same sample data as above.
 
     1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`<br>
-       Expected: The week `Mon 5 – Sun 11 Oct 2026` is shown, the week of the first appointment in the range, with
-       Alex Yeoh's appointment at 09:30 on Mon 5 Oct selected. On the **Patients** tab, Alex Yeoh, Bernice Yu and Irfan
-       Ibrahim are listed. The status message shows `3 patient(s) with appointments from 2026-10-01 to 2026-10-31`.
+       Expected: Above the list is `Thu 1 Oct – Sat 31 Oct 2026`. The list shows the three appointments on 5, 6 and
+       7 Oct, each day under its own heading, with Alex Yeoh's at 09:30 on Mon 5 Oct selected. On the **Patients** tab,
+       Alex Yeoh, Bernice Yu and Irfan Ibrahim are listed. The status message shows
+       `3 patient(s) with appointments from 2026-10-01 to 2026-10-31`.
 
     1. Test case: `viewappt --to 2026-10-06 --from 2026-10-06`<br>
        Expected: Bernice Yu's appointment is selected, and only Bernice Yu is listed on the **Patients** tab. The
        options may be in any order, and a one-day range behaves like `viewappt 2026-10-06`.
 
     1. Test case: `viewappt --from 2026-10-07`<br>
-       Expected: Irfan Ibrahim's appointment is selected. Alex Yeoh (appointment `2026-11-02`) and Irfan Ibrahim are
-       listed on the **Patients** tab. The status message shows `2 patient(s) with appointments on or after 2026-10-07`.
+       Expected: Above the list is `From Wed 7 Oct 2026`. The list shows Irfan Ibrahim's appointment, which is
+       selected, and Alex Yeoh's on 2 Nov. Both are listed on the **Patients** tab. The status message shows
+       `2 patient(s) with appointments on or after 2026-10-07`.
 
     1. Test case: `viewappt --to 2099-12-31`<br>
        Expected: Only patients with an appointment from today onwards are listed on the **Patients** tab. The range in
        the status message starts with today's date, which is the current date in your computer's time zone. If no
-       appointment is in the range, the appointment view shows this week, with nothing selected.
+       appointment is in the range, the list says `No appointments in this range.`
 
     1. Test case: `viewappt --to 2000-01-01`<br>
        Expected: The list is unchanged. The status message says that the `--to` date is before today.
@@ -1165,7 +1199,7 @@ testers are expected to do more *exploratory* testing.
        date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123 Clementi Ave 3, #05-12 --appt 2026-10-06 15:00`.
 
     1. Test case: `viewappt 2026-10-06`<br>
-       Expected: Under `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `No time`, then Eve Tan's at 15:00.
+       Expected: Under `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`, then Eve Tan's at 15:00.
        Bernice Yu's appointment is selected. Both are listed on the **Patients** tab. The status message shows
        `2 patient(s) with appointments on 2026-10-06`.
 
@@ -1176,56 +1210,86 @@ testers are expected to do more *exploratory* testing.
 
 ### Switching views and browsing appointments
 
-1. Browsing the weeks of the appointment view
+1. Browsing a `viewappt` page and the weekly view
 
     1. Prerequisites: Start with the sample data, which has appointments on Mon 5 Oct (Alex Yeoh, 09:30), Tue 6 Oct
-       (Bernice Yu, no time) and Wed 7 Oct 2026 (Irfan Ibrahim, 14:00). Enter `viewappt 2026-10-05`.
+       (Bernice Yu, no time) and Wed 7 Oct 2026 (Irfan Ibrahim, 14:00). Enter
+       `viewappt --from 2026-10-01 --to 2026-10-31`.
 
     1. Test case: the result of the prerequisite<br>
-       Expected: The **Appointments** tab is selected. The list shows the week `Mon 5 – Sun 11 Oct 2026` with a heading
-       for each day, and the three appointments numbered 1 to 3. Alex Yeoh's appointment is selected, and the panel
-       shows his details with that appointment marked under **Past** or **Appointments**.
+       Expected: The **Appointments** tab is selected. The list shows the three appointments numbered 1 to 3, each under
+       a heading for its day, and no heading for the days without appointments. Alex Yeoh's appointment is selected,
+       and the panel shows his details with that appointment marked under **Past** or **Appointments**.
 
     1. Test case: press Esc, then Down<br>
-       Expected: The list gets a green border. Bernice Yu's appointment is selected, skipping the heading of Tue 6 Oct,
+       Expected: The list gets a grey-blue border. Bernice Yu's appointment is selected, skipping the heading of Tue 6 Oct,
        and the panel shows her details. Up selects Alex Yeoh's appointment again.
 
-    1. Test case: with the focus in the list, press Right<br>
-       Expected: The week `Mon 12 – Sun 18 Oct 2026` is shown, with `None` beside each day and `No appointments` above
-       the list. Nothing is selected, and the panel shows its starting message. Press Left: the week of 5 Oct is shown
-       again, with its first appointment selected.
+    1. Test case: with the focus in the list, press Ctrl+Down, then Ctrl+Up (Cmd on macOS)<br>
+       Expected: Ctrl+Down selects Irfan Ibrahim's appointment, the last on the page, and Ctrl+Up selects Alex Yeoh's,
+       the first.
+
+    1. Test case: with the focus in the list, press Left or Right<br>
+       Expected: Nothing changes, because a `viewappt` page has no other weeks.
 
     1. Test case: with the focus in the list, press Esc<br>
-       Expected: This week is shown, marked `This week`, and its first appointment from today on is selected, if it has
-       one.
+       Expected: The weekly view shows the week that it showed before `viewappt`, with the arrow buttons above the list.
+       If you had not moved it, that is this week, marked `This week`. Its first appointment that has not passed is
+       selected, if it has one.
+
+    1. Test case: press Right, then Left twice<br>
+       Expected: Right shows next week, marked `Next week`, and selects its first appointment, or nothing in a week with
+       no appointments. Left twice shows last week, marked `Last week`. Esc goes back to this week.
 
 1. Switching views without a command
 
     1. Prerequisites: Start with the sample data, and enter `viewappt 2026-10-05`.
 
-    1. Test case: press Esc, so that Alex Yeoh's appointment, the first of the week, is selected, then press Up<br>
-       Expected: The **Appointments** tab gets a green border, and a hint `Left Right switch views` appears beside the
-       tabs.
+    1. Test case: press Esc, so that Alex Yeoh's appointment, the first on the page, is selected, then press Up<br>
+       Expected: The **Appointments** tab gets a grey-blue border.
 
     1. Test case: after the test case above, press Left<br>
-       Expected: The **Patients** tab is selected. The list shows only Alex Yeoh, as `viewappt` left it, and the right end
-       of the tabs says `1 of 6 patients`. The status message does not change. Right shows the appointment view again,
-       with the same week and selection as before.
+       Expected: The **Patients** tab is selected. The list shows only Alex Yeoh, as `viewappt` left it, and the header
+       above it shows `Filtered patients` and `1 of 6`. The status message does not change. Right shows the appointment
+       view again, with the same page and selection as before.
 
     1. Test case: after the test cases above, press Down, then Up twice<br>
        Expected: Down moves the focus to the appointment list, with Alex Yeoh's appointment still selected. The first
-       Up moves it back to the **Appointments** tab, and the second to the command box.
+       Up moves it back to the **Appointments** tab. The second Up does nothing, and the focus stays on the tab.
 
-    1. Test case: click the **Patients** tab, then the **Appointments** tab<br>
-       Expected: The same as with Left and Right, and the focus does not move.
+    1. Test case: with the focus on the **Appointments** tab, click the **Patients** tab, then the **Appointments** tab<br>
+       Expected: The same as with Left and Right. The grey-blue border moves to the tab that you click.
+
+    1. Test case: type `abc` in the command box, then click the **Patients** tab<br>
+       Expected: The view switches, and the focus stays in the command box, with `abc` still in it.
+
+1. Appointments that have passed today
+
+    1. Prerequisites: Do these test cases before 23:59. Start with the sample data, and replace `TODAY` below with
+       today's date, such as `2026-10-17`. Add a patient with three appointments today:
+       `add --id T0567890E --name Fay Ong --phone 91234567 --address Blk 1 Bedok North Ave 1 --appt TODAY 00:00 --appt TODAY --appt TODAY 23:59`.
+
+    1. Test case: the result of the prerequisite<br>
+       Expected: On the **Patients** tab, Fay Ong's row shows `Today` in orange as her next appointment: the one with
+       no time, because the one at 00:00 has passed.
+
+    1. Test case: `view T0567890E`<br>
+       Expected: Under **Appointments**, the panel lists today's appointment with `No time specified`, then the one at
+       23:59, both in orange. Under **Past**, it lists the one at 00:00, dimmed.
+
+    1. Test case: click the **Appointments** tab, then press Esc<br>
+       Expected: The weekly view shows this week. Under today's heading, in orange, the appointment at 00:00 comes
+       first and is greyed out. Then comes the one with no time, showing `‒‒:‒‒`, and then the one at 23:59. The one
+       with no time is selected, as the first appointment that has not passed, and the panel shows Fay Ong's details
+       with it marked.
 
 1. Commands that keep the view
 
     1. Prerequisites: Start with the sample data, and enter `viewappt 2026-10-05`.
 
     1. Test case: `delete S1234567A`<br>
-       Expected: The **Appointments** tab stays selected. Alex Yeoh's appointment disappears from the week, the others
-       are renumbered 1 and 2, nothing is selected, and the panel shows its starting message.
+       Expected: The **Appointments** tab stays selected. Alex Yeoh's appointment disappears from the page, which then
+       says `No appointments in this range.` Nothing is selected, and the panel shows its starting message.
 
     1. Test case: `list`<br>
        Expected: The **Patients** tab is selected, and all patients are listed.

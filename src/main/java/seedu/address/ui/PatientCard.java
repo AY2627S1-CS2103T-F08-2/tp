@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -48,14 +49,17 @@ public class PatientCard extends UiPart<Region> {
         index.setText(displayedIndex + ".");
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);
-        LocalDate today = LocalDate.now();
-        patient.getSchedule().getNextOnOrAfter(today)
-                .ifPresentOrElse(appointment -> showNextAppointment(appointment, today), () -> {
+        LocalDateTime now = LocalDateTime.now();
+        AppointmentFormatter.findFirstNotPassed(patient.getSchedule().asList(), now)
+                .ifPresentOrElse(appointment -> showNextAppointment(appointment, now.toLocalDate()), () -> {
                     nextAppointment.setVisible(false);
                     nextAppointment.setManaged(false);
                 });
     }
 
+    /**
+     * Shows {@code appointment}, the patient's next one, highlighted if it is today.
+     */
     private void showNextAppointment(Appointment appointment, LocalDate today) {
         nextAppointment.setText(AppointmentFormatter.formatShort(appointment, today));
         if (AppointmentFormatter.isToday(appointment, today)) {
