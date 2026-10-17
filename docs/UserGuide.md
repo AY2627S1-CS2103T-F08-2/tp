@@ -83,7 +83,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * The appointments that have passed are greyed out.
   * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates, and `Esc to show the weekly view`.
 
-An appointment has passed once its time today has gone by, or once its day is over if it has no time. Orange marks what is today, such as today's heading and today's appointments. A grey-blue marks what is selected, and what has the keyboard focus.
+An appointment has passed once its time today has gone by, or once its day is over if it has no time. Orange marks what is today, such as today's heading and today's appointments. A blue marks what is selected, and what has the keyboard focus.
 
 ![The weekly appointment view, with today's first appointment selected](images/AppointmentView.png)
 
@@ -93,7 +93,7 @@ In the weekly view, click the arrow buttons above the list to see another week, 
 
 ### Using the keyboard
 
-You can use LaiNurse without the mouse. The keyboard focus is in the command box or in the view that is shown. In the view, it is on the view tabs or in the list below them, and Tab, Up and Down move between the two. Esc moves from the command box to the view, and typing or Enter moves back. The part with the focus has a grey-blue border, and the command box is dimmed while the focus is elsewhere. The details beside the list do not take the focus. To scroll them, press Shift+Up and Shift+Down in the view, or use the mouse.
+You can use LaiNurse without the mouse. The keyboard focus is in the command box or in the view that is shown. In the view, it is on the view tabs or in the list below them, and Tab, Up and Down move between the two. Esc moves from the command box to the view, and typing or Enter moves back. The part with the focus has a blue border, and the command box is dimmed while the focus is elsewhere. The details beside the list do not take the focus. To scroll them, press Shift+Up and Shift+Down in the view, or use the mouse.
 
 **In the command box:**
 

@@ -139,7 +139,7 @@ the selection changes, the panel tells `MainWindow`, which shows the appointment
 `PatientDetailPanel` with that appointment marked.
 
 `DarkTheme.css` gives each highlight colour one meaning, as two named colours at its top: orange for urgency, which is
-whatever is today, and a grey-blue for selection, which is the keyboard focus and the selected tab, row and
+whatever is today, and a blue for selection, which is the keyboard focus and the selected tab, row and
 appointment. So the marked appointment in the details is orange only if it is today.
 
 When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID in the
@@ -1015,14 +1015,14 @@ testers are expected to do more *exploratory* testing.
        Expected: The header above the list shows `Filtered patients`, `Esc to show all patients` and `2 of 6`.
 
     1. Test case: type `abc` in the command box, then press Esc<br>
-       Expected: The patient list gets a grey-blue border and the command box is dimmed. `abc` stays in the command box.
+       Expected: The patient list gets a blue border and the command box is dimmed. `abc` stays in the command box.
        Bernice Yu is selected, and the panel shows her details.
 
     1. Test case: after the test case above, press Down<br>
        Expected: David Li is selected, and the panel shows his details. Up selects and shows Bernice Yu again.
 
     1. Test case: with Bernice Yu selected at the top of the list, press Up<br>
-       Expected: The **Patients** tab gets a grey-blue border. A second Up does nothing. Down moves the focus back to the
+       Expected: The **Patients** tab gets a blue border. A second Up does nothing. Down moves the focus back to the
        list, with Bernice Yu still selected.
 
     1. Test case: after the test cases above, press Esc<br>
@@ -1222,7 +1222,7 @@ testers are expected to do more *exploratory* testing.
        and the panel shows his details with that appointment marked under **Past** or **Appointments**.
 
     1. Test case: press Esc, then Down<br>
-       Expected: The list gets a grey-blue border. Bernice Yu's appointment is selected, skipping the heading of Tue 6 Oct,
+       Expected: The list gets a blue border. Bernice Yu's appointment is selected, skipping the heading of Tue 6 Oct,
        and the panel shows her details. Up selects Alex Yeoh's appointment again.
 
     1. Test case: with the focus in the list, press Ctrl+Down, then Ctrl+Up (Cmd on macOS)<br>
@@ -1246,7 +1246,7 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data, and enter `viewappt 2026-10-05`.
 
     1. Test case: press Esc, so that Alex Yeoh's appointment, the first on the page, is selected, then press Up<br>
-       Expected: The **Appointments** tab gets a grey-blue border.
+       Expected: The **Appointments** tab gets a blue border.
 
     1. Test case: after the test case above, press Left<br>
        Expected: The **Patients** tab is selected. The list shows only Alex Yeoh, as `viewappt` left it, and the header
@@ -1258,7 +1258,7 @@ testers are expected to do more *exploratory* testing.
        Up moves it back to the **Appointments** tab. The second Up does nothing, and the focus stays on the tab.
 
     1. Test case: with the focus on the **Appointments** tab, click the **Patients** tab, then the **Appointments** tab<br>
-       Expected: The same as with Left and Right. The grey-blue border moves to the tab that you click.
+       Expected: The same as with Left and Right. The blue border moves to the tab that you click.
 
     1. Test case: type `abc` in the command box, then click the **Patients** tab<br>
        Expected: The view switches, and the focus stays in the command box, with `abc` still in it.

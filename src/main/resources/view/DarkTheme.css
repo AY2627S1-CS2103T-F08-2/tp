@@ -1,11 +1,11 @@
 /*
- * Two highlight colours, each with one meaning. Orange marks urgency: today. A greyed NUS blue marks selection:
- * the keyboard focus, and the selected tab, row and appointment. It is light enough to stand out on the dark
- * greys, as NUS blue itself does not.
+ * Two highlight colours, each with one meaning. Orange marks urgency: today. A lightened NUS blue marks
+ * selection: the keyboard focus, and the selected tab, row and appointment. NUS blue itself is too dark to see
+ * on the dark greys.
  */
 .root {
     -lainurse-urgent: #f7b26a;
-    -lainurse-selection: #8b9eb1;
+    -lainurse-selection: #466e97;
 }
 
 .background {
