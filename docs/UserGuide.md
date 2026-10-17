@@ -78,12 +78,14 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. A filtered list also shows `Esc to show all patients`. An empty list says `No patients yet.` or `No patients match the filter.`
   * The next appointment of a patient is their first appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last two past appointments, dimmed.
-* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page.
+* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. If it is older than the patient's last two past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
   * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates, and `Esc to show the weekly view`.
 
-An appointment has passed once its time today has gone by, or once its day is over if it has no time. Orange marks what is today, such as today's heading and today's appointments. A blue marks what is selected, and what has the keyboard focus.
+In both views, the list and the details share the width of the window, and grow and shrink together as you resize it.
+
+An appointment has passed once its time today has gone by, or once its day is over if it has no time. So one at 10:00 has passed from 10:01. LaiNurse keeps up with the clock while it is left open: within a few seconds of an appointment passing, it is greyed out and moves under **Past**, and after midnight, the new day is marked as today. Orange marks what is today, such as today's heading and today's appointments. A blue marks what is selected, and what has the keyboard focus.
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
@@ -337,6 +339,7 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
 2. **If you minimize the Help Window** and then run the `help window` command (or `help --window`, **Help** > **Help**,
    or the keyboard shortcut <kbd>F1</kbd>) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+3. **In a narrow window**, such as at the default size, the hint and the count in a list's header, such as `Esc to show all patients`, can be cut short. The remedy is to widen the window.
 
 --------------------------------------------------------------------------------------------------------------------
 

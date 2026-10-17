@@ -106,6 +106,12 @@ from the abstract `UiPart` class, which captures common behavior among classes t
 show (see [Patient and appointment views](#patient-and-appointment-views)), and clicking a tab, or Left and Right with the
 focus on the tabs, switch the view without running a command.
 
+In each view, `MainWindow#shareWidth` gives the list 45% of the width and the details the rest, so that both grow and
+shrink together as the window is resized. The window can be no narrower than both at their minimum widths. In a narrow
+list header, the hint and the count give up their room before the dates do. In narrow details, `PatientDetailPanel`
+shrinks the dates of all appointment rows together and lets the times wrap, so that the times stay in line and no row
+is wider than the panel.
+
 `PatientListPanel` shows each patient in the filtered list as a `PatientRow`, with their next appointment, and its
 `PatientDetailPanel` shows all the details of one patient. Above the rows, a header says whether the list is filtered,
 and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
@@ -1023,10 +1029,10 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: type `abc` in the command box, then press Esc<br>
        Expected: The patient list gets a blue border and the command box is dimmed. `abc` stays in the command box.
-       Bernice Yu is selected, and the panel shows her details.
+       Bernice Yu is selected, and the panel shows their details.
 
     1. Test case: after the test case above, press Down<br>
-       Expected: David Li is selected, and the panel shows his details. Up selects and shows Bernice Yu again.
+       Expected: David Li is selected, and the panel shows their details. Up selects and shows Bernice Yu again.
 
     1. Test case: with Bernice Yu selected at the top of the list, press Up<br>
        Expected: The **Patients** tab gets a blue border. A second Up does nothing. Down moves the focus back to the
@@ -1091,7 +1097,7 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the unmodified sample data and enter `list`.
 
     1. Test case: `find --id 0123`<br>
-       Expected: Only Charlotte Oliveiro is shown, because her ID contains `0123`.
+       Expected: Only Charlotte Oliveiro is shown, because their ID contains `0123`.
 
     1. Test case: `find --name "lex"`<br>
        Expected: Only Alex Yeoh is shown. Partial names match, even though the previous search showed another patient.
@@ -1100,7 +1106,7 @@ testers are expected to do more *exploratory* testing.
        Expected: Bernice Yu and David Li are shown. Matching ignores case and repeated whitespace, and accepts curly quotes.
 
     1. Test case: `find --phone 4388`<br>
-       Expected: Only Alex Yeoh is shown, because his phone number contains `4388`.
+       Expected: Only Alex Yeoh is shown, because their phone number contains `4388`.
 
     1. Test case: `find --medical-history penicillin`<br>
        Expected: Only Bernice Yu is shown. Patients without medical history do not match this criterion.
@@ -1111,7 +1117,7 @@ testers are expected to do more *exploratory* testing.
        Expected: Alex Yeoh, Bernice Yu and David Li are shown, in their original order. Either field may match.
 
     1. Test case: `find --name Alex --id 1234567`<br>
-       Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though both criteria match him.
+       Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though Alex matches both criteria.
 
     1. Test case: `find --address "Gardens Serangoon"`<br>
        Expected: An empty list is shown with a count of zero. Multiword values must match a contiguous substring.
@@ -1146,7 +1152,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt 2026-10-07`<br>
        Expected: The **Appointments** tab is selected. Above the list are `Wed 7 Oct 2026` and `Esc to show the weekly
        view`, and no arrow buttons. The list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
-       panel beside the list shows his details with that appointment marked. The status message shows
+       panel beside the list shows their details with that appointment marked. The status message shows
        `1 patient(s) with appointments on 2026-10-07`. On the **Patients** tab, only Irfan Ibrahim is listed.
 
     1. Test case: `viewappt 2026-11-02`, the date of Alex Yeoh's second appointment<br>
@@ -1226,11 +1232,11 @@ testers are expected to do more *exploratory* testing.
     1. Test case: the result of the prerequisite<br>
        Expected: The **Appointments** tab is selected. The list shows the three appointments numbered 1 to 3, each under
        a heading for its day, and no heading for the days without appointments. Alex Yeoh's appointment is selected,
-       and the panel shows his details with that appointment marked under **Past** or **Appointments**.
+       and the panel shows their details with that appointment marked under **Past** or **Appointments**.
 
     1. Test case: press Esc, then Down<br>
        Expected: The list gets a blue border. Bernice Yu's appointment is selected, skipping the heading of Tue 6 Oct,
-       and the panel shows her details. Up selects Alex Yeoh's appointment again.
+       and the panel shows their details. Up selects Alex Yeoh's appointment again.
 
     1. Test case: with the focus in the list, press Ctrl+Down, then Ctrl+Up (Cmd on macOS)<br>
        Expected: Ctrl+Down selects Irfan Ibrahim's appointment, the last on the page, and Ctrl+Up selects Alex Yeoh's,
@@ -1270,14 +1276,28 @@ testers are expected to do more *exploratory* testing.
     1. Test case: type `abc` in the command box, then click the **Patients** tab<br>
        Expected: The view switches, and the focus stays in the command box, with `abc` still in it.
 
+1. Resizing the window
+
+    1. Prerequisites: Start with the sample data, and enter `view S1234567A`.
+
+    1. Test case: drag an edge of the window to make it as narrow as it goes, then wide<br>
+       Expected: The patient list and the details beside it shrink and grow together. At the narrowest, nothing is cut
+       off at the sides of the window, and neither the list nor the details scroll sideways. In the details, long
+       values such as Alex Yeoh's address wrap without breaking a word, and `No time specified` beside Mon 2 Nov wraps
+       onto two lines.
+
+    1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`, then make the window as narrow as it goes<br>
+       Expected: Above the list, `Thu 1 Oct – Sat 31 Oct 2026` stays whole, while `Esc to show the weekly view` and
+       the count beside it are cut short. Widening the window shows them in full.
+
 1. Appointments that have passed today
 
-    1. Prerequisites: Do these test cases before 23:59. Start with the sample data, and replace `TODAY` below with
+    1. Prerequisites: Do these test cases before 23:55. Start with the sample data, and replace `TODAY` below with
        today's date, such as `2026-10-17`. Add a patient with three appointments today:
        `add --id T0567890E --name Fay Ong --phone 91234567 --address Blk 1 Bedok North Ave 1 --appt TODAY 00:00 --appt TODAY --appt TODAY 23:59`.
 
     1. Test case: the result of the prerequisite<br>
-       Expected: On the **Patients** tab, Fay Ong's row shows `Today` in orange as her next appointment: the one with
+       Expected: On the **Patients** tab, Fay Ong's row shows `Today` in orange as their next appointment: the one with
        no time, because the one at 00:00 has passed.
 
     1. Test case: `view T0567890E`<br>
@@ -1289,6 +1309,12 @@ testers are expected to do more *exploratory* testing.
        first and is greyed out. Then comes the one with no time, showing `‒‒:‒‒`, and then the one at 23:59. The one
        with no time is selected, as the first appointment that has not passed, and the panel shows Fay Ong's details
        with it marked.
+
+    1. Test case: `edit T0567890E --add-appt TODAY HH:MM`, where `HH:MM` is two minutes from now, then
+       `view T0567890E`. Wait until the minute after `HH:MM`, without entering a command.<br>
+       Expected: At first, the panel lists the new appointment under **Appointments**, in orange. Within a few seconds
+       of the minute after `HH:MM`, when the appointment has passed, it moves under **Past**, dimmed. On the
+       **Appointments** tab, it is greyed out.
 
 1. Commands that keep the view
 
