@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.PatientAppointment;
 
 /**
  * Formats appointments and their dates for display, relative to a given day, and decides which appointments
@@ -166,6 +167,23 @@ public final class AppointmentFormatter {
         }
         LocalTime thisMinute = now.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
         return appointment.getTime().map(time -> time.isBefore(thisMinute)).orElse(false);
+    }
+
+    /**
+     * Returns true if the window shows {@code appointments} differently at {@code later} than at {@code earlier}:
+     * the two are on different days, or one of the appointments has passed at one but not at the other.
+     */
+    public static boolean hasChangedBetween(List<PatientAppointment> appointments, LocalDateTime earlier,
+            LocalDateTime later) {
+        requireNonNull(appointments);
+        requireNonNull(earlier);
+        requireNonNull(later);
+        if (!earlier.toLocalDate().equals(later.toLocalDate())) {
+            return true;
+        }
+        return appointments.stream()
+                .map(PatientAppointment::getAppointment)
+                .anyMatch(appointment -> hasPassed(appointment, earlier) != hasPassed(appointment, later));
     }
 
     private static String formatWeekdayDate(LocalDate date, LocalDate today) {

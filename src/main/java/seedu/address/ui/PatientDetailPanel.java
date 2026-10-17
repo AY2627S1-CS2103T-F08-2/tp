@@ -140,7 +140,11 @@ public class PatientDetailPanel extends UiPart<Region> {
         return details.isFocused();
     }
 
-    private void refresh() {
+    /**
+     * Shows the patient's details again as of now, after the patient changes, an appointment passes or a new day
+     * begins. Keeps the scroll position.
+     */
+    public void refresh() {
         Optional<Patient> patient = Optional.ofNullable(shownId).flatMap(id -> allPatients.stream()
                 .filter(p -> p.getId().equals(id)).findFirst());
         if (patient.isPresent()) {

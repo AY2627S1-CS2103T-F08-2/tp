@@ -253,10 +253,10 @@ public class AppointmentListPanel extends UiPart<Region> {
     }
 
     /**
-     * Rebuilds the page after appointments change, and keeps the selected appointment if it is still there,
-     * even if its patient's other details changed.
+     * Rebuilds the page as of now, after appointments change, an appointment passes or a new day begins. Keeps the
+     * selected appointment if it is still there, even if its patient's other details changed.
      */
-    private void refresh() {
+    public void refresh() {
         Optional<PatientAppointment> selected = page.getEntryAt(
                 appointmentListView.getSelectionModel().getSelectedIndex());
         showPage();

@@ -124,6 +124,13 @@ An appointment has passed once its time today has gone by, or once its day is ov
   that have, plus a marked older one.
 * The appointment list greys out the appointments that have passed.
 
+Each of these decides what has passed, and which day is today, when it is drawn. So that they stay right while the
+window is left open, `MinuteClock` reads the clock every few seconds and tells `MainWindow` when the minute changes.
+`MainWindow` then asks `AppointmentFormatter#hasChangedBetween` whether an appointment has passed, or a new day has
+begun, since the minute before. Only then does it refresh both lists and both details panels, which keep their
+selection. Reading the clock every few seconds, rather than once a minute, also catches up within seconds after the
+computer wakes from sleep.
+
 `AppointmentListPanel` shows the appointments of `Logic#getAppointmentList()`, which holds every appointment of every
 patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek`, from Monday to Sunday. After
 `viewappt`, the panel shows only the appointments in the command's range, on one page, and hides the week's arrow

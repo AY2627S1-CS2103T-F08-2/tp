@@ -137,6 +137,14 @@ public class PatientListPanel extends UiPart<Region> {
     }
 
     /**
+     * Redraws the rows as of now, so that each patient shows their next appointment, after one has passed or a new
+     * day has begun. Keeps the selection and the scroll position.
+     */
+    public void refresh() {
+        patientListView.refresh();
+    }
+
+    /**
      * Moves the keyboard focus to the list, unless the list is empty.
      *
      * @return true if the list has the focus.

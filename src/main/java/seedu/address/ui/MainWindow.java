@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -59,6 +60,7 @@ public class MainWindow extends UiPart<Stage> {
     private CommandBox commandBox;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
+    private MinuteClock clock;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -190,6 +192,25 @@ public class MainWindow extends UiPart<Stage> {
 
         viewTabs.addEventFilter(KeyEvent.KEY_PRESSED, this::handleTabKeyPressed);
         showView(View.PATIENTS);
+
+        clock = new MinuteClock(this::handleMinuteChanged);
+        clock.start();
+    }
+
+    /**
+     * Shows the views again as of now if, since {@code previousMinute}, an appointment has passed or a new day has
+     * begun. The lists and details decide what has passed, and what is today, only when they are drawn, so without
+     * this they would go out of date while the window is left open.
+     */
+    private void handleMinuteChanged(LocalDateTime previousMinute, LocalDateTime minute) {
+        if (!AppointmentFormatter.hasChangedBetween(logic.getAppointmentList(), previousMinute, minute)) {
+            return;
+        }
+        logger.fine("Refreshing the views at " + minute + ", as an appointment has passed or a new day has begun");
+        patientListPanel.refresh();
+        patientDetailPanel.refresh();
+        appointmentListPanel.refresh();
+        appointmentDetailPanel.refresh();
     }
 
     /**
@@ -436,6 +457,7 @@ public class MainWindow extends UiPart<Stage> {
         GuiSettings guiSettings = new GuiSettings(primaryStage.getWidth(), primaryStage.getHeight(),
                 (int) primaryStage.getX(), (int) primaryStage.getY());
         logic.setGuiSettings(guiSettings);
+        clock.stop();
         helpWindow.hide();
         primaryStage.hide();
     }

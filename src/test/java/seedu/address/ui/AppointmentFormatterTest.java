@@ -13,6 +13,9 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
+import seedu.address.testutil.PatientBuilder;
 
 public class AppointmentFormatterTest {
 
@@ -175,5 +178,40 @@ public class AppointmentFormatterTest {
         assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDetailDate(TODAY, null));
         assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDayHeading(null, TODAY));
         assertThrows(NullPointerException.class, () -> AppointmentFormatter.formatDayHeading(TODAY, null));
+    }
+
+    @Test
+    public void hasChangedBetween_appointmentPassed_returnsTrue() {
+        List<PatientAppointment> appointments = appointmentsOf("2026-10-12 10:00", "2026-10-13");
+        // 10:00 passes once the clock reaches 10:01
+        assertTrue(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 10, 0), LocalDateTime.of(2026, 10, 12, 10, 1)));
+        // after hours away, as after the computer sleeps
+        assertTrue(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 8, 0), LocalDateTime.of(2026, 10, 12, 15, 0)));
+    }
+
+    @Test
+    public void hasChangedBetween_newDay_returnsTrue() {
+        // no appointment passes at midnight, but "today" moves on
+        assertTrue(AppointmentFormatter.hasChangedBetween(List.of(),
+                LocalDateTime.of(2026, 10, 12, 23, 59), LocalDateTime.of(2026, 10, 13, 0, 0)));
+    }
+
+    @Test
+    public void hasChangedBetween_nothingPassed_returnsFalse() {
+        List<PatientAppointment> appointments = appointmentsOf("2026-10-12 10:00", "2026-10-12");
+        assertFalse(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 9, 58), LocalDateTime.of(2026, 10, 12, 9, 59)));
+        // 10:00 has not passed during 10:00
+        assertFalse(AppointmentFormatter.hasChangedBetween(appointments,
+                LocalDateTime.of(2026, 10, 12, 9, 59), LocalDateTime.of(2026, 10, 12, 10, 0)));
+    }
+
+    private static List<PatientAppointment> appointmentsOf(String... appointments) {
+        Patient patient = new PatientBuilder().withAppointments(appointments).build();
+        return patient.getSchedule().asList().stream()
+                .map(appointment -> new PatientAppointment(patient, appointment))
+                .toList();
     }
 }
