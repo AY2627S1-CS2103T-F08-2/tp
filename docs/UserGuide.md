@@ -85,7 +85,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
 
 An appointment has passed once its time today has gone by, or once its day is over if it has no time. Orange marks what is today, such as today's heading and today's appointments. A blue marks what is selected, and what has the keyboard focus.
 
-![The weekly appointment view, with today's first appointment selected](images/AppointmentView.png)
+![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
 Commands switch the view. `viewappt` shows **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. You can also click a tab, or move to the tabs with the keyboard and press Left or Right. Switching views this way runs no command, so each view still shows what it showed before.
 
