@@ -382,7 +382,7 @@ public class AppointmentListPanel extends UiPart<Region> {
         }
 
         private Node createHeading(AppointmentPage.DayHeading heading) {
-            LocalDate today = LocalDate.now();
+            LocalDate today = pageTime.toLocalDate();
             Label day = new Label(AppointmentFormatter.formatDayHeading(heading.date(), today));
             day.getStyleClass().add(heading.date().equals(today) ? "appointment-day-today" : "appointment-day");
             Label count = new Label(heading.appointmentCount() == 0
