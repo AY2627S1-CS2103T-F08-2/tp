@@ -83,7 +83,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * The appointments that have passed are greyed out.
   * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates, and `Esc to show the weekly view`.
 
-In both views, the list and the details share the width of the window, and grow and shrink together as you resize it.
+In both views, the list and the details share the width of the window, and grow and shrink together as you resize it. In a small window, each takes about half. In a larger one, the details take more, up to 72% on a full HD screen.
 
 An appointment has passed once its time today has gone by, or once its day is over if it has no time. So one at 10:00 has passed from 10:01. LaiNurse keeps up with the clock while it is left open: within a few seconds of an appointment passing, it is greyed out and moves under **Past**, and after midnight, the new day is marked as today. Orange marks what is today, such as today's heading and today's appointments. A blue marks what is selected, and what has the keyboard focus.
 

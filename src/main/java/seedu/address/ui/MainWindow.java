@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -43,8 +45,14 @@ public class MainWindow extends UiPart<Stage> {
             "To see a patient's details here, select one of their appointments.";
     private static final String PATIENT_PROMPT = "Type a command, or press Esc to browse patients";
     private static final String APPOINTMENT_PROMPT = "Type a command, or press Esc to browse appointments";
-    /** The share of a view's width that its list takes. The details beside it take the rest. */
-    private static final double LIST_SHARE = 0.45;
+    /** The share of a view's width that its list takes in a small window. The details beside it take the rest. */
+    private static final double SMALL_LIST_SHARE = 0.5;
+    /** The share of a view's width that its list takes in a large window. */
+    private static final double LARGE_LIST_SHARE = 0.28;
+    /** The room in a view up to which its list takes {@link #SMALL_LIST_SHARE}: that in a window 1,000 pixels wide. */
+    private static final double SMALL_VIEW_WIDTH = 950;
+    /** The room in a view from which its list takes {@link #LARGE_LIST_SHARE}: that in a full HD window. */
+    private static final double LARGE_VIEW_WIDTH = 1870;
 
     private final Logger logger = LogsCenter.getLogger(getClass());
 
@@ -422,13 +430,33 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Makes {@code list} take {@link #LIST_SHARE} of the room in {@code view}, so that the list and the details
-     * beside it grow and shrink together as the window is resized. The minimum widths of both still hold.
+     * Makes {@code list} take the width that {@link #listWidth} gives for the room in {@code view}, so that the list
+     * and the details beside it grow and shrink together as the window is resized. The minimum widths of both still
+     * hold.
      */
     private static void shareWidth(HBox view, Region list) {
-        list.prefWidthProperty().bind(view.widthProperty()
-                .subtract(view.getPadding().getLeft() + view.getPadding().getRight() + view.getSpacing())
-                .multiply(LIST_SHARE));
+        DoubleBinding room = view.widthProperty()
+                .subtract(view.getPadding().getLeft() + view.getPadding().getRight() + view.getSpacing());
+        list.prefWidthProperty().bind(Bindings.createDoubleBinding(() -> listWidth(room.get()), room));
+    }
+
+    /**
+     * Returns the width of a list in a view with {@code room}: {@link #SMALL_LIST_SHARE} of it in a small window, and
+     * {@link #LARGE_LIST_SHARE} of it in a full HD or larger window. In between, the width grows steadily from the one
+     * to the other, so that the list's share falls as the window grows, and a large window gives most of its extra
+     * room to the details. The list never gets narrower as the window gets wider.
+     */
+    private static double listWidth(double room) {
+        if (room <= SMALL_VIEW_WIDTH) {
+            return room * SMALL_LIST_SHARE;
+        }
+        if (room >= LARGE_VIEW_WIDTH) {
+            return room * LARGE_LIST_SHARE;
+        }
+        double smallWidth = SMALL_VIEW_WIDTH * SMALL_LIST_SHARE;
+        double largeWidth = LARGE_VIEW_WIDTH * LARGE_LIST_SHARE;
+        double progress = (room - SMALL_VIEW_WIDTH) / (LARGE_VIEW_WIDTH - SMALL_VIEW_WIDTH);
+        return smallWidth + (largeWidth - smallWidth) * progress;
     }
 
     private static void setShown(Node node, boolean isShown) {
