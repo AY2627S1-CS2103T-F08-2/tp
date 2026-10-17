@@ -233,7 +233,7 @@ public class PatientListPanel extends UiPart<Region> {
     }
 
     /**
-     * Custom {@code ListCell} that displays the graphics of a {@code Patient} using a {@code PatientCard}.
+     * Custom {@code ListCell} that displays the graphics of a {@code Patient} using a {@code PatientRow}.
      */
     class PatientListViewCell extends ListCell<Patient> {
         PatientListViewCell() {
@@ -249,7 +249,7 @@ public class PatientListPanel extends UiPart<Region> {
                 setGraphic(null);
                 setText(null);
             } else {
-                Region row = new PatientCard(patient, getIndex() + 1).getRoot();
+                Region row = new PatientRow(patient, getIndex() + 1).getRoot();
                 // Fits the row to the cell, so a long name ends in "..." and the ID stays visible.
                 row.prefWidthProperty().bind(widthProperty());
                 setGraphic(row);

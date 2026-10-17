@@ -14,7 +14,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -27,9 +26,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
-import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.PatientAppointment;
 
 /**
@@ -44,7 +41,6 @@ public class AppointmentListPanel extends UiPart<Region> {
     private static final String THIS_WEEK_STYLE_CLASS = "list-header-note-this";
     private static final String DAY_CELL_STYLE_CLASS = "appointment-day-cell";
     private static final String ENTRY_CELL_STYLE_CLASS = "appointment-entry-cell";
-    private static final String PASSED_STYLE_CLASS = "appointment-entry-passed";
     private static final String RANGE_HINT = "Esc to show the weekly view";
 
     private final ObservableList<PatientAppointment> allAppointments;
@@ -401,36 +397,7 @@ public class AppointmentListPanel extends UiPart<Region> {
         }
 
         private Node createEntry(AppointmentPage.Entry entry) {
-            Appointment appointment = entry.appointment().getAppointment();
-            Label number = new Label(entry.number() + ".");
-            number.getStyleClass().add("appointment-entry-number");
-            number.setMinWidth(28);
-            Label time = new Label(AppointmentFormatter.formatTime(appointment));
-            time.getStyleClass().add(appointment.getTime().isPresent()
-                    ? "appointment-entry-time" : "appointment-entry-no-time");
-            time.setMinWidth(64);
-
-            Label name = new Label(entry.appointment().getPatient().getName().fullName);
-            name.getStyleClass().add("appointment-entry-name");
-            name.setMinWidth(0);
-            Label id = new Label(entry.appointment().getPatient().getId().value);
-            id.getStyleClass().add("appointment-entry-id");
-            id.setMinWidth(Region.USE_PREF_SIZE);
-            HBox patient = new HBox(8, name, id);
-            patient.setAlignment(Pos.BASELINE_LEFT);
-            patient.setMinWidth(0);
-            // A later field for the appointment's details goes under the patient
-            VBox text = new VBox(2, patient);
-            text.setMinWidth(0);
-            HBox.setHgrow(text, Priority.ALWAYS);
-
-            HBox box = new HBox(10, number, time, text);
-            box.setAlignment(Pos.BASELINE_LEFT);
-            box.getStyleClass().add("appointment-entry-box");
-            if (AppointmentFormatter.hasPassed(appointment, pageTime)) {
-                box.getStyleClass().add(PASSED_STYLE_CLASS);
-            }
-            return box;
+            return new AppointmentRow(entry, pageTime).getRoot();
         }
     }
 }

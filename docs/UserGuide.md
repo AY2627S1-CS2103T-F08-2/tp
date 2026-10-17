@@ -200,7 +200,7 @@ Edits the details of an existing patient, and adds or removes their appointments
 
 Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`
 
-* Edits the patient with the given `ID`, which is the patient ID shown on their card, not their position in the list. The patient does not have to be in the list currently shown.
+* Edits the patient with the given `ID`, which is the patient ID shown in their row, not their position in the list. The patient does not have to be in the list currently shown.
 * `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs.
 * As in `add`, whitespace-delimited words beginning with `--` are reserved for options. Unknown options, misspellings, and `--id` are rejected with the command usage instructions.
 * The ID itself cannot be edited. To correct a wrong ID, delete the patient and add them again.

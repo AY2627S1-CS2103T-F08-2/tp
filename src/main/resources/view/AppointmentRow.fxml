@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox styleClass="appointment-entry-box" alignment="BASELINE_LEFT" spacing="10" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1">
+  <Label fx:id="number" styleClass="appointment-entry-number" minWidth="28" />
+  <!-- The time's style class depends on whether it has a time, so the code sets it. -->
+  <Label fx:id="time" minWidth="64" />
+  <!-- A later field for the appointment's details goes under the patient. -->
+  <VBox spacing="2" minWidth="0" HBox.hgrow="ALWAYS">
+    <HBox alignment="BASELINE_LEFT" spacing="8" minWidth="0">
+      <!-- A long name ends in "...", and the ID stays whole. -->
+      <Label fx:id="name" styleClass="appointment-entry-name" minWidth="0" />
+      <Label fx:id="patientId" styleClass="appointment-entry-id">
+        <minWidth>
+          <Region fx:constant="USE_PREF_SIZE" />
+        </minWidth>
+      </Label>
+    </HBox>
+  </VBox>
+</HBox>

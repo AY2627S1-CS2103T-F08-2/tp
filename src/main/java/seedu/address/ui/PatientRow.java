@@ -14,9 +14,9 @@ import seedu.address.model.patient.Patient;
  * A UI component that displays one {@code Patient} as a row of the patient list: the list number, name,
  * patient ID and next appointment. {@link PatientDetailPanel} shows the other details.
  */
-public class PatientCard extends UiPart<Region> {
+public class PatientRow extends UiPart<Region> {
 
-    private static final String FXML = "PatientListCard.fxml";
+    private static final String FXML = "PatientRow.fxml";
     private static final String TODAY_STYLE_CLASS = "patient-row-appointment-today";
 
     public final Patient patient;
@@ -30,7 +30,7 @@ public class PatientCard extends UiPart<Region> {
      */
 
     @FXML
-    private HBox cardPane;
+    private HBox rowPane;
     @FXML
     private Label index;
     @FXML
@@ -41,9 +41,9 @@ public class PatientCard extends UiPart<Region> {
     private Label nextAppointment;
 
     /**
-     * Creates a {@code PatientCard} with the given {@code Patient} and list number to display.
+     * Creates a {@code PatientRow} with the given {@code Patient} and list number to display.
      */
-    public PatientCard(Patient patient, int displayedIndex) {
+    public PatientRow(Patient patient, int displayedIndex) {
         super(FXML);
         this.patient = patient;
         index.setText(displayedIndex + ".");

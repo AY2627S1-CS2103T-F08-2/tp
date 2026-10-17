@@ -106,7 +106,7 @@ from the abstract `UiPart` class, which captures common behavior among classes t
 show (see [Patient and appointment views](#patient-and-appointment-views)), and clicking a tab, or Left and Right with the
 focus on the tabs, switch the view without running a command.
 
-`PatientListPanel` shows each patient in the filtered list on one row, with their next appointment, and its
+`PatientListPanel` shows each patient in the filtered list as a `PatientRow`, with their next appointment, and its
 `PatientDetailPanel` shows all the details of one patient. Above the rows, a header says whether the list is filtered,
 and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
 as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. When a
@@ -129,7 +129,7 @@ patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek
 `viewappt`, the panel shows only the appointments in the command's range, on one page, and hides the week's arrow
 buttons. `AppointmentPage#ofWeek` and `AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
 of the week, or for each day in the range that has an appointment, followed by that day's appointments, numbered down
-the page. An appointment with no time comes first in its day, except today, where it comes after the appointments that
+the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. An appointment with no time comes first in its day, except today, where it comes after the appointments that
 have passed, right above the next one. A page is built as at the time given to it, so the page and the appointment that
 it selects first agree, and unit tests can fix the time. While a range is shown, the panel keeps the week of the weekly
 view, so that Esc goes back to it. The panel listens to the appointment list and rebuilds the page after a change,
@@ -1314,7 +1314,7 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `2026-10-05 09:30` and `2026-11-02`.
 
     1. Test case: `edit S1234567A --add-appt 2026-10-20 --add-appt 2026-12-01 10:00`<br>
-       Expected: Alex Yeoh's card lists four appointments, from earliest to latest.
+       Expected: The status message lists Alex Yeoh's four appointments, from earliest to latest.
 
     1. Test case: `edit S1234567A --remove-appt 2026-10-05 09:30 --add-appt 2026-10-06 09:30`<br>
        Expected: The 5 October appointment is replaced by one on 6 October.
