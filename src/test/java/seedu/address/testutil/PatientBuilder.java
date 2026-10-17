@@ -3,9 +3,12 @@ package seedu.address.testutil;
 import java.util.Optional;
 
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
@@ -26,6 +29,7 @@ public class PatientBuilder {
     private Phone phone;
     private Address address;
     private Optional<MedicalHistory> medicalHistory;
+    private Optional<Notes> notes;
     private AppointmentSchedule appointments;
 
     /**
@@ -37,6 +41,7 @@ public class PatientBuilder {
         phone = new Phone(DEFAULT_PHONE);
         address = new Address(DEFAULT_ADDRESS);
         medicalHistory = Optional.empty();
+        notes = Optional.empty();
         appointments = AppointmentSchedule.empty();
     }
 
@@ -49,6 +54,7 @@ public class PatientBuilder {
         phone = patientToCopy.getPhone();
         address = patientToCopy.getAddress();
         medicalHistory = patientToCopy.getMedicalHistory();
+        notes = patientToCopy.getNotes();
         appointments = patientToCopy.getSchedule();
     }
 
@@ -93,15 +99,42 @@ public class PatientBuilder {
     }
 
     /**
-     * Sets the {@code AppointmentSchedule} of the {@code Patient} that we are building.
+     * Sets the {@code Notes} of the {@code Patient} that we are building.
+     */
+    public PatientBuilder withNotes(String notes) {
+        this.notes = Optional.of(new Notes(notes));
+        return this;
+    }
+
+    /**
+     * Sets the {@code AppointmentSchedule} of the {@code Patient} that we are building, to appointments with no
+     * details.
      */
     public PatientBuilder withAppointments(String... appointments) {
         this.appointments = SampleDataUtil.getSchedule(appointments);
         return this;
     }
 
+    /**
+     * Sets the {@code AppointmentSchedule} of the {@code Patient} that we are building to {@code schedule}.
+     */
+    public PatientBuilder withSchedule(AppointmentSchedule schedule) {
+        this.appointments = schedule;
+        return this;
+    }
+
+    /**
+     * Adds an appointment at {@code appointment}, a date or a date and time, with {@code details} to the
+     * {@code AppointmentSchedule} of the {@code Patient} that we are building.
+     */
+    public PatientBuilder withAppointment(String appointment, String details) {
+        this.appointments = appointments.add(
+                new Appointment(appointment, Optional.of(new AppointmentDetails(details))));
+        return this;
+    }
+
     public Patient build() {
-        return new Patient(id, name, phone, address, medicalHistory, appointments);
+        return new Patient(id, name, phone, address, medicalHistory, notes, appointments);
     }
 
 }

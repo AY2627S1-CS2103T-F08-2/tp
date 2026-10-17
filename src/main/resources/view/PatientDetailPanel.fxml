@@ -63,6 +63,14 @@
             <Region fx:constant="USE_PREF_SIZE" />
           </minHeight>
         </Label>
+        <Label text="Notes" styleClass="patient-detail-key"
+               GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+        <Label fx:id="notes" styleClass="patient-detail-value" wrapText="true"
+               GridPane.rowIndex="3" GridPane.columnIndex="1">
+          <minHeight>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </Label>
       </GridPane>
       <VBox>
         <HBox styleClass="detail-section-header" alignment="BASELINE_LEFT" spacing="10">

@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -22,6 +23,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
@@ -114,18 +116,33 @@ public class EditCommandFlowTest {
 
     @Test
     public void execute_removeAppointmentAndEditPhone_bothApplied() throws Exception {
+        // the appointment left keeps its details
+        AppointmentSchedule expectedSchedule = patient(ALEX_ID).getSchedule().remove(new Appointment("2026-11-02"));
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withPhone("99999999")
-                .withAppointments("2026-10-05 09:30").build();
+                .withSchedule(expectedSchedule).build();
         assertEditPersisted("edit S1234567A --remove-appt 2026-11-02 --phone 99999999", ALEX_ID, expected);
     }
 
     @Test
     public void execute_dateOnlyAppointment_sortedBeforeTimedSameDay() throws Exception {
-        Patient expected = new PatientBuilder(patient(ALEX_ID))
-                .withAppointments("2026-10-05", "2026-10-05 08:00", "2026-10-05 09:30", "2026-11-02").build();
+        AppointmentSchedule expectedSchedule = patient(ALEX_ID).getSchedule()
+                .add(new Appointment("2026-10-05 08:00")).add(new Appointment("2026-10-05"));
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(expectedSchedule).build();
         assertEditPersisted("edit S1234567A --add-appt 2026-10-05 08:00 --add-appt 2026-10-05", ALEX_ID, expected);
         assertEquals("2026-10-05, 2026-10-05 08:00, 2026-10-05 09:30, 2026-11-02",
                 patient(ALEX_ID).getSchedule().toString());
+    }
+
+    @Test
+    public void execute_editPhone_keepsNotesAndAppointmentDetails() throws Exception {
+        // edit has no options for notes or appointment details, so it must keep the ones the patient has
+        Patient before = patient(ALEX_ID);
+        logic.execute("edit S1234567A --phone 91234567");
+        Patient after = patient(ALEX_ID);
+        assertTrue(before.getNotes().isPresent());
+        assertEquals(before.getNotes(), after.getNotes());
+        assertEquals(before.getSchedule(), after.getSchedule());
+        assertTrue(after.getSchedule().asList().get(0).getDetails().isPresent());
     }
 
     @Test
