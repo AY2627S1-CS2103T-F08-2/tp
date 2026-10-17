@@ -1,0 +1,23 @@
+{
+  "_comment": "LaiNurse save file with notes and appointment details, saved as this version saves them, and with appointments saved as plain strings, as earlier versions save them",
+  "persons" : [ {
+    "id" : "S1234567A",
+    "name" : "ALEX YEOH",
+    "phone" : "87438807",
+    "address" : "BLK 30 GEYLANG STREET 29, #06-40",
+    "medicalHistory" : "TYPE 2 DIABETES",
+    "notes" : "DAUGHTER MEI LING (91234567) IS THE MAIN CONTACT",
+    "appointments" : [ {
+      "dateTime" : "2026-10-05 09:30",
+      "details" : "INSULIN REVIEW"
+    }, {
+      "dateTime" : "2026-11-02"
+    } ]
+  }, {
+    "id" : "S2345678B",
+    "name" : "BERNICE YU",
+    "phone" : "99272758",
+    "address" : "BLK 30 LORONG 3 SERANGOON GARDENS, #07-18",
+    "appointments" : [ "2026-10-06", "2026-10-13 10:00" ]
+  } ]
+}

@@ -21,20 +21,22 @@ public class Patient {
     private final Phone phone;
     private final Address address;
     private final MedicalHistory medicalHistory; // null if not given
+    private final Notes notes; // null if not given
     private final AppointmentSchedule schedule;
 
     /**
-     * Every field must be present and not null. An absent medical history is passed as {@code Optional#empty()},
-     * and a patient with no appointments is given {@link AppointmentSchedule#empty()}.
+     * Every field must be present and not null. An absent medical history or absent notes are passed as
+     * {@code Optional#empty()}, and a patient with no appointments is given {@link AppointmentSchedule#empty()}.
      */
     public Patient(PatientId id, Name name, Phone phone, Address address,
-            Optional<MedicalHistory> medicalHistory, AppointmentSchedule schedule) {
-        requireAllNonNull(id, name, phone, address, medicalHistory, schedule);
+            Optional<MedicalHistory> medicalHistory, Optional<Notes> notes, AppointmentSchedule schedule) {
+        requireAllNonNull(id, name, phone, address, medicalHistory, notes, schedule);
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.medicalHistory = medicalHistory.orElse(null);
+        this.notes = notes.orElse(null);
         this.schedule = schedule;
     }
 
@@ -59,6 +61,13 @@ public class Patient {
      */
     public Optional<MedicalHistory> getMedicalHistory() {
         return Optional.ofNullable(medicalHistory);
+    }
+
+    /**
+     * Returns the notes, or {@code Optional#empty()} if none were given.
+     */
+    public Optional<Notes> getNotes() {
+        return Optional.ofNullable(notes);
     }
 
     /**
@@ -101,13 +110,14 @@ public class Patient {
                 && phone.equals(otherPatient.phone)
                 && address.equals(otherPatient.address)
                 && Objects.equals(medicalHistory, otherPatient.medicalHistory)
+                && Objects.equals(notes, otherPatient.notes)
                 && schedule.equals(otherPatient.schedule);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(id, name, phone, address, medicalHistory, schedule);
+        return Objects.hash(id, name, phone, address, medicalHistory, notes, schedule);
     }
 
     @Override
@@ -118,6 +128,7 @@ public class Patient {
                 .add("phone", phone)
                 .add("address", address)
                 .add("medicalHistory", medicalHistory)
+                .add("notes", notes)
                 .add("schedule", schedule)
                 .toString();
     }

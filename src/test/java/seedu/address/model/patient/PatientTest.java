@@ -23,6 +23,7 @@ public class PatientTest {
 
     private static final String VALID_MEDICAL_HISTORY = "Asthma";
     private static final String VALID_APPOINTMENT = "2026-10-20 10:00";
+    private static final String VALID_NOTES = "Has a dog";
 
     @Test
     public void constructor_nullField_throwsNullPointerException() {
@@ -31,32 +32,38 @@ public class PatientTest {
         Phone phone = new Phone("94351253");
         Address address = new Address("Jurong West");
 
+        AppointmentSchedule none = AppointmentSchedule.empty();
+
         assertThrows(NullPointerException.class, () ->
-                new Patient(null, name, phone, address, Optional.empty(), AppointmentSchedule.empty()));
+                new Patient(null, name, phone, address, Optional.empty(), Optional.empty(), none));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, null, phone, address, Optional.empty(), AppointmentSchedule.empty()));
+                new Patient(id, null, phone, address, Optional.empty(), Optional.empty(), none));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, null, address, Optional.empty(), AppointmentSchedule.empty()));
+                new Patient(id, name, null, address, Optional.empty(), Optional.empty(), none));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, phone, null, Optional.empty(), AppointmentSchedule.empty()));
+                new Patient(id, name, phone, null, Optional.empty(), Optional.empty(), none));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, phone, address, null, AppointmentSchedule.empty()));
+                new Patient(id, name, phone, address, null, Optional.empty(), none));
         assertThrows(NullPointerException.class, () ->
-                new Patient(id, name, phone, address, Optional.empty(), null));
+                new Patient(id, name, phone, address, Optional.empty(), null, none));
+        assertThrows(NullPointerException.class, () ->
+                new Patient(id, name, phone, address, Optional.empty(), Optional.empty(), null));
     }
 
     @Test
     public void getOptionalFields_notGiven_returnsEmpty() {
         Patient patient = new PatientBuilder().build();
         assertEquals(Optional.empty(), patient.getMedicalHistory());
+        assertEquals(Optional.empty(), patient.getNotes());
         assertTrue(patient.getSchedule().isEmpty());
     }
 
     @Test
     public void getOptionalFields_given_returnsValue() {
-        Patient patient = new PatientBuilder().withMedicalHistory(VALID_MEDICAL_HISTORY)
+        Patient patient = new PatientBuilder().withMedicalHistory(VALID_MEDICAL_HISTORY).withNotes(VALID_NOTES)
                 .withAppointments(VALID_APPOINTMENT).build();
         assertEquals(Optional.of(new MedicalHistory(VALID_MEDICAL_HISTORY)), patient.getMedicalHistory());
+        assertEquals(Optional.of(new Notes(VALID_NOTES)), patient.getNotes());
         assertEquals(new AppointmentSchedule(List.of(new Appointment(VALID_APPOINTMENT))), patient.getSchedule());
     }
 
@@ -129,9 +136,17 @@ public class PatientTest {
         editedAlice = new PatientBuilder(ALICE).withMedicalHistory(VALID_MEDICAL_HISTORY).build();
         assertFalse(ALICE.equals(editedAlice));
 
+        // different notes -> returns false
+        editedAlice = new PatientBuilder(ALICE).withNotes(VALID_NOTES).build();
+        assertFalse(ALICE.equals(editedAlice));
+
         // different appointments -> returns false
         editedAlice = new PatientBuilder(ALICE).withAppointments(VALID_APPOINTMENT).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // the same appointment with different details -> returns false
+        assertFalse(new PatientBuilder(ALICE).withAppointment(VALID_APPOINTMENT, "Insulin review").build()
+                .equals(new PatientBuilder(ALICE).withAppointment(VALID_APPOINTMENT, "Blood test").build()));
 
         // optional field present vs absent -> returns false
         assertFalse(new PatientBuilder().build().equals(
@@ -148,6 +163,7 @@ public class PatientTest {
         String expected = Patient.class.getCanonicalName() + "{id=" + BENSON.getId() + ", name=" + BENSON.getName()
                 + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
                 + ", medicalHistory=" + BENSON.getMedicalHistory().get()
+                + ", notes=null"
                 + ", schedule=" + BENSON.getSchedule() + "}";
         assertEquals(expected, BENSON.toString());
     }

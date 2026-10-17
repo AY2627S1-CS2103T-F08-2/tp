@@ -11,7 +11,9 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
- * Represents all the appointments of a Patient, in chronological order and without duplicates.
+ * Represents all the appointments of a Patient, in chronological order, with at most one at each date and time.
+ * Two appointments at the same date and time are the same appointment, whatever their details, as
+ * {@link Appointment#isSameAppointment(Appointment)} gives.
  * Guarantees: immutable; never contains null
  */
 public class AppointmentSchedule {
@@ -21,8 +23,8 @@ public class AppointmentSchedule {
     private final List<Appointment> appointments;
 
     /**
-     * Constructs an {@code AppointmentSchedule} holding the given appointments.
-     * Duplicates are removed and the appointments are sorted.
+     * Constructs an {@code AppointmentSchedule} holding the given appointments, sorted.
+     * Of several appointments at the same date and time, only the first is kept.
      */
     public AppointmentSchedule(Collection<Appointment> appointments) {
         requireNonNull(appointments);
@@ -38,7 +40,7 @@ public class AppointmentSchedule {
 
     /**
      * Returns a copy of these appointments with {@code appointment} added.
-     * Adding an appointment that is already present has no effect.
+     * Adding an appointment at a date and time that already has one has no effect, whatever their details.
      */
     public AppointmentSchedule add(Appointment appointment) {
         requireNonNull(appointment);
@@ -48,8 +50,8 @@ public class AppointmentSchedule {
     }
 
     /**
-     * Returns a copy of these appointments with {@code appointment} removed.
-     * Removing an appointment that is not present has no effect.
+     * Returns a copy of these appointments without the one at the date and time of {@code appointment}, whatever
+     * its details. Removing an appointment that is not present has no effect.
      */
     public AppointmentSchedule remove(Appointment appointment) {
         requireNonNull(appointment);
@@ -59,10 +61,12 @@ public class AppointmentSchedule {
     }
 
     /**
-     * Returns true if {@code appointment} is one of these appointments.
+     * Returns true if one of these appointments is at the date and time of {@code appointment}, whatever its
+     * details.
      */
     public boolean contains(Appointment appointment) {
-        return appointments.contains(appointment);
+        requireNonNull(appointment);
+        return appointments.stream().anyMatch(appointment::isSameAppointment);
     }
 
     /**

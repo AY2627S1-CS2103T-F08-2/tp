@@ -20,7 +20,7 @@ import seedu.address.model.patient.AppointmentSchedule;
 public final class DetailAppointments {
 
     /** The number of past appointments that the details list, besides a marked one. */
-    public static final int PAST_SHOWN = 2;
+    public static final int PAST_SHOWN = 10;
 
     private final List<Appointment> upcoming;
     private final List<Appointment> pastShown;
@@ -52,7 +52,7 @@ public final class DetailAppointments {
                 .sorted(Comparator.reverseOrder())
                 .toList();
         List<Appointment> pastShown = IntStream.range(0, pastLatestFirst.size())
-                .filter(i -> i < PAST_SHOWN || marked.equals(Optional.of(pastLatestFirst.get(i))))
+                .filter(i -> i < PAST_SHOWN || marked.filter(pastLatestFirst.get(i)::isSameAppointment).isPresent())
                 .mapToObj(pastLatestFirst::get)
                 .toList();
         boolean isOnlyLatestPastShown = pastShown.equals(
@@ -90,7 +90,7 @@ public final class DetailAppointments {
 
     /**
      * Returns the note beside the "Past" heading, such as "1 of 1" when every past appointment is listed,
-     * or "last 2 of 4, latest first" when only some are.
+     * or "last 10 of 12, latest first" when only some are.
      */
     public String describePast() {
         if (pastShown.size() == pastCount) {

@@ -60,7 +60,9 @@ public class AddCommandParser implements Parser<AddCommand> {
         AppointmentSchedule appointments =
                 ParserUtil.parseAppointments(argMultimap.getAllValues(PREFIX_APPOINTMENT));
 
-        Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory), appointments);
+        // add has no option for notes yet, so a new patient starts without them
+        Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory), Optional.empty(),
+                appointments);
 
         return new AddCommand(patient);
     }
