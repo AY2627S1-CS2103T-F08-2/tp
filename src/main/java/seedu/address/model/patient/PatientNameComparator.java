@@ -1,5 +1,7 @@
 package seedu.address.model.patient;
 
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
 import java.util.Comparator;
 
 /**
@@ -16,6 +18,7 @@ public class PatientNameComparator implements Comparator<Patient> {
 
     @Override
     public int compare(Patient first, Patient second) {
+        requireAllNonNull(first, second);
         int byName = String.CASE_INSENSITIVE_ORDER.compare(
                 first.getName().fullName, second.getName().fullName);
         if (byName != 0) {

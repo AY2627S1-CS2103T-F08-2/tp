@@ -2,6 +2,7 @@ package seedu.address.model.patient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,15 @@ import seedu.address.testutil.PatientBuilder;
 public class PatientNameComparatorTest {
 
     private final PatientNameComparator comparator = PatientNameComparator.PATIENT_NAME_ORDER;
+
+    @Test
+    public void compare_nullPatient_throwsNullPointerException() {
+        Patient alice = patient("S00000001A", "Alice Tan");
+
+        assertThrows(NullPointerException.class, () -> comparator.compare(alice, null));
+        assertThrows(NullPointerException.class, () -> comparator.compare(null, alice));
+        assertThrows(NullPointerException.class, () -> comparator.compare(null, null));
+    }
 
     @Test
     public void compare_differentNames_ordersByNameIgnoringCase() {
