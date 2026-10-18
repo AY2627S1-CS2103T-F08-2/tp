@@ -339,11 +339,6 @@ public class AppointmentListPanel extends UiPart<Region> {
         }
     }
 
-    private static void setShown(Node node, boolean isShown) {
-        node.setVisible(isShown);
-        node.setManaged(isShown);
-    }
-
     private static String describeCount(int count) {
         return switch (count) {
             case 0 -> "No appointments";
