@@ -28,12 +28,16 @@ public class ModelManagerTest {
     private static final String NAME_BOB = "Bob Ong";
     private static final String NAME_ZAC = "Zac Lim";
 
-    private static final Patient ALICE = patient("S00000001A", NAME_ALICE);
-    private static final Patient BOB = patient("S00000002A", NAME_BOB);
-    private static final Patient ZAC = patient("S00000003A", NAME_ZAC);
+    private static final Patient ALICE =
+            new PatientBuilder().withId("S00000001A").withName(NAME_ALICE).build();
+    private static final Patient BOB =
+            new PatientBuilder().withId("S00000002A").withName(NAME_BOB).build();
+    private static final Patient ZAC =
+            new PatientBuilder().withId("S00000003A").withName(NAME_ZAC).build();
 
     /** Has the same name as {@link #ALICE}, so a sort by name alone cannot tell the two apart. */
-    private static final Patient ALICE_LATER_ID = patient("S00000002A", NAME_ALICE);
+    private static final Patient ALICE_LATER_ID =
+            new PatientBuilder().withId("S00000002A").withName(NAME_ALICE).build();
 
     private ModelManager modelManager = new ModelManager();
 
@@ -192,12 +196,6 @@ public class ModelManagerTest {
 
     private static PatientAppointment entry(Patient patient, String appointment) {
         return new PatientAppointment(patient, new Appointment(appointment));
-    }
-
-    /** Returns a patient with the given ID and name, with the other details filled in. */
-    private static Patient patient(String id, String name) {
-        return new PatientBuilder().withId(id).withName(name)
-                .withPhone("90000000").withAddress("Blk 1 Clementi Rd").build();
     }
 
     @Test

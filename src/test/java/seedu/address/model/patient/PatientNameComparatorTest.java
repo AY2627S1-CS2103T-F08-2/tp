@@ -14,7 +14,7 @@ public class PatientNameComparatorTest {
 
     @Test
     public void compare_nullPatient_throwsNullPointerException() {
-        Patient alice = patient("S00000001A", "Alice Tan");
+        Patient alice = new PatientBuilder().withId("S00000001A").withName("Alice Tan").build();
 
         assertThrows(NullPointerException.class, () -> comparator.compare(alice, null));
         assertThrows(NullPointerException.class, () -> comparator.compare(null, alice));
@@ -23,9 +23,9 @@ public class PatientNameComparatorTest {
 
     @Test
     public void compare_differentNames_ordersByNameIgnoringCase() {
-        Patient alice = patient("S00000001A", "alice Tan");
-        Patient bob = patient("S00000002A", "Bob Ong");
-        Patient zac = patient("S00000003A", "Zac Lim");
+        Patient alice = new PatientBuilder().withId("S00000001A").withName("Alice Tan").build();
+        Patient bob = new PatientBuilder().withId("S00000002A").withName("Bob Ong").build();
+        Patient zac = new PatientBuilder().withId("S00000003A").withName("Zac Lim").build();
 
         assertTrue(comparator.compare(alice, bob) < 0);
         assertTrue(comparator.compare(bob, zac) < 0);
@@ -34,18 +34,12 @@ public class PatientNameComparatorTest {
 
     @Test
     public void compare_sameNameIgnoringCase_breaksTieById() {
-        Patient first = patient("S00000001A", "alice Tan");
-        Patient second = patient("S00000002A", "ALICE TAN");
-        Patient twin = patient("S00000001A", "alice Tan");
+        Patient first = new PatientBuilder().withId("S00000001A").withName("Alice Tan").build();
+        Patient second = new PatientBuilder().withId("S00000002A").withName("ALICE TAN").build();
+        Patient twin = new PatientBuilder().withId("S00000001A").withName("Alice Tan").build();
 
         assertTrue(comparator.compare(first, second) < 0);
         assertTrue(comparator.compare(second, first) > 0);
         assertEquals(0, comparator.compare(first, twin));
-    }
-
-    /** Returns a patient with the given ID and name, with the other details filled in. */
-    private static Patient patient(String id, String name) {
-        return new PatientBuilder().withId(id).withName(name)
-                .withPhone("90000000").withAddress("Blk 1 Clementi Rd").build();
     }
 }
