@@ -189,7 +189,7 @@ Examples:
 
 ### Listing all patients: `list`
 
-Shows a list of all patients.
+Shows a list of all patients, sorted by name.
 
 Format: `list`
 

@@ -660,6 +660,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | see all my patients in one list                                                                      | I can see everyone I care for at a glance                    |
 | `* * *`  | home-based nurse | view all the details of a patient in one place                                                       | I can check their address and health details before a visit  |
 | `* * *`  | home-based nurse | find patients by part of their name, ID, phone number, address or medical history                    | I can find a patient quickly without typing their full details |
+| `* *`    | home-based nurse | see the patient list sorted by name                                                                  | I can find a patient quickly without scanning the whole list   |
 | `* * *`  | home-based nurse | edit a patient's details                                                                             | their records stay correct when something changes            |
 | `* * *`  | home-based nurse | delete a patient I no longer care for                                                                | my list shows only my current patients                       |
 | `* * *`  | home-based nurse | add an appointment for a patient with a date and time                                                | I can plan my home visits in advance                         |
@@ -1137,7 +1138,7 @@ testers are expected to do more *exploratory* testing.
 1. Combining substrings and restoring the list
 
     1. Test case: `find --name Alex --address "Serangoon Gardens"`<br>
-       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in their original order. Either field may match.
+       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in name order. Either field may match.
 
     1. Test case: `find --name Alex --id 1234567`<br>
        Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though Alex matches both criteria.
@@ -1174,13 +1175,13 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `list`<br>
        Expected: All six patients are shown, in the name order above.
 
-    1. Test case: `add --id S0245678G --name Zara Lim --number 98765432 --address "Blk 123 Clementi Ave 3, #05-12"`<br>
+    1. Test case: `add --id S0245678G --name Zara Lim --phone 98765432 --address "Blk 123 Clementi Ave 3, #05-12"`<br>
        Expected: The list shows all patients again, and Zara Lim is last, after Roy Balakrishnan.
 
     1. Test case: `edit S0245678G --name Aaron Tan`<br>
        Expected: Aaron Tan moves to the top of the list, above Alex Yeoh.
 
-    1. Test case: `add --id S0356789H --name aaron tan --number 91234567 --address "Blk 456 Bedok Ave 2"`<br>
+    1. Test case: `add --id S0356789H --name aaron tan --phone 91234567 --address "Blk 456 Bedok Ave 2"`<br>
        Expected: Two rows read `AARON TAN`, adjacent at the top: `S0245678G` above `S0356789H`, because the patient
        ID breaks the tie.
 

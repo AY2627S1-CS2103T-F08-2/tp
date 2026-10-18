@@ -29,7 +29,8 @@ public class ViewAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "viewappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Shows the appointments on a date, "
-            + "or between two dates (inclusive), in the appointment view, and lists the patients who have one.\n"
+            + "or between two dates (inclusive), in the appointment view, and lists the patients who have one,"
+            + " in name order.\n"
             + "Parameters: DATE, or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE] "
             + "(dates in yyyy-MM-dd)\n"
             + "Give a DATE, or at least one of " + PREFIX_FROM + "and " + PREFIX_TO.getPrefix().trim() + ". "

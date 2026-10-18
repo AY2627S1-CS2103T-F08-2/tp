@@ -165,6 +165,17 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void setPatient_renamedPatient_movesToItsNameOrder() {
+        ModelManager model = new ModelManager(new LaiNurseBuilder()
+                .withPatient(ZAC).withPatient(BOB).withPatient(ALICE).build(), new UserPrefs());
+        Patient renamedBob = new PatientBuilder(BOB).withName(NAME_ALICE).build();
+
+        model.setPatient(BOB, renamedBob);
+
+        assertEquals(List.of(ALICE, renamedBob, ZAC), model.getFilteredPatientList());
+    }
+
+    @Test
     public void getAppointmentList_followsPatientsInTimeOrder() {
         // Daniel's appointment is the day after Benson's, so adding Daniel first still lists Benson first
         modelManager = new ModelManager(new LaiNurseBuilder().withPatient(DANIEL).withPatient(ALICE).build(),
