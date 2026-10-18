@@ -646,6 +646,17 @@
     -fx-text-fill: #a3adb2;
 }
 
+/* An appointment's details, under its patient. */
+.list-cell .appointment-entry-details {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-text-fill: #c3cacd;
+}
+
+.list-cell:filled:selected .appointment-entry-details {
+    -fx-text-fill: #d5dadc;
+}
+
 /* An appointment that has passed is greyed out. A selected one is less so, to stay readable on its row. */
 .list-cell .appointment-entry-passed .label {
     -fx-text-fill: #a3adb2;
@@ -704,6 +715,12 @@
 .patient-detail .detail-appointment-today .label {
     -fx-font-family: "Segoe UI Semibold";
     -fx-text-fill: -lainurse-urgent;
+}
+
+/* Today's appointment details keep the plain text of a row: only the date and time are orange. */
+.patient-detail .detail-appointment-today .detail-appointment-details {
+    -fx-font-family: "Segoe UI";
+    -fx-text-fill: #d5dadc;
 }
 
 /* The appointment selected in the appointment view, marked as the list marks its selected row. */

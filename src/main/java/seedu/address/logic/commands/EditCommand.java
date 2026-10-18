@@ -111,8 +111,9 @@ public class EditCommand extends Command {
             updatedSchedule = updatedSchedule.add(appointment);
         }
 
+        // edit has no option for notes yet, so they stay as they are
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, updatedSchedule);
+                updatedMedicalHistory, patientToEdit.getNotes(), updatedSchedule);
     }
 
     @Override

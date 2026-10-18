@@ -135,4 +135,17 @@ public class AppointmentScheduleTest {
         // equal objects have equal hash codes
         assertEquals(appointments.hashCode(), new AppointmentSchedule(List.of(LATE, EARLY)).hashCode());
     }
+
+    @Test
+    public void sameDateAndTime_isSameAppointmentWhateverItsDetails() {
+        Appointment middleWithDetails = new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Insulin review")));
+        AppointmentSchedule schedule = new AppointmentSchedule(List.of(EARLY, middleWithDetails));
+
+        assertTrue(schedule.contains(MIDDLE));
+        // adding the same date and time keeps the appointment that is there, with its details
+        assertEquals(schedule, schedule.add(MIDDLE));
+        // removing by date and time removes it, whatever its details
+        assertEquals(new AppointmentSchedule(List.of(EARLY)), schedule.remove(MIDDLE));
+    }
 }

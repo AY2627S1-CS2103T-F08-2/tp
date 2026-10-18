@@ -115,4 +115,45 @@ public class AppointmentTest {
         // equal appointments compare as equal
         assertEquals(0, morning.compareTo(new Appointment("2026-10-05 09:30")));
     }
+
+    @Test
+    public void constructor_nullDetails_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new Appointment("2026-10-05", null));
+    }
+
+    @Test
+    public void getDetails() {
+        assertEquals(Optional.empty(), new Appointment("2026-10-05").getDetails());
+        AppointmentDetails details = new AppointmentDetails("Insulin review");
+        assertEquals(Optional.of(details), new Appointment("2026-10-05", Optional.of(details)).getDetails());
+    }
+
+    @Test
+    public void isSameAppointment_sameDateAndTime_ignoresDetails() {
+        Appointment plain = new Appointment("2026-10-05 09:30");
+        Appointment withDetails = new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Insulin review")));
+        assertTrue(plain.isSameAppointment(withDetails));
+        assertTrue(withDetails.isSameAppointment(plain));
+        assertEquals(0, plain.compareTo(withDetails));
+
+        assertFalse(plain.isSameAppointment(new Appointment("2026-10-05")));
+        assertFalse(plain.isSameAppointment(new Appointment("2026-10-06 09:30")));
+        assertFalse(plain.isSameAppointment(null));
+    }
+
+    @Test
+    public void equals_comparesDetails() {
+        Appointment withDetails = new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Insulin review")));
+        assertTrue(withDetails.equals(new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("insulin review")))));
+        assertEquals(withDetails.hashCode(), new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Insulin review"))).hashCode());
+
+        // the same date and time with other details, or none -> returns false
+        assertFalse(withDetails.equals(new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Blood test")))));
+        assertFalse(withDetails.equals(new Appointment("2026-10-05 09:30")));
+    }
 }

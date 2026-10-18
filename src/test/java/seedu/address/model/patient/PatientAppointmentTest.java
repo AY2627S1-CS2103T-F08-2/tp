@@ -93,4 +93,14 @@ public class PatientAppointmentTest {
                 + ", appointment=" + TODAY_MORNING + "}";
         assertEquals(expected, entry.toString());
     }
+
+    @Test
+    public void isSameEntry_appointmentDetailsChanged_returnsTrue() {
+        Patient alexWithDetails = new PatientBuilder(ALEX).withAppointments()
+                .withAppointment("2026-10-16 09:30", "Insulin review").build();
+        PatientAppointment before = new PatientAppointment(ALEX, TODAY_MORNING);
+        PatientAppointment after = new PatientAppointment(alexWithDetails,
+                alexWithDetails.getSchedule().asList().get(0));
+        assertTrue(before.isSameEntry(after));
+    }
 }

@@ -106,11 +106,14 @@ from the abstract `UiPart` class, which captures common behavior among classes t
 show (see [Patient and appointment views](#patient-and-appointment-views)), and clicking a tab, or Left and Right with the
 focus on the tabs, switch the view without running a command.
 
-In each view, `MainWindow#shareWidth` gives the list 45% of the width and the details the rest, so that both grow and
-shrink together as the window is resized. The window can be no narrower than both at their minimum widths. In a narrow
-list header, the hint and the count give up their room before the dates do. In narrow details, `PatientDetailPanel`
-shrinks the dates of all appointment rows together and lets the times wrap, so that the times stay in line and no row
-is wider than the panel.
+In each view, `MainWindow#shareWidth` splits the width between the list and the details, so that both grow and shrink
+together as the window is resized. Up to a window about 1,000 pixels wide, each takes half. In a wider window, the
+list's share falls steadily, to 28% in a window 1,920 pixels wide, a full HD screen, and stays there in a wider one, so
+that the details take most of the extra room. The list itself never gets narrower as the window gets wider. The window
+can be no narrower than both at their minimum widths. In a narrow list header, the hint and the count give up their room
+before the dates do. With room, `PatientDetailPanel` shows each appointment's date, time and details side by side, with
+the same widths in every row, so that they line up. In narrow details, it puts the details under the time, shrinks the
+dates of all rows together and lets the times wrap, so that the times stay in line and no row is wider than the panel.
 
 `PatientListPanel` shows each patient in the filtered list as a `PatientRow`, with their next appointment, and its
 `PatientDetailPanel` shows all the details of one patient. Above the rows, a header says whether the list is filtered,
@@ -126,7 +129,7 @@ An appointment has passed once its time today has gone by, or once its day is ov
 `AppointmentFormatter#hasPassed` holds this rule, and the three places that show appointments use it:
 
 * A patient's row shows their first appointment that has not passed, from `AppointmentFormatter#findFirstNotPassed`.
-* `DetailAppointments` picks the appointments that the details list: every one that has not passed, and the latest two
+* `DetailAppointments` picks the appointments that the details list: every one that has not passed, and the latest ten
   that have, plus a marked older one.
 * The appointment list greys out the appointments that have passed.
 
@@ -335,27 +338,45 @@ Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` 
 one command can move an appointment. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
 so a failed `edit` leaves the patient unchanged.
 
-**Equality.** An `Appointment` stores a date and an optional time. Two appointments are equal when their normalized
-text is equal. Dates and times are parsed with strict formatters that accept only one spelling of each value, so equal
-text means the same date and the same time (or both having no time).
+**Equality.** An `Appointment` stores a date, an optional time and optional details. Its date and time identify it, as
+`Appointment#isSameAppointment` gives, while `equals` also compares the details. Dates and times are parsed with strict
+formatters that accept only one spelling of each value, so equal text means the same date and the same time (or both
+having no time).
 
 **Order.** Appointments are ordered by date, then by time. On the same day, an appointment with only a date comes before
 any appointment with a time. A date-only appointment means "sometime that day", like an all-day event in a calendar, so
-it is listed at the top of that day. `compareTo` is consistent with `equals`, so `AppointmentSchedule` can use a
-`TreeSet` to sort the appointments and drop duplicates in one step.
+it is listed at the top of that day. `compareTo` ignores the details, as `isSameAppointment` does, so
+`AppointmentSchedule` can use a `TreeSet` to sort the appointments and keep one at each date and time.
 
-**Duplicates.** Only exact duplicates are dropped. `2026-10-05` and `2026-10-05 00:00` are different appointments: the
-first has no fixed time, while the second is at midnight. Merging them would lose information that the nurse entered.
-Removing an appointment through `edit` also needs an exact match, so `--remove-appt 2026-10-05` does not remove
-`2026-10-05 09:30`.
+**Duplicates.** Only appointments at the same date and time are duplicates. `2026-10-05` and `2026-10-05 00:00` are
+different appointments: the first has no fixed time, while the second is at midnight. Merging them would lose
+information that the nurse entered. Removing an appointment through `edit` also needs the same date and time, so
+`--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`.
 
-**Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list, and still reads
-the single `"nextAppointment"` field from older data files.
+**Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of objects, such
+as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings,
+and the single `"nextAppointment"` field, from older data files.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
 holds for home visits, so an appointment means the local date and time of the visit. The app never converts appointments
 between time zones, so changing the computer's time zone, or a daylight saving change, does not move them.
+
+### Patient notes and appointment details
+
+A patient has optional `Notes`, free text that is not medical history, such as their routine or which family member to
+call. An appointment has optional `AppointmentDetails`, free text about the visit, such as what to do or bring. Both
+follow `MedicalHistory`: `TextNormalizer` trims the text, collapses its whitespace and stores it in upper case, and
+blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
+
+The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
+in a narrow panel. `AppointmentRow` shows an appointment's details on a second line under its patient, and only when it
+has some.
+
+No command sets the notes or the details yet. `add` creates a patient without notes. `edit` keeps a patient's notes, and
+`--add-appt` and `--remove-appt` keep the details of the appointments that they do not remove. A command that sets them
+needs a `Prefix` in `CliSyntax`, a parser that builds `Notes` or `AppointmentDetails` with the matching `isValid`
+method, and a `Patient` or `Appointment` built with the new value.
 
 ### Viewing appointments by date
 
@@ -989,7 +1010,7 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data, which includes a patient with the ID `S1234567A`.
 
     1. Test case: `view S1234567A`<br>
-       Expected: The **Patients** tab is selected. The panel beside the list shows the patient's name, ID, phone number, address and medical history, then their appointments that have not passed, then up to two that have, dimmed. Their row in the list is highlighted. The status message names the patient.
+       Expected: The **Patients** tab is selected. The panel beside the list shows the patient's name, ID, phone number, address, medical history and notes, then their appointments that have not passed, then up to ten that have, dimmed. Each appointment shows its details beside its time, or under it if the window is narrow. Their row in the list is highlighted. The status message names the patient.
 
     1. Test case: `find --name bernice`, then `view S1234567A`<br>
        Expected: The panel shows the patient with the ID `S1234567A`, although the list shows only the `find` results. No row is highlighted.
@@ -1281,10 +1302,12 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data, and enter `view S1234567A`.
 
     1. Test case: drag an edge of the window to make it as narrow as it goes, then wide<br>
-       Expected: The patient list and the details beside it shrink and grow together. At the narrowest, nothing is cut
-       off at the sides of the window, and neither the list nor the details scroll sideways. In the details, long
-       values such as Alex Yeoh's address wrap without breaking a word, and `No time specified` beside Mon 2 Nov wraps
-       onto two lines.
+       Expected: The patient list and the details beside it shrink and grow together. Up to a window about 1,000
+       pixels wide, each takes about half. In a wider window, the details take more, up to 72% when the window is
+       1,920 pixels wide. At the narrowest, nothing is cut off at the sides of the window, and neither the list nor the
+       details scroll sideways. In the details, long values such as Alex Yeoh's address wrap without breaking a word.
+       Beside Mon 2 Nov, `No time specified` wraps onto two lines, with the appointment's details,
+       `MONTHLY BLOOD TEST`, under it. In a wide window, the details of each appointment move beside its time.
 
     1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`, then make the window as narrow as it goes<br>
        Expected: Above the list, `Thu 1 Oct – Sat 31 Oct 2026` stays whole, while `Esc to show the weekly view` and

@@ -91,7 +91,13 @@
           </HBox>
         </StackPane>
 
-        <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />
+        <!-- The status bar keeps its height. Otherwise, when a patient's details are taller than the views, the
+             window would shrink the status bar to make room, and the lists would move as the selection changes. -->
+        <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER">
+          <minHeight>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </StackPane>
       </VBox>
     </Scene>
   </scene>

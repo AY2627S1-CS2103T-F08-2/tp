@@ -47,12 +47,12 @@ public class PatientAppointment implements Comparable<PatientAppointment> {
 
     /**
      * Returns true if {@code other} is the same appointment of the same patient, even if the patient's other
-     * details have changed since.
+     * details, or the appointment's details, have changed since.
      */
     public boolean isSameEntry(PatientAppointment other) {
         return other != null
                 && patient.getId().equals(other.patient.getId())
-                && appointment.equals(other.appointment);
+                && appointment.isSameAppointment(other.appointment);
     }
 
     @Override
