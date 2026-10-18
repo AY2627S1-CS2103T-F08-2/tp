@@ -24,6 +24,17 @@ import seedu.address.testutil.PatientBuilder;
 
 public class ModelManagerTest {
 
+    private static final String NAME_ALICE = "Alice Tan";
+    private static final String NAME_BOB = "Bob Ong";
+    private static final String NAME_ZAC = "Zac Lim";
+
+    private static final Patient ALICE = patient("S00000001A", NAME_ALICE);
+    private static final Patient BOB = patient("S00000002A", NAME_BOB);
+    private static final Patient ZAC = patient("S00000003A", NAME_ZAC);
+
+    /** Has the same name as {@link #ALICE}, so a sort by name alone cannot tell the two apart. */
+    private static final Patient ALICE_LATER_ID = patient("S00000002A", NAME_ALICE);
+
     private ModelManager modelManager = new ModelManager();
 
     @Test
@@ -100,6 +111,44 @@ public class ModelManagerTest {
         assertThrows(UnsupportedOperationException.class, () -> modelManager.getFilteredPatientList().remove(0));
     }
 
+    // The tests below assert the sorted order of the patient view, which is by name, not the order of addition.
+    // Names are stored upper case, so the order of two names never depends on how they were typed in.
+
+    @Test
+    public void constructor_patientsOutOfOrder_showsPatientsSortedByName() {
+        ModelManager model = new ModelManager(new LaiNurseBuilder()
+                .withPatient(ZAC).withPatient(ALICE).withPatient(BOB).build(), new UserPrefs());
+
+        assertEquals(List.of(ALICE, BOB, ZAC), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void constructor_sameName_ordersTieById() {
+        ModelManager model = new ModelManager(new LaiNurseBuilder()
+                .withPatient(ALICE_LATER_ID).withPatient(ALICE).build(), new UserPrefs());
+
+        assertEquals(List.of(ALICE, ALICE_LATER_ID), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void addPatient_keepsListSortedByName() {
+        ModelManager model = new ModelManager(new LaiNurseBuilder().withPatient(ZAC).build(), new UserPrefs());
+
+        model.addPatient(ALICE);
+
+        assertEquals(List.of(ALICE, ZAC), model.getFilteredPatientList());
+    }
+
+    @Test
+    public void updateFilteredPatientList_filteredSubset_staysSortedByName() {
+        ModelManager model = new ModelManager(new LaiNurseBuilder()
+                .withPatient(ZAC).withPatient(ALICE).withPatient(BOB).build(), new UserPrefs());
+
+        model.updateFilteredPatientList(new NameContainsKeywordsPredicate(List.of("lim", "tan")));
+
+        assertEquals(List.of(ALICE, ZAC), model.getFilteredPatientList());
+    }
+
     @Test
     public void getAppointmentList_followsPatientsInTimeOrder() {
         // Daniel's appointment is the day after Benson's, so adding Daniel first still lists Benson first
@@ -132,6 +181,12 @@ public class ModelManagerTest {
 
     private static PatientAppointment entry(Patient patient, String appointment) {
         return new PatientAppointment(patient, new Appointment(appointment));
+    }
+
+    /** Returns a patient with the given ID and name, with the other details filled in. */
+    private static Patient patient(String id, String name) {
+        return new PatientBuilder().withId(id).withName(name)
+                .withPhone("90000000").withAddress("Blk 1 Clementi Rd").build();
     }
 
     @Test

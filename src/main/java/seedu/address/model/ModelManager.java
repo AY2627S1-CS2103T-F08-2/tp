@@ -11,11 +11,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
+import seedu.address.model.patient.PatientNameComparator;
 
 /**
  * Represents the in-memory model of the LaiNurse data.
@@ -38,7 +40,8 @@ public class ModelManager implements Model {
 
         this.laiNurse = new LaiNurse(laiNurse);
         this.userPrefs = new UserPrefs(userPrefs);
-        filteredPatients = new FilteredList<>(this.laiNurse.getPatientList());
+        filteredPatients = new FilteredList<>(
+                new SortedList<>(this.laiNurse.getPatientList(), PatientNameComparator.PATIENT_NAME_ORDER));
         this.laiNurse.getPatientList().addListener((ListChangeListener<Patient>) change -> refreshAppointments());
         refreshAppointments();
     }
