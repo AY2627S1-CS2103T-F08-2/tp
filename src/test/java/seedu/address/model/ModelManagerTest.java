@@ -150,6 +150,17 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void setLaiNurse_newData_showsPatientsSortedByName() {
+        modelManager = new ModelManager(new LaiNurseBuilder().withPatient(ZAC).withPatient(ALICE).build(),
+                new UserPrefs());
+
+        // The new data is out of order, so a sorted view proves that the order follows the new data
+        modelManager.setLaiNurse(new LaiNurseBuilder().withPatient(ZAC).withPatient(BOB).build());
+
+        assertEquals(List.of(BOB, ZAC), modelManager.getFilteredPatientList());
+    }
+
+    @Test
     public void getAppointmentList_followsPatientsInTimeOrder() {
         // Daniel's appointment is the day after Benson's, so adding Daniel first still lists Benson first
         modelManager = new ModelManager(new LaiNurseBuilder().withPatient(DANIEL).withPatient(ALICE).build(),
