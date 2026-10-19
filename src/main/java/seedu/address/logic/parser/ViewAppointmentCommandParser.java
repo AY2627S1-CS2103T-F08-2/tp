@@ -27,56 +27,51 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
      * @throws ParseException if the user input does not conform to the expected format.
      */
     public ViewAppointmentCommand parse(String args) throws ParseException {
-        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
-                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAppointmentCommand.MESSAGE_USAGE),
+        String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT,
+                ViewAppointmentCommand.MESSAGE_USAGE);
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
                 PREFIX_FROM, PREFIX_TO, PREFIX_ID);
         if (normalizedArgs.isBlank()) {
             // A plain viewappt shows the upcoming appointments
             return new ViewAppointmentCommand(Optional.empty(), Optional.empty(), Optional.empty());
         }
-        Optional<ViewAppointmentCommand> dateCommand = parseWithDate(normalizedArgs);
-        if (dateCommand.isPresent()) {
-            return dateCommand.get();
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        // Duplicate options are reported whatever the rest of the input looks like
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        Optional<LocalDate> date = parseDateOrEmpty(argMultimap.getPreamble());
+        if (date.isPresent()) {
+            return parseWithDate(argMultimap, date.get(), invalidFormatMessage);
         }
-        return parseWithOptionalDateRange(normalizedArgs);
+        return parseWithOptionalDateRange(argMultimap, invalidFormatMessage);
     }
 
     /**
-     * Parses the given {@code String} of arguments of the form {@code DATE [--id ID]}
-     * Returns the corresponding {@code Optional<ViewAppointmentCommand>}, or {@code Optional#empty()} if
-     * the preamble is not a date or a range option is present.
+     * Parses the date form {@code DATE [--id ID]}, which cannot combine with the range options.
+     *
+     * @throws ParseException if a range option is also present.
      */
-    private static Optional<ViewAppointmentCommand> parseWithDate(String args) throws ParseException {
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
-        Optional<LocalDate> date = parseDateOrEmpty(argMultimap.getPreamble());
-        if (date.isEmpty()) {
-            return Optional.empty();
-        }
+    private static ViewAppointmentCommand parseWithDate(ArgumentMultimap argMultimap, LocalDate date,
+            String invalidFormatMessage) throws ParseException {
         boolean hasRangeOptions = argMultimap.getValue(PREFIX_FROM).isPresent()
                 || argMultimap.getValue(PREFIX_TO).isPresent();
         if (hasRangeOptions) {
-            return Optional.empty();
+            throw new ParseException(invalidFormatMessage);
         }
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID);
-        Optional<PatientId> patientId = parseOptionalPatientId(argMultimap);
-        return Optional.of(new ViewAppointmentCommand(
-                Optional.of(date.get()), Optional.of(date.get()), patientId));
+        return new ViewAppointmentCommand(Optional.of(date), Optional.of(date),
+                parseOptionalPatientId(argMultimap));
     }
 
     /**
-     * Parses the given {@code String} of arguments of the form {@code [--id ID] [--from START_DATE] [--to END_DATE]},
-     * in any order, and returns the corresponding {@code Optional<ViewAppointmentCommand>}.
+     * Parses the range form {@code [--id ID] [--from START_DATE] [--to END_DATE]}, in any order.
      *
      * @throws ParseException if the user input does not conform to the expected format.
      */
-    private static ViewAppointmentCommand parseWithOptionalDateRange(String args) throws ParseException {
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+    private static ViewAppointmentCommand parseWithOptionalDateRange(ArgumentMultimap argMultimap,
+            String invalidFormatMessage) throws ParseException {
         if (!argMultimap.getPreamble().isEmpty()) {
-            // A date that does not parse, or any other word, cannot be used here
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT,
-                    ViewAppointmentCommand.MESSAGE_USAGE));
+            // A bare word that is not a date has no place in the range form
+            throw new ParseException(invalidFormatMessage);
         }
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
         Optional<PatientId> patientId = parseOptionalPatientId(argMultimap);
         Optional<LocalDate> startDate = parseOptionalDate(argMultimap, PREFIX_FROM);
         Optional<LocalDate> endDate = parseOptionalDate(argMultimap, PREFIX_TO);

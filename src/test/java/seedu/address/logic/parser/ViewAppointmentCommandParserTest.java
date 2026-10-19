@@ -162,6 +162,9 @@ public class ViewAppointmentCommandParserTest {
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_FROM));
         assertParseFailure(parser, TO_FLAG + START + " " + TO_FLAG + END,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_TO));
+        // A duplicate option is reported even when a date is also present
+        assertParseFailure(parser, VALID_DATE_STRING + " " + FROM_FLAG + START + " " + FROM_FLAG + END,
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_FROM));
     }
 
     @Test

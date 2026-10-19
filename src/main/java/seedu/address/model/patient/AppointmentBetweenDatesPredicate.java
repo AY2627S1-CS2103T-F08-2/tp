@@ -1,5 +1,6 @@
 package seedu.address.model.patient;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
@@ -33,10 +34,18 @@ public class AppointmentBetweenDatesPredicate implements Predicate<Patient> {
         this.endDate = endDate;
     }
 
+    /**
+     * Returns true if {@code date} falls within the range, both ends included.
+     */
+    public boolean isWithinRange(LocalDate date) {
+        requireNonNull(date);
+        return !date.isBefore(startDate) && !date.isAfter(endDate);
+    }
+
     @Override
     public boolean test(Patient patient) {
         return patient.getSchedule().asList().stream()
-                .anyMatch(a -> !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate));
+                .anyMatch(appointment -> isWithinRange(appointment.getDate()));
     }
 
     @Override

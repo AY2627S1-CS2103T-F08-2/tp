@@ -35,18 +35,12 @@ public class ViewAppointmentCommand extends Command {
 
     public static final String COMMAND_WORD = "viewappt";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Shows the appointments on a date, or between two "
-            + "dates (inclusive), in the appointment view, and lists the patients who have one.\n"
-            + "Parameters: [DATE] or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE], "
-            + "with an optional [" + PREFIX_ID + "ID] (dates in yyyy-MM-dd)\n"
-            + "Give a DATE, at least one of " + PREFIX_FROM + "and " + PREFIX_TO.getPrefix().trim() + ", or neither. "
-            + "Without " + PREFIX_FROM + "the range starts today. Without " + PREFIX_TO + "it has no end, so a plain "
-            + COMMAND_WORD + " shows the upcoming appointments.\n"
-            + PREFIX_ID.getPrefix().trim() + " narrows the appointments and the patient list to one patient, and "
-            + "combines with the date options. A DATE comes before the options.\n"
-            + "Examples: " + COMMAND_WORD + " 2026-10-15, "
-            + COMMAND_WORD + " " + PREFIX_FROM + "2026-10-01 " + PREFIX_TO + "2026-10-31, "
-            + COMMAND_WORD + " " + PREFIX_ID + "S1234567A " + PREFIX_FROM + "2026-10-01";
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Shows the appointments on a date, or within a date "
+            + "range, in the appointment view, and lists the patients who have one. Without a date or "
+            + "range, shows appointments from today onwards. A DATE must come before other options.\n"
+            + "Parameters: [DATE] or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE], with an optional ["
+            + PREFIX_ID + "ID] (dates in yyyy-MM-dd)\n"
+            + "Example: " + COMMAND_WORD + " 2026-10-15";
 
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;
@@ -126,8 +120,7 @@ public class ViewAppointmentCommand extends Command {
         // The patient list mirrors the appointment view: only this patient, and only with an appointment in range
         model.updateFilteredPatientList(candidate -> candidate.getId().equals(id) && inRange.test(candidate));
         long count = patient.getSchedule().asList().stream()
-                .filter(appointment -> !appointment.getDate().isBefore(start)
-                        && !appointment.getDate().isAfter(end))
+                .filter(appointment -> inRange.isWithinRange(appointment.getDate()))
                 .count();
         return new CommandResult(describeForPatient(count, patient, start, end),
                 new CommandResult.AppointmentRange(start, end, id));
