@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.util.DateUtil;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ViewAppointmentCommand;
+import seedu.address.model.patient.PatientId;
 
 public class ViewAppointmentCommandParserTest {
 
@@ -46,9 +48,11 @@ public class ViewAppointmentCommandParserTest {
     }
 
     @Test
-    public void parse_emptyString_throwsParseException() {
-        assertParseFailure(parser, "", INVALID_FORMAT_MESSAGE);
-        assertParseFailure(parser, " \t ", INVALID_FORMAT_MESSAGE);
+    public void parse_plainViewappt_returnsCommand() {
+        ViewAppointmentCommand expectedCommand = new ViewAppointmentCommand(
+                Optional.empty(), Optional.empty(), Optional.empty());
+        assertParseSuccess(parser, "", expectedCommand);
+        assertParseSuccess(parser, " \t ", expectedCommand);
     }
 
     @Test
@@ -113,5 +117,50 @@ public class ViewAppointmentCommandParserTest {
                 "--From 2026-10-01")) {
             assertParseFailure(parser, arguments, INVALID_FORMAT_MESSAGE);
         }
+    }
+
+    @Test
+    public void parse_idOnly_returnsCommand() {
+        PatientId id = new PatientId("S1234567A");
+        ViewAppointmentCommand expectedCommand = new ViewAppointmentCommand(
+                Optional.empty(), Optional.empty(), Optional.of(id));
+        assertParseSuccess(parser, "--id S1234567A", expectedCommand);
+        assertParseSuccess(parser, " --id S1234567A ", expectedCommand);
+    }
+
+    @Test
+    public void parse_dateWithId_returnsCommand() {
+        PatientId id = new PatientId("S1234567A");
+        LocalDate date = LocalDate.of(2026, 10, 15);
+        assertParseSuccess(parser, "2026-10-15 --id S1234567A",
+                new ViewAppointmentCommand(Optional.of(date), Optional.of(date), Optional.of(id)));
+    }
+
+    @Test
+    public void parse_idWithFromAndTo_returnsCommand() {
+        PatientId id = new PatientId("S1234567A");
+        ViewAppointmentCommand expectedCommand = new ViewAppointmentCommand(
+                Optional.of(START), Optional.of(END), Optional.of(id));
+        assertParseSuccess(parser, "--id S1234567A --from 2026-10-01 --to 2026-10-31", expectedCommand);
+        assertParseSuccess(parser, "--from 2026-10-01 --id S1234567A --to 2026-10-31", expectedCommand);
+        assertParseSuccess(parser, "--to 2026-10-31 --from 2026-10-01 --id S1234567A", expectedCommand);
+    }
+
+    @Test
+    public void parse_dateAfterOptions_throwsParseException() {
+        // The date would end up inside the ID value, so a date comes before the options
+        assertParseFailure(parser, "--id S1234567A 2026-10-15", INVALID_FORMAT_MESSAGE);
+    }
+
+    @Test
+    public void parse_duplicateId_throwsParseException() {
+        assertParseFailure(parser, "--id S1234567A --id S2345678B",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
+    }
+
+    @Test
+    public void parse_invalidId_throwsParseException() {
+        assertParseFailure(parser, "--id 12#", PatientId.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, "--id", INVALID_FORMAT_MESSAGE);
     }
 }

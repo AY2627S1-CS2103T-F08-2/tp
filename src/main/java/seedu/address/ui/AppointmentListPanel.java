@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
@@ -228,9 +229,14 @@ public class AppointmentListPanel extends UiPart<Region> {
     private void showPage() {
         pageTime = LocalDateTime.now();
         LocalDate today = pageTime.toLocalDate();
+        // A range with a patient narrows the page to that patient's appointments
+        List<PatientAppointment> pageAppointments = allAppointments.stream()
+                .filter(entry -> range == null || range.patientId() == null
+                        || entry.getPatient().getId().equals(range.patientId()))
+                .toList();
         page = range == null
-                ? AppointmentPage.ofWeek(week, allAppointments, pageTime)
-                : AppointmentPage.ofRange(range.start(), range.end(), allAppointments, pageTime);
+                ? AppointmentPage.ofWeek(week, pageAppointments, pageTime)
+                : AppointmentPage.ofRange(range.start(), range.end(), pageAppointments, pageTime);
         appointmentListView.getSelectionModel().clearSelection();
         rows.setAll(page.getRows());
         appointmentListView.scrollTo(0);

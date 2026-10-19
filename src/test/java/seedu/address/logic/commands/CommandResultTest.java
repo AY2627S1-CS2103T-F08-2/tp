@@ -150,6 +150,18 @@ public class CommandResultTest {
     }
 
     @Test
+    public void appointmentRange_withPatient() {
+        AppointmentRange patientRange = new AppointmentRange(START, END, new PatientId("S1234567A"));
+
+        // The two-arg range is the same as a three-arg range with no patient
+        assertEquals(new AppointmentRange(START, END, null), RANGE);
+        assertEquals(patientRange, new AppointmentRange(START, END, new PatientId("S1234567A")));
+        assertFalse(patientRange.equals(RANGE));
+        assertFalse(patientRange.equals(new AppointmentRange(START, END, new PatientId("S2345678B"))));
+        assertEquals(new PatientId("S1234567A"), patientRange.patientId());
+    }
+
+    @Test
     public void toStringMethod() {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName()

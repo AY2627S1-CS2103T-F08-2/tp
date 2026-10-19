@@ -28,9 +28,17 @@ public class CommandResult {
 
     /**
      * The dates, both included, whose appointments the appointment view shows on one page, as {@code viewappt}
-     * finds them. An end of {@code LocalDate.MAX} means that the range has no end.
+     * finds them. An end of {@code LocalDate.MAX} means that the range has no end. A patient ID of {@code null}
+     * means that the appointments of every patient are shown; otherwise, only that patient's are.
      */
-    public record AppointmentRange(LocalDate start, LocalDate end) {
+    public record AppointmentRange(LocalDate start, LocalDate end, PatientId patientId) {
+
+        /**
+         * Constructs an {@code AppointmentRange} with the appointments of every patient in it.
+         */
+        public AppointmentRange(LocalDate start, LocalDate end) {
+            this(start, end, null);
+        }
 
         /**
          * Constructs an {@code AppointmentRange}.
