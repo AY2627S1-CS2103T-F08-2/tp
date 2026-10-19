@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -27,10 +28,11 @@ public class CommandResult {
     }
 
     /**
-     * The dates, both included, whose appointments the appointment view shows on one page, as {@code viewappt}
-     * finds them. An end of {@code LocalDate.MAX} means that the range has no end.
+     * The appointments that the appointment view shows on one page, as {@code viewappt} finds them: those on the
+     * dates from {@code start} to {@code end}, both included, and only those of the patient with the ID
+     * {@code patient}, if it is given. An end of {@code LocalDate.MAX} means that the range has no end.
      */
-    public record AppointmentRange(LocalDate start, LocalDate end) {
+    public record AppointmentRange(LocalDate start, LocalDate end, Optional<PatientId> patient) {
 
         /**
          * Constructs an {@code AppointmentRange}.
@@ -38,8 +40,17 @@ public class CommandResult {
          * @throws IllegalArgumentException if {@code start} is after {@code end}.
          */
         public AppointmentRange {
-            requireAllNonNull(start, end);
+            requireAllNonNull(start, end, patient);
             checkArgument(!start.isAfter(end), "The start of the range must not be after its end.");
+        }
+
+        /**
+         * Constructs an {@code AppointmentRange} of every patient's appointments from {@code start} to {@code end}.
+         *
+         * @throws IllegalArgumentException if {@code start} is after {@code end}.
+         */
+        public AppointmentRange(LocalDate start, LocalDate end) {
+            this(start, end, Optional.empty());
         }
 
         /**
@@ -48,6 +59,66 @@ public class CommandResult {
         public boolean contains(LocalDate date) {
             requireNonNull(date);
             return !date.isBefore(start) && !date.isAfter(end);
+        }
+
+        /**
+         * Returns true if {@code entry} is on a date within the range, and is of the range's patient, if it has one.
+         */
+        public boolean contains(PatientAppointment entry) {
+            requireNonNull(entry);
+            return contains(entry.getAppointment().getDate())
+                    && patient.map(entry.getPatient().getId()::equals).orElse(true);
+        }
+    }
+
+    /**
+     * Where the main window goes after a command: the view to switch to, and what to select in that view's list.
+     * A result with no {@code Navigation} keeps what both views select.
+     * <p>
+     * {@link #toPatient} selects that patient. {@link #toAppointment} selects that appointment, on the result's
+     * {@link AppointmentRange} if it has one. Without a range, the appointment view stays on the page shown if that
+     * page has the appointment, and otherwise shows the appointment's week. {@link #toView} selects the entry to start
+     * from: the first patient in the list, or the next appointment from now (the first, if all have passed), on the
+     * result's range if it has one, and otherwise in this week.
+     * <p>
+     * The entry to select must be in the list that its view shows after the command: a patient in the filtered
+     * patient list, and an appointment in the result's range, if it has one. Otherwise the command has a bug, and
+     * {@code LogicManager} throws an {@code IllegalStateException}.
+     */
+    public record Navigation(View view, Optional<PatientId> patient, Optional<PatientAppointment> appointment) {
+
+        /**
+         * Constructs a {@code Navigation}.
+         *
+         * @throws IllegalArgumentException if it selects a patient outside the patient view, or an appointment
+         *         outside the appointment view.
+         */
+        public Navigation {
+            requireAllNonNull(view, patient, appointment);
+            checkArgument(patient.isEmpty() || view == View.PATIENTS, "Only the patient view can select a patient.");
+            checkArgument(appointment.isEmpty() || view == View.APPOINTMENTS,
+                    "Only the appointment view can select an appointment.");
+        }
+
+        /**
+         * Returns a {@code Navigation} to {@code view} that selects the entry to start from.
+         */
+        public static Navigation toView(View view) {
+            return new Navigation(view, Optional.empty(), Optional.empty());
+        }
+
+        /**
+         * Returns a {@code Navigation} to the patient view that selects the patient with {@code id}.
+         */
+        public static Navigation toPatient(PatientId id) {
+            return new Navigation(View.PATIENTS, Optional.of(id), Optional.empty());
+        }
+
+        /**
+         * Returns a {@code Navigation} to the appointment view that selects {@code appointment}.
+         */
+        public static Navigation toAppointment(PatientAppointment appointment) {
+            return new Navigation(View.APPOINTMENTS, Optional.empty(), Optional.of(appointment));
         }
     }
 
@@ -68,11 +139,14 @@ public class CommandResult {
     /** The range whose appointments the appointment view should show, or null to keep what it shows. */
     private final AppointmentRange appointmentRange;
 
+    /** Where the main window goes, or null to keep the selections of both views. */
+    private final Navigation navigation;
+
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
-        this(feedbackToUser, showHelp, exit, null, null, null);
+        this(feedbackToUser, showHelp, exit, null, null, null, null);
     }
 
     /**
@@ -80,7 +154,7 @@ public class CommandResult {
      * to be shown, with other fields set to their default value.
      */
     public CommandResult(String feedbackToUser, PatientId patientToView) {
-        this(feedbackToUser, false, false, requireNonNull(patientToView), null, null);
+        this(feedbackToUser, false, false, requireNonNull(patientToView), null, null, null);
     }
 
     /**
@@ -88,7 +162,7 @@ public class CommandResult {
      * {@code appointmentRange} on one page, with other fields set to their default value.
      */
     public CommandResult(String feedbackToUser, AppointmentRange appointmentRange) {
-        this(feedbackToUser, false, false, null, null, requireNonNull(appointmentRange));
+        this(feedbackToUser, false, false, null, null, requireNonNull(appointmentRange), null);
     }
 
     /**
@@ -96,25 +170,44 @@ public class CommandResult {
      * and other fields set to their default value.
      */
     public CommandResult(String feedbackToUser) {
-        this(feedbackToUser, false, false, null, null, null);
+        this(feedbackToUser, false, false, null, null, null, null);
     }
 
     private CommandResult(String feedbackToUser, boolean showHelp, boolean exit, PatientId patientToView,
-            View view, AppointmentRange appointmentRange) {
+            View view, AppointmentRange appointmentRange, Navigation navigation) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
         this.patientToView = patientToView;
         this.view = view;
         this.appointmentRange = appointmentRange;
+        this.navigation = navigation;
     }
 
     /**
      * Returns a copy of this result that asks the main window to switch to {@code view}.
+     *
+     * @throws IllegalArgumentException if this result navigates to another view.
      */
     public CommandResult withView(View view) {
         requireNonNull(view);
-        return new CommandResult(feedbackToUser, showHelp, exit, patientToView, view, appointmentRange);
+        checkArgument(navigation == null || navigation.view() == view,
+                "The view must be the one that the result navigates to.");
+        return new CommandResult(feedbackToUser, showHelp, exit, patientToView, view, appointmentRange, navigation);
+    }
+
+    /**
+     * Returns a copy of this result that asks the main window to go where {@code navigation} says, which also
+     * switches to its view. See {@link Navigation} for what it selects.
+     *
+     * @throws IllegalArgumentException if this result already switches to another view.
+     */
+    public CommandResult withNavigation(Navigation navigation) {
+        requireNonNull(navigation);
+        checkArgument(view == null || view == navigation.view(),
+                "The view must be the one that the result switches to.");
+        return new CommandResult(feedbackToUser, showHelp, exit, patientToView, navigation.view(), appointmentRange,
+                navigation);
     }
 
     public String getFeedbackToUser() {
@@ -152,6 +245,14 @@ public class CommandResult {
         return Optional.ofNullable(appointmentRange);
     }
 
+    /**
+     * Returns where the main window goes, or {@code Optional#empty()} if the selections of both views should not
+     * change.
+     */
+    public Optional<Navigation> getNavigation() {
+        return Optional.ofNullable(navigation);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -168,12 +269,13 @@ public class CommandResult {
                 && exit == otherCommandResult.exit
                 && Objects.equals(patientToView, otherCommandResult.patientToView)
                 && view == otherCommandResult.view
-                && Objects.equals(appointmentRange, otherCommandResult.appointmentRange);
+                && Objects.equals(appointmentRange, otherCommandResult.appointmentRange)
+                && Objects.equals(navigation, otherCommandResult.navigation);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit, patientToView, view, appointmentRange);
+        return Objects.hash(feedbackToUser, showHelp, exit, patientToView, view, appointmentRange, navigation);
     }
 
     @Override
@@ -185,6 +287,7 @@ public class CommandResult {
                 .add("patientToView", patientToView)
                 .add("view", view)
                 .add("appointmentRange", appointmentRange)
+                .add("navigation", navigation)
                 .toString();
     }
 

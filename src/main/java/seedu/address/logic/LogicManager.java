@@ -3,6 +3,7 @@ package seedu.address.logic;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -11,6 +12,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.IdCompleter;
 import seedu.address.logic.parser.LaiNurseParser;
@@ -52,8 +54,6 @@ public class LogicManager implements Logic {
         CommandResult commandResult;
         Command command = laiNurseParser.parseCommand(commandText);
         commandResult = command.execute(model);
-        // Each command declares the view it shows, so a command's own result never has to name it
-        commandResult = command.getView().map(commandResult::withView).orElse(commandResult);
 
         try {
             storage.saveLaiNurse(model.getLaiNurse());
@@ -63,7 +63,38 @@ public class LogicManager implements Logic {
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
         }
 
+        // The view and the navigation are added and checked after saving, so that the data file still matches the
+        // model if they show a bug in the command.
+        // Each command declares the view it shows, so a command's own result never has to name it
+        commandResult = command.getView().map(commandResult::withView).orElse(commandResult);
+        checkNavigation(commandResult, model);
         return commandResult;
+    }
+
+    /**
+     * Checks that the entry that {@code result} navigates to, if any, is in the list that its view shows after the
+     * command: a patient in the filtered patient list of {@code model}, or an appointment in its appointment list
+     * and in the result's range, if it has one, which includes the range's patient.
+     *
+     * @throws IllegalStateException if the entry is not in that list, which is a bug in the command.
+     */
+    static void checkNavigation(CommandResult result, Model model) {
+        Optional<Navigation> navigation = result.getNavigation();
+        navigation.flatMap(Navigation::patient).ifPresent(id -> {
+            if (model.getFilteredPatientList().stream().noneMatch(patient -> patient.getId().equals(id))) {
+                throw new IllegalStateException("Patient " + id + " is not in the filtered patient list.");
+            }
+        });
+        navigation.flatMap(Navigation::appointment).ifPresent(entry -> {
+            if (model.getAppointmentList().stream().noneMatch(entry::isSameEntry)) {
+                throw new IllegalStateException("Appointment " + entry + " is not in the appointment list.");
+            }
+            boolean isInRange = result.getAppointmentRange().map(range -> range.contains(entry)).orElse(true);
+            if (!isInRange) {
+                throw new IllegalStateException("Appointment " + entry + " is not in the range "
+                        + result.getAppointmentRange().get() + ".");
+            }
+        });
     }
 
     @Override

@@ -421,6 +421,25 @@ Each `Command` declares the view it shows by overriding `Command#getView()`, whi
 `MainWindow#executeCommand` switches to it. A `CommandResult` can also hold an `AppointmentRange`, as the result of
 `viewappt` does. Then `MainWindow` tells `AppointmentListPanel` to show the appointments in that range on one page.
 
+A command can also choose the entry to select, by adding a `CommandResult.Navigation` with
+`CommandResult#withNavigation`. `Navigation.toPatient(id)` selects that patient in the patient view, and
+`Navigation.toAppointment(entry)` selects that appointment in the appointment view. If the result has no range, the
+appointment view stays on the page shown if that page has the appointment, so that a nurse working through a range
+stays on it, or else shows the appointment's week. `Navigation.toView(view)` selects the entry to start from: the
+first patient in the list, or the next appointment from now (the first, if all have passed), in the result's range
+or, if the result has no range, in this week. A range without a `Navigation`, as `viewappt` returns, selects its
+first appointment. A command that filters the patient list or shows a range can select an entry in the same result,
+because the entry is selected after the filter and the range are applied.
+
+An `AppointmentRange` can also name a patient, with `new AppointmentRange(start, end, Optional.of(id))`. The page
+then shows only that patient's appointments, and its header starts with their ID.
+
+After the command, `LogicManager` checks that the entry to select is in the list that the view shows: a patient in
+the filtered patient list, and an appointment in the range, including the range's patient. If it is not, the
+command has a bug, and `LogicManager` throws an `IllegalStateException`. `add` and `edit` use
+`Navigation.toPatient` to select the patient that they added or edited, as `view` does. Both show all patients
+first, so that patient is always in the list.
+
 Switching the tab by mouse or key runs no command and changes no model state. So the result display, the filtered
 patient list and the shown page of appointments all keep their state. If the keyboard focus is in the view being hidden, `MainWindow`
 moves it to the tab of the view being shown.
@@ -1350,6 +1369,21 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `list`<br>
        Expected: The **Patients** tab is selected, and all patients are listed.
 
+### Adding a patient
+
+1. Adding a patient while the list is filtered
+
+    1. Prerequisites: Start with the sample data. No patient has the ID `T0123456B`.
+
+    1. Test case: `viewappt 2026-10-06`, then `find --name bernice`, then
+       `add --id T0123456B --name John Doe --phone 98765432 --address John street, block 123, #01-01`<br>
+       Expected: The **Patients** tab is selected, and the list shows all patients again. John Doe's row is
+       highlighted, and the panel beside the list shows their details. The status message names the new patient.
+
+    1. Test case: the same `add` command again<br>
+       Expected: No patient is added. The status message shows `This patient already exists in LaiNurse.` The
+       selection does not change.
+
 ### Editing a patient
 
 1. Editing a patient's details by ID
@@ -1358,6 +1392,10 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `edit S1234567A --phone 91234567`<br>
        Expected: Alex Yeoh's phone number changes to `91234567`. The other details are unchanged.
+
+    1. Test case: `viewappt 2026-10-06`, then `find --name bernice`, then `edit S1234567A --phone 91234567`<br>
+       Expected: The **Patients** tab is selected, and the list shows all patients again. Alex Yeoh's row is
+       highlighted, and the panel beside the list shows their details.
 
     1. Test case: `edit S0000000Z --phone 91234567`, an ID that no patient has<br>
        Expected: No patient is changed. The status message shows `The patient ID provided is invalid.`

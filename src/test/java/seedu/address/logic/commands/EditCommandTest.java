@@ -22,6 +22,7 @@ import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
@@ -54,7 +55,7 @@ public class EditCommandTest {
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(firstPatient, editedPatient);
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(editCommand, model, editResult(expectedMessage, firstPatient.getId()), expectedModel);
     }
 
     @Test
@@ -74,7 +75,7 @@ public class EditCommandTest {
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(lastPatient, editedPatient);
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(editCommand, model, editResult(expectedMessage, lastPatient.getId()), expectedModel);
     }
 
     @Test
@@ -92,7 +93,7 @@ public class EditCommandTest {
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(firstPatient, editedPatient);
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(editCommand, model, editResult(expectedMessage, firstPatient.getId()), expectedModel);
     }
 
     @Test
@@ -153,7 +154,7 @@ public class EditCommandTest {
 
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(editCommand, model, editResult(expectedMessage, firstPatient.getId()), expectedModel);
     }
 
     @Test
@@ -172,7 +173,7 @@ public class EditCommandTest {
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(secondPatient, editedPatient);
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(editCommand, model, editResult(expectedMessage, secondPatient.getId()), expectedModel);
     }
 
     @Test
@@ -195,7 +196,7 @@ public class EditCommandTest {
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(secondPatient, editedPatient);
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(editCommand, model, editResult(expectedMessage, secondPatient.getId()), expectedModel);
     }
 
     @Test
@@ -219,7 +220,14 @@ public class EditCommandTest {
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(patientToEdit, editedPatient);
 
-        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertCommandSuccess(editCommand, model, editResult(expectedMessage, patientToEdit.getId()), expectedModel);
+    }
+
+    /**
+     * Returns the result of an edit that succeeds with {@code message}, which selects the patient with {@code id}.
+     */
+    private static CommandResult editResult(String message, PatientId id) {
+        return new CommandResult(message).withNavigation(Navigation.toPatient(id));
     }
 
     @Test

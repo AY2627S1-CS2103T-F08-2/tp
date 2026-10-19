@@ -178,7 +178,7 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * Each appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted. If the same appointment is given twice, it is kept once. A date-only appointment and a timed one on the same day, including `00:00`, are kept as separate appointments.
 * Appointments have no time zone. They are the local date and time of the visit, as you would write them on a calendar, so changing your computer's time zone does not change them.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
-* After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change.
+* After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change. The new patient is selected in the list, and their details are shown, as `view` does.
 
 Examples:
 
@@ -211,7 +211,7 @@ Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-hi
 * `--add-appt` adds an appointment, and `--remove-appt` removes one. Both can be repeated. Appointments use the same format as in `add`.
 * `--remove-appt` must match an existing appointment exactly. For example, `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`. If any appointment to remove is not found, nothing is changed.
 * Appointments are removed before they are added, so one command can move an appointment to a new date. Adding an appointment the patient already has makes no change. As with `add`, a date-only appointment and a timed one on the same day are separate appointments.
-* After a patient is edited, the list shows all patients again.
+* After a patient is edited, the list shows all patients again. The edited patient is selected in the list, and their details are shown, as `view` does.
 
 Examples:
 *  `edit S1234567A --phone 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.
