@@ -399,8 +399,8 @@ The command also returns the range in its `CommandResult`, as a `CommandResult.A
 `LocalDate.MAX` if the range has no end. `MainWindow` then tells `AppointmentListPanel` to show only the appointments in
 that range, on one page, and to select the first one.
 
-With `--id`, the parser also reads a `PatientId`. An ID keeps to one token: a date typed after the options would
-otherwise end up inside the ID value, so the parser rejects it. When the command runs, it looks the patient up by ID,
+With `--id`, the parser also reads a `PatientId`. A date typed after the options ends up inside the ID value, which
+`ParserUtil#parseId` fails as an invalid ID. When the command runs, it looks the patient up by ID,
 and if none matches, fails with the invalid-patient-ID error and leaves the list and the page as they were. Otherwise
 it narrows the list to that patient with an appointment in the range, and counts that patient's appointments in the
 range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
@@ -1194,18 +1194,21 @@ testers are expected to do more *exploratory* testing.
        `0 patient(s) with appointments on 2026-11-11`. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
-       Expected: The list is unchanged. The status message shows an error: `Dates should be a real date in the format yyyy-MM-dd`.
+       Expected: The list is unchanged. The status message shows the command format, because a date that does not
+       parse is treated like any other invalid input.
 
     1. Test case: `viewappt 15/10/2026`, a date in the wrong format<br>
-       Expected: The list is unchanged. The status message shows the same date format error as above.
+       Expected: The list is unchanged. The status message shows the command format, as above.
 
     1. Test case: `viewappt`, with no date and no options<br>
        Expected: The appointments from today onwards are shown on one page. The status message names today's
        date, which is the current date in your computer's time zone, and the **Patients** tab lists the patients with
        an upcoming appointment. If none is upcoming, the appointment page says `No appointments in this range.`
 
-    1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date)<br>
-       Expected: The list is unchanged. The status message shows the correct command format or the date format error.
+    1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date),
+       `viewappt --from 2026-02-30` (an impossible date for an option)<br>
+       Expected: The list is unchanged. The first shows the command format; the second shows the date format error,
+       because a date given to an option keeps the date error.
 
 1. Viewing patients who have an appointment in a date range
 
@@ -1269,9 +1272,10 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
        Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
 
-    1. Other incorrect commands to try: `viewappt --id S1234567A 2026-10-05` (a date after the option),
-       `viewappt --id S1234567A --id S2345678B` (repeated option), `viewappt --id` (missing ID)<br>
-       Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
+    1. Other incorrect commands to try: `viewappt --id S1234567A 2026-10-05` (a date after the option, which makes
+       the ID invalid), `viewappt --id S1234567A --id S2345678B` (repeated option), `viewappt --id` (missing ID)<br>
+       Expected: The list is unchanged. The status message shows the patient ID constraints or a duplicate-option
+       error.
 
 1. Viewing a date-only appointment next to a timed one on the same day
 

@@ -21,35 +21,63 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
     /**
      * Parses the given {@code String} of arguments in the context of the ViewAppointmentCommand
      * and returns a ViewAppointmentCommand object for execution.
-     * The arguments are an optional patient ID, combined with a date, a {@code --from} date, a {@code --to} date,
-     * or none of these. A date with no option is the preamble, and comes before the options.
+     * The arguments are a date with an optional patient ID, or a patient ID with an optional date range,
+     * or none of these.
      *
      * @throws ParseException if the user input does not conform to the expected format.
      */
     public ViewAppointmentCommand parse(String args) throws ParseException {
-        String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT,
-                ViewAppointmentCommand.MESSAGE_USAGE);
-        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAppointmentCommand.MESSAGE_USAGE),
                 PREFIX_FROM, PREFIX_TO, PREFIX_ID);
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_FROM, PREFIX_TO, PREFIX_ID);
-        String preamble = argMultimap.getPreamble();
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TO, PREFIX_ID);
-        Optional<PatientId> patientId = parseOptionalPatientId(argMultimap, invalidFormatMessage);
-        boolean hasDateFlags = argMultimap.getValue(PREFIX_FROM).isPresent()
+        if (normalizedArgs.isBlank()) {
+            // A plain viewappt shows the upcoming appointments
+            return new ViewAppointmentCommand(Optional.empty(), Optional.empty(), Optional.empty());
+        }
+        Optional<ViewAppointmentCommand> dateCommand = parseWithDate(normalizedArgs);
+        if (dateCommand.isPresent()) {
+            return dateCommand.get();
+        }
+        return parseWithOptionalDateRange(normalizedArgs);
+    }
+
+    /**
+     * Parses the given {@code String} of arguments of the form {@code DATE [--id ID]}
+     * Returns the corresponding {@code Optional<ViewAppointmentCommand>}, or {@code Optional#empty()} if
+     * the preamble is not a date or a range option is present.
+     */
+    private static Optional<ViewAppointmentCommand> parseWithDate(String args) throws ParseException {
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        Optional<LocalDate> date = parseDateOrEmpty(argMultimap.getPreamble());
+        if (date.isEmpty()) {
+            return Optional.empty();
+        }
+        boolean hasRangeOptions = argMultimap.getValue(PREFIX_FROM).isPresent()
                 || argMultimap.getValue(PREFIX_TO).isPresent();
-
-        if (!hasDateFlags) {
-            if (preamble.isEmpty()) {
-                // A plain viewappt shows the upcoming appointments
-                return new ViewAppointmentCommand(Optional.empty(), Optional.empty(), patientId);
-            }
-            LocalDate date = ParserUtil.parseDate(preamble);
-            return new ViewAppointmentCommand(Optional.of(date), Optional.of(date), patientId);
+        if (hasRangeOptions) {
+            return Optional.empty();
         }
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID);
+        Optional<PatientId> patientId = parseOptionalPatientId(argMultimap);
+        return Optional.of(new ViewAppointmentCommand(
+                Optional.of(date.get()), Optional.of(date.get()), patientId));
+    }
 
-        if (!preamble.isEmpty()) {
-            throw new ParseException(invalidFormatMessage);
+    /**
+     * Parses the given {@code String} of arguments of the form {@code [--id ID] [--from START_DATE] [--to END_DATE]},
+     * in any order, and returns the corresponding {@code Optional<ViewAppointmentCommand>}.
+     *
+     * @throws ParseException if the user input does not conform to the expected format.
+     */
+    private static ViewAppointmentCommand parseWithOptionalDateRange(String args) throws ParseException {
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        if (!argMultimap.getPreamble().isEmpty()) {
+            // A date that does not parse, or any other word, cannot be used here
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT,
+                    ViewAppointmentCommand.MESSAGE_USAGE));
         }
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        Optional<PatientId> patientId = parseOptionalPatientId(argMultimap);
         Optional<LocalDate> startDate = parseOptionalDate(argMultimap, PREFIX_FROM);
         Optional<LocalDate> endDate = parseOptionalDate(argMultimap, PREFIX_TO);
         if (startDate.isPresent() && endDate.isPresent() && startDate.get().isAfter(endDate.get())) {
@@ -58,23 +86,25 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         return new ViewAppointmentCommand(startDate, endDate, patientId);
     }
 
+    /** Returns the date, or {@code Optional#empty()} if {@code date} is not a real date in {@code yyyy-MM-dd}. */
+    private static Optional<LocalDate> parseDateOrEmpty(String date) {
+        try {
+            return Optional.of(ParserUtil.parseDate(date));
+        } catch (ParseException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** Returns the date given to {@code prefix}, or {@code Optional#empty()} if the prefix is absent. */
     private static Optional<LocalDate> parseOptionalDate(ArgumentMultimap argMultimap, Prefix prefix)
             throws ParseException {
         Optional<String> date = argMultimap.getValue(prefix);
         return date.isPresent() ? Optional.of(ParserUtil.parseDate(date.get())) : Optional.empty();
     }
 
-    private static Optional<PatientId> parseOptionalPatientId(ArgumentMultimap argMultimap,
-            String invalidFormatMessage) throws ParseException {
-        Optional<String> value = argMultimap.getValue(PREFIX_ID);
-        if (value.isEmpty()) {
-            return Optional.empty();
-        }
-        // A date after the options would end up inside the ID value, so an ID keeps to one token
-        String trimmedId = value.get().trim();
-        if (trimmedId.isEmpty() || trimmedId.contains(" ")) {
-            throw new ParseException(invalidFormatMessage);
-        }
-        return Optional.of(ParserUtil.parseId(trimmedId));
+    /** Returns the patient ID given to {@code PREFIX_ID}, or {@code Optional#empty()} if the prefix is absent. */
+    private static Optional<PatientId> parseOptionalPatientId(ArgumentMultimap argMultimap) throws ParseException {
+        Optional<String> id = argMultimap.getValue(PREFIX_ID);
+        return id.isPresent() ? Optional.of(ParserUtil.parseId(id.get())) : Optional.empty();
     }
 }
