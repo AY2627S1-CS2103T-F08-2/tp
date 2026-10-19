@@ -143,7 +143,8 @@ computer wakes from sleep.
 `AppointmentListPanel` shows the appointments of `Logic#getAppointmentList()`, which holds every appointment of every
 patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek`, from Monday to Sunday. After
 `viewappt`, the panel shows only the appointments in the command's range, on one page, and hides the week's arrow
-buttons. `AppointmentPage#ofWeek` and `AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
+buttons; if the range carries a patient ID, only that patient's appointments. `AppointmentPage#ofWeek` and
+`AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
 of the week, or for each day in the range that has an appointment, followed by that day's appointments, numbered down
 the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. An appointment with no time comes first in its day, except today, where it comes after the appointments that
 have passed, right above the next one. A page is built as at the time given to it, so the page and the appointment that
@@ -380,7 +381,7 @@ method, and a `Patient` or `Appointment` built with the new value.
 
 ### Viewing appointments by date
 
-`viewappt` takes either one date, or a range given by `--from`, `--to`, or both. `ViewAppointmentCommandParser`
+`viewappt` takes one date, a range given by `--from`, `--to`, or both, or none of these. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
 that starts and ends on that date. When both options are given, the parser rejects a `--from` date that is after the
 `--to` date.
@@ -398,13 +399,21 @@ The command also returns the range in its `CommandResult`, as a `CommandResult.A
 `LocalDate.MAX` if the range has no end. `MainWindow` then tells `AppointmentListPanel` to show only the appointments in
 that range, on one page, and to select the first one.
 
+With `--id`, the parser also reads a `PatientId`. An ID keeps to one token: a date typed after the options would
+otherwise end up inside the ID value, so the parser rejects it. When the command runs, it looks the patient up by ID,
+and if none matches, fails with the invalid-patient-ID error and leaves the list and the page as they were. Otherwise
+it narrows the list to that patient with an appointment in the range, and counts that patient's appointments in the
+range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
+messages count patients. The `AppointmentRange` also carries the ID, and `AppointmentListPanel` filters the page's
+appointments by it, so the page shows only that patient's until Esc or another `viewappt` replaces the range.
+
 **Design considerations: where appointment searches belong**
 
 * **Alternative 1 (current choice):** Only `viewappt` searches appointments, by real dates.
     * Pros: Each command answers one question. `find` answers "who is this patient?", and `viewappt` answers "whom do I
       visit, and when?". Only `AppointmentBetweenDatesPredicate` matches appointments, and it checks every appointment.
-    * Cons: A search such as "Alex, or anyone with an appointment in October" needs two commands. There is no search by
-      time of day.
+    * Cons: A search such as "anyone called Alex who has an appointment in October" still needs two commands, one for
+      each question. There is no search by time of day.
 * **Alternative 2:** `find` also takes an appointment option and matches it as a substring of each appointment.
     * Pros: Appointment searches can be combined with other `find` options in one command.
     * Cons: Substrings are ambiguous for dates. For example, `10` matches October, the 10th of any month, and 10:00.
@@ -1190,7 +1199,12 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt 15/10/2026`, a date in the wrong format<br>
        Expected: The list is unchanged. The status message shows the same date format error as above.
 
-    1. Other incorrect `viewappt` commands to try: `viewappt` (missing date), `viewappt 2026-10-15 2026-10-20` (more than one date)<br>
+    1. Test case: `viewappt`, with no date and no options<br>
+       Expected: The appointments from today onwards are shown on one page. The status message names today's
+       date, which is the current date in your computer's time zone, and the **Patients** tab lists the patients with
+       an upcoming appointment. If none is upcoming, the appointment page says `No appointments in this range.`
+
+    1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date)<br>
        Expected: The list is unchanged. The status message shows the correct command format or the date format error.
 
 1. Viewing patients who have an appointment in a date range
@@ -1205,7 +1219,8 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `viewappt --to 2026-10-06 --from 2026-10-06`<br>
        Expected: Bernice Yu's appointment is selected, and only Bernice Yu is listed on the **Patients** tab. The
-       options may be in any order, and a one-day range behaves like `viewappt 2026-10-06`.
+       options may be in any order, and a one-day range shows the same page as `viewappt 2026-10-06`; only the status
+       message words it differently, as `from 2026-10-06 to 2026-10-06`.
 
     1. Test case: `viewappt --from 2026-10-07`<br>
        Expected: Above the list is `From Wed 7 Oct 2026`. The list shows Irfan Ibrahim's appointment, which is
@@ -1215,7 +1230,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --to 2099-12-31`<br>
        Expected: Only patients with an appointment from today onwards are listed on the **Patients** tab. The range in
        the status message starts with today's date, which is the current date in your computer's time zone. If no
-       appointment is in the range, the list says `No appointments in this range.`
+       appointment is in the range, the appointment page says `No appointments in this range.`
 
     1. Test case: `viewappt --to 2000-01-01`<br>
        Expected: The list is unchanged. The status message says that the `--to` date is before today.
@@ -1225,6 +1240,37 @@ testers are expected to do more *exploratory* testing.
 
     1. Other incorrect commands to try: `viewappt 2026-10-15 --to 2026-10-31` (a date and an option),
        `viewappt --till 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated option)<br>
+       Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
+
+1. Viewing one patient's appointments with `--id`
+
+    1. Prerequisites: The same sample data as above.
+
+    1. Test case: `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31`<br>
+       Expected: The list shows only Alex Yeoh's appointment at 09:30 on Mon 5 Oct, which is selected. On the
+       **Patients** tab, only Alex Yeoh is listed. The status message shows
+       `1 appointment(s) of Alex Yeoh from 2026-10-01 to 2026-10-31`.
+
+    1. Test case: `viewappt 2026-10-05 --id S1234567A`, a date before the option<br>
+       Expected: The same page as `viewappt 2026-10-05` gives, but the status message says
+       `1 appointment(s) of Alex Yeoh on 2026-10-05`. A date combines with `--id` when it comes before the options.
+
+    1. Test case: `viewappt --id S1234567A --from 2026-11-01`<br>
+       Expected: Only Alex Yeoh's appointment on Mon 2 Nov is shown, and the status message shows
+       `1 appointment(s) of Alex Yeoh on or after 2026-11-01`.
+
+    1. Test case: `viewappt --id s1234567a`, the ID in lower case<br>
+       Expected: The same as `viewappt --id S1234567A` gives. IDs are case-insensitive.
+
+    1. Test case: `viewappt --id S1234567A --from 2026-12-01`, a range without appointments<br>
+       Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
+       `0 appointment(s) of Alex Yeoh on or after 2026-12-01`. The patient list on the **Patients** tab is empty.
+
+    1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
+       Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
+
+    1. Other incorrect commands to try: `viewappt --id S1234567A 2026-10-05` (a date after the option),
+       `viewappt --id S1234567A --id S2345678B` (repeated option), `viewappt --id` (missing ID)<br>
        Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
 
 1. Viewing a date-only appointment next to a timed one on the same day
@@ -1391,7 +1437,8 @@ testers are expected to do more *exploratory* testing.
     * Test case: `help add` (or `help --add`)
         * Expected: Parameter syntax and usage examples for `add` are displayed.
     * Test case: `help viewappt` (or `help --viewappt`)
-        * Expected: Both single-date and date-range syntax options (`--from`, `--to`) for `viewappt` are displayed.
+        * Expected: The `viewappt` syntax is displayed: a date, a `--from`/`--to` range, or neither for the upcoming
+          appointments, each with an optional `--id ID`.
     * Test case: `help --DELETE` or `help VIEW`
         * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
 

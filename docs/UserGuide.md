@@ -247,27 +247,32 @@ Examples:
 
 ### Viewing appointments: `viewappt`
 
-Shows only the appointments on a date, or between two dates, in the appointment view, and lists the patients who have one.
+Shows only the appointments on a date, or between two dates, in the appointment view, and lists the patients who have one. With `--id`, shows only that patient's appointments.
 
-Format: `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`
+Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`
 
 * All dates must be real dates in `yyyy-MM-dd` format.
 * `viewappt DATE` looks for appointments on `DATE`.
-* With `--from` and `--to`, the range includes both dates. Give at least one of them, in any order, each at most once.
-* Without `--from`, the range starts today. Without `--to`, the range has no end.
+* With `--from` and `--to`, the range includes both dates. Give one of them or both, in any order, each at most once.
+* Without `--from`, the range starts today. Without `--to`, the range has no end. With neither, a plain `viewappt` shows the appointments from today onwards.
 * "Today" is the current date on your computer, in its time zone. If your computer is set to a different time zone from where you visit patients, "today" can be a day off near midnight.
 * The `--from` date must not be later than the `--to` date. With only `--to`, the date must not be before today. To see past appointments, give `--from` too.
-* `DATE` cannot be combined with `--from` or `--to`.
+* `DATE` cannot be combined with `--from` or `--to`, and comes before the options.
+* `--id ID` narrows the appointment page and the patient list to the patient with that ID, together with the date range. It combines with `DATE` (which must come first, as above) and with `--from` and `--to` in any order, and can be the only argument: `viewappt --id ID` shows that patient's upcoming appointments.
+* The ID is case-insensitive, as in [`view`](#viewing-a-patients-details-view), and must belong to a patient. If no patient has it, LaiNurse shows an error, and the appointment page and the patient list stay as they were.
 * LaiNurse switches to the **Appointments** view, and shows the appointments in the range on one page, in place of the weekly view. The first one is selected, and its patient's details are shown. If no appointment is in the range, the page says `No appointments in this range.`
 * To go back to the weekly view, press Esc with the focus in the appointment list. The weekly view shows the week that it showed before. See [The patient and appointment views](#the-patient-and-appointment-views).
-* The patient list, on the **Patients** tab, shows the patients with an appointment in the range. All of each patient's appointments are checked, with or without a time. Each patient appears once, in the original list order. If no patient has an appointment in the range, the patient list is empty.
+* The patient list, on the **Patients** tab, shows the patients with an appointment in the range, or with `--id`, only that patient if they have one. All of each patient's appointments are checked, with or without a time. Each patient appears once, in the original list order. If no appointment is in the range, the patient list is empty.
 * Only dates are compared, so an appointment earlier today still counts.
 
 Examples:
+* `viewappt` shows the appointments from today onwards.
 * `viewappt 2026-10-15` shows the appointments on October 15, 2026.
 * `viewappt --from 2026-10-01 --to 2026-10-31` shows the appointments in October 2026.
 * `viewappt --to 2026-10-31` shows the appointments from today to October 31, 2026.
 * `viewappt --from 2026-12-01` shows the appointments on or after December 1, 2026.
+* `viewappt --id S1234567A` shows Alex Yeoh's appointments from today onwards.
+* `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31` shows Alex Yeoh's appointments in October 2026.
 
 ### Viewing a patient's details: `view`
 
@@ -354,6 +359,6 @@ Action | Format, Examples
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
 **List** | `list`
 **View** | `view ID`<br> e.g., `view S1234567A`
-**ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --to 2026-10-31`
+**ViewAppt** | `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`<br> e.g., `viewappt 2026-10-15`, `viewappt --id S1234567A --from 2026-10-01`
 **Help** | `help [COMMAND]` (or `help [--COMMAND]`)<br> e.g., `help`, `help add` (or `help --add`), `help window` (or `help --window`)
 **Exit** | `exit`
