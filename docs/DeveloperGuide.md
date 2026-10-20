@@ -110,10 +110,11 @@ In each view, `MainWindow#shareWidth` splits the width between the list and the 
 together as the window is resized. Up to a window about 1,000 pixels wide, each takes half. In a wider window, the
 list's share falls steadily, to 28% in a window 1,920 pixels wide, a full HD screen, and stays there in a wider one, so
 that the details take most of the extra room. The list itself never gets narrower as the window gets wider. The window
-can be no narrower than both at their minimum widths. In a narrow list header, the hint and the count give up their room
-before the dates do. With room, `PatientDetailPanel` shows each appointment's date, time and details side by side, with
-the same widths in every row, so that they line up. In narrow details, it puts the details under the time, shrinks the
-dates of all rows together and lets the times wrap, so that the times stay in line and no row is wider than the panel.
+can be no narrower than both at their minimum widths. In a narrow list header, the note, such as `This week`, and the
+count give up their room before the dates do. With room, `PatientDetailPanel` shows each appointment's date, time and
+details side by side, with the same widths in every row, so that they line up. In narrow details, it puts the details
+under the time, shrinks the dates of all rows together and lets the times wrap, so that the times stay in line and no
+row is wider than the panel.
 
 `PatientListPanel` shows each patient in the filtered list as a `PatientRow`, with their next appointment, and its
 `PatientDetailPanel` shows all the details of one patient. Above the rows, a header says whether the list is filtered,
@@ -1065,7 +1066,7 @@ testers are expected to do more *exploratory* testing.
        and David Li, and no patient's details are shown.
 
     1. Test case: the result of the prerequisite<br>
-       Expected: The header above the list shows `Filtered patients`, `Esc to show all patients` and `2 of 6`.
+       Expected: The header above the list shows `Filtered patients` and `2 of 6`.
 
     1. Test case: type `abc` in the command box, then press Esc<br>
        Expected: The patient list gets a blue border and the command box is dimmed. `abc` stays in the command box.
@@ -1254,8 +1255,8 @@ testers are expected to do more *exploratory* testing.
        If you have modified the data, delete the data file and relaunch the app to restore the sample data.
 
     1. Test case: `viewappt 2026-10-07`<br>
-       Expected: The **Appointments** tab is selected. Above the list are `Wed 7 Oct 2026` and `Esc to show the weekly
-       view`, and no arrow buttons. The list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
+       Expected: The **Appointments** tab is selected. Above the list is `Wed 7 Oct 2026`, with no arrow buttons. The
+       list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
        panel beside the list shows their details with that appointment marked. The status message shows
        `1 patient(s) with appointments on 2026-10-07`. On the **Patients** tab, only Irfan Ibrahim is listed.
 
@@ -1393,8 +1394,8 @@ testers are expected to do more *exploratory* testing.
        `MONTHLY BLOOD TEST`, under it. In a wide window, the details of each appointment move beside its time.
 
     1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`, then make the window as narrow as it goes<br>
-       Expected: Above the list, `Thu 1 Oct – Sat 31 Oct 2026` stays whole, while `Esc to show the weekly view` and
-       the count beside it are cut short. Widening the window shows them in full.
+       Expected: Above the list, `Thu 1 Oct – Sat 31 Oct 2026` stays whole. If the header runs out of room, the count
+       beside it is cut short instead. Widening the window shows it in full.
 
 1. Appointments that have passed today
 

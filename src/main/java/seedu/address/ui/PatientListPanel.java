@@ -28,7 +28,6 @@ import seedu.address.model.patient.PatientId;
  */
 public class PatientListPanel extends UiPart<Region> {
     private static final String FXML = "PatientListPanel.fxml";
-    private static final String FILTERED_HINT = "Esc to show all patients";
     private static final String NO_MATCH_PLACEHOLDER = "No patients match the filter.";
     private static final String NO_PATIENTS_PLACEHOLDER = "No patients yet.";
 
@@ -44,8 +43,6 @@ public class PatientListPanel extends UiPart<Region> {
 
     @FXML
     private Label listTitle;
-    @FXML
-    private Label listHint;
     @FXML
     private Label listCount;
     @FXML
@@ -117,9 +114,6 @@ public class PatientListPanel extends UiPart<Region> {
         int total = allPatients.size();
         boolean isFiltered = shown < total;
         listTitle.setText(isFiltered ? "Filtered patients" : "All patients");
-        listHint.setText(FILTERED_HINT);
-        setShown(listHint, isFiltered);
-        // The title already says "patients" while the list is filtered, which leaves room for the hint
         if (total == 0) {
             listCount.setText("No patients");
         } else if (isFiltered) {
