@@ -87,10 +87,8 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_help() throws Exception {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
-        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " 3") instanceof HelpCommand);
-        assertEquals(new HelpCommand("add"), parser.parseCommand(HelpCommand.COMMAND_WORD + " add"));
-        assertEquals(new HelpCommand("add"), parser.parseCommand(HelpCommand.COMMAND_WORD + " --add"));
-        assertEquals(new HelpCommand("delete"), parser.parseCommand(HelpCommand.COMMAND_WORD + " --delete"));
+        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " add") instanceof HelpCommand);
+        assertEquals(new HelpCommand("delete"), parser.parseCommand(HelpCommand.COMMAND_WORD + " delete"));
         assertEquals(new HelpCommand("window"), parser.parseCommand(HelpCommand.COMMAND_WORD + " window"));
     }
 
@@ -100,6 +98,16 @@ public class LaiNurseParserTest {
                 parser.parseCommand(HelpCommand.COMMAND_WORD + " -- add"));
         assertThrows(ParseException.class, () ->
                 parser.parseCommand(HelpCommand.COMMAND_WORD + " add patient"));
+        // The '--COMMAND' flag form is no longer supported
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand(HelpCommand.COMMAND_WORD + " --add"));
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand(HelpCommand.COMMAND_WORD + " --window"));
+        // Unknown targets are rejected at parse time
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand(HelpCommand.COMMAND_WORD + " 3"));
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand(HelpCommand.COMMAND_WORD + " nonexistent"));
     }
 
     @Test

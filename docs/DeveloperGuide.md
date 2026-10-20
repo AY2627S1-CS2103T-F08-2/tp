@@ -456,8 +456,8 @@ moves it to the tab of the view being shown.
 The help system provides a three-tier support model designed to give nurses immediate CLI feedback as well as complete offline reference documentation without network connectivity:
 
 1. **General CLI Overview (`help`)**: Displays a concise summary of all available command words directly in the result display box.
-2. **Targeted CLI Help (`help [COMMAND]` or `help [--COMMAND]`)**: Displays parameter formats, constraints, and syntax examples for a specific command directly in the result display box by reading canonical `MESSAGE_USAGE` definitions.
-3. **Pop-up User Guide Window (`help window`, `help --window`, menu bar, or <kbd>F1</kbd>)**: Opens a standalone non-modal window displaying the full, offline User Guide rendered using native JavaFX components.
+2. **Targeted CLI Help (`help [COMMAND]`)**: Displays parameter formats, constraints, and syntax examples for a specific command (e.g., `help add`) directly in the result display box by reading canonical `MESSAGE_USAGE` definitions.
+3. **Pop-up User Guide Window (`help window`, menu bar, or <kbd>F1</kbd>)**: Opens a standalone non-modal window displaying the full, offline User Guide rendered using native JavaFX components.
 
 #### Implementation
 
@@ -467,17 +467,18 @@ The help architecture spans argument parsing in `Logic`, command dispatching in 
 
 `HelpCommandParser` processes user input according to the following rules:
 * Strips surrounding whitespace and checks for an empty argument string, returning a targetless `HelpCommand()` (Tier 1: General Help).
-* Normalizes flags: detects if the argument begins with `--` (via `TARGET_FLAG_MARKER`), strips the prefix, and ensures no whitespace exists between `--` and the target name (e.g., rejecting `help -- add`).
 * Normalizes casing using `Locale.ROOT` (`commandTarget.toLowerCase(Locale.ROOT)`) to ensure consistent parsing across system locales (avoiding locale-specific casing anomalies such as Turkish dotted 'i').
-* Rejects multi-token arguments (e.g., `help add patient`) or isolated flag markers (`help --`) by throwing a `ParseException` with `HelpCommand.MESSAGE_USAGE`.
+* Accepts only a single bare command word: rejects the deprecated `--` flag form (e.g., `help --add`, `help -- add`, `help --`) and multi-token arguments (e.g., `help add patient`) by throwing a `ParseException` with `HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT`.
+* Validates the target against `HelpCommand.COMMAND_USAGE_MAP` and `HelpCommand.TARGET_WINDOW`, rejecting unknown targets (e.g., `help 3`, `help help`, `help nonexistent`) at parse time with the same `ParseException`.
 
 ##### 2. Dynamic Command Usage Mapping (`HelpCommand`)
 
 Rather than hardcoding command names and usage strings inside `HelpCommand`:
 * A static `Map<String, String> COMMAND_USAGE_MAP` is initialized using a `TreeMap` to sort available command words alphabetically.
 * Each command registers its canonical `MESSAGE_USAGE` string dynamically (e.g., `AddCommand.COMMAND_WORD -> AddCommand.MESSAGE_USAGE`).
+* `HelpCommand` itself is excluded from `COMMAND_USAGE_MAP`: the self-referential `help help` is a cyclic lookup and is rejected at parse time.
 * The help window target (`"window"`) is deliberately decoupled from `COMMAND_USAGE_MAP`. It is handled as a distinct navigation branch returning `new CommandResult(SHOWING_HELP_MESSAGE, true, false)`.
-* If a target matches a registered command, its usage string is returned. If unknown, `MESSAGE_UNKNOWN_HELP_TARGET` is returned listing all valid command words.
+* If a target matches a registered command, its usage string is returned. Unknown targets cannot reach `HelpCommand` because `HelpCommandParser` validates the target before constructing the command.
 
 ##### 3. Build-Time Bundling & Extraction
 
@@ -488,6 +489,7 @@ Rather than hardcoding command names and usage strings inside `HelpCommand`:
 
 `MarkdownRenderer` parses the sanitized Markdown sequentially into native JavaFX nodes without external third-party dependencies:
 * **Section Structure & Headings**: Tracks headers (`#`, `##`, `###`) and horizontal separators (`---`), rendering them as styled `Label` and `Separator` nodes, while resetting active list counters.
+* **Offline Image Placeholders**: Image syntax (`![alt](src)`) cannot be bundled with the offline copy, so a standalone image line renders as a subdued placeholder note that keeps the alt text and directs the reader to the online User Guide via the window's **Copy URL** button, while inline occurrences are substituted with `[image: alt]` so they can never render as hyperlinks.
 * **List Counter Tracking across Continuations**:
     * Tracks numbered items with monotonic counter progression (`1., 2., 3., ...`), supporting lazy markdown numbering where all raw items start with `1.`.
     * Secondary continuation notes (e.g., `**Mac users:**`, multi-line descriptions) and sub-bullet items (`*`, `-`) are left-padded (`28px`–`32px`) without resetting the parent numbered list counter.
@@ -910,7 +912,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests help for a specific command (e.g., `help add` or `help --add`).
+1.  Nurse requests help for a specific command (e.g., `help add`).
 2.  LaiNurse displays the parameter syntax, format constraints, and usage examples for that command in the result display.
 
     Use case ends.
@@ -921,19 +923,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 1a1. LaiNurse displays an alphabetical list of all available commands and general navigation guidance in the result display.
     * Use case ends.
 
-* 1b. Nurse requests to open the full offline User Guide window (`help window`, `help --window`, press <kbd>F1</kbd>, or select **Help** > **Help**).
+* 1b. Nurse requests to open the full offline User Guide window (`help window`, press <kbd>F1</kbd>, or select **Help** > **Help**).
     * 1b1. LaiNurse opens the Help Window containing the complete offline User Guide rendered using native JavaFX components.
     * Use case ends.
 
-* 1c. Nurse enters an unrecognized command target (e.g., `help nonexistent` or `help --nonexistent`).
-    * 1c1. LaiNurse displays an unknown help target error message, lists all available commands in alphabetical order, and provides instructions to access the full guide window.
+* 1c. Nurse enters an unrecognized command target (e.g., `help nonexistent`) or the discontinued flag form (e.g., `help --add`).
+    * 1c1. LaiNurse displays an invalid command format error that shows `HelpCommand.MESSAGE_USAGE` and lists all available commands.
     * Use case ends.
 
 * 1d. Nurse provides a malformed help argument (e.g., `help -- add`, `help --`, or multiple tokens such as `help add patient`).
     * 1d1. LaiNurse displays an invalid command format error displaying `HelpCommand.MESSAGE_USAGE`.
     * Use case ends.
 
-* 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW` or `help --DELETE`).
+* 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW`).
     * 1e1. LaiNurse normalizes the target using `Locale.ROOT` and displays the syntax details for the matching command.
     * Use case ends.
 
@@ -1385,26 +1387,30 @@ testers are expected to do more *exploratory* testing.
 
 1. Command overview via CLI
     * Test case: `help`
-        * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
+        * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `list`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
-    * Test case: `help add` (or `help --add`)
+    * Test case: `help add`
         * Expected: Parameter syntax and usage examples for `add` are displayed.
-    * Test case: `help viewappt` (or `help --viewappt`)
+    * Test case: `help viewappt`
         * Expected: Both single-date and date-range syntax options (`--from`, `--to`) for `viewappt` are displayed.
-    * Test case: `help --DELETE` or `help VIEW`
+    * Test case: `help DELETE` or `help VIEW`
         * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
 
 3. Rejecting invalid help inputs
     * Test case: `help nonexistent`
-        * Expected: Displays `Unknown help command: 'nonexistent'.` along with the list of valid commands.
-    * Test case: `help --` or `help -- add`
+        * Expected: Displays an invalid command format error (`HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT`) showing `HelpCommand.MESSAGE_USAGE` and the available commands.
+    * Test case: `help --add` or `help --window`
+        * Expected: The discontinued `--` flag form is rejected; displays the same invalid command format error.
+    * Test case: `help help`
+        * Expected: Displays the invalid command format error with the available commands list; `help` itself is not a help target.
+    * Test case: `help -- add` or `help --`
         * Expected: Displays invalid command format error showing `HelpCommand.MESSAGE_USAGE`.
     * Test case: `help add patient`
         * Expected: Multi-token arguments are rejected; displays invalid command format error.
 
 4. Opening the full User Guide window
-    * Test case: `help window` or `help --window`
+    * Test case: `help window`
         * Expected: The Help Window opens displaying the full bundled User Guide formatted with native JavaFX nodes. The status message confirms: `Opened help window.`.
     * Test case: Press <kbd>F1</kbd> or click **Help** > **Help** in the menu bar.
         * Expected: Opens the Help Window.

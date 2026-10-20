@@ -33,6 +33,9 @@ public class MarkdownRenderer {
     private static final Pattern INLINE_PATTERN =
             Pattern.compile("(\\[.*?\\]\\(.*?\\)|<kbd>.*?</kbd>|\\*\\*.*?\\*\\*|`.*?`)");
 
+    // Matches image syntax ![alt](url) so images resolve to offline placeholders instead of being skipped
+    private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[(.*?)\\]\\((.*?)\\)");
+
     /**
      * Renders the given markdown text string into a JavaFX {@code VBox} container.
      */
@@ -79,11 +82,20 @@ public class MarkdownRenderer {
                 continue;
             }
 
-            // Sanitize tags & skip image references
+            // Sanitize tags & resolve image references to offline placeholders
             line = sanitizeLine(line);
-            if (line.isEmpty() || line.matches("^!\\[.*?\\]\\(.*?\\)$")) {
+            if (line.isEmpty()) {
                 continue;
             }
+
+            Matcher imageMatcher = IMAGE_PATTERN.matcher(line);
+            if (imageMatcher.matches()) {
+                // Standalone image line: show where the figure belongs and how to view it online
+                container.getChildren().add(buildImagePlaceholder(imageMatcher.group(1)));
+                continue;
+            }
+            // Inline image inside a paragraph: substitute it before the link pattern can match it
+            line = imageMatcher.replaceAll("[image: $1]");
 
             // Collapse repeated callout emoji clusters (e.g. [:exclamation: :exclamation: ...])
             line = line.replaceAll("\\[?\\s*(:exclamation:(\\uFE0F)?\\s*)+\\]?\\s*(\\*\\*Caution:\\*\\*)?",
@@ -206,6 +218,24 @@ public class MarkdownRenderer {
                 .trim();
     }
 
+    /**
+     * Builds a subdued placeholder describing an image that is omitted from the offline copy
+     * of the guide, so the reader knows what it depicts and how to view it in the online
+     * User Guide.
+     */
+    private static TextFlow buildImagePlaceholder(String altText) {
+        String description = (altText == null || altText.isBlank()) ? "screenshot" : altText;
+        TextFlow placeholder = new TextFlow();
+        Text icon = new Text("🖼 ");
+        icon.setStyle("-fx-fill: " + NUS_ORANGE + "; -fx-font-size: 13px;");
+        Text message = new Text("Image omitted from the offline guide: '" + description + "'. "
+                + "Use the Copy URL button above to view it in the online User Guide.");
+        message.setStyle("-fx-fill: #8b949e; -fx-font-size: 12px; -fx-font-style: italic;");
+        placeholder.getChildren().addAll(icon, message);
+        placeholder.setStyle("-fx-padding: 4 0 4 16;");
+        return placeholder;
+    }
+
     private static GridPane renderTable(List<String> tableLines) {
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -264,7 +294,7 @@ public class MarkdownRenderer {
             String match = matcher.group();
             if (match.startsWith("[") && match.contains("](") && match.endsWith(")")) {
                 int splitIndex = match.indexOf("](");
-                String label = match.substring(1, splitIndex);
+                String label = match.substring(1, splitIndex).replace("`", "");
                 String target = match.substring(splitIndex + 2, match.length() - 1);
 
                 if (target.startsWith("http://") || target.startsWith("https://")) {

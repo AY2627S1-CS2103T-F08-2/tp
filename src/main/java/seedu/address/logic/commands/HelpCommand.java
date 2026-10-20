@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 
 /**
@@ -16,7 +17,7 @@ public class HelpCommand extends Command {
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Shows program usage instructions.\n"
             + "Parameters: [COMMAND]\n"
             + "Example: " + COMMAND_WORD + " add\n"
-            + "To open the full User Guide window: " + COMMAND_WORD + " window";
+            + "To open the full User Guide window: '" + COMMAND_WORD + " window'";
 
     public static final String SHOWING_HELP_MESSAGE = "Opened help window.";
 
@@ -33,22 +34,25 @@ public class HelpCommand extends Command {
         map.put(EditCommand.COMMAND_WORD, EditCommand.MESSAGE_USAGE);
         map.put(ExitCommand.COMMAND_WORD, ExitCommand.MESSAGE_USAGE);
         map.put(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE);
-        map.put(HelpCommand.COMMAND_WORD, HelpCommand.MESSAGE_USAGE);
         map.put(ListCommand.COMMAND_WORD, ListCommand.MESSAGE_USAGE);
         map.put(ViewCommand.COMMAND_WORD, ViewCommand.MESSAGE_USAGE);
         map.put(ViewAppointmentCommand.COMMAND_WORD, ViewAppointmentCommand.MESSAGE_USAGE);
         COMMAND_USAGE_MAP = Collections.unmodifiableMap(map);
+        // 'help' is deliberately not registered as a help target: 'help help' is cyclic and rejected.
     }
 
     public static final String AVAILABLE_COMMANDS = String.join(", ", COMMAND_USAGE_MAP.keySet());
 
-    public static final String SHOWING_HELP_SUMMARY = "Commands: " + AVAILABLE_COMMANDS + "\n"
-            + "Type help [COMMAND] to view syntax details for a specific command.\n"
-            + "Type help window to open the full User Guide window, or press F1.";
+    /**
+     * Error message used by every rejected `help` argument: the invalid command format notice,
+     * the usage summary, and the list of valid targets so the user can recover immediately.
+     */
+    public static final String MESSAGE_INVALID_HELP_ARGUMENT = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
+            MESSAGE_USAGE) + "\nAvailable commands: " + AVAILABLE_COMMANDS + ", window";
 
-    public static final String MESSAGE_UNKNOWN_HELP_TARGET = "Unknown help command: '%1$s'.\n"
-            + "Available commands: " + AVAILABLE_COMMANDS + "\n"
-            + "Type 'help window' to open the guide window, or press F1.";
+    public static final String SHOWING_HELP_SUMMARY = "Commands: " + AVAILABLE_COMMANDS + "\n"
+            + "Type 'help [COMMAND]' to view syntax details for a specific command.\n"
+            + "Type 'help window' to open the full User Guide window, or press F1.";
 
     private final String target;
 
@@ -80,7 +84,8 @@ public class HelpCommand extends Command {
             return new CommandResult(COMMAND_USAGE_MAP.get(target));
         }
 
-        return new CommandResult(String.format(MESSAGE_UNKNOWN_HELP_TARGET, target));
+        // Targets are validated by HelpCommandParser; this fallback covers direct construction.
+        return new CommandResult(MESSAGE_USAGE);
     }
 
     @Override

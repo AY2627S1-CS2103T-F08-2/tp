@@ -148,19 +148,20 @@ LaiNurse offers three ways to get help:
 1. **Full User Guide Window** (<kbd>F1</kbd> / select **Help** > **Help** / `help window`): Opens a dedicated help
    window containing the complete, bundled User Guide for convenient browsing alongside your work, as well as a button to copy the link to the online guide.
 2. **Command Overview** (`help`): Prints a concise list and summary of all available commands directly in the application's result display box.
-3. **Targeted Command Help** (`help COMMAND` or `help --COMMAND`): Displays detailed usage rules, parameter formats, and examples for a specific command directly in the result display box.
+3. **Targeted Command Help** (`help COMMAND`): Displays detailed usage rules, parameter formats, and examples for a specific command directly in the result display box.
 
-Format: `help [COMMAND]` or `help [--COMMAND]`
+Format: `help [COMMAND]`
 
 * Typing `help` without arguments outputs a summary of all commands in the result display.
-* Adding a command name or flag (e.g., `help add` or `help --add`, `help edit` or `help --edit`) displays the syntax and practical examples for that command.
-* Typing `help window` or `help --window` opens the pop-up Help Window containing the complete User Guide.
+* Adding a command name (e.g., `help add`, `help edit`) displays the syntax and practical examples for that command.
+* Typing `help window` opens the pop-up Help Window containing the complete User Guide.
+* Typing an unknown command name (e.g., `help 3` or the cyclic `help help`) or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the available commands.
 
 Examples:
 * `help` shows a quick summary list of all available commands in the result display.
-* `help add` (or `help --add`) shows the exact parameters and examples for adding a patient.
-* `help edit` (or `help --edit`) shows how to modify patient details and manage appointments.
-* `help window` (or `help --window`) opens the full User Guide window.
+* `help add` shows the exact parameters and examples for adding a patient.
+* `help edit` shows how to modify patient details and manage appointments.
+* `help window` opens the full User Guide window.
 * Pressing <kbd>F1</kbd> opens the full User Guide window.
 
 ### Adding a patient: `add`
@@ -337,7 +338,7 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 ## Known issues
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help window` command (or `help --window`, **Help** > **Help**,
+2. **If you minimize the Help Window** and then run the `help window` command (or select **Help** > **Help**,
    or the keyboard shortcut <kbd>F1</kbd>) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
 3. **In a narrow window**, such as at the default size, the hint and the count in a list's header, such as `Esc to show all patients`, can be cut short. The remedy is to widen the window.
 
@@ -355,5 +356,5 @@ Action | Format, Examples
 **List** | `list`
 **View** | `view ID`<br> e.g., `view S1234567A`
 **ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --to 2026-10-31`
-**Help** | `help [COMMAND]` (or `help [--COMMAND]`)<br> e.g., `help`, `help add` (or `help --add`), `help window` (or `help --window`)
+**Help** | `help [COMMAND]`<br> e.g., `help`, `help add`, `help window`
 **Exit** | `exit`
