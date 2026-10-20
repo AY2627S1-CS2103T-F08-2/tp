@@ -677,6 +677,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | quickly check the syntax and usage examples of a specific command via the CLI                       | I can recall command arguments without breaking my typing workflow |
 | `* *`    | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
+| `* *`    | home-based nurse | view one patient's appointments on a date or in a range                                              | I can prepare for that patient's visits                      |
 | `*`      | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
 
 ### Use cases
@@ -830,13 +831,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
-**Use case: UC05 - View appointments by date**
+**Use case: UC05 - View appointments**
 
 **MSS**
 
-1. Nurse requests to view appointments on a date, or between two dates.
-2. LaiNurse shows only the appointments in that range, with the first appointment and its patient's details, and
-   lists the patients who have any appointment in the range.
+1. Nurse requests to view appointments on a date, in a range, or upcoming, optionally for one patient by ID.
+2. LaiNurse shows only the matching appointments, with the first appointment and its patient's details, and lists
+   the matching patients.
 3. Nurse requests to go back to the weekly view.
 4. LaiNurse shows the week that it showed before.
 
@@ -844,9 +845,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The date is missing, invalid, or does not exist.
+* 1a. The nurse gives a date that is not a real date in `yyyy-MM-dd`.
 
-    * 1a1. LaiNurse indicates that the date is invalid.
+    * 1a1. LaiNurse shows an error message.
 
       Use case resumes at step 1.
 
@@ -868,7 +869,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 2.
 
-* 2a. No patients have an appointment on the given date or in the given range.
+* 1e. The patient ID the nurse gives is invalid or belongs to no patient.
+
+    * 1e1. LaiNurse shows an error message, and the patient list and the appointment page stay as they were.
+
+      Use case resumes at step 1.
+
+* 2a. No appointment is in the range, or, with an ID given, the patient has none in it.
 
     * 2a1. LaiNurse shows that the range has no appointments, and indicates that there are no matching patients.
 
@@ -1194,11 +1201,11 @@ testers are expected to do more *exploratory* testing.
        `0 patient(s) with appointments on 2026-11-11`. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
-       Expected: The list is unchanged. The status message shows the command format, because a date that does not
-       parse is treated like any other invalid input.
+       Expected: The list is unchanged. The status message shows an error: `Dates should be a real date in the
+       format yyyy-MM-dd`.
 
     1. Test case: `viewappt 15/10/2026`, a date in the wrong format<br>
-       Expected: The list is unchanged. The status message shows the command format, as above.
+       Expected: The list is unchanged. The status message shows the same date format error as above.
 
     1. Test case: `viewappt`, with no date and no options<br>
        Expected: The appointments from today onwards are shown on one page. The status message names today's
@@ -1207,8 +1214,8 @@ testers are expected to do more *exploratory* testing.
 
     1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date),
        `viewappt --from 2026-02-30` (an impossible date for an option)<br>
-       Expected: The list is unchanged. The first shows the command format; the second shows the date format error,
-       because a date given to an option keeps the date error.
+       Expected: The list is unchanged. Both show the date format error, because input where a date is expected
+       fails as a date when it is not one.
 
 1. Viewing patients who have an appointment in a date range
 
@@ -1252,22 +1259,22 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31`<br>
        Expected: The list shows only Alex Yeoh's appointment at 09:30 on Mon 5 Oct, which is selected. On the
        **Patients** tab, only Alex Yeoh is listed. The status message shows
-       `1 appointment(s) of Alex Yeoh from 2026-10-01 to 2026-10-31`.
+       `1 appointment(s) of ALEX YEOH from 2026-10-01 to 2026-10-31`.
 
     1. Test case: `viewappt 2026-10-05 --id S1234567A`, a date before the option<br>
        Expected: The same page as `viewappt 2026-10-05` gives, but the status message says
-       `1 appointment(s) of Alex Yeoh on 2026-10-05`. A date combines with `--id` when it comes before the options.
+       `1 appointment(s) of ALEX YEOH on 2026-10-05`. A date combines with `--id` when it comes before the options.
 
     1. Test case: `viewappt --id S1234567A --from 2026-11-01`<br>
        Expected: Only Alex Yeoh's appointment on Mon 2 Nov is shown, and the status message shows
-       `1 appointment(s) of Alex Yeoh on or after 2026-11-01`.
+       `1 appointment(s) of ALEX YEOH on or after 2026-11-01`.
 
     1. Test case: `viewappt --id s1234567a`, the ID in lower case<br>
        Expected: The same as `viewappt --id S1234567A` gives. IDs are case-insensitive.
 
     1. Test case: `viewappt --id S1234567A --from 2026-12-01`, a range without appointments<br>
        Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
-       `0 appointment(s) of Alex Yeoh on or after 2026-12-01`. The patient list on the **Patients** tab is empty.
+       `0 appointment(s) of ALEX YEOH on or after 2026-12-01`. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
        Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
