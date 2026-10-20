@@ -33,8 +33,7 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
             # Linux runners are headless; JavaFX needs a display to start
-            sudo apt-get update -q
-            sudo apt-get install -y xvfb
+            # (the runner image ships xvfb already)
             xvfb-run -a ./gradlew check coverage
           else
             ./gradlew check coverage

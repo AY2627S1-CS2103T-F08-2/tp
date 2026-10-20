@@ -90,12 +90,15 @@ public class MarkdownRenderer {
 
             Matcher imageMatcher = IMAGE_PATTERN.matcher(line);
             if (imageMatcher.matches()) {
-                // Standalone image line: show where the figure belongs and how to view it online
+                // Standalone image line: flush pending text first so the source order is kept
+                flushParagraph(container, currentParagraph);
+                // Show where the figure belongs and how to view it online
                 container.getChildren().add(buildImagePlaceholder(imageMatcher.group(1)));
                 continue;
             }
-            // Inline image inside a paragraph: substitute it before the link pattern can match it
-            line = imageMatcher.replaceAll("[image: $1]");
+            // Inline image inside a paragraph: substitute it with bracket-free placeholder text
+            // before the link pattern can match it
+            line = imageMatcher.replaceAll("(image: $1)");
 
             // Collapse repeated callout emoji clusters (e.g. [:exclamation: :exclamation: ...])
             line = line.replaceAll("\\[?\\s*(:exclamation:(\\uFE0F)?\\s*)+\\]?\\s*(\\*\\*Caution:\\*\\*)?",

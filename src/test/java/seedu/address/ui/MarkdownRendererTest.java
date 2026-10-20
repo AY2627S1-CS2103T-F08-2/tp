@@ -118,8 +118,35 @@ public class MarkdownRendererTest {
         VBox rendered = MarkdownRenderer.render("See ![Ui](images/Ui.png) above for the screenshot.");
 
         assertEquals(0, hyperlinks(rendered).size()); // inline image must not create any hyperlink
-        assertTrue(visibleText(rendered).contains("[image: Ui]"));
-        assertFalse(visibleText(rendered).contains("!["));
+        String visible = visibleText(rendered);
+        assertTrue(visible.contains("(image: Ui)"));
+        assertFalse(visible.contains("["));
+        assertFalse(visible.contains("!["));
+    }
+
+    @Test
+    public void render_inlineImageBeforeLink_linkKeepsItsOwnLabel() {
+        VBox rendered = MarkdownRenderer.render("See ![Ui](images/Ui.png) and get it [here](https://example.com).");
+
+        // The substituted text must not merge with the following link into one hyperlink
+        List<Hyperlink> links = hyperlinks(rendered);
+        assertEquals(1, links.size());
+        assertEquals("here", links.get(0).getText());
+        assertTrue(visibleText(rendered).contains("(image: Ui)"));
+    }
+
+    @Test
+    public void render_textImmediatelyBeforeImage_keepsSourceOrder() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "The weekly view looks like this:",
+                "![Weekly view](images/AppointmentView.png)"));
+
+        assertEquals(2, rendered.getChildren().size());
+        Parent first = (Parent) rendered.getChildren().get(0);
+        Parent second = (Parent) rendered.getChildren().get(1);
+        assertTrue(visibleText(first).contains("The weekly view looks like this:"));
+        assertTrue(visibleText(second).contains("Image omitted from the offline guide"));
+        assertFalse(visibleText(second).contains("The weekly view"));
     }
 
     @Test
@@ -201,9 +228,9 @@ public class MarkdownRendererTest {
         return nodes;
     }
 
-    private static String visibleText(VBox rendered) {
+    private static String visibleText(Parent root) {
         StringBuilder text = new StringBuilder();
-        for (Node node : descendants(rendered)) {
+        for (Node node : descendants(root)) {
             if (node instanceof Label label) {
                 text.append(label.getText()).append('\n');
             } else if (node instanceof Hyperlink hyperlink) {

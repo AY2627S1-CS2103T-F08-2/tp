@@ -90,6 +90,7 @@ public class LaiNurseParserTest {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " add") instanceof HelpCommand);
         assertEquals(new HelpCommand("delete"), parser.parseCommand(HelpCommand.COMMAND_WORD + " delete"));
         assertEquals(new HelpCommand("window"), parser.parseCommand(HelpCommand.COMMAND_WORD + " window"));
+        assertEquals(new HelpCommand("help"), parser.parseCommand(HelpCommand.COMMAND_WORD + " help"));
     }
 
     @Test

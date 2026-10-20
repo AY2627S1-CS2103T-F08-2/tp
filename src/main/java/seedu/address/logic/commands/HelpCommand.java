@@ -34,11 +34,11 @@ public class HelpCommand extends Command {
         map.put(EditCommand.COMMAND_WORD, EditCommand.MESSAGE_USAGE);
         map.put(ExitCommand.COMMAND_WORD, ExitCommand.MESSAGE_USAGE);
         map.put(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE);
+        map.put(HelpCommand.COMMAND_WORD, HelpCommand.MESSAGE_USAGE);
         map.put(ListCommand.COMMAND_WORD, ListCommand.MESSAGE_USAGE);
         map.put(ViewCommand.COMMAND_WORD, ViewCommand.MESSAGE_USAGE);
         map.put(ViewAppointmentCommand.COMMAND_WORD, ViewAppointmentCommand.MESSAGE_USAGE);
         COMMAND_USAGE_MAP = Collections.unmodifiableMap(map);
-        // 'help' is deliberately not registered as a help target: 'help help' is cyclic and rejected.
     }
 
     public static final String AVAILABLE_COMMANDS = String.join(", ", COMMAND_USAGE_MAP.keySet());
@@ -48,7 +48,7 @@ public class HelpCommand extends Command {
      * the usage summary, and the list of valid targets so the user can recover immediately.
      */
     public static final String MESSAGE_INVALID_HELP_ARGUMENT = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
-            MESSAGE_USAGE) + "\nAvailable commands: " + AVAILABLE_COMMANDS + ", window";
+            MESSAGE_USAGE) + "\nValid targets: " + AVAILABLE_COMMANDS + ", " + TARGET_WINDOW;
 
     public static final String SHOWING_HELP_SUMMARY = "Commands: " + AVAILABLE_COMMANDS + "\n"
             + "Type 'help [COMMAND]' to view syntax details for a specific command.\n"
@@ -67,6 +67,9 @@ public class HelpCommand extends Command {
      * Creates a HelpCommand targeting a specific command or window.
      */
     public HelpCommand(String target) {
+        // HelpCommandParser guarantees a valid target; this assert surfaces direct construction
+        // with an invalid target in tests rather than failing silently.
+        assert target == null || TARGET_WINDOW.equals(target) || COMMAND_USAGE_MAP.containsKey(target);
         this.target = target;
     }
 
@@ -80,12 +83,7 @@ public class HelpCommand extends Command {
             return new CommandResult(SHOWING_HELP_MESSAGE, true, false);
         }
 
-        if (COMMAND_USAGE_MAP.containsKey(target)) {
-            return new CommandResult(COMMAND_USAGE_MAP.get(target));
-        }
-
-        // Targets are validated by HelpCommandParser; this fallback covers direct construction.
-        return new CommandResult(MESSAGE_USAGE);
+        return new CommandResult(COMMAND_USAGE_MAP.get(target));
     }
 
     @Override

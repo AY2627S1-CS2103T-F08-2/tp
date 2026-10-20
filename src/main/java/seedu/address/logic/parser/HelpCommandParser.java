@@ -25,8 +25,8 @@ public class HelpCommandParser implements Parser<HelpCommand> {
 
         String commandTarget = trimmed.toLowerCase(Locale.ROOT);
 
-        // Only valid command words (and 'window') are accepted; flags ('help --add'), unknown
-        // targets ('help 3'), and the self-reference ('help help') are rejected.
+        // Only valid command words (and 'window') are accepted; flags ('help --add') and
+        // unknown targets ('help 3') are rejected.
         if (!HelpCommand.COMMAND_USAGE_MAP.containsKey(commandTarget)
                 && !commandTarget.equals(HelpCommand.TARGET_WINDOW)) {
             throw new ParseException(HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT);

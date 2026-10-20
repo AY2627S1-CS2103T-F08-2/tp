@@ -40,6 +40,12 @@ public class HelpCommandTest {
     }
 
     @Test
+    public void execute_helpValidTargetHelp_showsHelpUsage() {
+        CommandResult expectedResult = new CommandResult(HelpCommand.MESSAGE_USAGE);
+        assertCommandSuccess(new HelpCommand("help"), model, expectedResult, expectedModel);
+    }
+
+    @Test
     public void execute_helpWindowFlag_opensHelpWindow() throws Exception {
         CommandResult result = new HelpCommand("window").execute(model);
         assertTrue(result.isShowHelp());

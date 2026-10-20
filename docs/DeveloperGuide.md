@@ -469,14 +469,14 @@ The help architecture spans argument parsing in `Logic`, command dispatching in 
 * Strips surrounding whitespace and checks for an empty argument string, returning a targetless `HelpCommand()` (Tier 1: General Help).
 * Normalizes casing using `Locale.ROOT` (`commandTarget.toLowerCase(Locale.ROOT)`) to ensure consistent parsing across system locales (avoiding locale-specific casing anomalies such as Turkish dotted 'i').
 * Accepts only a single bare command word: rejects the deprecated `--` flag form (e.g., `help --add`, `help -- add`, `help --`) and multi-token arguments (e.g., `help add patient`) by throwing a `ParseException` with `HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT`.
-* Validates the target against `HelpCommand.COMMAND_USAGE_MAP` and `HelpCommand.TARGET_WINDOW`, rejecting unknown targets (e.g., `help 3`, `help help`, `help nonexistent`) at parse time with the same `ParseException`.
+* Validates the target against `HelpCommand.COMMAND_USAGE_MAP` and `HelpCommand.TARGET_WINDOW`, rejecting unknown targets (e.g., `help 3`, `help nonexistent`) at parse time with the same `ParseException`.
 
 ##### 2. Dynamic Command Usage Mapping (`HelpCommand`)
 
 Rather than hardcoding command names and usage strings inside `HelpCommand`:
 * A static `Map<String, String> COMMAND_USAGE_MAP` is initialized using a `TreeMap` to sort available command words alphabetically.
 * Each command registers its canonical `MESSAGE_USAGE` string dynamically (e.g., `AddCommand.COMMAND_WORD -> AddCommand.MESSAGE_USAGE`).
-* `HelpCommand` itself is excluded from `COMMAND_USAGE_MAP`: the self-referential `help help` is a cyclic lookup and is rejected at parse time.
+* `HelpCommand` registers itself in `COMMAND_USAGE_MAP` (`HelpCommand.COMMAND_WORD -> HelpCommand.MESSAGE_USAGE`), so `help help` displays the syntax of the `help` command, as specified in issue #102.
 * The help window target (`"window"`) is deliberately decoupled from `COMMAND_USAGE_MAP`. It is handled as a distinct navigation branch returning `new CommandResult(SHOWING_HELP_MESSAGE, true, false)`.
 * If a target matches a registered command, its usage string is returned. Unknown targets cannot reach `HelpCommand` because `HelpCommandParser` validates the target before constructing the command.
 
@@ -489,7 +489,7 @@ Rather than hardcoding command names and usage strings inside `HelpCommand`:
 
 `MarkdownRenderer` parses the sanitized Markdown sequentially into native JavaFX nodes without external third-party dependencies:
 * **Section Structure & Headings**: Tracks headers (`#`, `##`, `###`) and horizontal separators (`---`), rendering them as styled `Label` and `Separator` nodes, while resetting active list counters.
-* **Offline Image Placeholders**: Image syntax (`![alt](src)`) cannot be bundled with the offline copy, so a standalone image line renders as a subdued placeholder note that keeps the alt text and directs the reader to the online User Guide via the window's **Copy URL** button, while inline occurrences are substituted with `[image: alt]` so they can never render as hyperlinks.
+* **Offline Image Placeholders**: Image syntax (`![alt](src)`) cannot be bundled with the offline copy, so a standalone image line renders as a subdued placeholder note that keeps the alt text and directs the reader to the online User Guide via the window's **Copy URL** button. Inline occurrences are substituted with the bracket-free text `(image: alt)`, so they can neither form hyperlinks by themselves nor merge with a link that follows on the same line.
 * **List Counter Tracking across Continuations**:
     * Tracks numbered items with monotonic counter progression (`1., 2., 3., ...`), supporting lazy markdown numbering where all raw items start with `1.`.
     * Secondary continuation notes (e.g., `**Mac users:**`, multi-line descriptions) and sub-bullet items (`*`, `-`) are left-padded (`28px`–`32px`) without resetting the parent numbered list counter.
@@ -928,7 +928,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * Use case ends.
 
 * 1c. Nurse enters an unrecognized command target (e.g., `help nonexistent`) or the discontinued flag form (e.g., `help --add`).
-    * 1c1. LaiNurse displays an invalid command format error that shows `HelpCommand.MESSAGE_USAGE` and lists all available commands.
+    * 1c1. LaiNurse displays an invalid command format error that shows `HelpCommand.MESSAGE_USAGE` and lists all valid targets.
     * Use case ends.
 
 * 1d. Nurse provides a malformed help argument (e.g., `help -- add`, `help --`, or multiple tokens such as `help add patient`).
@@ -1387,11 +1387,13 @@ testers are expected to do more *exploratory* testing.
 
 1. Command overview via CLI
     * Test case: `help`
-        * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `list`, `view`, `viewappt`) is displayed in the result box.
+        * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
     * Test case: `help add`
         * Expected: Parameter syntax and usage examples for `add` are displayed.
+    * Test case: `help help`
+        * Expected: The syntax and example of the `help` command itself is displayed.
     * Test case: `help viewappt`
         * Expected: Both single-date and date-range syntax options (`--from`, `--to`) for `viewappt` are displayed.
     * Test case: `help DELETE` or `help VIEW`
@@ -1399,13 +1401,11 @@ testers are expected to do more *exploratory* testing.
 
 3. Rejecting invalid help inputs
     * Test case: `help nonexistent`
-        * Expected: Displays an invalid command format error (`HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT`) showing `HelpCommand.MESSAGE_USAGE` and the available commands.
+        * Expected: Displays `Invalid command format!`, the usage of `help`, and the list of valid targets.
     * Test case: `help --add` or `help --window`
         * Expected: The discontinued `--` flag form is rejected; displays the same invalid command format error.
-    * Test case: `help help`
-        * Expected: Displays the invalid command format error with the available commands list; `help` itself is not a help target.
     * Test case: `help -- add` or `help --`
-        * Expected: Displays invalid command format error showing `HelpCommand.MESSAGE_USAGE`.
+        * Expected: Displays the same invalid command format error.
     * Test case: `help add patient`
         * Expected: Multi-token arguments are rejected; displays invalid command format error.
 

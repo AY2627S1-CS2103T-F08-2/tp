@@ -26,6 +26,8 @@ public class HelpCommandParserTest {
         assertParseSuccess(parser, "delete", new HelpCommand("delete"));
         assertParseSuccess(parser, "viewappt", new HelpCommand("viewappt"));
         assertParseSuccess(parser, "window", new HelpCommand("window"));
+        // 'help' itself is a registered target: 'help help' shows the help usage
+        assertParseSuccess(parser, "help", new HelpCommand("help"));
     }
 
     @Test
@@ -47,7 +49,6 @@ public class HelpCommandParserTest {
         // Unknown targets are rejected instead of passing through
         assertParseFailure(parser, "3", INVALID_FORMAT_MESSAGE);
         assertParseFailure(parser, "nonexistent", INVALID_FORMAT_MESSAGE);
-        assertParseFailure(parser, "help", INVALID_FORMAT_MESSAGE);
 
         // Multiple words / extra tokens
         assertParseFailure(parser, "add patient", INVALID_FORMAT_MESSAGE);

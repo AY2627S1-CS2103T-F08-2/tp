@@ -152,14 +152,15 @@ LaiNurse offers three ways to get help:
 
 Format: `help [COMMAND]`
 
-* Typing `help` without arguments outputs a summary of all commands in the result display.
-* Adding a command name (e.g., `help add`, `help edit`) displays the syntax and practical examples for that command.
+* Typing `help` without arguments outputs a summary of all commands in the result display, including help itself.
+* Adding a command name (e.g., `help add`, `help edit`, `help help`) displays the syntax and practical examples for that command.
 * Typing `help window` opens the pop-up Help Window containing the complete User Guide.
-* Typing an unknown command name (e.g., `help 3` or the cyclic `help help`) or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the available commands.
+* Typing an unknown command name (e.g., `help 3`) or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
 
 Examples:
 * `help` shows a quick summary list of all available commands in the result display.
 * `help add` shows the exact parameters and examples for adding a patient.
+* `help help` shows the syntax and example of the `help` command.
 * `help edit` shows how to modify patient details and manage appointments.
 * `help window` opens the full User Guide window.
 * Pressing <kbd>F1</kbd> opens the full User Guide window.
