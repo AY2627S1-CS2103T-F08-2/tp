@@ -63,7 +63,7 @@ public class LaiNurseParserTest {
 
     @Test
     public void parseCommand_edit() throws Exception {
-        Patient patient = new PatientBuilder().build();
+        Patient patient = new PatientBuilder().withNotes("Enjoys gardening").build();
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder(patient).build();
         EditCommand command = (EditCommand) parser.parseCommand(EditCommand.COMMAND_WORD + " "
                 + patient.getId().value + " " + PatientUtil.getEditPatientDescriptorDetails(descriptor));
@@ -81,7 +81,7 @@ public class LaiNurseParserTest {
         FindCommand command = (FindCommand) parser.parseCommand(
                 FindCommand.COMMAND_WORD + " --name \"John\" --address \"Marina Bay\" --id \"123\"");
         assertEquals(new FindCommand(new PatientContainsSubstringsPredicate(Optional.of("123"), Optional.of("John"),
-                Optional.empty(), Optional.of("Marina Bay"), Optional.empty())), command);
+                Optional.empty(), Optional.of("Marina Bay"), Optional.empty(), Optional.empty())), command);
     }
 
     @Test

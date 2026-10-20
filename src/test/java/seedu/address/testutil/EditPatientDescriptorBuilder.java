@@ -4,6 +4,7 @@ import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.Phone;
 import seedu.address.model.util.SampleDataUtil;
@@ -32,6 +33,7 @@ public class EditPatientDescriptorBuilder {
         descriptor.setPhone(patient.getPhone());
         descriptor.setAddress(patient.getAddress());
         patient.getMedicalHistory().ifPresent(descriptor::setMedicalHistory);
+        patient.getNotes().ifPresent(descriptor::setNotes);
     }
 
     /**
@@ -63,6 +65,14 @@ public class EditPatientDescriptorBuilder {
      */
     public EditPatientDescriptorBuilder withMedicalHistory(String medicalHistory) {
         descriptor.setMedicalHistory(new MedicalHistory(medicalHistory));
+        return this;
+    }
+
+    /**
+     * Sets the {@code Notes} of the {@code EditPatientDescriptor} that we are building.
+     */
+    public EditPatientDescriptorBuilder withNotes(String notes) {
+        descriptor.setNotes(new Notes(notes));
         return this;
     }
 

@@ -74,12 +74,14 @@ public interface Model {
     void setPatient(Patient target, Patient editedPatient);
 
     /**
-     * Returns an unmodifiable, observable view of the filtered patient list in its current display order.
+     * Returns an unmodifiable, observable view of the filtered patient list in its current display order: name
+     * order, as {@link seedu.address.model.patient.PatientNameComparator#PATIENT_NAME_ORDER} gives, unless the last
+     * filter update gave a comparator.
      */
     ObservableList<Patient> getFilteredPatientList();
 
     /**
-     * Updates the filter using {@code predicate} and restores the original patient-list order.
+     * Updates the filter using {@code predicate} and restores name order.
      *
      * @throws NullPointerException if {@code predicate} is null.
      */
@@ -87,7 +89,7 @@ public interface Model {
 
     /**
      * Updates the filter using {@code predicate} and orders the results using {@code comparator}.
-     * A null comparator restores the original patient-list order. The stored patient order is unchanged.
+     * A null comparator restores name order. The stored patient order is unchanged.
      *
      * @throws NullPointerException if {@code predicate} is null.
      */

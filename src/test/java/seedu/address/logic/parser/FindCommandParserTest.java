@@ -5,6 +5,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -44,14 +45,16 @@ public class FindCommandParserTest {
         assertParseSuccess(parser, "--phone 5", command(null, null, "5", null, null));
         assertParseSuccess(parser, "--address #01-", command(null, null, null, "#01-", null));
         assertParseSuccess(parser, "--medical-history diabet", command(null, null, null, null, "diabet"));
+        assertParseSuccess(parser, "--notes garden", command(null, null, null, null, null, "garden"));
     }
 
     @Test
     public void parse_allOptionsInDifferentOrders_returnsSameCommand() {
-        FindCommand expectedCommand = command("123", "Mary Jane", "65", "Marina Bay", "Type 2");
+        FindCommand expectedCommand = command("123", "Mary Jane", "65", "Marina Bay", "Type 2", "Enjoys gardening");
         assertParseSuccess(parser, "--id 123 --name Mary Jane --phone 65 --address Marina Bay"
-                + " --medical-history Type 2", expectedCommand);
-        assertParseSuccess(parser, " --medical-history “Type 2” --address \"Marina Bay\" --phone “65”"
+                + " --medical-history Type 2 --notes Enjoys gardening", expectedCommand);
+        assertParseSuccess(parser, " --notes “Enjoys gardening” --medical-history “Type 2”"
+                + " --address \"Marina Bay\" --phone “65”"
                 + " --name “Mary Jane” --id \"123\"", expectedCommand);
     }
 
@@ -69,7 +72,14 @@ public class FindCommandParserTest {
         for (String value : List.of("Mary Jane", "\"Mary Jane\"", "“Mary Jane”", "\"  mary\t JANE  \"",
                 "“ mary  Jane ”")) {
             assertParseSuccess(parser, "--name " + value, expectedCommand);
+            assertParseSuccess(parser, "--notes " + value, command(null, null, null, null, null, "Mary Jane"));
         }
+    }
+
+    @Test
+    public void parse_tabSeparatedNotes_returnsFindCommand() {
+        assertParseSuccess(parser, "\t--notes\tEnjoys\t gardening\t",
+                command(null, null, null, null, null, "Enjoys gardening"));
     }
 
     @Test
@@ -82,7 +92,7 @@ public class FindCommandParserTest {
     @Test
     public void parse_emptyValues_failure() {
         for (Prefix prefix : List.of(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                PREFIX_MEDICAL_HISTORY)) {
+                PREFIX_MEDICAL_HISTORY, PREFIX_NOTES)) {
             for (String value : List.of("", " \t ", "\"\"", "\" \t \"", "“”", "“  ”")) {
                 assertParseFailure(parser, prefix + value, INVALID_FORMAT_MESSAGE);
             }
@@ -95,7 +105,7 @@ public class FindCommandParserTest {
     @Test
     public void parse_duplicateOptions_failure() {
         for (Prefix prefix : List.of(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                PREFIX_MEDICAL_HISTORY)) {
+                PREFIX_MEDICAL_HISTORY, PREFIX_NOTES)) {
             String expectedMessage = Messages.getErrorMessageForDuplicatePrefixes(prefix);
             assertParseFailure(parser, prefix + "first " + prefix + "second", expectedMessage);
             assertParseFailure(parser, prefix + "first " + prefix.getPrefix().trim(), expectedMessage);
@@ -116,13 +126,15 @@ public class FindCommandParserTest {
         for (String value : List.of("\"", "“", "\"Mary", "“Mary", "\"Mary”", "“Mary\"", "Mary\"", "Mary”",
                 "”Mary”", "\"Mary\" trailing", "“Mary” trailing", "\"Mary\" \"Jane\"", "“Mary” “Jane”")) {
             assertParseFailure(parser, "--name " + value, INVALID_FORMAT_MESSAGE);
+            assertParseFailure(parser, "--notes " + value, INVALID_FORMAT_MESSAGE);
         }
     }
 
     @Test
     public void parse_reservedOptionsInsideValues_failure() {
         for (String arguments : List.of("--name \"Mary --unknown value\"", "--name \"--unknown\"",
-                "--name “--id”", "--name \"Mary --address Jurong\"", "--name Mary\t--unknown\tvalue")) {
+                "--name “--id”", "--name \"Mary --address Jurong\"", "--name Mary\t--unknown\tvalue",
+                "--notes \"Enjoys --unknown gardening\"", "--notes “--name”")) {
             assertParseFailure(parser, arguments, INVALID_FORMAT_MESSAGE);
         }
     }
@@ -134,8 +146,13 @@ public class FindCommandParserTest {
     }
 
     private FindCommand command(String id, String name, String phone, String address, String medicalHistory) {
+        return command(id, name, phone, address, medicalHistory, null);
+    }
+
+    private FindCommand command(String id, String name, String phone, String address, String medicalHistory,
+            String notes) {
         return new FindCommand(new PatientContainsSubstringsPredicate(Optional.ofNullable(id),
                 Optional.ofNullable(name), Optional.ofNullable(phone), Optional.ofNullable(address),
-                Optional.ofNullable(medicalHistory)));
+                Optional.ofNullable(medicalHistory), Optional.ofNullable(notes)));
     }
 }

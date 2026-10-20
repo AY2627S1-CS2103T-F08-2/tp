@@ -18,6 +18,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
+import seedu.address.model.patient.PatientNameComparator;
 
 /**
  * Represents the in-memory model of the LaiNurse data.
@@ -41,7 +42,8 @@ public class ModelManager implements Model {
 
         this.laiNurse = new LaiNurse(laiNurse);
         this.userPrefs = new UserPrefs(userPrefs);
-        filteredPatients = new FilteredList<>(this.laiNurse.getPatientList());
+        filteredPatients = new FilteredList<>(
+                new SortedList<>(this.laiNurse.getPatientList(), PatientNameComparator.PATIENT_NAME_ORDER));
         sortedPatients = new SortedList<>(filteredPatients);
         this.laiNurse.getPatientList().addListener((ListChangeListener<Patient>) change -> refreshAppointments());
         refreshAppointments();
@@ -132,7 +134,7 @@ public class ModelManager implements Model {
         filteredPatients.setPredicate(predicate);
         sortedPatients.setComparator(comparator);
         logger.fine(() -> "Updated patient filter: " + sortedPatients.size() + " patients, "
-                + (comparator == null ? "original order" : "custom order"));
+                + (comparator == null ? "name order" : "custom order"));
     }
 
     //=========== Appointment List Accessors ==================================================================

@@ -6,8 +6,8 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
- * Represents a Patient's notes in LaiNurse: free text about the patient that is not medical history, such as their
- * routine, how to get into their home, or which family member to call.
+ * Represents a Patient's notes in LaiNurse: free text about personal information not covered by other patient fields,
+ * such as hobbies, pet peeves or daily routines.
  * The notes are stored in upper case with whitespace normalized.
  * Guarantees: immutable; is valid as declared in {@link #isValidNotes(String)}
  */

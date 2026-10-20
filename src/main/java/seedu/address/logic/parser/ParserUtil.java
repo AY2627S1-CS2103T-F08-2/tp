@@ -7,7 +7,9 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.StringUtil;
@@ -17,6 +19,7 @@ import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 
@@ -26,6 +29,8 @@ import seedu.address.model.patient.Phone;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+
+    private static final Logger logger = LogsCenter.getLogger(ParserUtil.class);
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it.
@@ -114,6 +119,24 @@ public class ParserUtil {
             throw new ParseException(MedicalHistory.MESSAGE_CONSTRAINTS);
         }
         return new MedicalHistory(trimmedMedicalHistory);
+    }
+
+    /**
+     * Parses {@code String notes} into {@code Notes}.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code notes} are invalid.
+     */
+    public static Notes parseNotes(String notes) throws ParseException {
+        requireNonNull(notes);
+        String trimmedNotes = notes.trim();
+        if (!Notes.isValidNotes(trimmedNotes)) {
+            logger.fine("Rejected blank patient notes.");
+            throw new ParseException(Notes.MESSAGE_CONSTRAINTS);
+        }
+        Notes parsedNotes = new Notes(trimmedNotes);
+        logger.fine("Parsed patient notes.");
+        return parsedNotes;
     }
 
     /**

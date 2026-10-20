@@ -17,6 +17,7 @@ public class PatientContainsSubstringsPredicateTest {
     private final Patient patient = new PatientBuilder().withId("T04123").withName("Mary Jane")
             .withPhone("+65 9876-5432").withAddress("123, Marina Bay, #01-02")
             .withMedicalHistory("Type 2 diabetes; allergy (penicillin)")
+            .withNotes("Enjoys gardening; walks at 7am (daily)")
             .withAppointments("2026-10-15 09:30").build();
 
     @Test
@@ -27,7 +28,9 @@ public class PatientContainsSubstringsPredicateTest {
     @Test
     public void constructor_nullOptional_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new PatientContainsSubstringsPredicate(null,
-                Optional.of("Mary"), Optional.empty(), Optional.empty(), Optional.empty()));
+                Optional.of("Mary"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
+        assertThrows(NullPointerException.class, () -> new PatientContainsSubstringsPredicate(Optional.empty(),
+                Optional.of("Mary"), Optional.empty(), Optional.empty(), Optional.empty(), null));
     }
 
     @Test
@@ -38,6 +41,7 @@ public class PatientContainsSubstringsPredicateTest {
             assertThrows(IllegalArgumentException.class, () -> predicate(null, null, blank, null, null));
             assertThrows(IllegalArgumentException.class, () -> predicate(null, null, null, blank, null));
             assertThrows(IllegalArgumentException.class, () -> predicate(null, null, null, null, blank));
+            assertThrows(IllegalArgumentException.class, () -> predicate(null, null, null, null, null, blank));
         }
     }
 
@@ -48,7 +52,8 @@ public class PatientContainsSubstringsPredicateTest {
                 predicate(null, "arY", null, null, null),
                 predicate(null, null, "9876", null, null),
                 predicate(null, null, null, "ina Bay", null),
-                predicate(null, null, null, null, "diabet"));
+                predicate(null, null, null, null, "diabet"),
+                predicate(null, null, null, null, null, "garden"));
         for (PatientContainsSubstringsPredicate predicate : predicates) {
             assertTrue(predicate.test(patient), predicate.toString());
             assertEquals(1, predicate.countMatchingFields(patient), predicate.toString());
@@ -107,6 +112,8 @@ public class PatientContainsSubstringsPredicateTest {
         assertFalse(predicate(null, null, "2026", null, null).test(patient));
         assertFalse(predicate(null, null, null, "diabetes", null).test(patient));
         assertFalse(predicate(null, null, null, null, "09:30").test(patient));
+        assertFalse(predicate(null, null, null, null, null, "penicillin").test(patient));
+        assertFalse(predicate(null, "gardening", null, null, null).test(patient));
     }
 
     @Test
@@ -114,7 +121,7 @@ public class PatientContainsSubstringsPredicateTest {
         // Appointment searches belong to viewappt, so no field matches the appointment's text
         for (String appointmentText : List.of("2026-10-15", "2026-10", "09:30")) {
             assertFalse(predicate(appointmentText, appointmentText, appointmentText, appointmentText,
-                    appointmentText).test(patient));
+                    appointmentText, appointmentText).test(patient));
         }
     }
 
@@ -122,6 +129,7 @@ public class PatientContainsSubstringsPredicateTest {
     public void test_caseAndWhitespaceDifferences_returnsTrue() {
         assertTrue(predicate(null, "  mArY\t  jAnE  ", null, null, null).test(patient));
         assertTrue(predicate(null, null, null, "  marina \n BAY ", null).test(patient));
+        assertTrue(predicate(null, null, null, null, null, "  WALKS\t at 7am  ").test(patient));
     }
 
     @Test
@@ -129,6 +137,7 @@ public class PatientContainsSubstringsPredicateTest {
         assertTrue(predicate(null, null, null, "Marina Bay", null).test(patient));
         assertFalse(predicate(null, null, null, "Bay Marina", null).test(patient));
         assertFalse(predicate(null, null, null, "Marina Street", null).test(patient));
+        assertFalse(predicate(null, null, null, null, null, "7am at walks").test(patient));
     }
 
     @Test
@@ -136,6 +145,9 @@ public class PatientContainsSubstringsPredicateTest {
         assertTrue(predicate(null, "Mary", null, "Jurong", null).test(patient));
         assertTrue(predicate(null, "John", null, "Marina", null).test(patient));
         assertFalse(predicate(null, "John", null, "Jurong", null).test(patient));
+        assertTrue(predicate(null, "John", null, null, null, "gardening").test(patient));
+        assertTrue(predicate(null, "Mary", null, null, null, "knitting").test(patient));
+        assertFalse(predicate(null, "John", null, null, null, "knitting").test(patient));
     }
 
     @Test
@@ -143,6 +155,8 @@ public class PatientContainsSubstringsPredicateTest {
         Patient withoutOptionalFields = new PatientBuilder().build();
         assertFalse(predicate(null, null, null, null, "diabetes").test(withoutOptionalFields));
         assertTrue(predicate(null, "Amy", null, null, "diabetes").test(withoutOptionalFields));
+        assertFalse(predicate(null, null, null, null, null, "gardening").test(withoutOptionalFields));
+        assertTrue(predicate(null, "Amy", null, null, null, "gardening").test(withoutOptionalFields));
     }
 
     @Test
@@ -156,6 +170,8 @@ public class PatientContainsSubstringsPredicateTest {
         assertTrue(predicate(null, null, null, "#01-", null).test(patient));
         assertTrue(predicate(null, null, null, null, "(penicillin)").test(patient));
         assertFalse(predicate(null, null, null, null, ".*").test(patient));
+        assertTrue(predicate(null, null, null, null, null, "(daily)").test(patient));
+        assertFalse(predicate(null, null, null, null, null, ".*").test(patient));
         Patient literalPattern = new PatientBuilder().withMedicalHistory("Recorded .* literally").build();
         assertTrue(predicate(null, null, null, null, ".*").test(literalPattern));
     }
@@ -163,9 +179,9 @@ public class PatientContainsSubstringsPredicateTest {
     @Test
     public void equals() {
         PatientContainsSubstringsPredicate firstPredicate = predicate("T04", "Mary Jane", "9876", "Marina Bay",
-                "diabetes");
+                "diabetes", "gardening");
         PatientContainsSubstringsPredicate normalizedCopy = predicate("t04", " mary\t jane ", "9876", "marina bay",
-                "DIABETES");
+                "DIABETES", " GARDENING ");
         assertTrue(firstPredicate.equals(firstPredicate));
         assertTrue(firstPredicate.equals(normalizedCopy));
         assertEquals(firstPredicate.hashCode(), normalizedCopy.hashCode());
@@ -173,12 +189,14 @@ public class PatientContainsSubstringsPredicateTest {
         assertFalse(firstPredicate.equals(1));
 
         List<PatientContainsSubstringsPredicate> differentPredicates = List.of(
-                predicate("S04", "Mary Jane", "9876", "Marina Bay", "diabetes"),
-                predicate("T04", "John", "9876", "Marina Bay", "diabetes"),
-                predicate("T04", "Mary Jane", "1234", "Marina Bay", "diabetes"),
-                predicate("T04", "Mary Jane", "9876", "Jurong", "diabetes"),
-                predicate("T04", "Mary Jane", "9876", "Marina Bay", "asthma"),
-                predicate(null, "Mary Jane", "9876", "Marina Bay", "diabetes"));
+                predicate("S04", "Mary Jane", "9876", "Marina Bay", "diabetes", "gardening"),
+                predicate("T04", "John", "9876", "Marina Bay", "diabetes", "gardening"),
+                predicate("T04", "Mary Jane", "1234", "Marina Bay", "diabetes", "gardening"),
+                predicate("T04", "Mary Jane", "9876", "Jurong", "diabetes", "gardening"),
+                predicate("T04", "Mary Jane", "9876", "Marina Bay", "asthma", "gardening"),
+                predicate(null, "Mary Jane", "9876", "Marina Bay", "diabetes", "gardening"),
+                predicate("T04", "Mary Jane", "9876", "Marina Bay", "diabetes", "knitting"),
+                predicate("T04", "Mary Jane", "9876", "Marina Bay", "diabetes"));
         for (PatientContainsSubstringsPredicate differentPredicate : differentPredicates) {
             assertFalse(firstPredicate.equals(differentPredicate));
         }
@@ -189,13 +207,19 @@ public class PatientContainsSubstringsPredicateTest {
         PatientContainsSubstringsPredicate predicate = predicate("123", "Mary", "9876", "Marina", "diabetes");
         String expected = PatientContainsSubstringsPredicate.class.getCanonicalName()
                 + "{id=Optional[123], name=Optional[MARY], phone=Optional[9876], address=Optional[MARINA], "
-                + "medicalHistory=Optional[DIABETES]}";
+                + "medicalHistory=Optional[DIABETES], notes=Optional.empty}";
         assertEquals(expected, predicate.toString());
     }
 
     private PatientContainsSubstringsPredicate predicate(String id, String name, String phone, String address,
             String medicalHistory) {
+        return predicate(id, name, phone, address, medicalHistory, null);
+    }
+
+    private PatientContainsSubstringsPredicate predicate(String id, String name, String phone, String address,
+            String medicalHistory, String notes) {
         return new PatientContainsSubstringsPredicate(Optional.ofNullable(id), Optional.ofNullable(name),
-                Optional.ofNullable(phone), Optional.ofNullable(address), Optional.ofNullable(medicalHistory));
+                Optional.ofNullable(phone), Optional.ofNullable(address), Optional.ofNullable(medicalHistory),
+                Optional.ofNullable(notes));
     }
 }
