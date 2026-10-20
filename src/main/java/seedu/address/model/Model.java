@@ -1,5 +1,6 @@
 package seedu.address.model;
 
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -73,16 +74,24 @@ public interface Model {
     void setPatient(Patient target, Patient editedPatient);
 
     /**
-     * Returns an unmodifiable view of the filtered patient list
+     * Returns an unmodifiable, observable view of the filtered patient list in its current display order.
      */
     ObservableList<Patient> getFilteredPatientList();
 
     /**
-     * Updates the filter of the filtered patient list to filter by the given {@code predicate}.
+     * Updates the filter using {@code predicate} and restores the original patient-list order.
      *
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate);
+
+    /**
+     * Updates the filter using {@code predicate} and orders the results using {@code comparator}.
+     * A null comparator restores the original patient-list order. The stored patient order is unchanged.
+     *
+     * @throws NullPointerException if {@code predicate} is null.
+     */
+    void updateFilteredPatientList(Predicate<Patient> predicate, Comparator<Patient> comparator);
 
     /**
      * Returns an unmodifiable list of every appointment of every patient, in time order. It follows the patients,

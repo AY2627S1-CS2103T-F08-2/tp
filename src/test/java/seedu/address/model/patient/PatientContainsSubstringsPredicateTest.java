@@ -51,7 +51,53 @@ public class PatientContainsSubstringsPredicateTest {
                 predicate(null, null, null, null, "diabet"));
         for (PatientContainsSubstringsPredicate predicate : predicates) {
             assertTrue(predicate.test(patient), predicate.toString());
+            assertEquals(1, predicate.countMatchingFields(patient), predicate.toString());
         }
+    }
+
+    @Test
+    public void countMatchingFields_multipleCriteria_countsOnlyMatchingFields() {
+        List<PatientContainsSubstringsPredicate> predicates = List.of(
+                predicate("Z99", "John", "1111", "Jurong", "asthma"),
+                predicate("041", "John", "1111", "Jurong", "asthma"),
+                predicate("041", "Mary", "1111", "Jurong", "asthma"),
+                predicate("041", "Mary", "9876", "Jurong", "asthma"),
+                predicate("041", "Mary", "9876", "Marina", "asthma"),
+                predicate("041", "Mary", "9876", "Marina", "diabetes"));
+        for (int expectedCount = 0; expectedCount < predicates.size(); expectedCount++) {
+            PatientContainsSubstringsPredicate predicate = predicates.get(expectedCount);
+            assertEquals(expectedCount, predicate.countMatchingFields(patient));
+            assertEquals(expectedCount > 0, predicate.test(patient));
+        }
+    }
+
+    @Test
+    public void countMatchingFields_repeatedOccurrences_countsEachFieldOnce() {
+        Patient repeatedValues = new PatientBuilder().withId("123123").withName("Mary Mary Mary")
+                .withPhone("123123").withAddress("Bay Bay").withMedicalHistory("diabetes diabetes").build();
+        assertEquals(1, predicate(null, "Mary", null, null, null).countMatchingFields(repeatedValues));
+        assertEquals(5, predicate("123", "Mary", "123", "Bay", "diabetes").countMatchingFields(repeatedValues));
+    }
+
+    @Test
+    public void countMatchingFields_caseAndWhitespaceDifferences_countsAllMatches() {
+        PatientContainsSubstringsPredicate predicate = predicate(" t04 ", "  mArY\t jAnE ", " +65\t 9876-54 ",
+                " marina\n  BAY ", " type\t 2 DIABETES ");
+        assertEquals(5, predicate.countMatchingFields(patient));
+    }
+
+    @Test
+    public void countMatchingFields_missingMedicalHistory_doesNotContributeMatch() {
+        Patient withoutHistory = new PatientBuilder().build();
+        assertEquals(0, predicate(null, null, null, null, "diabetes").countMatchingFields(withoutHistory));
+        assertEquals(1, predicate(null, "Amy", null, null, "diabetes").countMatchingFields(withoutHistory));
+    }
+
+    @Test
+    public void countMatchingFields_nullPatient_throwsNullPointerException() {
+        PatientContainsSubstringsPredicate predicate = predicate(null, "Mary", null, null, null);
+        assertThrows(NullPointerException.class, () -> predicate.countMatchingFields(null));
+        assertThrows(NullPointerException.class, () -> predicate.test(null));
     }
 
     @Test

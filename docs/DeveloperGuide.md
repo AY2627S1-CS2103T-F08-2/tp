@@ -267,9 +267,9 @@ How the parsing works:
 The `Model` component,
 
 * stores the LaiNurse data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
-* stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It
-  exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates
-  when the list changes.
+* selects patients with a `FilteredList` and orders the results through a `SortedList`, such as by the number of
+  fields matched by `find`. It exposes the displayed list as an unmodifiable `ObservableList<Patient>` that the UI can
+  observe and bind to, so the UI updates when the list changes. The stored patient order is unchanged.
 * keeps a list of every appointment of every patient, each as a `PatientAppointment`, in time order. It rebuilds the
   list whenever a patient is added, edited or deleted, and exposes it as an unmodifiable
   `ObservableList<PatientAppointment>` for the appointment view. The filter on the patient list does not change it.
@@ -321,15 +321,20 @@ quotes cause a `ParseException` before the displayed list is changed. Words begi
 options, including inside quoted values.
 
 `PatientContainsSubstringsPredicate` stores five optional string criteria normalized by `TextNormalizer`. Each criterion
-is a literal, contiguous substring of its corresponding stored field. The criteria combine using OR, so a patient is
-included if any supplied criterion matches. Missing medical history contributes no match for that field. Phone criteria
-are substrings rather than complete phone numbers, so the parser does not apply the validation used when adding a
-patient. `find` does not search appointments. `viewappt` handles every appointment search, as described in
+is a literal, contiguous substring of its corresponding stored field. `countMatchingFields()` counts each matching
+supplied field once, and `test()` includes a patient when this count exceeds zero, preserving the OR search. Repeated
+occurrences of a substring in one field contribute only one match. Missing medical history contributes no match.
+Phone criteria are substrings rather than complete phone numbers, so the parser does not apply the validation used when
+adding a patient. `find` does not search appointments. `viewappt` handles every appointment search, as described in
 [Viewing appointments by date](#viewing-appointments-by-date).
 
-`FindCommand` applies the predicate through `Model#updateFilteredPatientList()` and reports the existing patient count
-message. This replaces the previous filter and searches the full patient collection while preserving its order.
-Filtering does not change patient records. `list` restores the full list.
+`FindCommand` passes the predicate and a comparator to `Model#updateFilteredPatientList(predicate, comparator)` and
+reports the existing patient count message. The comparator orders patients by descending match count, then by their
+current position in the stored patient list, so ties keep the original order. Each search replaces the previous filter
+and searches the full patient collection. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to
+patient records update the same observable view. Filtering and sorting do not change stored records or their order.
+The single-argument filter method clears sorting, as does a null comparator; existing calls from `list`, `add`, `edit`
+and `viewappt` therefore restore the original patient order. The appointment list is independent of this sorting.
 
 ### Storing multiple appointments
 
@@ -1135,10 +1140,16 @@ testers are expected to do more *exploratory* testing.
 1. Combining substrings and restoring the list
 
     1. Test case: `find --name Alex --address "Serangoon Gardens"`<br>
-       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in their original order. Either field may match.
+       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in their original order because each matches one field.
 
     1. Test case: `find --name Alex --id 1234567`<br>
-       Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though Alex matches both criteria.
+       Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears first and once, because Alex matches both criteria.
+
+    1. Test case: `find --name Irfan --id 1234567`<br>
+       Expected: Irfan Ibrahim appears before Alex Yeoh. Irfan matches both fields, while Alex matches only ID.
+
+    1. Test case: `find --id 1234567`<br>
+       Expected: Alex Yeoh appears before Irfan Ibrahim again, because both match one field and ties use original order.
 
     1. Test case: `find --address "Gardens Serangoon"`<br>
        Expected: An empty list is shown with a count of zero. Multiword values must match a contiguous substring.
