@@ -66,7 +66,7 @@ public class FindCommandTest {
     public void execute_multipleFields_multiplePatientsFound() {
         String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 3);
         PatientContainsSubstringsPredicate predicate = new PatientContainsSubstringsPredicate(Optional.of("3456789"),
-                Optional.of("Elle"), Optional.empty(), Optional.of("tokyo"), Optional.empty());
+                Optional.of("Elle"), Optional.empty(), Optional.of("tokyo"), Optional.empty(), Optional.empty());
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPatientList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
@@ -86,6 +86,6 @@ public class FindCommandTest {
      */
     private PatientContainsSubstringsPredicate prepareNamePredicate(String substring) {
         return new PatientContainsSubstringsPredicate(Optional.empty(), Optional.of(substring), Optional.empty(),
-                Optional.empty(), Optional.empty());
+                Optional.empty(), Optional.empty(), Optional.empty());
     }
 }

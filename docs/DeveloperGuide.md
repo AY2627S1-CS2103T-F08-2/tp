@@ -314,18 +314,18 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Finding patients by substrings
 
-`FindCommandParser` recognizes the five patient-detail options defined in `CliSyntax`: ID, name, phone number, address
-and medical history. It normalizes option separators
-using the same approach as `add`, then reuses `ArgumentTokenizer` and `ArgumentMultimap` to extract values and reject
+`FindCommandParser` recognizes the six patient-detail options defined in `CliSyntax`: ID, name, phone number, address,
+medical history and notes. It reuses `ArgumentTokenizer.normalizeOptionSeparators`, as `add` and `edit` do,
+then uses `ArgumentTokenizer` and `ArgumentMultimap` to extract values and reject
 duplicate options. At least one option is required, and every supplied value must be non-blank. Matching straight or
 curly double quotes surrounding a complete value are removed. Unknown options, unexpected preamble text, and malformed
 quotes cause a `ParseException` before the displayed list is changed. Words beginning with `--` remain reserved for
 options, including inside quoted values.
 
-`PatientContainsSubstringsPredicate` stores five optional string criteria normalized by `TextNormalizer`. Each criterion
+`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by `TextNormalizer`. Each criterion
 is a literal, contiguous substring of its corresponding stored field. The criteria combine using OR, so a patient is
-included if any supplied criterion matches. Missing medical history contributes no match for that field. Phone criteria
-are substrings rather than complete phone numbers, so the parser does not apply the validation used when adding a
+included if any supplied criterion matches. Missing medical history or notes contributes no match for that field.
+Phone criteria are substrings rather than complete phone numbers, so the parser does not apply the validation used when adding a
 patient. `find` does not search appointments. `viewappt` handles every appointment search, as described in
 [Viewing appointments by date](#viewing-appointments-by-date).
 
@@ -366,19 +366,26 @@ between time zones, so changing the computer's time zone, or a daylight saving c
 
 ### Patient notes and appointment details
 
-A patient has optional `Notes`, free text that is not medical history, such as their routine or which family member to
-call. An appointment has optional `AppointmentDetails`, free text about the visit, such as what to do or bring. Both
-follow `MedicalHistory`: `TextNormalizer` trims the text, collapses its whitespace and stores it in upper case, and
+A patient has optional `Notes` for other personal information not covered by the other fields, such as hobbies, pet peeves
+and daily routines. An appointment has optional `AppointmentDetails`, free text about the visit, such as what to do or
+bring. Both follow `MedicalHistory`: `TextNormalizer` trims the text, collapses its whitespace and stores it in upper case, and
 blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
 
 The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
 in a narrow panel. `AppointmentRow` shows an appointment's details on a second line under its patient, and only when it
 has some.
 
-No command sets the notes or the details yet. `add` creates a patient without notes. `edit` keeps a patient's notes, and
-`--add-appt` and `--remove-appt` keep the details of the appointments that they do not remove. A command that sets them
-needs a `Prefix` in `CliSyntax`, a parser that builds `Notes` or `AppointmentDetails` with the matching `isValid`
-method, and a `Patient` or `Appointment` built with the new value.
+`add` and `edit` accept the optional, single-valued `--notes` option defined by `CliSyntax.PREFIX_NOTES`.
+`ParserUtil.parseNotes` validates it using `Notes.isValidNotes` and throws a `ParseException` with
+`Notes.MESSAGE_CONSTRAINTS` for blank text. It logs parsing success or rejection at `FINE` level without logging the text.
+`add` starts a patient without notes when the option is omitted. `EditPatientDescriptor` stores a supplied notes value;
+`edit` replaces the patient's notes when supplied and preserves them otherwise. An empty option is rejected, so it does
+not clear notes. Notes are included in patient feedback through `Messages.format`. `find --notes` uses the substring
+search described above, and `view ID` shows the notes using the existing detail panel and its live updates.
+
+No command sets appointment details yet. `--add-appt` and `--remove-appt` keep the details of appointments that they do
+not remove. A command that sets details needs a `Prefix` in `CliSyntax`, a parser that builds `AppointmentDetails` with
+its `isValid` method, and an `Appointment` built with the new value.
 
 ### Viewing appointments by date
 
@@ -717,7 +724,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, or medical history
+1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, medical history or notes
 2.  LaiNurse shows a list of matching patients
 
     Use case ends.
@@ -1114,6 +1121,34 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
+### Recording and viewing patient notes
+
+1. Adding, editing and saving notes
+
+    1. Test case: `add --id NOTES1 --name Mary Tan --phone 91234567 --address Blk 10 Clementi Ave 2 --notes Enjoys gardening`<br>
+       Expected: The patient is added. The feedback includes `Notes: ENJOYS GARDENING`.
+
+    1. Test case: `view NOTES1`, then `edit NOTES1 --notes Dislikes loud noises; walks every morning`<br>
+       Expected: The panel shows the notes below medical history, then updates to `DISLIKES LOUD NOISES; WALKS EVERY MORNING`.
+
+    1. Test case: `edit NOTES1 --phone 98765432`<br>
+       Expected: The phone changes, and the notes are preserved.
+
+    1. Test case: Close and restart LaiNurse, then enter `view NOTES1` and `find --notes "walks every morning"`.<br>
+       Expected: The notes remain saved, and the search finds Mary Tan.
+
+1. Rejecting invalid notes
+
+    1. Test cases: `edit NOTES1 --notes`, `edit NOTES1 --notes --phone 11112222`, and
+       `add --id NOTES2 --name Jane Tan --phone 91234567 --address Clementi --notes`<br>
+       Expected: A blank-notes error is shown. No patient, displayed list or saved record changes.
+
+    1. Test cases: `edit NOTES1 --notes First --notes Second`, and
+       `add --id NOTES2 --name Jane Tan --phone 91234567 --address Clementi --notes First --notes Second`<br>
+       Expected: A duplicate-option error is shown, and nothing changes.
+
+    1. Enter `delete NOTES1`, then `list` after testing to restore the sample patients.
+
 ### Finding patients by substrings
 
 1. Searching each patient field
@@ -1135,6 +1170,9 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `find --medical-history penicillin`<br>
        Expected: Only Bernice Yu is shown. Patients without medical history do not match this criterion.
 
+    1. Test case: `find --notes "has a dog"`<br>
+       Expected: Only Bernice Yu is shown. Patients without notes do not match this criterion.
+
 1. Combining substrings and restoring the list
 
     1. Test case: `find --name Alex --address "Serangoon Gardens"`<br>
@@ -1142,6 +1180,9 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `find --name Alex --id 1234567`<br>
        Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though Alex matches both criteria.
+
+    1. Test case: `find --notes dog --name Charlotte`<br>
+       Expected: Bernice Yu and Charlotte Oliveiro are shown, in their original order. Either field may match.
 
     1. Test case: `find --address "Gardens Serangoon"`<br>
        Expected: An empty list is shown with a count of zero. Multiword values must match a contiguous substring.
@@ -1154,7 +1195,8 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Enter `find --name Alex`, so only Alex Yeoh is shown.
 
     1. Test cases: `find`, `find Alex`, `find --name ""`, `find --name "Alex`, `find --name “Alex"`,
-       `find --name "Alex" trailing`, `find --unknown Alex`, and `find --name=Alex`<br>
+       `find --name "Alex" trailing`, `find --unknown Alex`, `find --name=Alex`, `find --notes`,
+       `find --notes ""`, and `find --notes "dog`<br>
        Expected: The displayed list and patient records are unchanged. The status message shows the command usage instructions.
 
     1. Test case: `find --next-appointment 2026-10`<br>
@@ -1162,6 +1204,9 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `find --name Alex --name Bernice`<br>
        Expected: The displayed list and patient records are unchanged. The status message shows a duplicate-option error.
+
+    1. Test case: `find --notes dog --notes morning`<br>
+       Expected: The same duplicate-option error is shown, and nothing changes.
 
     1. Enter `list` after testing to show all patients again.
 

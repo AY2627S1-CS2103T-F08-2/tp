@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Files;
@@ -25,6 +26,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
@@ -88,6 +90,31 @@ public class EditCommandFlowTest {
     }
 
     @Test
+    public void execute_addNotesToPatientWithout_persisted() throws Exception {
+        Patient expected = new PatientBuilder(patient(CHARLOTTE_ID)).withNotes("Enjoys gardening").build();
+        assertEditPersisted("edit T0123456C --notes Enjoys\t gardening", CHARLOTTE_ID, expected);
+    }
+
+    @Test
+    public void execute_replaceNotes_persisted() throws Exception {
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withNotes("Walks every morning").build();
+        assertEditPersisted("edit S1234567A --notes Walks   every morning", ALEX_ID, expected);
+    }
+
+    @Test
+    public void execute_notesAfterReload_foundAndViewed() throws Exception {
+        logic.execute("edit T0123456C --notes Enjoys gardening");
+        Model reloadedModel = new ModelManager(storage.readLaiNurse().orElseThrow(), new UserPrefs());
+        Logic reloadedLogic = new LogicManager(reloadedModel, storage);
+        reloadedLogic.execute("find --notes \"enjoys   garden\"");
+        assertEquals(List.of(patient(CHARLOTTE_ID)), reloadedModel.getFilteredPatientList());
+        CommandResult viewResult = reloadedLogic.execute("view T0123456C");
+        assertEquals(new PatientId(CHARLOTTE_ID), viewResult.getPatientToView().orElseThrow());
+        assertEquals("ENJOYS GARDENING",
+                reloadedModel.getFilteredPatientList().get(0).getNotes().orElseThrow().value);
+    }
+
+    @Test
     public void execute_addAppointmentsOutOfOrder_storedSorted() throws Exception {
         Patient expected = new PatientBuilder(patient(CHARLOTTE_ID))
                 .withAppointments("2026-11-15", "2026-12-01 10:00").build();
@@ -135,7 +162,7 @@ public class EditCommandFlowTest {
 
     @Test
     public void execute_editPhone_keepsNotesAndAppointmentDetails() throws Exception {
-        // edit has no options for notes or appointment details, so it must keep the ones the patient has
+        // Omitting --notes preserves the notes, and unrelated edits preserve appointment details
         Patient before = patient(ALEX_ID);
         logic.execute("edit S1234567A --phone 91234567");
         Patient after = patient(ALEX_ID);
@@ -188,6 +215,10 @@ public class EditCommandFlowTest {
                 Phone.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --medical-history  --name Alex",
                 ParseException.class, MedicalHistory.MESSAGE_CONSTRAINTS);
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes \t ", ParseException.class,
+                Notes.MESSAGE_CONSTRAINTS);
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes --phone 91234567", ParseException.class,
+                Notes.MESSAGE_CONSTRAINTS);
 
         // option with no value at the end of the command
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt", ParseException.class,
@@ -216,6 +247,15 @@ public class EditCommandFlowTest {
         // single-valued field repeated
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --name Alex --name Bob", ParseException.class,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME));
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes First --notes Second", ParseException.class,
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTES));
+    }
+
+    @Test
+    public void execute_notesWithInvalidAppointment_rejectedWithoutChanges() throws Exception {
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes Enjoys gardening"
+                + " --remove-appt 2026-11-02 09:30", CommandException.class,
+                String.format(EditCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-11-02 09:30"));
     }
 
     /**

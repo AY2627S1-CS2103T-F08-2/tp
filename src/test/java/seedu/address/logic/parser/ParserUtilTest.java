@@ -6,6 +6,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 
@@ -165,6 +167,24 @@ public class ParserUtilTest {
         String medicalHistoryWithWhitespace = WHITESPACE + VALID_MEDICAL_HISTORY + WHITESPACE;
         MedicalHistory expectedMedicalHistory = new MedicalHistory(VALID_MEDICAL_HISTORY);
         assertEquals(expectedMedicalHistory, ParserUtil.parseMedicalHistory(medicalHistoryWithWhitespace));
+    }
+
+    @Test
+    public void parseNotes_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseNotes(null));
+    }
+
+    @Test
+    public void parseNotes_blank_throwsParseException() {
+        for (String notes : List.of("", " ", WHITESPACE)) {
+            assertThrows(ParseException.class, Notes.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseNotes(notes));
+        }
+    }
+
+    @Test
+    public void parseNotes_validText_normalized() throws Exception {
+        assertEquals("ENJOYS GARDENING; WALKS AT 7AM",
+                ParserUtil.parseNotes("  Enjoys\t gardening;\n walks at 7am  ").value);
     }
 
     @Test
