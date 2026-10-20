@@ -12,7 +12,6 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -129,11 +128,6 @@ public class PatientListPanel extends UiPart<Region> {
             listCount.setText(total == 1 ? "1 patient" : total + " patients");
         }
         placeholder.setText(total == 0 ? NO_PATIENTS_PLACEHOLDER : NO_MATCH_PLACEHOLDER);
-    }
-
-    private static void setShown(Node node, boolean isShown) {
-        node.setVisible(isShown);
-        node.setManaged(isShown);
     }
 
     /**

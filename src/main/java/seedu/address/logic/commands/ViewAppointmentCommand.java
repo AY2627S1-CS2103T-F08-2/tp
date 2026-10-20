@@ -36,8 +36,8 @@ public class ViewAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "viewappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Shows the appointments on a date, or within a date "
-            + "range, in the appointment view, and lists the patients who have one. Without a date or "
-            + "range, shows appointments from today onwards. A DATE must come before other options.\n"
+            + "range, in the appointment view, and lists the patients who have one, in name order. Without a date "
+            + "or range, shows appointments from today onwards. A DATE must come before other options.\n"
             + "Parameters: [DATE] or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE], with an optional ["
             + PREFIX_ID + "ID] (dates in yyyy-MM-dd)\n"
             + "Example: " + COMMAND_WORD + " 2026-10-15";

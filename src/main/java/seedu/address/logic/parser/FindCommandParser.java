@@ -6,10 +6,10 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import java.util.Optional;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -25,7 +25,7 @@ public class FindCommandParser implements Parser<FindCommand> {
 
     private static final Pattern OPTION_PATTERN = Pattern.compile("(?<!\\S)--\\S*");
     private static final Prefix[] SUPPORTED_PREFIXES = {
-        PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY
+        PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES
     };
 
     /**
@@ -35,7 +35,8 @@ public class FindCommandParser implements Parser<FindCommand> {
      */
     public FindCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        String normalizedArgs = normalizeOptionSeparators(args);
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE), SUPPORTED_PREFIXES);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, SUPPORTED_PREFIXES);
 
         if (!argMultimap.getPreamble().isEmpty()
@@ -47,24 +48,7 @@ public class FindCommandParser implements Parser<FindCommand> {
         return new FindCommand(new PatientContainsSubstringsPredicate(
                 parseSearchValue(argMultimap, PREFIX_ID), parseSearchValue(argMultimap, PREFIX_NAME),
                 parseSearchValue(argMultimap, PREFIX_PHONE), parseSearchValue(argMultimap, PREFIX_ADDRESS),
-                parseSearchValue(argMultimap, PREFIX_MEDICAL_HISTORY)));
-    }
-
-    /**
-     * Supplies space separators for the existing tokenizer and rejects unsupported long options.
-     */
-    private static String normalizeOptionSeparators(String args) throws ParseException {
-        Matcher matcher = OPTION_PATTERN.matcher(args);
-        StringBuilder normalizedArgs = new StringBuilder();
-        while (matcher.find()) {
-            String option = matcher.group();
-            if (Stream.of(SUPPORTED_PREFIXES).noneMatch(prefix -> prefix.getPrefix().trim().equals(option))) {
-                throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
-            }
-            matcher.appendReplacement(normalizedArgs, Matcher.quoteReplacement(" " + option + " "));
-        }
-        matcher.appendTail(normalizedArgs);
-        return normalizedArgs.toString();
+                parseSearchValue(argMultimap, PREFIX_MEDICAL_HISTORY), parseSearchValue(argMultimap, PREFIX_NOTES)));
     }
 
     /**

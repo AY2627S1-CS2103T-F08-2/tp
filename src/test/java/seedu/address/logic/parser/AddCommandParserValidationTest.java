@@ -17,6 +17,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
@@ -35,6 +36,7 @@ import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
@@ -70,6 +72,25 @@ public class AddCommandParserValidationTest {
     }
 
     @Test
+    public void parse_notesInDifferentOrders_success() {
+        Patient notesOnly = new PatientBuilder(AMY).withNotes("Enjoys gardening").build();
+        assertParseSuccess(parser, " --notes Enjoys   gardening" + REQUIRED_ARGUMENTS, new AddCommand(notesOnly));
+        assertParseSuccess(parser, REQUIRED_ARGUMENTS + "\t--notes\tEnjoys\t gardening", new AddCommand(notesOnly));
+
+        Patient allOptionalFields = new PatientBuilder(BOB).withNotes("Dislikes loud noises").build();
+        assertParseSuccess(parser, PatientUtil.getPatientDetails(allOptionalFields), new AddCommand(allOptionalFields));
+    }
+
+    @Test
+    public void parse_repeatedNotes_failure() {
+        for (String repeatedNotes : List.of(" --notes First --notes Second", " --notes First --notes",
+                " --notes --notes Second")) {
+            assertParseFailure(parser, REQUIRED_ARGUMENTS + repeatedNotes,
+                    Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTES));
+        }
+    }
+
+    @Test
     public void parse_dateOnlyAppointment_success() {
         Patient expectedPatient = new PatientBuilder(AMY).withAppointments("2026-09-20").build();
         assertParseSuccess(parser, REQUIRED_ARGUMENTS + " --appt 2026-09-20",
@@ -99,12 +120,14 @@ public class AddCommandParserValidationTest {
         assertCommandParseFailure(ID_DESC_AMY + NAME_DESC_AMY + PHONE_DESC_AMY + " --address",
                 Address.MESSAGE_CONSTRAINTS);
         assertCommandParseFailure(REQUIRED_ARGUMENTS + " --medical-history", MedicalHistory.MESSAGE_CONSTRAINTS);
+        assertCommandParseFailure(REQUIRED_ARGUMENTS + " --notes", Notes.MESSAGE_CONSTRAINTS);
         assertCommandParseFailure(REQUIRED_ARGUMENTS + " --appt", Appointment.MESSAGE_CONSTRAINTS);
     }
 
     @Test
     public void parse_emptyOptionalValueBetweenOptions_failure() {
         assertParseFailure(parser, " --medical-history" + REQUIRED_ARGUMENTS, MedicalHistory.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, " --notes \t " + REQUIRED_ARGUMENTS, Notes.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, " --appt" + REQUIRED_ARGUMENTS, Appointment.MESSAGE_CONSTRAINTS);
     }
 

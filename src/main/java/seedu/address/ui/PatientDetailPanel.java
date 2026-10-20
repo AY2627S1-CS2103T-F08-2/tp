@@ -307,11 +307,6 @@ public class PatientDetailPanel extends UiPart<Region> {
         }
     }
 
-    private static void setShown(Node node, boolean isShown) {
-        node.setVisible(isShown);
-        node.setManaged(isShown);
-    }
-
     /**
      * The time and details of one appointment row, in a grid that puts the details beside the time or under it.
      */

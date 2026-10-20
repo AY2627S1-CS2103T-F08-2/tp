@@ -5,6 +5,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_REMOVE_APPOINTMENT;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
@@ -23,6 +24,7 @@ import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
@@ -42,6 +44,7 @@ public class EditCommand extends Command {
             + "[" + PREFIX_PHONE + "PHONE] "
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL_HISTORY] "
+            + "[" + PREFIX_NOTES + "NOTES] "
             + "[" + PREFIX_ADD_APPOINTMENT + "DATE_OR_DATETIME]... "
             + "[" + PREFIX_REMOVE_APPOINTMENT + "DATE_OR_DATETIME]...\n"
             + "Example: " + COMMAND_WORD + " T0123456B "
@@ -92,12 +95,14 @@ public class EditCommand extends Command {
     private static Patient createEditedPatient(Patient patientToEdit, EditPatientDescriptor editPatientDescriptor)
             throws CommandException {
         assert patientToEdit != null;
+        assert editPatientDescriptor != null;
 
         Name updatedName = editPatientDescriptor.getName().orElse(patientToEdit.getName());
         Phone updatedPhone = editPatientDescriptor.getPhone().orElse(patientToEdit.getPhone());
         Address updatedAddress = editPatientDescriptor.getAddress().orElse(patientToEdit.getAddress());
         Optional<MedicalHistory> updatedMedicalHistory = editPatientDescriptor.getMedicalHistory()
                 .or(patientToEdit::getMedicalHistory);
+        Optional<Notes> updatedNotes = editPatientDescriptor.getNotes().or(patientToEdit::getNotes);
 
         AppointmentSchedule updatedSchedule = patientToEdit.getSchedule();
         for (Appointment appointment : editPatientDescriptor.getAppointmentsToRemove().asList()) {
@@ -111,9 +116,8 @@ public class EditCommand extends Command {
             updatedSchedule = updatedSchedule.add(appointment);
         }
 
-        // edit has no option for notes yet, so they stay as they are
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, patientToEdit.getNotes(), updatedSchedule);
+                updatedMedicalHistory, updatedNotes, updatedSchedule);
     }
 
     @Override
@@ -153,6 +157,7 @@ public class EditCommand extends Command {
         private Phone phone;
         private Address address;
         private MedicalHistory medicalHistory;
+        private Notes notes;
         private AppointmentSchedule appointmentsToAdd = AppointmentSchedule.empty();
         private AppointmentSchedule appointmentsToRemove = AppointmentSchedule.empty();
 
@@ -166,6 +171,7 @@ public class EditCommand extends Command {
             setPhone(toCopy.phone);
             setAddress(toCopy.address);
             setMedicalHistory(toCopy.medicalHistory);
+            setNotes(toCopy.notes);
             setAppointmentsToAdd(toCopy.appointmentsToAdd);
             setAppointmentsToRemove(toCopy.appointmentsToRemove);
         }
@@ -174,7 +180,7 @@ public class EditCommand extends Command {
          * Returns true if at least one field is edited.
          */
         public boolean isAnyFieldEdited() {
-            return CollectionUtil.isAnyNonNull(name, phone, address, medicalHistory)
+            return CollectionUtil.isAnyNonNull(name, phone, address, medicalHistory, notes)
                     || !appointmentsToAdd.isEmpty() || !appointmentsToRemove.isEmpty();
         }
 
@@ -208,6 +214,14 @@ public class EditCommand extends Command {
 
         public Optional<MedicalHistory> getMedicalHistory() {
             return Optional.ofNullable(medicalHistory);
+        }
+
+        public void setNotes(Notes notes) {
+            this.notes = notes;
+        }
+
+        public Optional<Notes> getNotes() {
+            return Optional.ofNullable(notes);
         }
 
         /**
@@ -253,6 +267,7 @@ public class EditCommand extends Command {
                     && Objects.equals(phone, otherEditPatientDescriptor.phone)
                     && Objects.equals(address, otherEditPatientDescriptor.address)
                     && Objects.equals(medicalHistory, otherEditPatientDescriptor.medicalHistory)
+                    && Objects.equals(notes, otherEditPatientDescriptor.notes)
                     && appointmentsToAdd.equals(otherEditPatientDescriptor.appointmentsToAdd)
                     && appointmentsToRemove.equals(otherEditPatientDescriptor.appointmentsToRemove);
         }
@@ -264,6 +279,7 @@ public class EditCommand extends Command {
                     .add("phone", phone)
                     .add("address", address)
                     .add("medicalHistory", medicalHistory)
+                    .add("notes", notes)
                     .add("appointmentsToAdd", appointmentsToAdd)
                     .add("appointmentsToRemove", appointmentsToRemove)
                     .toString();

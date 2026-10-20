@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.Model;
@@ -25,6 +27,13 @@ public class HelpCommandTest {
     public void execute_helpValidTargetAdd_showsAddUsage() {
         CommandResult expectedResult = new CommandResult(AddCommand.MESSAGE_USAGE);
         assertCommandSuccess(new HelpCommand("add"), model, expectedResult, expectedModel);
+    }
+
+    @Test
+    public void execute_notesCommandsHelp_includesNotesOption() {
+        for (String commandWord : List.of("add", "edit", "find")) {
+            assertTrue(new HelpCommand(commandWord).execute(model).getFeedbackToUser().contains("--notes NOTES"));
+        }
     }
 
     @Test

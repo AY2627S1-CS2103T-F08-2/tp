@@ -10,7 +10,6 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
@@ -457,11 +456,6 @@ public class MainWindow extends UiPart<Stage> {
         double largeWidth = LARGE_VIEW_WIDTH * LARGE_LIST_SHARE;
         double progress = (room - SMALL_VIEW_WIDTH) / (LARGE_VIEW_WIDTH - SMALL_VIEW_WIDTH);
         return smallWidth + (largeWidth - smallWidth) * progress;
-    }
-
-    private static void setShown(Node node, boolean isShown) {
-        node.setVisible(isShown);
-        node.setManaged(isShown);
     }
 
     /**

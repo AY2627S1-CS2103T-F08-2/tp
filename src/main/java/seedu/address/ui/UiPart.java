@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import seedu.address.MainApp;
 
 /**
@@ -73,6 +74,14 @@ public abstract class UiPart<T> {
         } catch (IOException e) {
             throw new AssertionError(e);
         }
+    }
+
+    /**
+     * Shows or hides {@code node}. A hidden node takes no room in the layout, so the parts beside it fill its place.
+     */
+    protected static void setShown(Node node, boolean isShown) {
+        node.setVisible(isShown);
+        node.setManaged(isShown);
     }
 
     /**

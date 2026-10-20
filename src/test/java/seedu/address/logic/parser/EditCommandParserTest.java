@@ -22,10 +22,13 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_REMOVE_APPOINTMENT;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +39,7 @@ import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
 import seedu.address.testutil.EditPatientDescriptorBuilder;
@@ -143,6 +147,34 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_notesOnly_success() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withNotes("Enjoys gardening").build();
+        EditCommand expectedCommand = new EditCommand(new PatientId(VALID_ID_AMY), descriptor);
+        assertParseSuccess(parser, VALID_ID_AMY + " --notes Enjoys   gardening", expectedCommand);
+        assertParseSuccess(parser, VALID_ID_AMY + "\t--notes\tEnjoys\t gardening", expectedCommand);
+    }
+
+    @Test
+    public void parse_notesWithOtherFields_success() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withNotes("Enjoys gardening")
+                .withPhone(VALID_PHONE_BOB).withMedicalHistory(VALID_MEDICAL_HISTORY_BOB)
+                .withAppointmentsToAdd("2026-10-20 09:30").build();
+        assertParseSuccess(parser, VALID_ID_AMY + " --notes Enjoys gardening" + PHONE_DESC_BOB
+                + MEDICAL_HISTORY_DESC_BOB + " --add-appt 2026-10-20 09:30",
+                new EditCommand(new PatientId(VALID_ID_AMY), descriptor));
+    }
+
+    @Test
+    public void parse_blankOrRepeatedNotes_failure() {
+        assertParseFailure(parser, VALID_ID_AMY + " --notes \t " + NAME_DESC_AMY, Notes.MESSAGE_CONSTRAINTS);
+        for (String repeatedNotes : List.of(" --notes First --notes Second", " --notes First --notes",
+                " --notes --notes Second")) {
+            assertParseFailure(parser, VALID_ID_AMY + repeatedNotes,
+                    Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTES));
+        }
+    }
+
+    @Test
     public void parse_appointments_success() {
         PatientId targetId = new PatientId(VALID_ID_AMY);
 
@@ -182,6 +214,7 @@ public class EditCommandParserTest {
         assertParseFailure(parser, VALID_ID_AMY + " --remove-appt", Appointment.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ID_AMY + " --phone", Phone.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, VALID_ID_AMY + " --medical-history", MedicalHistory.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --notes", Notes.MESSAGE_CONSTRAINTS);
     }
 
     @Test
