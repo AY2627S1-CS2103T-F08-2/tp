@@ -1,5 +1,5 @@
 {
-  "persons": [ {
+  "patients": [ {
     "id": "S1234567A",
     "name": "Valid Patient",
     "phone": "9482424",

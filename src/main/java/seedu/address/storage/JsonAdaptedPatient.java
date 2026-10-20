@@ -35,19 +35,15 @@ class JsonAdaptedPatient {
     private final String medicalHistory; // null if not set
     private final String notes; // null if not set
     private final List<JsonAdaptedAppointment> appointments; // null if there are none
-    private final String nextAppointment; // only set when reading a file saved before multiple appointments
 
     /**
      * Constructs a {@code JsonAdaptedPatient} with the given patient details.
-     * {@code nextAppointment} is the single appointment stored by older versions of the app;
-     * it is read as one more appointment, and is never written.
      */
     @JsonCreator
     public JsonAdaptedPatient(@JsonProperty("id") String id, @JsonProperty("name") String name,
             @JsonProperty("phone") String phone, @JsonProperty("address") String address,
             @JsonProperty("medicalHistory") String medicalHistory, @JsonProperty("notes") String notes,
-            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments,
-            @JsonProperty("nextAppointment") String nextAppointment) {
+            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments) {
         this.id = id;
         this.name = name;
         this.phone = phone;
@@ -55,7 +51,6 @@ class JsonAdaptedPatient {
         this.medicalHistory = medicalHistory;
         this.notes = notes;
         this.appointments = appointments;
-        this.nextAppointment = nextAppointment;
     }
 
     /**
@@ -71,7 +66,6 @@ class JsonAdaptedPatient {
         appointments = source.getSchedule().isEmpty()
                 ? null
                 : source.getSchedule().asList().stream().map(JsonAdaptedAppointment::new).toList();
-        nextAppointment = null;
     }
 
     /**
@@ -124,15 +118,9 @@ class JsonAdaptedPatient {
         }
         final Optional<Notes> modelNotes = Optional.ofNullable(notes).map(Notes::new);
 
-        final List<JsonAdaptedAppointment> allAppointments = new ArrayList<>();
-        if (appointments != null) {
-            allAppointments.addAll(appointments);
-        }
-        if (nextAppointment != null) {
-            allAppointments.add(JsonAdaptedAppointment.fromString(nextAppointment));
-        }
+        final List<JsonAdaptedAppointment> savedAppointments = appointments == null ? List.of() : appointments;
         final List<Appointment> modelAppointmentList = new ArrayList<>();
-        for (JsonAdaptedAppointment appointment : allAppointments) {
+        for (JsonAdaptedAppointment appointment : savedAppointments) {
             if (appointment == null) {
                 throw new IllegalValueException(Appointment.MESSAGE_CONSTRAINTS);
             }
