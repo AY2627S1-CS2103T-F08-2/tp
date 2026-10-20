@@ -75,7 +75,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 LaiNurse shows one view at a time. The tabs under the result display switch between them:
 
 * **Patients**: the list of patients, sorted by name, each with their next appointment, and beside it the details of one patient.
-  * The list is sorted by patient name. Case does not matter, and the ID breaks ties between patients with the same name, so two patients with the same name keep one fixed order. Renaming a patient with [`edit`](#editing-a-patient-edit) moves their row.
+  * The list is sorted by patient name. Case does not matter, and the ID breaks ties between patients with the same name, so two patients with the same name keep one fixed order. Renaming a patient with [`edit`](#editing-a-patient-edit) moves their row. After [`find`](#locating-patients-by-substrings-find), the patients that match more fields come first, and patients that match the same number of fields are in name order.
   * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
   * The next appointment of a patient is their first appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.

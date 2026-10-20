@@ -678,6 +678,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | view all the details of a patient in one place                                                       | I can check their address and health details before a visit  |
 | `* * *`  | home-based nurse | find patients by part of their name, ID, phone number, address or medical history                    | I can find a patient quickly without typing their full details |
 | `* *`    | home-based nurse | see the patient list sorted by name                                                                  | I can find a patient quickly without scanning the whole list   |
+| `* *`    | home-based nurse | see the patients that match the most search fields first                                             | the best matches are at the top of a long list                 |
 | `* * *`  | home-based nurse | edit a patient's details                                                                             | their records stay correct when something changes            |
 | `* * *`  | home-based nurse | delete a patient I no longer care for                                                                | my list shows only my current patients                       |
 | `* * *`  | home-based nurse | add an appointment for a patient with a date and time                                                | I can plan my home visits in advance                         |
@@ -735,7 +736,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, medical history or notes
-2.  LaiNurse shows a list of matching patients
+2.  LaiNurse shows a list of matching patients, with the patients that match the most fields first, and patients that match the same number of fields in name order
 
     Use case ends.
 
@@ -990,6 +991,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   true residential location, as some treatment, e.g. rehabilitation post surgery may be done outdoors.
 * **Medical History**: Free-form textual records capturing relevant chronic conditions, allergies, past diagnoses, or
   ongoing medical concerns of a patient (e.g., "dementia").
+* **Notes**: Optional free-form personal information about a patient that the other fields do not cover, such as their
+  hobbies, pet peeves and daily routines (e.g., "walks every morning"). Health information goes in the Medical History
+  instead.
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
   24-hour format, in local time with no time zone.
