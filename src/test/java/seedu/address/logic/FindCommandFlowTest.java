@@ -26,6 +26,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
+import seedu.address.testutil.LaiNurseBuilder;
 import seedu.address.testutil.PatientBuilder;
 
 /**
@@ -49,20 +50,30 @@ public class FindCommandFlowTest {
     }
 
     @Test
-    public void execute_equalMatchCounts_preservesOriginalOrderWithinEachGroup() throws Exception {
+    public void execute_equalMatchCounts_nameOrderWithinEachGroup() throws Exception {
         executeRankedSearch();
         assertEquals(getTypicalPatients(), model.getLaiNurse().getPatientList());
     }
 
     @Test
-    public void execute_singleFieldAfterRankedSearch_restoresOriginalOrderForTies() throws Exception {
+    public void execute_singleFieldAfterRankedSearch_tiesInNameOrder() throws Exception {
         executeRankedSearch();
         execute("find --address street");
         assertEquals(List.of(CARL, DANIEL, GEORGE), model.getFilteredPatientList());
     }
 
     @Test
-    public void execute_notesAndName_uniquePatientsInOriginalOrder() throws Exception {
+    public void execute_tiesStoredOutOfNameOrder_tiesInNameOrder() throws Exception {
+        // Typical patients are stored in name order, so these are stored in another order to tell the two apart
+        Model unsortedModel = new ModelManager(new LaiNurseBuilder().withPatient(GEORGE).withPatient(DANIEL)
+                .withPatient(CARL).build(), new UserPrefs());
+        parser.parseCommand("find --address street").execute(unsortedModel);
+        assertEquals(List.of(CARL, DANIEL, GEORGE), unsortedModel.getFilteredPatientList());
+        assertEquals(List.of(GEORGE, DANIEL, CARL), unsortedModel.getLaiNurse().getPatientList());
+    }
+
+    @Test
+    public void execute_notesAndName_uniquePatientsInNameOrder() throws Exception {
         Patient aliceWithNotes = new PatientBuilder(ALICE).withNotes("Enjoys gardening").build();
         Patient carlWithNotes = new PatientBuilder(CARL).withNotes("Walks every morning").build();
         model.setPatient(ALICE, aliceWithNotes);
@@ -133,14 +144,14 @@ public class FindCommandFlowTest {
     }
 
     @Test
-    public void execute_listAfterRankedSearch_restoresAllPatientsInOriginalOrder() throws Exception {
+    public void execute_listAfterRankedSearch_restoresAllPatientsInNameOrder() throws Exception {
         executeRankedSearch();
         execute("list");
         assertEquals(getTypicalPatients(), model.getFilteredPatientList());
     }
 
     @Test
-    public void execute_addAfterRankedSearch_restoresAllPatientsInOriginalOrder() throws Exception {
+    public void execute_addAfterRankedSearch_restoresAllPatientsInNameOrder() throws Exception {
         executeRankedSearch();
         execute("add --id NEW123 --name New Patient --phone 12345678 --address New Street");
 
@@ -153,7 +164,7 @@ public class FindCommandFlowTest {
     }
 
     @Test
-    public void execute_editAfterRankedSearch_restoresAllPatientsInOriginalOrder() throws Exception {
+    public void execute_editAfterRankedSearch_restoresAllPatientsInNameOrder() throws Exception {
         executeRankedSearch();
         execute("edit S1234567A --name Alice Updated");
 
@@ -165,7 +176,7 @@ public class FindCommandFlowTest {
     }
 
     @Test
-    public void execute_viewAppointmentAfterRankedSearch_restoresOriginalPatientOrder() throws Exception {
+    public void execute_viewAppointmentAfterRankedSearch_restoresNameOrder() throws Exception {
         executeRankedSearch();
         execute("viewappt --from 2026-10-01 --to 2026-10-31");
         assertEquals(List.of(BENSON, DANIEL), model.getFilteredPatientList());
@@ -176,7 +187,7 @@ public class FindCommandFlowTest {
         execute("find --name Fiona --address tokyo");
         assertEquals(List.of(FIONA), model.getFilteredPatientList());
 
-        // Elle enters the results with the same score as Fiona, but has an earlier original position.
+        // Elle enters the results with the same score as Fiona, and comes first in name order.
         Patient editedElle = new PatientBuilder(ELLE).withName("Fiona Elle").withAddress("Tokyo Town").build();
         model.setPatient(ELLE, editedElle);
         assertEquals(List.of(editedElle, FIONA), model.getFilteredPatientList());
