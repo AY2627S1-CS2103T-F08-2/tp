@@ -73,7 +73,8 @@ public interface Model {
     void setPatient(Patient target, Patient editedPatient);
 
     /**
-     * Returns an unmodifiable view of the filtered patient list
+     * Returns an unmodifiable view of the filtered patient list, in name order, as
+     * {@link seedu.address.model.patient.PatientNameComparator#PATIENT_NAME_ORDER} gives.
      */
     ObservableList<Patient> getFilteredPatientList();
 

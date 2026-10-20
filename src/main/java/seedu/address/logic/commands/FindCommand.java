@@ -23,7 +23,7 @@ public class FindCommand extends Command {
     public static final String COMMAND_WORD = "find";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds patients matching any supplied field substring "
-            + "(case-insensitive) and displays them as a list with index numbers.\n"
+            + "(case-insensitive) and displays them as a list with index numbers, in name order.\n"
             + "Parameters: [" + PREFIX_ID + "ID] [" + PREFIX_NAME + "NAME] [" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_PHONE + "PHONE] [" + PREFIX_MEDICAL_HISTORY + "HISTORY]\n"
             + "Supply at least one non-blank value. Double quotes around values are optional.\n"

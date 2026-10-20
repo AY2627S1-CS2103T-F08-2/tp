@@ -269,7 +269,9 @@ The `Model` component,
 * stores the LaiNurse data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It
   exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates
-  when the list changes.
+  when the list changes. The filtered list is always in name order: `ModelManager` keeps a `SortedList` with
+  `PatientNameComparator`, which compares by name ignoring case and then by patient ID, between the patient list and
+  the filter, so `updateFilteredPatientList()` changes only the filter, never the order.
 * keeps a list of every appointment of every patient, each as a `PatientAppointment`, in time order. It rebuilds the
   list whenever a patient is added, edited or deleted, and exposes it as an unmodifiable
   `ObservableList<PatientAppointment>` for the appointment view. The filter on the patient list does not change it.
@@ -328,7 +330,7 @@ patient. `find` does not search appointments. `viewappt` handles every appointme
 [Viewing appointments by date](#viewing-appointments-by-date).
 
 `FindCommand` applies the predicate through `Model#updateFilteredPatientList()` and reports the existing patient count
-message. This replaces the previous filter and searches the full patient collection while preserving its order.
+message. This replaces the previous filter and searches the full patient collection. The list keeps its name order.
 Filtering does not change patient records. `list` restores the full list.
 
 ### Storing multiple appointments
@@ -658,6 +660,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | see all my patients in one list                                                                      | I can see everyone I care for at a glance                    |
 | `* * *`  | home-based nurse | view all the details of a patient in one place                                                       | I can check their address and health details before a visit  |
 | `* * *`  | home-based nurse | find patients by part of their name, ID, phone number, address or medical history                    | I can find a patient quickly without typing their full details |
+| `* *`    | home-based nurse | see the patient list sorted by name                                                                  | I can find a patient quickly without scanning the whole list   |
 | `* * *`  | home-based nurse | edit a patient's details                                                                             | their records stay correct when something changes            |
 | `* * *`  | home-based nurse | delete a patient I no longer care for                                                                | my list shows only my current patients                       |
 | `* * *`  | home-based nurse | add an appointment for a patient with a date and time                                                | I can plan my home visits in advance                         |
@@ -1135,7 +1138,7 @@ testers are expected to do more *exploratory* testing.
 1. Combining substrings and restoring the list
 
     1. Test case: `find --name Alex --address "Serangoon Gardens"`<br>
-       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in their original order. Either field may match.
+       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in name order. Either field may match.
 
     1. Test case: `find --name Alex --id 1234567`<br>
        Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though Alex matches both criteria.
@@ -1161,6 +1164,26 @@ testers are expected to do more *exploratory* testing.
        Expected: The displayed list and patient records are unchanged. The status message shows a duplicate-option error.
 
     1. Enter `list` after testing to show all patients again.
+
+### Sorting by name
+
+1. The order of the patient list
+
+    1. Prerequisites: Start with the sample data, which is already in name order: Alex Yeoh, Bernice Yu,
+       Charlotte Oliveiro, David Li, Irfan Ibrahim, Roy Balakrishnan.
+
+    1. Test case: `list`<br>
+       Expected: All six patients are shown, in the name order above.
+
+    1. Test case: `add --id S0245678G --name Zara Lim --phone 98765432 --address "Blk 123 Clementi Ave 3, #05-12"`<br>
+       Expected: The list shows all patients again, and Zara Lim is last, after Roy Balakrishnan.
+
+    1. Test case: `edit S0245678G --name Aaron Tan`<br>
+       Expected: Aaron Tan moves to the top of the list, above Alex Yeoh.
+
+    1. Test case: `add --id S0356789H --name aaron tan --phone 91234567 --address "Blk 456 Bedok Ave 2"`<br>
+       Expected: Two rows read `AARON TAN`, adjacent at the top: `S0245678G` above `S0356789H`, because the patient
+       ID breaks the tie.
 
 ### Viewing patients by appointment date
 
