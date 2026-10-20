@@ -8,6 +8,9 @@ src/main/resources/docs/
 /out/
 /*.iml
 
+# VS Code Java build output
+/bin/
+
 # Storage/log files
 /data/
 /preferences.json
