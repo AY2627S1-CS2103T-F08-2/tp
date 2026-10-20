@@ -8,23 +8,27 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
+import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
+import seedu.address.model.patient.PatientNameComparator;
 
 /**
  * Finds and lists patients whose fields contain any of the supplied substrings.
- * Matching ignores case and repeated whitespace.
+ * Matching ignores case and repeated whitespace. Patients matching more fields appear first.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds patients matching any supplied field substring "
-            + "(case-insensitive) and displays them as a list with index numbers, in name order.\n"
+            + "(case-insensitive) and displays them as a list with index numbers.\n"
+            + "Patients matching more fields appear first; ties are in name order.\n"
             + "Parameters: [" + PREFIX_ID + "ID] [" + PREFIX_NAME + "NAME] [" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_PHONE + "PHONE] [" + PREFIX_MEDICAL_HISTORY + "HISTORY] [" + PREFIX_NOTES + "NOTES]\n"
             + "Supply at least one non-blank value. Double quotes around values are optional.\n"
@@ -43,7 +47,9 @@ public class FindCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPatientList(predicate);
+        Comparator<Patient> comparator = Comparator.comparingInt(predicate::countMatchingFields).reversed()
+                .thenComparing(PatientNameComparator.PATIENT_NAME_ORDER);
+        model.updateFilteredPatientList(predicate, comparator);
         return new CommandResult(
                 String.format(Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW, model.getFilteredPatientList().size()));
     }
