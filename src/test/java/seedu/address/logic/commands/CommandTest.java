@@ -18,7 +18,7 @@ public class CommandTest {
     @Test
     public void getView_patientCommands_showPatients() {
         PatientContainsSubstringsPredicate predicate = new PatientContainsSubstringsPredicate(Optional.empty(),
-                Optional.of("Amy"), Optional.empty(), Optional.empty(), Optional.empty());
+                Optional.of("Amy"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
         for (Command command : List.of(new AddCommand(AMY), new EditCommand(AMY.getId(), new EditPatientDescriptor()),
                 new FindCommand(predicate), new ListCommand(), new ViewCommand(AMY.getId()))) {
             assertEquals(Optional.of(View.PATIENTS), command.getView(), command.toString());

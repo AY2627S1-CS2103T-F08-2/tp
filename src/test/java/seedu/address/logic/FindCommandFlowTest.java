@@ -23,6 +23,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
+import seedu.address.testutil.PatientBuilder;
 
 /**
  * Tests find commands from user input through patient-list filtering.
@@ -37,6 +38,28 @@ public class FindCommandFlowTest {
         assertEquals(List.of(ALICE, ELLE, FIONA), model.getFilteredPatientList());
         assertEquals(String.format(Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW, 3), result.getFeedbackToUser());
         assertEquals(getTypicalPatients(), model.getLaiNurse().getPatientList());
+    }
+
+    @Test
+    public void execute_notesAndName_uniquePatientsInOriginalOrder() throws Exception {
+        Patient aliceWithNotes = new PatientBuilder(ALICE).withNotes("Enjoys gardening").build();
+        Patient carlWithNotes = new PatientBuilder(CARL).withNotes("Walks every morning").build();
+        model.setPatient(ALICE, aliceWithNotes);
+        model.setPatient(CARL, carlWithNotes);
+        LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
+
+        execute("find --notes \"ENJOYS   GARDEN\"");
+        assertEquals(List.of(aliceWithNotes), model.getFilteredPatientList());
+
+        execute("find --notes morning --name Alice");
+        assertEquals(List.of(aliceWithNotes, carlWithNotes), model.getFilteredPatientList());
+
+        execute("find --notes gardening --name Alice");
+        assertEquals(List.of(aliceWithNotes), model.getFilteredPatientList());
+
+        execute("find --notes swimming");
+        assertEquals(List.of(), model.getFilteredPatientList());
+        assertEquals(expectedLaiNurse, model.getLaiNurse());
     }
 
     @Test
@@ -61,7 +84,9 @@ public class FindCommandFlowTest {
         List<Patient> expectedFilteredPatients = List.copyOf(model.getFilteredPatientList());
 
         for (String command : List.of("find", "find John", "find --name \"\"", "find --name Mary --unknown value",
-                "find --id 123 --id 456", "find --address “Marina Bay\"", "find --next-appointment 2026-10")) {
+                "find --id 123 --id 456", "find --address “Marina Bay\"", "find --next-appointment 2026-10",
+                "find --notes", "find --notes \"\"", "find --notes \"gardening",
+                "find --notes garden --notes walk")) {
             assertThrows(ParseException.class, () -> execute(command));
             assertEquals(expectedLaiNurse, model.getLaiNurse());
             assertEquals(expectedFilteredPatients, model.getFilteredPatientList());

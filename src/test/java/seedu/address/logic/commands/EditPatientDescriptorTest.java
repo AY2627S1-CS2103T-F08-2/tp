@@ -14,7 +14,9 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
+import seedu.address.model.patient.Notes;
 import seedu.address.testutil.EditPatientDescriptorBuilder;
+import seedu.address.testutil.PatientBuilder;
 
 public class EditPatientDescriptorTest {
 
@@ -52,6 +54,10 @@ public class EditPatientDescriptorTest {
         editedAmy = new EditPatientDescriptorBuilder(DESC_AMY).withMedicalHistory(VALID_MEDICAL_HISTORY_BOB).build();
         assertFalse(DESC_AMY.equals(editedAmy));
 
+        // different notes -> returns false
+        editedAmy = new EditPatientDescriptorBuilder(DESC_AMY).withNotes("Enjoys gardening").build();
+        assertFalse(DESC_AMY.equals(editedAmy));
+
         // different appointments to add -> returns false
         editedAmy = new EditPatientDescriptorBuilder(DESC_AMY).withAppointmentsToAdd(VALID_APPOINTMENT_BOB).build();
         assertFalse(DESC_AMY.equals(editedAmy));
@@ -62,13 +68,34 @@ public class EditPatientDescriptorTest {
     }
 
     @Test
+    public void notesOnlyDescriptor_isEditedAndCopied() {
+        EditPatientDescriptor original = new EditPatientDescriptorBuilder().withNotes("Enjoys gardening").build();
+        EditPatientDescriptor copy = new EditPatientDescriptor(original);
+        assertTrue(copy.isAnyFieldEdited());
+        assertEquals(original, copy);
+        assertEquals(new Notes("Enjoys gardening"), copy.getNotes().orElseThrow());
+
+        original.setNotes(new Notes("Walks every morning"));
+        assertEquals(new Notes("Enjoys gardening"), copy.getNotes().orElseThrow());
+        assertFalse(original.equals(copy));
+    }
+
+    @Test
+    public void builderFromPatient_copiesNotes() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder(
+                new PatientBuilder().withNotes("Enjoys gardening").build()).build();
+        assertEquals(new Notes("Enjoys gardening"), descriptor.getNotes().orElseThrow());
+    }
+
+    @Test
     public void toStringMethod() {
         EditPatientDescriptor editPatientDescriptor = new EditPatientDescriptor();
         String expected = EditPatientDescriptor.class.getCanonicalName() + "{name="
                 + editPatientDescriptor.getName().orElse(null) + ", phone="
                 + editPatientDescriptor.getPhone().orElse(null) + ", address="
                 + editPatientDescriptor.getAddress().orElse(null) + ", medicalHistory="
-                + editPatientDescriptor.getMedicalHistory().orElse(null) + ", appointmentsToAdd="
+                + editPatientDescriptor.getMedicalHistory().orElse(null) + ", notes="
+                + editPatientDescriptor.getNotes().orElse(null) + ", appointmentsToAdd="
                 + editPatientDescriptor.getAppointmentsToAdd() + ", appointmentsToRemove="
                 + editPatientDescriptor.getAppointmentsToRemove() + "}";
         assertEquals(expected, editPatientDescriptor.toString());

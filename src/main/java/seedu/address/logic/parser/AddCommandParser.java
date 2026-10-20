@@ -6,6 +6,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import java.util.Optional;
@@ -17,6 +18,7 @@ import seedu.address.model.patient.Address;
 import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
@@ -35,10 +37,11 @@ public class AddCommandParser implements Parser<AddCommand> {
     public AddCommand parse(String args) throws ParseException {
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
                 String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE),
-                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_APPOINTMENT);
+                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES,
+                PREFIX_APPOINTMENT);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                        PREFIX_MEDICAL_HISTORY, PREFIX_APPOINTMENT);
+                        PREFIX_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_APPOINTMENT);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS)
                 || !argMultimap.getPreamble().isEmpty()) {
@@ -47,7 +50,7 @@ public class AddCommandParser implements Parser<AddCommand> {
 
         // An appointment may be given more than once, so it is not checked for duplicates
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                PREFIX_MEDICAL_HISTORY);
+                PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
         PatientId id = ParserUtil.parseId(argMultimap.getValue(PREFIX_ID).get());
         Name name = ParserUtil.parseName(argMultimap.getValue(PREFIX_NAME).get());
         Phone phone = ParserUtil.parsePhone(argMultimap.getValue(PREFIX_PHONE).get());
@@ -57,12 +60,14 @@ public class AddCommandParser implements Parser<AddCommand> {
                 argMultimap.getValue(PREFIX_MEDICAL_HISTORY).isPresent()
                 ? ParserUtil.parseMedicalHistory(argMultimap.getValue(PREFIX_MEDICAL_HISTORY).get())
                 : null;
+        Notes notes = argMultimap.getValue(PREFIX_NOTES).isPresent()
+                ? ParserUtil.parseNotes(argMultimap.getValue(PREFIX_NOTES).get())
+                : null;
         AppointmentSchedule appointments =
                 ParserUtil.parseAppointments(argMultimap.getAllValues(PREFIX_APPOINTMENT));
 
-        // add has no option for notes yet, so a new patient starts without them
-        Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory), Optional.empty(),
-                appointments);
+        Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory),
+                Optional.ofNullable(notes), appointments);
 
         return new AddCommand(patient);
     }

@@ -53,6 +53,7 @@ public class Messages {
                 .append("; Address: ")
                 .append(patient.getAddress());
         patient.getMedicalHistory().ifPresent(history -> builder.append("; Medical History: ").append(history));
+        patient.getNotes().ifPresent(notes -> builder.append("; Notes: ").append(notes));
         if (!patient.getSchedule().isEmpty()) {
             builder.append("; Appointments: ").append(patient.getSchedule());
         }

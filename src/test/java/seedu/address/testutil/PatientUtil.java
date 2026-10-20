@@ -6,6 +6,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_REMOVE_APPOINTMENT;
 
@@ -37,6 +38,7 @@ public class PatientUtil {
         if (patient.getMedicalHistory().isPresent()) {
             sb.append(PREFIX_MEDICAL_HISTORY + patient.getMedicalHistory().get().value + " ");
         }
+        patient.getNotes().ifPresent(notes -> sb.append(PREFIX_NOTES).append(notes.value).append(" "));
         patient.getSchedule().asList().forEach(appointment ->
                 sb.append(PREFIX_APPOINTMENT + appointment.value + " "));
         return sb.toString();
@@ -52,6 +54,7 @@ public class PatientUtil {
         descriptor.getAddress().ifPresent(address -> sb.append(PREFIX_ADDRESS).append(address.value).append(" "));
         descriptor.getMedicalHistory().ifPresent(medicalHistory ->
                 sb.append(PREFIX_MEDICAL_HISTORY).append(medicalHistory.value).append(" "));
+        descriptor.getNotes().ifPresent(notes -> sb.append(PREFIX_NOTES).append(notes.value).append(" "));
         descriptor.getAppointmentsToAdd().asList().forEach(appointment ->
                 sb.append(PREFIX_ADD_APPOINTMENT).append(appointment.value).append(" "));
         descriptor.getAppointmentsToRemove().asList().forEach(appointment ->
