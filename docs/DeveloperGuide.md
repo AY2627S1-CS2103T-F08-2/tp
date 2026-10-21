@@ -450,7 +450,8 @@ details, validated by `ParserUtil.parseAppointmentDetails`. `AddAppointmentComma
 only the first appointment at each date and time, so without that check, adding onto an existing slot would silently
 replace nothing and lose the new appointment. The check makes the duplicate slot a `CommandException` instead. The
 command then replaces the patient through `Model#setPatient()` with a schedule that has the appointment added, and
-selects it with `Navigation.toAppointment`, as `editappt` does for the edited one.
+selects it with `Navigation.toAppointment`, as `editappt` does for the edited one. `Model#setPatient()` does not
+change the find filter, only `add` and `list` do, so a patient hidden by `find` stays hidden in the patient list.
 
 ### Viewing appointments by date
 

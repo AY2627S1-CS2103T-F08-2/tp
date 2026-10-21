@@ -292,7 +292,7 @@ Adds an appointment to a patient's schedule.
 
 Format: `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`
 
-* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
+* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown — even under a `find` filter, which stays: the patient may still be hidden when you return to the Patients view.
 * `--appt` gives the date, or date and time, of the new appointment, in the same format as in [`add`](#adding-a-patient-add). Past dates are accepted.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * The options may appear in any order after the ID, each at most once.
