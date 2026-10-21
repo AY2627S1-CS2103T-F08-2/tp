@@ -34,7 +34,7 @@ public class AddAppointmentCommand extends Command {
             + PREFIX_APPOINTMENT + "DATE_OR_DATETIME "
             + "[" + PREFIX_DETAILS + "DETAILS]\n"
             + "Example: " + COMMAND_WORD + " S1234567A "
-            + PREFIX_APPOINTMENT + "2026-10-05 09:30 "
+            + PREFIX_APPOINTMENT + "2026-12-01 10:00 "
             + PREFIX_DETAILS + "Bring insulin pen";
 
     public static final String MESSAGE_ADD_APPOINTMENT_SUCCESS = "Added appointment of %1$s (%2$s): %3$s";

@@ -403,7 +403,7 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 Action | Format, Examples
 --------|-----------------
 **Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening --appt 2026-11-30 09:00`
-**AddAppt** | `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --appt 2026-10-05 09:30 --details Bring insulin pen`
+**AddAppt** | `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --appt 2026-12-01 10:00 --details Bring insulin pen`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --notes Walks every morning --add-appt 2026-12-01 10:00`

@@ -48,8 +48,7 @@ public class AddAppointmentCommandParser implements Parser<AddAppointmentCommand
         Optional<AppointmentDetails> details = argMultimap.getValue(PREFIX_DETAILS).isPresent()
                 ? Optional.of(ParserUtil.parseAppointmentDetails(argMultimap.getValue(PREFIX_DETAILS).get()))
                 : Optional.empty();
-        Appointment toAdd = details.isEmpty() ? appointment
-                : new Appointment(appointment.toString(), details);
+        Appointment toAdd = new Appointment(appointment.toString(), details);
 
         return new AddAppointmentCommand(id, toAdd);
     }

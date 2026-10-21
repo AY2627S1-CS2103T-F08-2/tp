@@ -83,10 +83,12 @@ public class AddAppointmentCommandTest {
 
     @Test
     public void execute_duplicateSlot_failure() {
-        AddAppointmentCommand command =
-                new AddAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT);
-        assertCommandFailure(command, model,
-                String.format(AddAppointmentCommand.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(), "2026-10-05 09:30"));
+        String expectedMessage = String.format(AddAppointmentCommand.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(),
+                "2026-10-05 09:30");
+        assertCommandFailure(new AddAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT), model, expectedMessage);
+        // the slot is taken whatever the details of the new appointment
+        assertCommandFailure(new AddAppointmentCommand(BENSON.getId(),
+                new Appointment("2026-10-05 09:30", Optional.of(DETAILS))), model, expectedMessage);
     }
 
     @Test
