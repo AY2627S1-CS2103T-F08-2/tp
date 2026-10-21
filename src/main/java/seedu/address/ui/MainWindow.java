@@ -392,20 +392,25 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Resets the current view: shows all patients, as the {@code list} command does, or goes back from the
-     * appointments of a range to the weekly view, and from the weekly view to this week.
+     * Resets the current view, as Esc does, and keeps the selected entry so that it is seen among the rest. In the
+     * patient view, shows all patients, as the {@code list} command does. In the appointment view, goes back from
+     * the appointments of a range to the weekly view of the selected appointment's week.
      */
     private void resetView() {
         if (shownView == View.APPOINTMENTS) {
             appointmentListPanel.reset();
             return;
         }
+        Optional<PatientId> selected = patientDetailPanel.getShownId();
         try {
             executeCommand(ListCommand.COMMAND_WORD);
         } catch (CommandException | ParseException e) {
             // executeCommand has already shown the error to the user
             logger.warning("Showing all patients failed: " + e.getMessage());
         }
+        // list selects the first patient, but Esc is not a command, so it keeps the patient already selected
+        selected.ifPresentOrElse(patientDetailPanel::show, patientDetailPanel::clear);
+        selected.ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
     }
 
     /**
@@ -576,9 +581,12 @@ public class MainWindow extends UiPart<Stage> {
             commandResult.getView().ifPresent(this::showView);
             commandResult.getAppointmentRange().ifPresent(appointmentListPanel::showRange);
 
-            commandResult.getPatientToView().ifPresent(patientDetailPanel::show);
             commandResult.getNavigation().ifPresent(navigation ->
                     navigate(navigation, commandResult.getAppointmentRange()));
+            if (commandResult.isSelectionCleared()) {
+                patientDetailPanel.clear();
+                appointmentListPanel.selectNothing();
+            }
             // Removing or filtering rows can move the list's selection to another patient, so match it to the panel.
             patientDetailPanel.getShownId().ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
 

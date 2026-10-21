@@ -21,6 +21,9 @@ public class Messages {
             "%1$d patient(s) with appointments from %2$s to %3$s";
     public static final String MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW =
             "%1$d patient(s) with appointments on or after %2$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW =
+            "%1$d patient(s) with appointments this week, from %2$s to %3$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW = "%1$d appointment(s) of %2$s";
     public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_LISTED_OVERVIEW =
             "%1$d appointment(s) of %2$s on %3$s";
     public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW =

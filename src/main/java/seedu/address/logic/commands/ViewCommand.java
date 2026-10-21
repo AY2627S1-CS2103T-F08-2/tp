@@ -1,26 +1,28 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 
 import java.util.List;
 import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 
 /**
- * Shows the details of the patient with the given ID.
+ * Shows all patients, and selects the patient with the given ID to show their details.
  */
 public class ViewCommand extends Command {
 
     public static final String COMMAND_WORD = "view";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Shows the details of the patient with the given ID.\n"
+            + ": Shows all patients, and the details of the patient with the given ID.\n"
             + "Parameters: ID\n"
             + "Example: " + COMMAND_WORD + " S1234567A";
 
@@ -43,8 +45,10 @@ public class ViewCommand extends Command {
 
         Patient patientToView = listAllPatients.stream().filter(patient -> patient.getId().equals(targetId))
                 .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
+        // All patients, so that the patient's row is in the list to select
+        model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
         return new CommandResult(String.format(MESSAGE_VIEW_PATIENT_SUCCESS, patientToView.getName(),
-                patientToView.getId()), patientToView.getId());
+                patientToView.getId())).withNavigation(Navigation.toPatient(patientToView.getId()));
     }
 
     @Override

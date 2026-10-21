@@ -54,15 +54,11 @@ public class CommandResultTest {
         // different exit value -> returns false
         assertFalse(commandResult.equals(new CommandResult("feedback", false, true)));
 
-        // patient to view only in one -> returns false
-        assertFalse(commandResult.equals(new CommandResult("feedback", new PatientId("S1234567A"))));
+        // selection cleared only in one -> returns false
+        assertFalse(commandResult.equals(commandResult.withSelectionCleared()));
 
-        // same patient to view -> returns true
-        CommandResult viewResult = new CommandResult("feedback", new PatientId("S1234567A"));
-        assertTrue(viewResult.equals(new CommandResult("feedback", new PatientId("S1234567A"))));
-
-        // different patient to view -> returns false
-        assertFalse(viewResult.equals(new CommandResult("feedback", new PatientId("S2345678B"))));
+        // both clear the selection -> returns true
+        assertTrue(commandResult.withSelectionCleared().equals(new CommandResult("feedback").withSelectionCleared()));
     }
 
     @Test
@@ -81,35 +77,44 @@ public class CommandResultTest {
         // different exit value -> returns different hashcode
         assertNotEquals(commandResult.hashCode(), new CommandResult("feedback", false, true).hashCode());
 
-        // same patient to view -> returns same hashcode
-        assertEquals(new CommandResult("feedback", new PatientId("S1234567A")).hashCode(),
-                new CommandResult("feedback", new PatientId("S1234567A")).hashCode());
+        // both clear the selection -> returns same hashcode
+        assertEquals(commandResult.withSelectionCleared().hashCode(),
+                new CommandResult("feedback").withSelectionCleared().hashCode());
 
-        // different patient to view -> returns different hashcode
-        assertNotEquals(new CommandResult("feedback", new PatientId("S1234567A")).hashCode(),
-                new CommandResult("feedback", new PatientId("S2345678B")).hashCode());
+        // selection cleared only in one -> returns different hashcode
+        assertNotEquals(commandResult.hashCode(), commandResult.withSelectionCleared().hashCode());
     }
 
     @Test
-    public void getPatientToView() {
-        assertEquals(Optional.empty(), new CommandResult("feedback").getPatientToView());
-        assertEquals(Optional.empty(), new CommandResult("feedback", true, false).getPatientToView());
-        assertEquals(Optional.of(new PatientId("S1234567A")),
-                new CommandResult("feedback", new PatientId("S1234567A")).getPatientToView());
+    public void withSelectionCleared_clearsOnlyTheSelection() {
+        CommandResult result = new CommandResult("feedback", RANGE).withView(View.APPOINTMENTS);
+        CommandResult cleared = result.withSelectionCleared();
+
+        assertFalse(result.isSelectionCleared());
+        assertTrue(cleared.isSelectionCleared());
+        assertEquals(result.getView(), cleared.getView());
+        assertEquals(result.getAppointmentRange(), cleared.getAppointmentRange());
+        assertEquals(result.getFeedbackToUser(), cleared.getFeedbackToUser());
+        // LogicManager adds the command's view after the command, which must keep the cleared selection
+        assertTrue(new CommandResult("feedback").withSelectionCleared().withView(View.PATIENTS).isSelectionCleared());
     }
 
     @Test
-    public void constructor_nullPatientToView_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new CommandResult("feedback", (PatientId) null));
+    public void withSelectionCleared_withNavigation_throwsIllegalArgumentException() {
+        CommandResult navigated = new CommandResult("feedback").withNavigation(Navigation.toView(View.PATIENTS));
+        assertThrows(IllegalArgumentException.class, navigated::withSelectionCleared);
+
+        CommandResult cleared = new CommandResult("feedback").withSelectionCleared();
+        assertThrows(IllegalArgumentException.class, () -> cleared.withNavigation(Navigation.toView(View.PATIENTS)));
     }
 
     @Test
     public void withView_setsViewAndKeepsOtherFields() {
-        CommandResult viewResult = new CommandResult("feedback", new PatientId("S1234567A"));
+        CommandResult viewResult = new CommandResult("feedback", RANGE);
         CommandResult withView = viewResult.withView(View.PATIENTS);
 
         assertEquals(Optional.of(View.PATIENTS), withView.getView());
-        assertEquals(viewResult.getPatientToView(), withView.getPatientToView());
+        assertEquals(viewResult.getAppointmentRange(), withView.getAppointmentRange());
         assertEquals(viewResult.getFeedbackToUser(), withView.getFeedbackToUser());
         // the original is unchanged
         assertEquals(Optional.empty(), viewResult.getView());
@@ -254,27 +259,27 @@ public class CommandResultTest {
     public void toStringMethod() {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName()
-                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null, view=null, "
-                + "appointmentRange=null, navigation=null}";
+                + "{feedbackToUser=feedback, showHelp=false, exit=false, view=null, "
+                + "appointmentRange=null, navigation=null, isSelectionCleared=false}";
         assertEquals(expected, commandResult.toString());
 
-        CommandResult viewResult = new CommandResult("feedback", new PatientId("S1234567A")).withView(View.PATIENTS);
+        CommandResult viewResult = new CommandResult("feedback").withSelectionCleared().withView(View.PATIENTS);
         String expectedView = CommandResult.class.getCanonicalName()
-                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=S1234567A, view=PATIENTS, "
-                + "appointmentRange=null, navigation=null}";
+                + "{feedbackToUser=feedback, showHelp=false, exit=false, view=PATIENTS, "
+                + "appointmentRange=null, navigation=null, isSelectionCleared=true}";
         assertEquals(expectedView, viewResult.toString());
 
         CommandResult appointmentResult = new CommandResult("feedback", RANGE);
         String expectedAppointment = CommandResult.class.getCanonicalName()
-                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null, view=null, "
-                + "appointmentRange=" + RANGE + ", navigation=null}";
+                + "{feedbackToUser=feedback, showHelp=false, exit=false, view=null, "
+                + "appointmentRange=" + RANGE + ", navigation=null, isSelectionCleared=false}";
         assertEquals(expectedAppointment, appointmentResult.toString());
 
         Navigation navigation = Navigation.toView(View.PATIENTS);
         CommandResult navigationResult = new CommandResult("feedback").withNavigation(navigation);
         String expectedNavigation = CommandResult.class.getCanonicalName()
-                + "{feedbackToUser=feedback, showHelp=false, exit=false, patientToView=null, view=PATIENTS, "
-                + "appointmentRange=null, navigation=" + navigation + "}";
+                + "{feedbackToUser=feedback, showHelp=false, exit=false, view=PATIENTS, "
+                + "appointmentRange=null, navigation=" + navigation + ", isSelectionCleared=false}";
         assertEquals(expectedNavigation, navigationResult.toString());
     }
 
