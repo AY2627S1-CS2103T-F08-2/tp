@@ -97,6 +97,13 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_notesSpecified_success() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withNotes("Enjoys gardening").build();
+        Patient editedPatient = new PatientBuilder(BENSON).withNotes("Enjoys gardening").build();
+        assertEditSuccess(BENSON, descriptor, editedPatient);
+    }
+
+    @Test
     public void execute_addAppointments_success() {
         // BENSON already has an appointment on 2026-10-05 09:30
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()

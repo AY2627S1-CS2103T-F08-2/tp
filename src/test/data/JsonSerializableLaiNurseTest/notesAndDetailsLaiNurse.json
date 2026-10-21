@@ -1,6 +1,6 @@
 {
   "_comment": "LaiNurse save file with notes and appointment details, saved as this version saves them, and with appointments saved as plain strings, as earlier versions save them",
-  "persons" : [ {
+  "patients" : [ {
     "id" : "S1234567A",
     "name" : "ALEX YEOH",
     "phone" : "87438807",

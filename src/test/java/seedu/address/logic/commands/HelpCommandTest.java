@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.Model;
@@ -28,6 +30,13 @@ public class HelpCommandTest {
     }
 
     @Test
+    public void execute_notesCommandsHelp_includesNotesOption() {
+        for (String commandWord : List.of("add", "edit", "find")) {
+            assertTrue(new HelpCommand(commandWord).execute(model).getFeedbackToUser().contains("--notes NOTES"));
+        }
+    }
+
+    @Test
     public void execute_helpValidTargetDelete_showsDeleteUsage() {
         CommandResult expectedResult = new CommandResult(DeleteCommand.MESSAGE_USAGE);
         assertCommandSuccess(new HelpCommand("delete"), model, expectedResult, expectedModel);
@@ -40,6 +49,12 @@ public class HelpCommandTest {
     }
 
     @Test
+    public void execute_helpValidTargetHelp_showsHelpUsage() {
+        CommandResult expectedResult = new CommandResult(HelpCommand.MESSAGE_USAGE);
+        assertCommandSuccess(new HelpCommand("help"), model, expectedResult, expectedModel);
+    }
+
+    @Test
     public void execute_helpWindowFlag_opensHelpWindow() throws Exception {
         CommandResult result = new HelpCommand("window").execute(model);
         assertTrue(result.isShowHelp());
@@ -48,18 +63,18 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void execute_helpUnknownTarget_success() {
-        String invalidTarget = "nonexistent";
-        String expectedMessage = String.format(HelpCommand.MESSAGE_UNKNOWN_HELP_TARGET, invalidTarget);
-        CommandResult expectedCommandResult = new CommandResult(expectedMessage);
-        assertCommandSuccess(new HelpCommand(invalidTarget), model, expectedCommandResult, model);
-    }
-
-    @Test
     public void execute_allCommandsPresentInSummary() {
         for (String commandWord : HelpCommand.COMMAND_USAGE_MAP.keySet()) {
             assertTrue(HelpCommand.SHOWING_HELP_SUMMARY.contains(commandWord));
         }
+    }
+
+    @Test
+    public void execute_invalidHelpArgumentMessageListsAllTargets() {
+        for (String commandWord : HelpCommand.COMMAND_USAGE_MAP.keySet()) {
+            assertTrue(HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT.contains(commandWord));
+        }
+        assertTrue(HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT.contains("window"));
     }
 
     @Test

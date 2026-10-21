@@ -1,0 +1,283 @@
+package seedu.address.ui;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import seedu.address.commons.util.HelpBookUtil;
+
+public class MarkdownRendererTest {
+
+    /**
+     * Label and Hyperlink are JavaFX controls that require the toolkit to be initialized on
+     * JavaFX 25, unlike scene-graph primitives such as Text and TextFlow.
+     */
+    @BeforeAll
+    static void initJavaFxToolkit() {
+        try {
+            Platform.startup(() -> { });
+        } catch (IllegalStateException alreadyRunning) {
+            // Toolkit was already initialized by another test class
+        }
+    }
+
+    @Test
+    public void render_bundledUserGuide_rendersStructuredContentWithoutRawMarkdown() throws Exception {
+        VBox rendered = MarkdownRenderer.render(HelpBookUtil.getBundledUserGuide());
+
+        assertFalse(rendered.getChildren().isEmpty());
+        assertTrue(hasHeading(rendered));
+        assertTrue(hasTable(rendered));
+        assertFalse(hyperlinks(rendered).isEmpty());
+
+        // Raw markdown must never leak into visible text, whatever the guide currently contains
+        String visible = visibleText(rendered);
+        assertFalse(visible.contains("!["));
+        assertFalse(visible.contains("<br"));
+        assertFalse(visible.contains("`"));
+        assertFalse(visible.contains("**"));
+        assertTrue(visible.contains("help window"));
+    }
+
+    @Test
+    public void render_frontmatterAndTableOfContents_areSkipped() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "---",
+                "layout: UG",
+                "---",
+                "# LaiNurse User Guide",
+                "Table of Contents",
+                "* Table of Contents",
+                "Real content here."));
+
+        List<String> visibleLines = List.of(visibleText(rendered).split("\n"));
+        assertTrue(visibleLines.contains("LaiNurse User Guide"));
+        assertTrue(visibleLines.contains("Real content here."));
+        assertTrue(visibleLines.stream().noneMatch(line ->
+                line.contains("layout: UG") || line.equalsIgnoreCase("Table of Contents")));
+    }
+
+    @Test
+    public void render_headings_becomeStyledLabels() {
+        VBox rendered = MarkdownRenderer.render("# LaiNurse\n## Features\n### Adding a patient\nBody");
+
+        List<Label> labels = labels(rendered);
+        assertEquals(3, labels.size());
+        assertEquals("LaiNurse", labels.get(0).getText());
+        assertEquals("Features", labels.get(1).getText());
+        assertEquals("Adding a patient", labels.get(2).getText());
+    }
+
+    @Test
+    public void render_plainLines_mergeIntoSingleParagraph() {
+        VBox rendered = MarkdownRenderer.render("Line one.\nLine two.");
+
+        assertEquals(1, rendered.getChildren().size());
+        assertTrue(rendered.getChildren().get(0) instanceof TextFlow);
+    }
+
+    @Test
+    public void render_standaloneImage_rendersPlaceholderInsteadOfRawMarkdown() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n\n",
+                "A GUI similar to the one below should appear.",
+                "![Ui](images/Ui.png)",
+                "Next section."));
+
+        String visible = visibleText(rendered);
+        assertTrue(visible.contains("Image omitted from the offline guide"));
+        assertTrue(visible.contains("'Ui'"));
+        assertTrue(visible.contains("Copy URL"));
+        assertFalse(visible.contains("!["));
+        assertFalse(visible.contains("images/Ui.png"));
+    }
+
+    @Test
+    public void render_standaloneImageWithoutAltText_fallsBackToScreenshot() {
+        VBox rendered = MarkdownRenderer.render("![](images/Ui.png)");
+
+        assertTrue(visibleText(rendered).contains("'screenshot'"));
+    }
+
+    @Test
+    public void render_inlineImage_substitutedAsPlainText() {
+        VBox rendered = MarkdownRenderer.render("See ![Ui](images/Ui.png) above for the screenshot.");
+
+        assertEquals(0, hyperlinks(rendered).size()); // inline image must not create any hyperlink
+        String visible = visibleText(rendered);
+        assertTrue(visible.contains("(image: Ui)"));
+        assertFalse(visible.contains("["));
+        assertFalse(visible.contains("!["));
+    }
+
+    @Test
+    public void render_inlineImageBeforeLink_linkKeepsItsOwnLabel() {
+        VBox rendered = MarkdownRenderer.render("See ![Ui](images/Ui.png) and get it [here](https://example.com).");
+
+        // The substituted text must not merge with the following link into one hyperlink
+        List<Hyperlink> links = hyperlinks(rendered);
+        assertEquals(1, links.size());
+        assertEquals("here", links.get(0).getText());
+        assertTrue(visibleText(rendered).contains("(image: Ui)"));
+    }
+
+    @Test
+    public void render_textImmediatelyBeforeImage_keepsSourceOrder() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "The weekly view looks like this:",
+                "![Weekly view](images/AppointmentView.png)"));
+
+        assertEquals(2, rendered.getChildren().size());
+        Parent first = (Parent) rendered.getChildren().get(0);
+        Parent second = (Parent) rendered.getChildren().get(1);
+        assertTrue(visibleText(first).contains("The weekly view looks like this:"));
+        assertTrue(visibleText(second).contains("Image omitted from the offline guide"));
+        assertFalse(visibleText(second).contains("The weekly view"));
+    }
+
+    @Test
+    public void render_httpLink_rendersAsHyperlink() {
+        VBox rendered = MarkdownRenderer.render("Download it [here](https://example.com/releases) first.");
+
+        List<Hyperlink> links = hyperlinks(rendered);
+        assertEquals(1, links.size());
+        assertEquals("here", links.get(0).getText());
+    }
+
+    @Test
+    public void render_internalLink_rendersAsPlainText() {
+        VBox rendered = MarkdownRenderer.render("See [Ui](images/Ui.png) picture.");
+
+        assertEquals(0, hyperlinks(rendered).size());
+        assertTrue(visibleText(rendered).contains("Ui"));
+    }
+
+    @Test
+    public void render_internalLinkWithCodeSpanLabel_stripsBackticks() {
+        VBox rendered = MarkdownRenderer.render("Use [`add`](#adding-a-patient-add) to add a patient.");
+
+        assertEquals(0, hyperlinks(rendered).size());
+        String visible = visibleText(rendered);
+        assertTrue(visible.contains("add"));
+        assertFalse(visible.contains("`"));
+    }
+
+    @Test
+    public void render_inlineStyles_renderWithoutRawMarkdown() {
+        VBox rendered = MarkdownRenderer.render("Press <kbd>F1</kbd> or **Help** > **Help**, then `help add`.");
+
+        String visible = visibleText(rendered);
+        assertTrue(visible.contains("[F1]"));
+        assertTrue(visible.contains("Help"));
+        assertTrue(visible.contains("help add"));
+        assertFalse(visible.contains("<kbd>"));
+        assertFalse(visible.contains("**"));
+        assertFalse(visible.contains("`"));
+    }
+
+    @Test
+    public void render_calloutEmojiCluster_collapsesToBadge() {
+        VBox rendered = MarkdownRenderer.render("[:exclamation:] **Caution:** Data may be lost.");
+
+        String visible = visibleText(rendered);
+        assertTrue(visible.contains("Caution:"));
+        assertTrue(visible.contains("Data may be lost."));
+        assertFalse(visible.contains(":exclamation:"));
+    }
+
+    @Test
+    public void render_table_rendersAsGridPaneWithAllCells() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "Action | Format",
+                "-------|-------",
+                "**Add** | `add --id ID`",
+                "**Exit** | `exit`"));
+
+        List<GridPane> tables = tables(rendered);
+        assertEquals(1, tables.size());
+        // Header plus two data rows, two columns each
+        assertEquals(6, tables.get(0).getChildren().size());
+    }
+
+    private static void collectNodes(Node node, List<Node> out) {
+        out.add(node);
+        if (node instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                collectNodes(child, out);
+            }
+        }
+    }
+
+    private static List<Node> descendants(Node root) {
+        List<Node> nodes = new ArrayList<>();
+        collectNodes(root, nodes);
+        return nodes;
+    }
+
+    private static String visibleText(Parent root) {
+        StringBuilder text = new StringBuilder();
+        for (Node node : descendants(root)) {
+            if (node instanceof Label label) {
+                text.append(label.getText()).append('\n');
+            } else if (node instanceof Hyperlink hyperlink) {
+                text.append(hyperlink.getText()).append('\n');
+            } else if (node instanceof Text textNode) {
+                text.append(textNode.getText()).append('\n');
+            }
+        }
+        return text.toString();
+    }
+
+    private static boolean hasHeading(VBox rendered) {
+        return descendants(rendered).stream().anyMatch(node -> node instanceof Label label
+                && label.getStyle().contains("-fx-font-weight: bold"));
+    }
+
+    private static boolean hasTable(VBox rendered) {
+        return !tables(rendered).isEmpty();
+    }
+
+    private static List<GridPane> tables(VBox rendered) {
+        List<GridPane> tables = new ArrayList<>();
+        for (Node node : descendants(rendered)) {
+            if (node instanceof GridPane grid) {
+                tables.add(grid);
+            }
+        }
+        return tables;
+    }
+
+    private static List<Hyperlink> hyperlinks(VBox rendered) {
+        List<Hyperlink> links = new ArrayList<>();
+        for (Node node : descendants(rendered)) {
+            if (node instanceof Hyperlink hyperlink) {
+                links.add(hyperlink);
+            }
+        }
+        return links;
+    }
+
+    private static List<Label> labels(VBox rendered) {
+        List<Label> labels = new ArrayList<>();
+        for (Node node : descendants(rendered)) {
+            if (node instanceof Label label) {
+                labels.add(label);
+            }
+        }
+        return labels;
+    }
+}

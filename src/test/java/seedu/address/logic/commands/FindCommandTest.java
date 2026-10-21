@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.CARL;
 import static seedu.address.testutil.TypicalPatients.ELLE;
 import static seedu.address.testutil.TypicalPatients.FIONA;
@@ -26,6 +27,17 @@ import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 public class FindCommandTest {
     private Model model = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
     private Model expectedModel = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
+
+    @Test
+    public void constructor_nullPredicate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new FindCommand(null));
+    }
+
+    @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        FindCommand command = new FindCommand(prepareNamePredicate("Alice"));
+        assertThrows(NullPointerException.class, () -> command.execute(null));
+    }
 
     @Test
     public void equals() {
@@ -66,7 +78,7 @@ public class FindCommandTest {
     public void execute_multipleFields_multiplePatientsFound() {
         String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 3);
         PatientContainsSubstringsPredicate predicate = new PatientContainsSubstringsPredicate(Optional.of("3456789"),
-                Optional.of("Elle"), Optional.empty(), Optional.of("tokyo"), Optional.empty());
+                Optional.of("Elle"), Optional.empty(), Optional.of("tokyo"), Optional.empty(), Optional.empty());
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPatientList(predicate);
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
@@ -86,6 +98,6 @@ public class FindCommandTest {
      */
     private PatientContainsSubstringsPredicate prepareNamePredicate(String substring) {
         return new PatientContainsSubstringsPredicate(Optional.empty(), Optional.of(substring), Optional.empty(),
-                Optional.empty(), Optional.empty());
+                Optional.empty(), Optional.empty(), Optional.empty());
     }
 }

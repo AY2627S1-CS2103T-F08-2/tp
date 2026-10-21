@@ -110,10 +110,11 @@ In each view, `MainWindow#shareWidth` splits the width between the list and the 
 together as the window is resized. Up to a window about 1,000 pixels wide, each takes half. In a wider window, the
 list's share falls steadily, to 28% in a window 1,920 pixels wide, a full HD screen, and stays there in a wider one, so
 that the details take most of the extra room. The list itself never gets narrower as the window gets wider. The window
-can be no narrower than both at their minimum widths. In a narrow list header, the hint and the count give up their room
-before the dates do. With room, `PatientDetailPanel` shows each appointment's date, time and details side by side, with
-the same widths in every row, so that they line up. In narrow details, it puts the details under the time, shrinks the
-dates of all rows together and lets the times wrap, so that the times stay in line and no row is wider than the panel.
+can be no narrower than both at their minimum widths. In a narrow list header, the note, such as `This week`, and the
+count give up their room before the dates do. With room, `PatientDetailPanel` shows each appointment's date, time and
+details side by side, with the same widths in every row, so that they line up. In narrow details, it puts the details
+under the time, shrinks the dates of all rows together and lets the times wrap, so that the times stay in line and no
+row is wider than the panel.
 
 `PatientListPanel` shows each patient in the filtered list as a `PatientRow`, with their next appointment, and its
 `PatientDetailPanel` shows all the details of one patient. Above the rows, a header says whether the list is filtered,
@@ -192,6 +193,14 @@ Shift+Down and typed text do there:
 * Shift+Tab does nothing, also in the command box. `MainWindow` consumes it, or JavaFX would move the focus to another
   node.
 
+The menu bar must not take these keys. JavaFX's `MenuBar` selects a menu that the mouse is over, in a focused window,
+and while a menu is selected, a key filter that it adds to the scene takes Left and Right to move between the menus.
+That filter runs before the filters on the tabs and the lists, and the menu stays selected after the mouse has left,
+until a click outside the menu bar. So `MainWindow#ignoreHoverOfClosedMenus` stops the mouse-entered events of the
+menus while no menu is open. As JavaFX then sets no `:hover`, it gives the menu under the mouse the `hovered`
+pseudo-class, which `DarkTheme.css` styles as Modena styles `:hover`. A click still opens a menu, and an open menu
+still follows the mouse to the next one.
+
 `FocusArea`, `BrowseKeys`, `AppointmentWeek`, `AppointmentPage`, `DetailAppointments` and `AppointmentFormatter` hold
 no JavaFX nodes, so unit tests cover these rules, and the UI parts only connect them to JavaFX.
 
@@ -269,7 +278,10 @@ The `Model` component,
 * stores the LaiNurse data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
 * stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It
   exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates
-  when the list changes.
+  when the list changes. The filtered list is in name order: `ModelManager` keeps a `SortedList` with
+  `PatientNameComparator`, which compares by name ignoring case and then by patient ID, between the patient list and
+  the filter. A second `SortedList` over the filter orders the results when a command gives a comparator, such as by
+  the number of fields matched by `find`. The stored patient order is unchanged.
 * keeps a list of every appointment of every patient, each as a `PatientAppointment`, in time order. It rebuilds the
   list whenever a patient is added, edited or deleted, and exposes it as an unmodifiable
   `ObservableList<PatientAppointment>` for the appointment view. The filter on the patient list does not change it.
@@ -312,24 +324,29 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Finding patients by substrings
 
-`FindCommandParser` recognizes the five patient-detail options defined in `CliSyntax`: ID, name, phone number, address
-and medical history. It normalizes option separators
-using the same approach as `add`, then reuses `ArgumentTokenizer` and `ArgumentMultimap` to extract values and reject
+`FindCommandParser` recognizes the six patient-detail options defined in `CliSyntax`: ID, name, phone number, address,
+medical history and notes. It reuses `ArgumentTokenizer.normalizeOptionSeparators`, as `add` and `edit` do,
+then uses `ArgumentTokenizer` and `ArgumentMultimap` to extract values and reject
 duplicate options. At least one option is required, and every supplied value must be non-blank. Matching straight or
 curly double quotes surrounding a complete value are removed. Unknown options, unexpected preamble text, and malformed
 quotes cause a `ParseException` before the displayed list is changed. Words beginning with `--` remain reserved for
 options, including inside quoted values.
 
-`PatientContainsSubstringsPredicate` stores five optional string criteria normalized by `TextNormalizer`. Each criterion
-is a literal, contiguous substring of its corresponding stored field. The criteria combine using OR, so a patient is
-included if any supplied criterion matches. Missing medical history contributes no match for that field. Phone criteria
-are substrings rather than complete phone numbers, so the parser does not apply the validation used when adding a
-patient. `find` does not search appointments. `viewappt` handles every appointment search, as described in
-[Viewing appointments by date](#viewing-appointments-by-date).
+`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by `TextNormalizer`. Each criterion
+is a literal, contiguous substring of its corresponding stored field. `countMatchingFields()` counts each matching
+supplied field once, and `test()` includes a patient when this count exceeds zero, preserving the OR search. Repeated
+occurrences of a substring in one field contribute only one match. Missing medical history or notes contributes no
+match for that field. Phone criteria are substrings rather than complete phone numbers, so the parser does not apply
+the validation used when adding a patient. `find` does not search appointments. `viewappt` handles every appointment
+search, as described in [Viewing appointments by date](#viewing-appointments-by-date).
 
-`FindCommand` applies the predicate through `Model#updateFilteredPatientList()` and reports the existing patient count
-message. This replaces the previous filter and searches the full patient collection while preserving its order.
-Filtering does not change patient records. `list` restores the full list.
+`FindCommand` passes the predicate and a comparator to `Model#updateFilteredPatientList(predicate, comparator)` and
+reports the existing patient count message. The comparator orders patients by descending match count, then by
+`PatientNameComparator`, so ties are in name order. Each search replaces the previous filter and searches the full
+patient collection. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to patient records update
+the same observable view. Filtering and sorting do not change stored records or their order. The single-argument
+filter method clears sorting, as does a null comparator; existing calls from `list`, `add`, `edit` and `viewappt`
+therefore restore name order. The appointment list is independent of this sorting.
 
 ### Storing multiple appointments
 
@@ -354,8 +371,9 @@ information that the nurse entered. Removing an appointment through `edit` also 
 `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`.
 
 **Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of objects, such
-as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings,
-and the single `"nextAppointment"` field, from older data files.
+as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings
+from older data files. `JsonSerializableLaiNurse` saves the patients under the `"patients"` key. A data file without
+it, such as one from v1.3 that saved them under `"persons"`, fails to load, and LaiNurse starts with an empty list.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
@@ -364,19 +382,26 @@ between time zones, so changing the computer's time zone, or a daylight saving c
 
 ### Patient notes and appointment details
 
-A patient has optional `Notes`, free text that is not medical history, such as their routine or which family member to
-call. An appointment has optional `AppointmentDetails`, free text about the visit, such as what to do or bring. Both
-follow `MedicalHistory`: `TextNormalizer` trims the text, collapses its whitespace and stores it in upper case, and
+A patient has optional `Notes` for other personal information not covered by the other fields, such as hobbies, pet peeves
+and daily routines. An appointment has optional `AppointmentDetails`, free text about the visit, such as what to do or
+bring. Both follow `MedicalHistory`: `TextNormalizer` trims the text, collapses its whitespace and stores it in upper case, and
 blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
 
 The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
 in a narrow panel. `AppointmentRow` shows an appointment's details on a second line under its patient, and only when it
 has some.
 
-No command sets the notes or the details yet. `add` creates a patient without notes. `edit` keeps a patient's notes, and
-`--add-appt` and `--remove-appt` keep the details of the appointments that they do not remove. A command that sets them
-needs a `Prefix` in `CliSyntax`, a parser that builds `Notes` or `AppointmentDetails` with the matching `isValid`
-method, and a `Patient` or `Appointment` built with the new value.
+`add` and `edit` accept the optional, single-valued `--notes` option defined by `CliSyntax.PREFIX_NOTES`.
+`ParserUtil.parseNotes` validates it using `Notes.isValidNotes` and throws a `ParseException` with
+`Notes.MESSAGE_CONSTRAINTS` for blank text. It logs parsing success or rejection at `FINE` level without logging the text.
+`add` starts a patient without notes when the option is omitted. `EditPatientDescriptor` stores a supplied notes value;
+`edit` replaces the patient's notes when supplied and preserves them otherwise. An empty option is rejected, so it does
+not clear notes. Notes are included in patient feedback through `Messages.format`. `find --notes` uses the substring
+search described above, and `view ID` shows the notes using the existing detail panel and its live updates.
+
+No command sets appointment details yet. `--add-appt` and `--remove-appt` keep the details of appointments that they do
+not remove. A command that sets details needs a `Prefix` in `CliSyntax`, a parser that builds `AppointmentDetails` with
+its `isValid` method, and an `Appointment` built with the new value.
 
 ### Viewing appointments by date
 
@@ -475,8 +500,8 @@ moves it to the tab of the view being shown.
 The help system provides a three-tier support model designed to give nurses immediate CLI feedback as well as complete offline reference documentation without network connectivity:
 
 1. **General CLI Overview (`help`)**: Displays a concise summary of all available command words directly in the result display box.
-2. **Targeted CLI Help (`help [COMMAND]` or `help [--COMMAND]`)**: Displays parameter formats, constraints, and syntax examples for a specific command directly in the result display box by reading canonical `MESSAGE_USAGE` definitions.
-3. **Pop-up User Guide Window (`help window`, `help --window`, menu bar, or <kbd>F1</kbd>)**: Opens a standalone non-modal window displaying the full, offline User Guide rendered using native JavaFX components.
+2. **Targeted CLI Help (`help [COMMAND]`)**: Displays parameter formats, constraints, and syntax examples for a specific command (e.g., `help add`) directly in the result display box by reading canonical `MESSAGE_USAGE` definitions.
+3. **Pop-up User Guide Window (`help window`, menu bar, or <kbd>F1</kbd>)**: Opens a standalone non-modal window displaying the full, offline User Guide rendered using native JavaFX components.
 
 #### Implementation
 
@@ -486,17 +511,18 @@ The help architecture spans argument parsing in `Logic`, command dispatching in 
 
 `HelpCommandParser` processes user input according to the following rules:
 * Strips surrounding whitespace and checks for an empty argument string, returning a targetless `HelpCommand()` (Tier 1: General Help).
-* Normalizes flags: detects if the argument begins with `--` (via `TARGET_FLAG_MARKER`), strips the prefix, and ensures no whitespace exists between `--` and the target name (e.g., rejecting `help -- add`).
 * Normalizes casing using `Locale.ROOT` (`commandTarget.toLowerCase(Locale.ROOT)`) to ensure consistent parsing across system locales (avoiding locale-specific casing anomalies such as Turkish dotted 'i').
-* Rejects multi-token arguments (e.g., `help add patient`) or isolated flag markers (`help --`) by throwing a `ParseException` with `HelpCommand.MESSAGE_USAGE`.
+* Accepts only a single bare command word: rejects the deprecated `--` flag form (e.g., `help --add`, `help -- add`, `help --`) and multi-token arguments (e.g., `help add patient`) by throwing a `ParseException` with `HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT`.
+* Validates the target against `HelpCommand.COMMAND_USAGE_MAP` and `HelpCommand.TARGET_WINDOW`, rejecting unknown targets (e.g., `help 3`, `help nonexistent`) at parse time with the same `ParseException`.
 
 ##### 2. Dynamic Command Usage Mapping (`HelpCommand`)
 
 Rather than hardcoding command names and usage strings inside `HelpCommand`:
 * A static `Map<String, String> COMMAND_USAGE_MAP` is initialized using a `TreeMap` to sort available command words alphabetically.
 * Each command registers its canonical `MESSAGE_USAGE` string dynamically (e.g., `AddCommand.COMMAND_WORD -> AddCommand.MESSAGE_USAGE`).
+* `HelpCommand` registers itself in `COMMAND_USAGE_MAP` (`HelpCommand.COMMAND_WORD -> HelpCommand.MESSAGE_USAGE`), so `help help` displays the syntax of the `help` command, as specified in issue #102.
 * The help window target (`"window"`) is deliberately decoupled from `COMMAND_USAGE_MAP`. It is handled as a distinct navigation branch returning `new CommandResult(SHOWING_HELP_MESSAGE, true, false)`.
-* If a target matches a registered command, its usage string is returned. If unknown, `MESSAGE_UNKNOWN_HELP_TARGET` is returned listing all valid command words.
+* If a target matches a registered command, its usage string is returned. Unknown targets cannot reach `HelpCommand` because `HelpCommandParser` validates the target before constructing the command.
 
 ##### 3. Build-Time Bundling & Extraction
 
@@ -507,6 +533,7 @@ Rather than hardcoding command names and usage strings inside `HelpCommand`:
 
 `MarkdownRenderer` parses the sanitized Markdown sequentially into native JavaFX nodes without external third-party dependencies:
 * **Section Structure & Headings**: Tracks headers (`#`, `##`, `###`) and horizontal separators (`---`), rendering them as styled `Label` and `Separator` nodes, while resetting active list counters.
+* **Offline Image Placeholders**: Image syntax (`![alt](src)`) cannot be bundled with the offline copy, so a standalone image line renders as a subdued placeholder note that keeps the alt text and directs the reader to the online User Guide via the window's **Copy URL** button. Inline occurrences are substituted with the bracket-free text `(image: alt)`, so they can neither form hyperlinks by themselves nor merge with a link that follows on the same line.
 * **List Counter Tracking across Continuations**:
     * Tracks numbered items with monotonic counter progression (`1., 2., 3., ...`), supporting lazy markdown numbering where all raw items start with `1.`.
     * Secondary continuation notes (e.g., `**Mac users:**`, multi-line descriptions) and sub-bullet items (`*`, `-`) are left-padded (`28px`–`32px`) without resetting the parent numbered list counter.
@@ -677,6 +704,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | see all my patients in one list                                                                      | I can see everyone I care for at a glance                    |
 | `* * *`  | home-based nurse | view all the details of a patient in one place                                                       | I can check their address and health details before a visit  |
 | `* * *`  | home-based nurse | find patients by part of their name, ID, phone number, address or medical history                    | I can find a patient quickly without typing their full details |
+| `* *`    | home-based nurse | see the patient list sorted by name                                                                  | I can find a patient quickly without scanning the whole list   |
+| `* *`    | home-based nurse | see the patients that match the most search fields first                                             | the best matches are at the top of a long list                 |
 | `* * *`  | home-based nurse | edit a patient's details                                                                             | their records stay correct when something changes            |
 | `* * *`  | home-based nurse | delete a patient I no longer care for                                                                | my list shows only my current patients                       |
 | `* * *`  | home-based nurse | add an appointment for a patient with a date and time                                                | I can plan my home visits in advance                         |
@@ -733,8 +762,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, or medical history
-2.  LaiNurse shows a list of matching patients
+1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, medical history or notes
+2.  LaiNurse shows a list of matching patients, with the patients that match the most fields first, and patients that match the same number of fields in name order
 
     Use case ends.
 
@@ -929,7 +958,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests help for a specific command (e.g., `help add` or `help --add`).
+1.  Nurse requests help for a specific command (e.g., `help add`).
 2.  LaiNurse displays the parameter syntax, format constraints, and usage examples for that command in the result display.
 
     Use case ends.
@@ -940,19 +969,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 1a1. LaiNurse displays an alphabetical list of all available commands and general navigation guidance in the result display.
     * Use case ends.
 
-* 1b. Nurse requests to open the full offline User Guide window (`help window`, `help --window`, press <kbd>F1</kbd>, or select **Help** > **Help**).
+* 1b. Nurse requests to open the full offline User Guide window (`help window`, press <kbd>F1</kbd>, or select **Help** > **Help**).
     * 1b1. LaiNurse opens the Help Window containing the complete offline User Guide rendered using native JavaFX components.
     * Use case ends.
 
-* 1c. Nurse enters an unrecognized command target (e.g., `help nonexistent` or `help --nonexistent`).
-    * 1c1. LaiNurse displays an unknown help target error message, lists all available commands in alphabetical order, and provides instructions to access the full guide window.
+* 1c. Nurse enters an unrecognized command target (e.g., `help nonexistent`) or the discontinued flag form (e.g., `help --add`).
+    * 1c1. LaiNurse displays an invalid command format error that shows `HelpCommand.MESSAGE_USAGE` and lists all valid targets.
     * Use case ends.
 
 * 1d. Nurse provides a malformed help argument (e.g., `help -- add`, `help --`, or multiple tokens such as `help add patient`).
     * 1d1. LaiNurse displays an invalid command format error displaying `HelpCommand.MESSAGE_USAGE`.
     * Use case ends.
 
-* 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW` or `help --DELETE`).
+* 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW`).
     * 1e1. LaiNurse normalizes the target using `Locale.ROOT` and displays the syntax details for the matching command.
     * Use case ends.
 
@@ -989,6 +1018,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   true residential location, as some treatment, e.g. rehabilitation post surgery may be done outdoors.
 * **Medical History**: Free-form textual records capturing relevant chronic conditions, allergies, past diagnoses, or
   ongoing medical concerns of a patient (e.g., "dementia").
+* **Notes**: Optional free-form personal information about a patient that the other fields do not cover, such as their
+  hobbies, pet peeves and daily routines (e.g., "walks every morning"). Health information goes in the Medical History
+  instead.
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
   24-hour format, in local time with no time zone.
@@ -1065,7 +1097,7 @@ testers are expected to do more *exploratory* testing.
        and David Li, and no patient's details are shown.
 
     1. Test case: the result of the prerequisite<br>
-       Expected: The header above the list shows `Filtered patients`, `Esc to show all patients` and `2 of 6`.
+       Expected: The header above the list shows `Filtered patients` and `2 of 6`.
 
     1. Test case: type `abc` in the command box, then press Esc<br>
        Expected: The patient list gets a blue border and the command box is dimmed. `abc` stays in the command box.
@@ -1130,6 +1162,34 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases …​ }_
 
+### Recording and viewing patient notes
+
+1. Adding, editing and saving notes
+
+    1. Test case: `add --id NOTES1 --name Mary Tan --phone 91234567 --address Blk 10 Clementi Ave 2 --notes Enjoys gardening`<br>
+       Expected: The patient is added. The feedback includes `Notes: ENJOYS GARDENING`.
+
+    1. Test case: `view NOTES1`, then `edit NOTES1 --notes Dislikes loud noises; walks every morning`<br>
+       Expected: The panel shows the notes below medical history, then updates to `DISLIKES LOUD NOISES; WALKS EVERY MORNING`.
+
+    1. Test case: `edit NOTES1 --phone 98765432`<br>
+       Expected: The phone changes, and the notes are preserved.
+
+    1. Test case: Close and restart LaiNurse, then enter `view NOTES1` and `find --notes "walks every morning"`.<br>
+       Expected: The notes remain saved, and the search finds Mary Tan.
+
+1. Rejecting invalid notes
+
+    1. Test cases: `edit NOTES1 --notes`, `edit NOTES1 --notes --phone 11112222`, and
+       `add --id NOTES2 --name Jane Tan --phone 91234567 --address Clementi --notes`<br>
+       Expected: A blank-notes error is shown. No patient, displayed list or saved record changes.
+
+    1. Test cases: `edit NOTES1 --notes First --notes Second`, and
+       `add --id NOTES2 --name Jane Tan --phone 91234567 --address Clementi --notes First --notes Second`<br>
+       Expected: A duplicate-option error is shown, and nothing changes.
+
+    1. Enter `delete NOTES1`, then `list` after testing to restore the sample patients.
+
 ### Finding patients by substrings
 
 1. Searching each patient field
@@ -1151,13 +1211,25 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `find --medical-history penicillin`<br>
        Expected: Only Bernice Yu is shown. Patients without medical history do not match this criterion.
 
+    1. Test case: `find --notes "has a dog"`<br>
+       Expected: Only Bernice Yu is shown. Patients without notes do not match this criterion.
+
 1. Combining substrings and restoring the list
 
     1. Test case: `find --name Alex --address "Serangoon Gardens"`<br>
-       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in their original order. Either field may match.
+       Expected: Alex Yeoh, Bernice Yu and David Li are shown, in name order, because each matches one field.
 
     1. Test case: `find --name Alex --id 1234567`<br>
-       Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears once even though Alex matches both criteria.
+       Expected: Alex Yeoh and Irfan Ibrahim are shown. Alex appears first and once, because Alex matches both criteria.
+
+    1. Test case: `find --name Irfan --id 1234567`<br>
+       Expected: Irfan Ibrahim appears before Alex Yeoh. Irfan matches both fields, while Alex matches only ID.
+
+    1. Test case: `find --id 1234567`<br>
+       Expected: Alex Yeoh appears before Irfan Ibrahim again, because both match one field and ties are in name order.
+
+    1. Test case: `find --notes dog --name Charlotte`<br>
+       Expected: Bernice Yu and Charlotte Oliveiro are shown, in name order. Either field may match.
 
     1. Test case: `find --address "Gardens Serangoon"`<br>
        Expected: An empty list is shown with a count of zero. Multiword values must match a contiguous substring.
@@ -1170,7 +1242,8 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Enter `find --name Alex`, so only Alex Yeoh is shown.
 
     1. Test cases: `find`, `find Alex`, `find --name ""`, `find --name "Alex`, `find --name “Alex"`,
-       `find --name "Alex" trailing`, `find --unknown Alex`, and `find --name=Alex`<br>
+       `find --name "Alex" trailing`, `find --unknown Alex`, `find --name=Alex`, `find --notes`,
+       `find --notes ""`, and `find --notes "dog`<br>
        Expected: The displayed list and patient records are unchanged. The status message shows the command usage instructions.
 
     1. Test case: `find --next-appointment 2026-10`<br>
@@ -1179,7 +1252,30 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `find --name Alex --name Bernice`<br>
        Expected: The displayed list and patient records are unchanged. The status message shows a duplicate-option error.
 
+    1. Test case: `find --notes dog --notes morning`<br>
+       Expected: The same duplicate-option error is shown, and nothing changes.
+
     1. Enter `list` after testing to show all patients again.
+
+### Sorting by name
+
+1. The order of the patient list
+
+    1. Prerequisites: Start with the sample data, which is already in name order: Alex Yeoh, Bernice Yu,
+       Charlotte Oliveiro, David Li, Irfan Ibrahim, Roy Balakrishnan.
+
+    1. Test case: `list`<br>
+       Expected: All six patients are shown, in the name order above.
+
+    1. Test case: `add --id S0245678G --name Zara Lim --phone 98765432 --address "Blk 123 Clementi Ave 3, #05-12"`<br>
+       Expected: The list shows all patients again, and Zara Lim is last, after Roy Balakrishnan.
+
+    1. Test case: `edit S0245678G --name Aaron Tan`<br>
+       Expected: Aaron Tan moves to the top of the list, above Alex Yeoh.
+
+    1. Test case: `add --id S0356789H --name aaron tan --phone 91234567 --address "Blk 456 Bedok Ave 2"`<br>
+       Expected: Two rows read `AARON TAN`, adjacent at the top: `S0245678G` above `S0356789H`, because the patient
+       ID breaks the tie.
 
 ### Viewing patients by appointment date
 
@@ -1190,8 +1286,8 @@ testers are expected to do more *exploratory* testing.
        If you have modified the data, delete the data file and relaunch the app to restore the sample data.
 
     1. Test case: `viewappt 2026-10-07`<br>
-       Expected: The **Appointments** tab is selected. Above the list are `Wed 7 Oct 2026` and `Esc to show the weekly
-       view`, and no arrow buttons. The list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
+       Expected: The **Appointments** tab is selected. Above the list is `Wed 7 Oct 2026`, with no arrow buttons. The
+       list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
        panel beside the list shows their details with that appointment marked. The status message shows
        `1 patient(s) with appointments on 2026-10-07`. On the **Patients** tab, only Irfan Ibrahim is listed.
 
@@ -1329,8 +1425,8 @@ testers are expected to do more *exploratory* testing.
        `MONTHLY BLOOD TEST`, under it. In a wide window, the details of each appointment move beside its time.
 
     1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`, then make the window as narrow as it goes<br>
-       Expected: Above the list, `Thu 1 Oct – Sat 31 Oct 2026` stays whole, while `Esc to show the weekly view` and
-       the count beside it are cut short. Widening the window shows them in full.
+       Expected: Above the list, `Thu 1 Oct – Sat 31 Oct 2026` stays whole. If the header runs out of room, the count
+       beside it is cut short instead. Widening the window shows it in full.
 
 1. Appointments that have passed today
 
@@ -1426,23 +1522,27 @@ testers are expected to do more *exploratory* testing.
         * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
-    * Test case: `help add` (or `help --add`)
+    * Test case: `help add`
         * Expected: Parameter syntax and usage examples for `add` are displayed.
-    * Test case: `help viewappt` (or `help --viewappt`)
+    * Test case: `help help`
+        * Expected: The syntax and example of the `help` command itself is displayed.
+    * Test case: `help viewappt`
         * Expected: Both single-date and date-range syntax options (`--from`, `--to`) for `viewappt` are displayed.
-    * Test case: `help --DELETE` or `help VIEW`
+    * Test case: `help DELETE` or `help VIEW`
         * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
 
 3. Rejecting invalid help inputs
     * Test case: `help nonexistent`
-        * Expected: Displays `Unknown help command: 'nonexistent'.` along with the list of valid commands.
-    * Test case: `help --` or `help -- add`
-        * Expected: Displays invalid command format error showing `HelpCommand.MESSAGE_USAGE`.
+        * Expected: Displays `Invalid command format!`, the usage of `help`, and the list of valid targets.
+    * Test case: `help --add` or `help --window`
+        * Expected: The discontinued `--` flag form is rejected; displays the same invalid command format error.
+    * Test case: `help -- add` or `help --`
+        * Expected: Displays the same invalid command format error.
     * Test case: `help add patient`
         * Expected: Multi-token arguments are rejected; displays invalid command format error.
 
 4. Opening the full User Guide window
-    * Test case: `help window` or `help --window`
+    * Test case: `help window`
         * Expected: The Help Window opens displaying the full bundled User Guide formatted with native JavaFX nodes. The status message confirms: `Opened help window.`.
     * Test case: Press <kbd>F1</kbd> or click **Help** > **Help** in the menu bar.
         * Expected: Opens the Help Window.

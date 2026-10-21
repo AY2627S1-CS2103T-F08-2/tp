@@ -74,14 +74,15 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 LaiNurse shows one view at a time. The tabs under the result display switch between them:
 
-* **Patients**: the list of patients, each with their next appointment, and beside it the details of one patient.
-  * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. A filtered list also shows `Esc to show all patients`. An empty list says `No patients yet.` or `No patients match the filter.`
+* **Patients**: the list of patients, sorted by name, each with their next appointment, and beside it the details of one patient.
+  * The list is sorted by patient name. Case does not matter, and the ID breaks ties between patients with the same name, so two patients with the same name keep one fixed order. Renaming a patient with [`edit`](#editing-a-patient-edit) moves their row. After [`find`](#locating-patients-by-substrings-find), the patients that match more fields come first, and patients that match the same number of fields are in name order.
+  * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
   * The next appointment of a patient is their first appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
-  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates, and `Esc to show the weekly view`.
+  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
 
 In both views, the list and the details share the width of the window, and grow and shrink together as you resize it.
 
@@ -148,32 +149,35 @@ LaiNurse offers three ways to get help:
 1. **Full User Guide Window** (<kbd>F1</kbd> / select **Help** > **Help** / `help window`): Opens a dedicated help
    window containing the complete, bundled User Guide for convenient browsing alongside your work, as well as a button to copy the link to the online guide.
 2. **Command Overview** (`help`): Prints a concise list and summary of all available commands directly in the application's result display box.
-3. **Targeted Command Help** (`help COMMAND` or `help --COMMAND`): Displays detailed usage rules, parameter formats, and examples for a specific command directly in the result display box.
+3. **Targeted Command Help** (`help COMMAND`): Displays detailed usage rules, parameter formats, and examples for a specific command directly in the result display box.
 
-Format: `help [COMMAND]` or `help [--COMMAND]`
+Format: `help [COMMAND]`
 
-* Typing `help` without arguments outputs a summary of all commands in the result display.
-* Adding a command name or flag (e.g., `help add` or `help --add`, `help edit` or `help --edit`) displays the syntax and practical examples for that command.
-* Typing `help window` or `help --window` opens the pop-up Help Window containing the complete User Guide.
+* Typing `help` without arguments outputs a summary of all commands in the result display, including help itself.
+* Adding a command name (e.g., `help add`, `help edit`, `help help`) displays the syntax and practical examples for that command.
+* Typing `help window` opens the pop-up Help Window containing the complete User Guide.
+* Typing an unknown command name (e.g., `help 3`) or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
 
 Examples:
 * `help` shows a quick summary list of all available commands in the result display.
-* `help add` (or `help --add`) shows the exact parameters and examples for adding a patient.
-* `help edit` (or `help --edit`) shows how to modify patient details and manage appointments.
-* `help window` (or `help --window`) opens the full User Guide window.
+* `help add` shows the exact parameters and examples for adding a patient.
+* `help help` shows the syntax and example of the `help` command.
+* `help edit` shows how to modify patient details and manage appointments.
+* `help window` opens the full User Guide window.
 * Pressing <kbd>F1</kbd> opens the full User Guide window.
 
 ### Adding a patient: `add`
 
 Adds a patient to LaiNurse.
 
-Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​`
+Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--appt DATE_OR_DATETIME]…​`
 
 * `--id`, `--name`, `--phone`, and `--address` are required. Each must have a non-blank value.
-* Medical history and appointments are independently optional. If an option is supplied, its value must not be blank.
+* Medical history, notes and appointments are independently optional. If an option is supplied, its value must not be blank.
+* Notes record other personal information not covered by the other fields, such as the patient's hobbies, pet peeves and daily routines. Use `--medical-history` for health information.
 * Parameters may appear in any order. Each option may appear only once, except `--appt`, which can be repeated to add several appointments. Separate options and values using spaces or tabs; values may contain spaces.
 * IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
-* Names, addresses, and medical history accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
+* Names, addresses, medical history and notes accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * Each appointment must be a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-11-30` or `2026-11-30 09:00`. Past dates are accepted. If the same appointment is given twice, it is kept once. A date-only appointment and a timed one on the same day, including `00:00`, are kept as separate appointments.
 * Appointments have no time zone. They are the local date and time of the visit, as you would write them on a calendar, so changing your computer's time zone does not change them.
@@ -184,38 +188,41 @@ Examples:
 
 * `add --id T0123456B --name John Doe --phone 98765432 --address John street, block 123, #01-01`
 * `add --medical-history Asthma --address Block 312, Clementi Ave 2 --phone 91234567 --name Betsy Crowe --id S2222222B --appt 2026-11-30`
+* `add --id S4444444D --name Mary Tan --phone 91234567 --address Blk 10 Clementi Ave 2 --notes Enjoys gardening; walks every morning`
 * `add --appt 2026-11-30 09:00 --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --phone 22224444 --appt 2026-12-14 09:00`
 
 ### Listing all patients: `list`
 
-Shows a list of all patients.
+Shows a list of all patients, sorted by name.
 
 Format: `list`
 
 * Each row shows the patient's list number, name and ID, and their next appointment if they have one. The next appointment is the earliest one today or later, so past appointments are not shown. A name too long for the row ends in `…`, and `view` shows it in full.
-* To see a patient's phone number, address and medical history, use `view`, described below.
+* To see a patient's phone number, address, medical history and notes, use `view`, described below.
 * Next appointments are shown relative to today: `Today 09:30`, `Tomorrow`, a weekday such as `Tue 14:00` within the next 6 days, and a date such as `30 Nov` or `5 Jan 2027` after that. Today's appointments are highlighted.
 
 ### Editing a patient: `edit`
 
 Edits the details of an existing patient, and adds or removes their appointments.
 
-Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`
+Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`
 
 * Edits the patient with the given `ID`, which is the patient ID shown in their row, not their position in the list. The patient does not have to be in the list currently shown.
 * `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs.
 * As in `add`, whitespace-delimited words beginning with `--` are reserved for options. Unknown options, misspellings, and `--id` are rejected with the command usage instructions.
 * The ID itself cannot be edited. To correct a wrong ID, delete the patient and add them again.
 * At least one of the optional parameters must be provided.
-* `--name`, `--phone`, `--address`, and `--medical-history` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
+* `--name`, `--phone`, `--address`, `--medical-history` and `--notes` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
+* `--notes` can also set notes for a patient who has none. Omitting it keeps the existing notes. A blank value is rejected; notes cannot be cleared through `edit`.
 * `--add-appt` adds an appointment, and `--remove-appt` removes one. Both can be repeated. Appointments use the same format as in `add`.
 * `--remove-appt` must match an existing appointment exactly. For example, `--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`. If any appointment to remove is not found, nothing is changed.
 * Appointments are removed before they are added, so one command can move an appointment to a new date. Adding an appointment the patient already has makes no change. As with `add`, a date-only appointment and a timed one on the same day are separate appointments.
-* After a patient is edited, the list shows all patients again. The edited patient is selected in the list, and their details are shown, as `view` does.
+* After a patient is edited, the list shows all patients again. Renaming a patient moves their row, to keep the list sorted by name.
 
 Examples:
 *  `edit S1234567A --phone 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.
 *  `edit S1234567A --medical-history Type 2 diabetes, hypertension` replaces the medical history of patient `S1234567A`.
+*  `edit S1234567A --notes Enjoys gardening; dislikes loud noises` replaces the notes of patient `S1234567A`.
 *  `edit S1234567A --add-appt 2026-12-01 10:00 --add-appt 2026-12-15` adds two appointments.
 *  `edit S1234567A --remove-appt 2026-10-05 09:30 --add-appt 2026-10-07 14:00` moves an appointment from 5 October to 7 October.
 
@@ -223,7 +230,7 @@ Examples:
 
 Finds patients whose specified fields contain any of the supplied substrings.
 
-Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY]`
+Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES]`
 
 * `find` searches patient details only. To search by appointment date, use [`viewappt`](#viewing-appointments-viewappt).
 
@@ -232,18 +239,23 @@ Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--med
 * Values may be unquoted or enclosed in matching straight double quotes (`"Mary"`) or curly double quotes (`“Mary”`). Quotes must surround the complete value; missing or mismatched closing quotes and text after a closing quote are rejected.
 * Matching ignores case and repeated whitespace. For example, `--name han` matches `Hans`, and `--address "marina   bay"` matches `Marina Bay`.
 * Each value is one contiguous substring of its corresponding field. For example, `--address "Marina Bay"` matches that phrase, while `--address "Bay Marina"` does not match `Marina Bay`.
-* Patients matching **any** supplied option are returned (an `OR` search). For example, `--name John --address "Marina Bay"` finds patients whose name contains `John` **or** whose address contains `Marina Bay`. Each patient appears once, in the original list order.
+* Patients matching **any** supplied option are returned (an `OR` search). For example, `--name John --address "Marina Bay"` finds patients whose name contains `John` **or** whose address contains `Marina Bay`. Each patient appears once.
+* Patients matching more supplied fields appear first. For example, a patient matching both name and address appears before one matching only name or only address. Each field counts once, even if the substring occurs several times. Patients matching the same number of fields are in name order, so a single-field search shows its results in name order.
 * Phone searches match the stored text, so partial values such as `--phone 123` are accepted. Phone punctuation remains significant: `9876-54` does not contain `987654`.
 * Patients without medical history do not match a `--medical-history` search, but may match another supplied option.
+* `--notes` searches the patient's personal notes. Patients without notes do not match this option, but may match another supplied option.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within quoted values. Unknown options, misspellings, and `--name=value` syntax are rejected. Text such as `Anne--Marie` is accepted.
 * Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. To see all patients again, enter `list`, or press Esc twice: once to move to the patient list, and once to show all patients.
 
 Examples:
 
-* `find --name "John" --address "Marina Bay"` finds patients whose name contains `John` or whose address contains `Marina Bay`.
+* `find --name "John" --address "Marina Bay"` finds patients whose name contains `John` or whose address contains `Marina Bay`, with patients matching both fields first.
+* `find --name Irfan --id 1234567` on the sample data shows Irfan Ibrahim before Alex Yeoh, because Irfan matches both fields while Alex matches only ID.
 * `find --id “T04”` finds patients whose ID contains `T04`.
 * `find --id "123"` finds patients whose ID contains `123`.
 * `find --medical-history penicillin --name tan` finds patients whose medical history contains `penicillin` or whose name contains `tan`.
+* `find --notes "enjoys gardening"` finds patients whose notes contain that phrase.
+* `find --notes morning --name tan` finds patients whose notes contain `morning` or whose name contains `tan`.
 
 ### Viewing appointments: `viewappt`
 
@@ -260,7 +272,7 @@ Format: `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`
 * `DATE` cannot be combined with `--from` or `--to`.
 * LaiNurse switches to the **Appointments** view, and shows the appointments in the range on one page, in place of the weekly view. The first one is selected, and its patient's details are shown. If no appointment is in the range, the page says `No appointments in this range.`
 * To go back to the weekly view, press Esc with the focus in the appointment list. The weekly view shows the week that it showed before. See [The patient and appointment views](#the-patient-and-appointment-views).
-* The patient list, on the **Patients** tab, shows the patients with an appointment in the range. All of each patient's appointments are checked, with or without a time. Each patient appears once, in the original list order. If no patient has an appointment in the range, the patient list is empty.
+* The patient list, on the **Patients** tab, shows the patients with an appointment in the range. All of each patient's appointments are checked, with or without a time. Each patient appears once, in name order. If no patient has an appointment in the range, the patient list is empty.
 * Only dates are compared, so an appointment earlier today still counts.
 
 Examples:
@@ -279,7 +291,7 @@ Format: `view ID`
 * The patient does not need to be in the displayed list, because `view` searches all patients. If they are in the displayed list, their row is highlighted.
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * LaiNurse switches to the **Patients** view.
-* The panel shows the patient's name, ID, phone number, address, medical history and appointments. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last ten that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `No time specified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
+* The panel shows the patient's name, ID, phone number, address, medical history, notes and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last ten that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `No time specified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
 * The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete all patients with `clear`, it goes back to its starting message.
 * You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 
@@ -337,9 +349,9 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 ## Known issues
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help window` command (or `help --window`, **Help** > **Help**,
+2. **If you minimize the Help Window** and then run the `help window` command (or select **Help** > **Help**,
    or the keyboard shortcut <kbd>F1</kbd>) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
-3. **In a narrow window**, such as at the default size, the hint and the count in a list's header, such as `Esc to show all patients`, can be cut short. The remedy is to widen the window.
+3. **In a very narrow window**, the note and the count in a list's header, such as `This week` and the number of appointments, can be cut short. The remedy is to widen the window.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -347,13 +359,13 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 
 Action | Format, Examples
 --------|-----------------
-**Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --appt 2026-11-30 09:00`
+**Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening --appt 2026-11-30 09:00`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
-**Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --phone 91234567 --add-appt 2026-12-01 10:00`
-**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY]`<br> e.g., `find --name "John" --address "Marina Bay"` (matches either field; at least one option required)
+**Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --notes Walks every morning --add-appt 2026-12-01 10:00`
+**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one option required)
 **List** | `list`
 **View** | `view ID`<br> e.g., `view S1234567A`
 **ViewAppt** | `viewappt DATE` or `viewappt [--from START_DATE] [--to END_DATE]`<br> e.g., `viewappt 2026-10-15`, `viewappt --from 2026-10-01 --to 2026-10-31`
-**Help** | `help [COMMAND]` (or `help [--COMMAND]`)<br> e.g., `help`, `help add` (or `help --add`), `help window` (or `help --window`)
+**Help** | `help [COMMAND]`<br> e.g., `help`, `help add`, `help window`
 **Exit** | `exit`

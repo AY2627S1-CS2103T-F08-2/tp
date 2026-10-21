@@ -1,9 +1,9 @@
 {
-  "persons": [ {
+  "patients": [ {
     "id": "S1234567A",
     "name": "Hans Muster",
     "phone": "9482424",
     "address": "4th street",
-    "nextAppointment": "2026-02-30"
+    "appointments": [ "2026-02-30" ]
   } ]
 }

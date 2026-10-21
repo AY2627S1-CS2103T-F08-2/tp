@@ -14,6 +14,7 @@ import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_MEDICAL_HISTORY_BOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.AMY;
 import static seedu.address.testutil.TypicalPatients.BOB;
@@ -35,6 +36,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
+import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -76,6 +78,13 @@ public class AddCommandFlowTest {
     }
 
     @Test
+    public void execute_notesOnly_normalizedAndPersisted() throws Exception {
+        Patient expectedPatient = new PatientBuilder(AMY).withNotes("Enjoys gardening; walks at 7am").build();
+        assertAddedPatientPersisted("add --notes Enjoys\t gardening; walks at 7am"
+                + NAME_DESC_AMY + ADDRESS_DESC_AMY + ID_DESC_AMY + PHONE_DESC_AMY, expectedPatient);
+    }
+
+    @Test
     public void execute_dateOnlyAppointment_persisted() throws Exception {
         Patient expectedPatient = new PatientBuilder(AMY).withAppointments("2026-09-20").build();
         assertAddedPatientPersisted(AddCommand.COMMAND_WORD + " --appt 2026-09-20"
@@ -84,8 +93,10 @@ public class AddCommandFlowTest {
 
     @Test
     public void execute_allFields_persisted() throws Exception {
+        Patient expectedPatient = new PatientBuilder(BOB).withNotes("Dislikes loud noises").build();
         assertAddedPatientPersisted(AddCommand.COMMAND_WORD + APPOINTMENT_DESC_BOB + ADDRESS_DESC_BOB
-                + NAME_DESC_BOB + MEDICAL_HISTORY_DESC_BOB + PHONE_DESC_BOB + ID_DESC_BOB, BOB);
+                + NAME_DESC_BOB + MEDICAL_HISTORY_DESC_BOB + PHONE_DESC_BOB + ID_DESC_BOB
+                + " --notes Dislikes loud noises", expectedPatient);
     }
 
     @Test
@@ -114,6 +125,8 @@ public class AddCommandFlowTest {
 
         assertRejectedCommandLeavesDataUnchanged(command + " --medical-history", ParseException.class,
                 MedicalHistory.MESSAGE_CONSTRAINTS);
+        assertRejectedCommandLeavesDataUnchanged(command + " --notes \t ", ParseException.class,
+                Notes.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged(command + " --appt", ParseException.class,
                 Appointment.MESSAGE_CONSTRAINTS);
     }
@@ -125,6 +138,14 @@ public class AddCommandFlowTest {
 
         assertRejectedCommandLeavesDataUnchanged(command, ParseException.class,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME));
+    }
+
+    @Test
+    public void execute_repeatedNotes_rejectedWithoutChanges() throws Exception {
+        logic.execute(PatientUtil.getAddCommand(AMY));
+        String command = PatientUtil.getAddCommand(new PatientBuilder().build()) + " --notes First --notes Second";
+        assertRejectedCommandLeavesDataUnchanged(command, ParseException.class,
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTES));
     }
 
     private void assertAddedPatientPersisted(String command, Patient expectedPatient) throws Exception {
