@@ -70,6 +70,23 @@ public class AppointmentSchedule {
     }
 
     /**
+     * Returns the appointment at the date and time of {@code appointment}, with its own details, or
+     * {@code Optional#empty()} if there is none.
+     */
+    public Optional<Appointment> find(Appointment appointment) {
+        requireNonNull(appointment);
+        return appointments.stream().filter(appointment::isSameAppointment).findFirst();
+    }
+
+    /**
+     * Returns the appointments on {@code date}, whatever their time, in chronological order.
+     */
+    public List<Appointment> getOnDate(LocalDate date) {
+        requireNonNull(date);
+        return appointments.stream().filter(appointment -> appointment.getDate().equals(date)).toList();
+    }
+
+    /**
      * Returns true if there are no appointments.
      */
     public boolean isEmpty() {
