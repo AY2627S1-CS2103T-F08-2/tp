@@ -165,7 +165,7 @@ When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for 
 command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
 does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
 rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit` and `editappt` take the ID first and options after it, so `IdCompleter` completes the word after
+end the command. `edit`, `editappt` and `addappt` take the ID first and options after it, so `IdCompleter` completes the word after
 the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
 started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
@@ -442,6 +442,15 @@ The activity diagram below shows the checks that `editappt` makes, in order. Eve
 data file unchanged.
 
 <img src="images/EditAppointmentActivityDiagram.png" width="750" />
+
+`addappt` adds a new appointment to a patient's schedule with the same options as `editappt` uses to find and set
+one: `--appt` takes the date, or date and time, in the same format as in `add`, and `--details` takes the appointment's
+details, validated by `ParserUtil.parseAppointmentDetails`. `AddAppointmentCommand` finds the patient by
+`Model#findPatientById()`, then checks `AppointmentSchedule#contains` before adding: `AppointmentSchedule#add` keeps
+only the first appointment at each date and time, so without that check, adding onto an existing slot would silently
+replace nothing and lose the new appointment. The check makes the duplicate slot a `CommandException` instead. The
+command then replaces the patient through `Model#setPatient()` with a schedule that has the appointment added, and
+selects it with `Navigation.toAppointment`, as `editappt` does for the edited one.
 
 ### Viewing appointments by date
 
@@ -1692,6 +1701,30 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `editappt S1234567A --appt 2026-10-05 09:30`, with nothing to change<br>
        Expected: No appointment is changed. The status message says that `--to` or `--details` must be given.
+
+### Adding an appointment
+
+1. Adding an appointment
+
+    1. Prerequisites: Start with the sample data. Bernice Yu (`S2345678B`) has no appointment on 14 October.
+
+    1. Test case: `addappt S2345678B --appt 2026-10-14 --details Check blood pressure`<br>
+       Expected: The **Appointments** tab is selected, showing the week of 14 October, with Bernice Yu's appointment
+       selected and showing `CHECK BLOOD PRESSURE`. The list shows the appointment with no time.
+
+    1. Test case: `addappt S1234567A --appt 2026-12-01 10:00`<br>
+       Expected: The week of 1 December is shown, with Alex Yeoh's appointment at 10:00 selected.
+
+1. Adding an appointment that cannot be added
+
+    1. Prerequisites: Start with the sample data.
+
+    1. Test case: `addappt S1234567A --appt 2026-10-05 09:30`<br>
+       Expected: No appointment is added. The status message says that Alex Yeoh already has an appointment on
+       `2026-10-05 09:30`.
+
+    1. Test case: `addappt S0000000Z --appt 2026-10-14`<br>
+       Expected: No appointment is added. The status message says that no patient has the given ID.
 
 ### Viewing help and command instructions
 
