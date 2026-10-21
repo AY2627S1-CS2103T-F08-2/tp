@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -185,6 +186,24 @@ public class ParserUtilTest {
     public void parseNotes_validText_normalized() throws Exception {
         assertEquals("ENJOYS GARDENING; WALKS AT 7AM",
                 ParserUtil.parseNotes("  Enjoys\t gardening;\n walks at 7am  ").value);
+    }
+
+    @Test
+    public void parseAppointmentDetails_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseAppointmentDetails(null));
+    }
+
+    @Test
+    public void parseAppointmentDetails_blank_throwsParseException() {
+        for (String details : List.of("", " ", WHITESPACE)) {
+            assertThrows(ParseException.class, AppointmentDetails.MESSAGE_CONSTRAINTS, ()
+                    -> ParserUtil.parseAppointmentDetails(details));
+        }
+    }
+
+    @Test
+    public void parseAppointmentDetails_validText_normalized() throws Exception {
+        assertEquals("BRING INSULIN PEN", ParserUtil.parseAppointmentDetails("  Bring\t insulin\n pen  ").value);
     }
 
     @Test
