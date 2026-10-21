@@ -90,10 +90,11 @@ An appointment has passed once its time today has gone by, or once its day is ov
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
-Commands switch the view. `viewappt` shows **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
+Commands switch the view. `viewappt` and `editappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
 
 * `add`, `edit` and `view` select the patient that they add, edit or show. `list` and `find` select the first patient in the list.
 * `viewappt` selects the next appointment from now: the first appointment on the page that has not passed, or the first on the page if all have passed.
+* `editappt` selects the appointment that it edits: on the page shown, if that page has it, or else in the weekly view of its week.
 * `delete` and `clear` select nothing, and the details beside the list show their starting message.
 * `help`, and a command that fails, change nothing.
 
@@ -110,7 +111,7 @@ You can use LaiNurse without the mouse. The keyboard focus is in the command box
 Key | What it does
 --------|------------------
 Enter | Runs the command.
-Tab | Finishes typing a patient ID after `view`, `delete` or `edit`. See below. With nothing to finish, such as in an empty command box, it does nothing.
+Tab | Finishes typing a patient ID after `view`, `delete`, `edit` or `editappt`. See below. With nothing to finish, such as in an empty command box, it does nothing.
 Up and Down | Go back and forth through the commands you entered since LaiNurse started, including ones that failed. Down after the newest command gives back what you were typing.
 Esc | Moves to the list of the view that is shown, or to the tabs if the patient list is empty. What you typed stays in the command box.
 
@@ -144,7 +145,7 @@ Esc | In the patient view, shows all patients, as `list` does, but keeps the pat
 * For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.
 * To finish a patient ID with Tab, type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
   For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
-  With `edit`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`.
+  With `edit` and `editappt`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`.
 * The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
 
 ### Viewing help: `help`
@@ -295,6 +296,26 @@ Examples:
 * `viewappt --id S1234567A` shows all of Alex Yeoh's appointments.
 * `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31` shows Alex Yeoh's appointments in October 2026.
 
+### Editing an appointment: `editappt`
+
+Moves one of a patient's appointments to another date or time, or sets its details, or both.
+
+Format: `editappt ID --appt DATE_OR_DATETIME [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`
+
+* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
+* `--appt` gives the date, or date and time, of the appointment to edit. It must match the appointment exactly: `--appt 2026-10-05` means an appointment on 5 October with no time, and does not match `2026-10-05 09:30`. If the patient has no such appointment, the error lists their appointments on that day, if any, so you can retype the one you meant.
+* `--to` moves the appointment to a new date, or date and time, in the same format as in [`add`](#adding-a-patient-add). Giving a date alone turns it into an appointment with no time.
+* `--details` sets the appointment's details, such as what to do or bring, replacing any it had. Like notes, details are stored in upper case, and cannot be blank.
+* Give at least one of `--to` and `--details`. The options may appear in any order after the ID, each at most once.
+* Moving an appointment keeps its details, unless `--details` is also given.
+* A patient cannot have two appointments at the same date and time, so moving an appointment onto another of the patient's appointments is rejected, and nothing is changed.
+* LaiNurse switches to the **Appointments** view and selects the edited appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
+
+Examples:
+* `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00` moves Alex Yeoh's appointment from 5 October, 09:30 to 6 October, 10:00, keeping its details.
+* `editappt S2345678B --appt 2026-10-06 --details Check blood pressure` sets the details of Bernice Yu's appointment on 6 October.
+* `editappt S1234567A --appt 2026-11-02 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's appointment on 2 November to 3 November, 08:00, and replaces its details.
+
 ### Viewing a patient's details: `view`
 
 Shows all the details of a patient in the panel beside the patient list.
@@ -378,6 +399,7 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--add-appt DATE_OR_DATETIME]…​ [--remove-appt DATE_OR_DATETIME]…​`<br> e.g., `edit S1234567A --notes Walks every morning --add-appt 2026-12-01 10:00`
+**EditAppt** | `editappt ID --appt DATE_OR_DATETIME [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`<br> e.g., `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one option required)
 **List** | `list`
 **View** | `view ID`<br> e.g., `view S1234567A`

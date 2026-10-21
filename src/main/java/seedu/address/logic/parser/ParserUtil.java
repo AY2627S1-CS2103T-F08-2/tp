@@ -16,6 +16,7 @@ import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
@@ -152,6 +153,24 @@ public class ParserUtil {
             throw new ParseException(Appointment.MESSAGE_CONSTRAINTS);
         }
         return new Appointment(trimmedAppointment);
+    }
+
+    /**
+     * Parses {@code String details} into {@code AppointmentDetails}.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code details} are blank.
+     */
+    public static AppointmentDetails parseAppointmentDetails(String details) throws ParseException {
+        requireNonNull(details);
+        String trimmedDetails = details.trim();
+        if (!AppointmentDetails.isValidAppointmentDetails(trimmedDetails)) {
+            logger.fine("Rejected blank appointment details.");
+            throw new ParseException(AppointmentDetails.MESSAGE_CONSTRAINTS);
+        }
+        AppointmentDetails parsedDetails = new AppointmentDetails(trimmedDetails);
+        logger.fine("Parsed appointment details.");
+        return parsedDetails;
     }
 
     /**

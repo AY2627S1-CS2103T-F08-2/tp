@@ -13,7 +13,9 @@ import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -57,6 +59,8 @@ public class EditCommand extends Command {
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_APPOINTMENT_NOT_FOUND = "Patient %1$s has no appointment on %2$s.";
 
+    private static final Logger logger = LogsCenter.getLogger(EditCommand.class);
+
     private final PatientId targetId;
     private final EditPatientDescriptor editPatientDescriptor;
 
@@ -77,12 +81,18 @@ public class EditCommand extends Command {
         requireNonNull(model);
         List<Patient> allPatients = model.getLaiNurse().getPatientList();
 
-        Patient patientToEdit = allPatients.stream().filter(patient -> patient.getId().equals(targetId))
-                .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
+        Optional<Patient> foundPatient = allPatients.stream()
+                .filter(patient -> patient.getId().equals(targetId)).findFirst();
+        if (foundPatient.isEmpty()) {
+            logger.fine("Rejected edit: no patient has the given ID.");
+            throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+        }
+        Patient patientToEdit = foundPatient.get();
         Patient editedPatient = createEditedPatient(patientToEdit, editPatientDescriptor);
 
         model.setPatient(patientToEdit, editedPatient);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+        logger.fine("Edited patient " + targetId + ".");
         return new CommandResult(String.format(MESSAGE_EDIT_PATIENT_SUCCESS, Messages.format(editedPatient)))
                 .withNavigation(Navigation.toPatient(editedPatient.getId()));
     }
@@ -109,6 +119,7 @@ public class EditCommand extends Command {
         AppointmentSchedule updatedSchedule = patientToEdit.getSchedule();
         for (Appointment appointment : editPatientDescriptor.getAppointmentsToRemove().asList()) {
             if (!updatedSchedule.contains(appointment)) {
+                logger.fine("Rejected edit: the patient has no appointment to remove at the given time.");
                 throw new CommandException(
                         String.format(MESSAGE_APPOINTMENT_NOT_FOUND, patientToEdit.getId(), appointment));
             }

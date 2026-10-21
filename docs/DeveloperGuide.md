@@ -9,9 +9,6 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the
-  originals.}_
-
 * Codebase adapted from [AddressBook-Level3 (AB3)](https://github.com/se-edu/addressbook-level3) developed by the SE-EDU initiative.
 * UI components and controls utilize native [JavaFX 17+](https://openjfx.io/) libraries.
 
@@ -23,6 +20,10 @@ title: Developer Guide
 * AI Use Declaration from Yuhao: "I used Claude Code to write code, tests and documentation, and I review and test the results."
 
 * AI Use Declaration from Yong Kang: "I used Gemini to write and review code, tests and documentation. No automation is done and I go back and forth consistently with AI to ensure I am still largely in charge of the process. AI levels between AI-1 and AI-5."
+
+* AI Use Declaration from Darren: "I used Claude Code to write code, tests and documentation for the `edit` command and
+  the appointment model, and to review my changes. I decide the design and behavior, and I review, test and revise
+  the results before committing them."
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -164,9 +165,9 @@ When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for 
 command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
 does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
 rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit` takes the ID first and options after it, so `IdCompleter` completes the word after `edit` and
-keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app started, which the
-Up and Down keys go through. The history is kept only in the UI, because no command needs it.
+end the command. `edit` and `editappt` take the ID first and options after it, so `IdCompleter` completes the word after
+the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
+started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
 The keyboard focus is in one of three areas, given by `FocusArea`: the command box, and in the view that is shown, the
 view tabs or the list. The details beside the list are not an area, so the keyboard never moves the focus there. In the
@@ -352,6 +353,29 @@ the same observable view. Filtering and sorting do not change stored records or 
 filter method clears sorting, as does a null comparator; existing calls from `list`, `add`, `edit` and `viewappt`
 therefore restore name order. The appointment list is independent of this sorting.
 
+### Editing a patient's details
+
+`edit ID [OPTION VALUE]...` changes the fields of the patient with the given ID. The sequence diagram below shows how
+`edit S1234567A --phone 91234567` changes the phone number of patient `S1234567A`.
+
+<img src="images/EditSequenceDiagram.png" width="800" />
+
+`EditCommandParser` reads the ID from the preamble and stores each change in an `EditPatientDescriptor`. A field that
+is not given stays `null` in the descriptor, so `EditCommand#createEditedPatient()` keeps the patient's value for it.
+Each value is checked by the same `ParserUtil` method as in `add`, so a blank value is rejected for every field,
+including the optional medical history and notes. `EditCommand` finds the patient among all patients, not only those
+in the displayed list, then replaces them through `Model#setPatient()`. A new `Patient` is built because `Patient` is
+immutable, so a command that fails leaves the original patient unchanged.
+
+**Design considerations**
+
+* **Identifying the patient: by ID (chosen) or by list number.** An ID stays the same when the list is filtered or
+  sorted, so the nurse cannot edit the wrong patient by using a stale list number, and can edit a patient who is not
+  shown. The cost is typing a longer value, which the command box's ID completion reduces.
+* **A blank optional value: rejected (chosen) or read as clearing the field.** Rejecting it keeps `edit` consistent
+  with `add`, and a stray option cannot remove a medical history or notes by accident. The cost is that `edit` cannot
+  clear these fields.
+
 ### Storing multiple appointments
 
 Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` objects. `add` builds it from every
@@ -403,9 +427,24 @@ has some.
 not clear notes. Notes are included in patient feedback through `Messages.format`. `find --notes` uses the substring
 search described above, and `view ID` shows the notes using the existing detail panel and its live updates.
 
-No command sets appointment details yet. `--add-appt` and `--remove-appt` keep the details of appointments that they do
-not remove. A command that sets details needs a `Prefix` in `CliSyntax`, a parser that builds `AppointmentDetails` with
-its `isValid` method, and an `Appointment` built with the new value.
+`editappt` sets an appointment's details with the `--details` option defined by `CliSyntax.PREFIX_DETAILS`.
+`ParserUtil.parseAppointmentDetails` rejects blank details, as `parseNotes` does for notes, and logs without the text.
+`--add-appt` and `--remove-appt` keep the details of appointments that they do not remove.
+
+`editappt ID --appt DATE_OR_DATETIME` finds the appointment to edit with `AppointmentSchedule#find`, which returns the
+patient's appointment at that exact date and time, with its details. Because the match is exact, a date alone never
+matches a timed appointment. If there is no match, `EditAppointmentCommand` lists the patient's appointments on that
+day, from `AppointmentSchedule#getOnDate`, in the error message, so that the nurse can retype the right one. The edited
+appointment is built from the new date and time from `--to`, if given, and the new details from `--details`, if given;
+the rest is kept from the old appointment. The command rejects a move onto another of the patient's appointments,
+because the schedule keeps only one appointment at each date and time, and one of them would be lost. Otherwise, it
+replaces the patient through `Model#setPatient()` with a schedule that has the old appointment removed and the edited
+one added, and selects the edited appointment with `Navigation.toAppointment`.
+
+The activity diagram below shows the checks that `editappt` makes, in order. Every error leaves the patient and the
+data file unchanged.
+
+<img src="images/EditAppointmentActivityDiagram.png" width="750" />
 
 ### Viewing appointments by date
 
@@ -489,6 +528,7 @@ Each command navigates as follows:
 | `add`, `edit`, `view` | `Navigation.toPatient` of the patient that they add, edit or show. All three show all patients first, so that patient is always in the list. |
 | `list`, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
 | `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt` |
+| `editappt` | `Navigation.toAppointment` of the edited appointment, with no range, so the page shown stays if it has the appointment |
 | `delete`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
 | `help`, `exit` | no navigation: keeps the view and the selection |
 
@@ -861,39 +901,45 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
   Use case resumes at step 2.
 
-* 2a. The given ID does not match any patient.
+* 2a. The ID is missing or is not a valid ID.
 
-    * 2a1. LaiNurse shows an error message.
+    * 2a1. LaiNurse shows an error message with the command format.
 
       Use case resumes at step 2.
 
-* 2b. No fields to edit are provided.
+* 2b. The given ID does not match any patient.
 
     * 2b1. LaiNurse shows an error message.
 
       Use case resumes at step 2.
 
-* 2c. One or more fields are in an invalid format.
+* 2c. No fields to edit are provided.
 
-    * 2c1. LaiNurse shows an error message with the valid format.
-
-      Use case resumes at step 2.
-
-* 2d. Nurse tries to change the patient's ID.
-
-    * 2d1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
+    * 2c1. LaiNurse shows an error message.
 
       Use case resumes at step 2.
 
-* 2e. An appointment to remove is not one of the patient's appointments.
+* 2d. One or more fields are in an invalid format.
 
-    * 2e1. LaiNurse shows an error message naming the appointment, and makes no changes.
+    * 2d1. LaiNurse shows an error message with the valid format.
 
       Use case resumes at step 2.
 
-* 2f. An appointment to add is one the patient already has.
+* 2e. Nurse tries to change the patient's ID.
 
-    * 2f1. LaiNurse keeps a single copy of the appointment.
+    * 2e1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
+
+      Use case resumes at step 2.
+
+* 2f. An appointment to remove is not one of the patient's appointments.
+
+    * 2f1. LaiNurse shows an error message naming the appointment, and makes no changes.
+
+      Use case resumes at step 2.
+
+* 2g. An appointment to add is one the patient already has.
+
+    * 2g1. LaiNurse keeps a single copy of the appointment.
 
       Use case resumes at step 3.
 
@@ -1031,6 +1077,49 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW`).
     * 1e1. LaiNurse normalizes the target using `Locale.ROOT` and displays the syntax details for the matching command.
     * Use case ends.
+
+**Use case: UC08 - Edit an appointment**
+
+**MSS**
+
+1.  Nurse requests to edit a patient's appointment by the patient's ID and the appointment's date and time, with a
+    new date and time, new details, or both
+2.  LaiNurse updates the appointment
+3.  LaiNurse shows the edited appointment
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The ID or the appointment's date and time is missing, or nothing to change is given.
+
+    * 1a1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1b. The given ID does not match any patient.
+
+    * 1b1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1c. The patient has no appointment at the given date and time.
+
+    * 1c1. LaiNurse shows an error message that lists the patient's appointments on that day, if any.
+
+      Use case resumes at step 1.
+
+* 1d. The new date and time is that of another of the patient's appointments.
+
+    * 1d1. LaiNurse shows an error message, and makes no changes.
+
+      Use case resumes at step 1.
+
+* 1e. A date, time or the details are in an invalid format.
+
+    * 1e1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
 
 *{More to be added}*
 
@@ -1605,6 +1694,9 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `edit S1234567A`, with nothing to change<br>
        Expected: No patient is changed. The status message shows `At least one field to edit must be provided.`
 
+    1. Test case: `edit --phone 91234567`, with no ID<br>
+       Expected: No patient is changed. The status message shows the command format.
+
 1. Adding and removing appointments
 
     1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `2026-10-05 09:30` and `2026-11-02`.
@@ -1620,6 +1712,36 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `edit S1234567A --add-appt 2026-02-30`, an impossible date<br>
        Expected: No patient is changed. The status message shows the appointment format error.
+
+### Editing an appointment
+
+1. Moving an appointment and setting its details
+
+    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `2026-10-05 09:30`, with
+       the details `INSULIN REVIEW`, and `2026-11-02`, with the details `MONTHLY BLOOD TEST`.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00`<br>
+       Expected: The **Appointments** tab is selected, showing the week of 6 October, with Alex Yeoh's appointment at
+       10:00 selected and still showing `INSULIN REVIEW`. The status message ends with
+       `(moved from 2026-10-05 09:30)`.
+
+    1. Test case: `editappt S1234567A --appt 2026-11-02 --details Fasting blood test`<br>
+       Expected: The 2 November appointment keeps its date, and its details become `FASTING BLOOD TEST`.
+
+1. Editing an appointment that cannot be edited
+
+    1. Prerequisites: Start with the sample data.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 --to 2026-10-06`, a date alone for a timed appointment<br>
+       Expected: No appointment is changed. The status message says that the patient has no appointment on
+       `2026-10-05`, and lists `2026-10-05 09:30` as their appointment that day.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-11-02`<br>
+       Expected: No appointment is changed. The status message says that the patient already has an appointment on
+       `2026-11-02`.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30`, with nothing to change<br>
+       Expected: No appointment is changed. The status message says that `--to` or `--details` must be given.
 
 ### Viewing help and command instructions
 

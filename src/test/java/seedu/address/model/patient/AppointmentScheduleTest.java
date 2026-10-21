@@ -69,6 +69,31 @@ public class AppointmentScheduleTest {
     }
 
     @Test
+    public void find() {
+        Appointment middleWithDetails = new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Insulin review")));
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY, middleWithDetails));
+
+        // the stored appointment is returned with its own details
+        assertEquals(Optional.of(middleWithDetails), appointments.find(MIDDLE));
+        assertEquals(Optional.of(EARLY), appointments.find(EARLY));
+
+        // a date-only appointment does not match a timed one on the same day, nor midnight
+        assertEquals(Optional.empty(), appointments.find(new Appointment("2026-10-05 00:00")));
+        assertEquals(Optional.empty(), appointments.find(LATE));
+        assertThrows(NullPointerException.class, () -> appointments.find(null));
+    }
+
+    @Test
+    public void getOnDate() {
+        AppointmentSchedule appointments = new AppointmentSchedule(List.of(LATE, MIDDLE, EARLY));
+        assertEquals(List.of(EARLY, MIDDLE), appointments.getOnDate(LocalDate.of(2026, 10, 5)));
+        assertEquals(List.of(LATE), appointments.getOnDate(LocalDate.of(2026, 11, 2)));
+        assertEquals(List.of(), appointments.getOnDate(LocalDate.of(2026, 10, 6)));
+        assertThrows(NullPointerException.class, () -> appointments.getOnDate(null));
+    }
+
+    @Test
     public void asList_modified_throwsUnsupportedOperationException() {
         AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY));
         assertThrows(UnsupportedOperationException.class, () -> appointments.asList().add(LATE));
