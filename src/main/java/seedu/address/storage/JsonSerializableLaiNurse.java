@@ -20,17 +20,19 @@ import seedu.address.model.patient.Patient;
 class JsonSerializableLaiNurse {
 
     public static final String MESSAGE_DUPLICATE_PATIENT = "Patients list contains duplicate patient(s).";
+    public static final String MESSAGE_MISSING_PATIENTS = "The data file has no \"patients\" list.";
 
-    // The field is named "persons" because Jackson uses it as the key in the data file.
-    // Keep the name so that existing data files still load.
-    private final List<JsonAdaptedPatient> persons = new ArrayList<>();
+    // Jackson uses the field name as the key in the data file. Null if the file has no "patients" key.
+    private final List<JsonAdaptedPatient> patients;
 
     /**
      * Constructs a {@code JsonSerializableLaiNurse} with the given patients.
+     * {@code patients} is null if the data file has no {@code "patients"} key, such as a file from v1.3 or earlier,
+     * which saved them under {@code "persons"}.
      */
     @JsonCreator
-    public JsonSerializableLaiNurse(@JsonProperty("persons") List<JsonAdaptedPatient> persons) {
-        this.persons.addAll(persons);
+    public JsonSerializableLaiNurse(@JsonProperty("patients") List<JsonAdaptedPatient> patients) {
+        this.patients = patients == null ? null : new ArrayList<>(patients);
     }
 
     /**
@@ -39,17 +41,20 @@ class JsonSerializableLaiNurse {
      * @param source future changes to this will not affect the created {@code JsonSerializableLaiNurse}.
      */
     public JsonSerializableLaiNurse(ReadOnlyLaiNurse source) {
-        persons.addAll(source.getPatientList().stream().map(JsonAdaptedPatient::new).collect(Collectors.toList()));
+        patients = source.getPatientList().stream().map(JsonAdaptedPatient::new).collect(Collectors.toList());
     }
 
     /**
      * Converts this LaiNurse data into the model's {@code LaiNurse} object.
      *
-     * @throws IllegalValueException if there were any data constraints violated.
+     * @throws IllegalValueException if the data file has no patient list, or there were any data constraints violated.
      */
     public LaiNurse toModelType() throws IllegalValueException {
+        if (patients == null) {
+            throw new IllegalValueException(MESSAGE_MISSING_PATIENTS);
+        }
         LaiNurse laiNurse = new LaiNurse();
-        for (JsonAdaptedPatient jsonAdaptedPatient : persons) {
+        for (JsonAdaptedPatient jsonAdaptedPatient : patients) {
             Patient patient = jsonAdaptedPatient.toModelType();
             if (laiNurse.hasPatient(patient)) {
                 throw new IllegalValueException(MESSAGE_DUPLICATE_PATIENT);

@@ -75,14 +75,14 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 LaiNurse shows one view at a time. The tabs under the result display switch between them:
 
 * **Patients**: the list of patients, sorted by name, each with their next appointment, and beside it the details of one patient.
-  * The list is sorted by patient name. Case does not matter, and the ID breaks ties between patients with the same name, so two patients with the same name keep one fixed order. Renaming a patient with [`edit`](#editing-a-patient-edit) moves their row.
-  * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. A filtered list also shows `Esc to show all patients`. An empty list says `No patients yet.` or `No patients match the filter.`
+  * The list is sorted by patient name. Case does not matter, and the ID breaks ties between patients with the same name, so two patients with the same name keep one fixed order. Renaming a patient with [`edit`](#editing-a-patient-edit) moves their row. After [`find`](#locating-patients-by-substrings-find), the patients that match more fields come first, and patients that match the same number of fields are in name order.
+  * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
   * The next appointment of a patient is their first appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
-  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates, and `Esc to show the weekly view`.
+  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
 
 In both views, the list and the details share the width of the window, and grow and shrink together as you resize it.
 
@@ -351,7 +351,7 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
 2. **If you minimize the Help Window** and then run the `help window` command (or select **Help** > **Help**,
    or the keyboard shortcut <kbd>F1</kbd>) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
-3. **In a narrow window**, such as at the default size, the hint and the count in a list's header, such as `Esc to show all patients`, can be cut short. The remedy is to widen the window.
+3. **In a very narrow window**, the note and the count in a list's header, such as `This week` and the number of appointments, can be cut short. The remedy is to widen the window.
 
 --------------------------------------------------------------------------------------------------------------------
 

@@ -41,7 +41,6 @@ public class AppointmentListPanel extends UiPart<Region> {
     private static final String THIS_WEEK_STYLE_CLASS = "list-header-note-this";
     private static final String DAY_CELL_STYLE_CLASS = "appointment-day-cell";
     private static final String ENTRY_CELL_STYLE_CLASS = "appointment-entry-cell";
-    private static final String RANGE_HINT = "Esc to show the weekly view";
 
     private final ObservableList<PatientAppointment> allAppointments;
     private final Consumer<Optional<PatientAppointment>> onAppointmentChosen;
@@ -247,7 +246,7 @@ public class AppointmentListPanel extends UiPart<Region> {
             }
         } else {
             weekDates.setText(AppointmentFormatter.formatRange(range.start(), range.end()));
-            weekRelative.setText(RANGE_HINT);
+            weekRelative.setText("");
         }
         weekCount.setText(describeCount(page.getEntryCount()));
     }
