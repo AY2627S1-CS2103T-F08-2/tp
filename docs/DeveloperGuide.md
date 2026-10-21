@@ -164,9 +164,9 @@ When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for 
 command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
 does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
 rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit` takes the ID first and options after it, so `IdCompleter` completes the word after `edit` and
-keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app started, which the
-Up and Down keys go through. The history is kept only in the UI, because no command needs it.
+end the command. `edit` and `editappt` take the ID first and options after it, so `IdCompleter` completes the word after
+the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
+started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
 The keyboard focus is in one of three areas, given by `FocusArea`: the command box, and in the view that is shown, the
 view tabs or the list. The details beside the list are not an area, so the keyboard never moves the focus there. In the
