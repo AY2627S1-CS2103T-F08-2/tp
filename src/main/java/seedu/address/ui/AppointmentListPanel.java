@@ -296,7 +296,9 @@ public class AppointmentListPanel extends UiPart<Region> {
                 weekRelative.getStyleClass().add(THIS_WEEK_STYLE_CLASS);
             }
         } else {
-            weekDates.setText(AppointmentFormatter.formatRange(range.start(), range.end()));
+            // A range of one patient's appointments starts with their ID, so that it is not mistaken for everyone's
+            weekDates.setText((range.patientId() == null ? "" : range.patientId().value + ", ")
+                    + AppointmentFormatter.formatRange(range.start(), range.end()));
             weekRelative.setText("");
         }
         weekCount.setText(describeCount(page.getEntryCount()));
