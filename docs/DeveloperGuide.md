@@ -414,6 +414,11 @@ because the schedule keeps only one appointment at each date and time, and one o
 replaces the patient through `Model#setPatient()` with a schedule that has the old appointment removed and the edited
 one added, and selects the edited appointment with `Navigation.toAppointment`.
 
+The activity diagram below shows the checks that `editappt` makes, in order. Every error leaves the patient and the
+data file unchanged.
+
+<img src="images/EditAppointmentActivityDiagram.png" width="750" />
+
 ### Viewing appointments by date
 
 `viewappt` takes one date, a range given by `--from`, `--to`, or both, or none of these. `ViewAppointmentCommandParser`
