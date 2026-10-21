@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.CARL;
 import static seedu.address.testutil.TypicalPatients.ELLE;
 import static seedu.address.testutil.TypicalPatients.FIONA;
@@ -26,6 +27,17 @@ import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 public class FindCommandTest {
     private Model model = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
     private Model expectedModel = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
+
+    @Test
+    public void constructor_nullPredicate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new FindCommand(null));
+    }
+
+    @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        FindCommand command = new FindCommand(prepareNamePredicate("Alice"));
+        assertThrows(NullPointerException.class, () -> command.execute(null));
+    }
 
     @Test
     public void equals() {

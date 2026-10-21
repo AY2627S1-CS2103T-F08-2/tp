@@ -45,13 +45,38 @@ public final class PatientContainsSubstringsPredicate implements Predicate<Patie
 
     @Override
     public boolean test(Patient patient) {
+        return countMatchingFields(patient) > 0;
+    }
+
+    /**
+     * Returns the number of supplied criteria that match their corresponding patient fields.
+     * Each field contributes at most one match, regardless of repeated occurrences of the substring.
+     *
+     * @throws NullPointerException if {@code patient} is null.
+     */
+    public int countMatchingFields(Patient patient) {
         requireNonNull(patient);
-        return matches(id, patient.getId().value)
-                || matches(name, patient.getName().fullName)
-                || matches(phone, patient.getPhone().value)
-                || matches(address, patient.getAddress().value)
-                || patient.getMedicalHistory().map(history -> matches(medicalHistory, history.value)).orElse(false)
-                || patient.getNotes().map(patientNotes -> matches(notes, patientNotes.value)).orElse(false);
+        int matchCount = 0;
+        if (matches(id, patient.getId().value)) {
+            matchCount++;
+        }
+        if (matches(name, patient.getName().fullName)) {
+            matchCount++;
+        }
+        if (matches(phone, patient.getPhone().value)) {
+            matchCount++;
+        }
+        if (matches(address, patient.getAddress().value)) {
+            matchCount++;
+        }
+        if (patient.getMedicalHistory().map(history -> matches(medicalHistory, history.value)).orElse(false)) {
+            matchCount++;
+        }
+        if (patient.getNotes().map(patientNotes -> matches(notes, patientNotes.value)).orElse(false)) {
+            matchCount++;
+        }
+        assert matchCount >= 0 && matchCount <= 6 : "Each of the six searchable fields contributes at most one match.";
+        return matchCount;
     }
 
     private static Optional<String> normalizeCriterion(Optional<String> criterion) {

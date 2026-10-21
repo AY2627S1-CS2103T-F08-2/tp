@@ -10,11 +10,15 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -23,11 +27,15 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.AppointmentRange;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
+import seedu.address.model.patient.PatientId;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -38,6 +46,8 @@ public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
     private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
+    /** Marks the closed menu that the mouse is over, in place of {@code :hover}. */
+    private static final PseudoClass HOVERED = PseudoClass.getPseudoClass("hovered");
     private static final String PATIENT_PLACEHOLDER =
             "To see a patient's details here, type view and their ID, for example: view S1234567A";
     private static final String APPOINTMENT_PLACEHOLDER =
@@ -74,6 +84,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private StackPane commandBoxPlaceholder;
+
+    @FXML
+    private MenuBar menuBar;
 
     @FXML
     private MenuItem helpMenuItem;
@@ -127,6 +140,7 @@ public class MainWindow extends UiPart<Stage> {
         setWindowDefaultSize(logic.getGuiSettings());
 
         setAccelerators();
+        ignoreHoverOfClosedMenus(menuBar);
 
         helpWindow = new HelpWindow();
     }
@@ -137,6 +151,28 @@ public class MainWindow extends UiPart<Stage> {
 
     private void setAccelerators() {
         setAccelerator(helpMenuItem, KeyCombination.valueOf("F1"));
+    }
+
+    /**
+     * Keeps the mouse from selecting a menu of {@code menuBar} while none of its menus is open. JavaFX selects a menu
+     * that the mouse is over, and while a menu is selected, the menu bar takes Left and Right to move between its
+     * menus, also after the mouse has left, until a click elsewhere. A click still opens a menu, and an open menu
+     * still follows the mouse to the next one. As the mouse-entered events stop here, the menu under the mouse gets
+     * the {@code hovered} pseudo-class in place of {@code :hover}.
+     */
+    static void ignoreHoverOfClosedMenus(MenuBar menuBar) {
+        menuBar.addEventFilter(MouseEvent.MOUSE_ENTERED_TARGET, event -> {
+            boolean isAnyMenuShowing = menuBar.getMenus().stream().anyMatch(Menu::isShowing);
+            if (event.getTarget() instanceof Node node && node != menuBar && !isAnyMenuShowing) {
+                node.pseudoClassStateChanged(HOVERED, true);
+                event.consume();
+            }
+        });
+        menuBar.addEventFilter(MouseEvent.MOUSE_EXITED_TARGET, event -> {
+            if (event.getTarget() instanceof Node node) {
+                node.pseudoClassStateChanged(HOVERED, false);
+            }
+        });
     }
 
     /**
@@ -281,6 +317,29 @@ public class MainWindow extends UiPart<Stage> {
 
     private Button getTab(View view) {
         return view == View.PATIENTS ? patientsTab : appointmentsTab;
+    }
+
+    /**
+     * Selects the entry that {@code navigation} names in the list of its view, which {@link #showView} has shown,
+     * or the entry to start from if it names none. {@code range} is the range of appointments that the command
+     * showed, if any. {@code LogicManager} has checked that the entry is in the list.
+     */
+    private void navigate(Navigation navigation, Optional<AppointmentRange> range) {
+        if (navigation.view() == View.PATIENTS) {
+            Optional<PatientId> patient = navigation.patient().or(() -> logic.getFilteredPatientList().stream()
+                    .findFirst().map(Patient::getId));
+            // executeCommand then selects the shown patient in the list
+            patient.ifPresentOrElse(patientDetailPanel::show, patientDetailPanel::clear);
+            return;
+        }
+        if (range.isPresent()) {
+            // showRange has shown the range and selected its first appointment, which a result with no navigation keeps
+            navigation.appointment().ifPresentOrElse(appointmentListPanel::selectAppointment,
+                    appointmentListPanel::selectNextFromNow);
+            return;
+        }
+        navigation.appointment().ifPresentOrElse(appointmentListPanel::showAppointment,
+                appointmentListPanel::showThisWeek);
     }
 
     private void showAppointmentDetails(Optional<PatientAppointment> appointment) {
@@ -518,6 +577,8 @@ public class MainWindow extends UiPart<Stage> {
             commandResult.getAppointmentRange().ifPresent(appointmentListPanel::showRange);
 
             commandResult.getPatientToView().ifPresent(patientDetailPanel::show);
+            commandResult.getNavigation().ifPresent(navigation ->
+                    navigate(navigation, commandResult.getAppointmentRange()));
             // Removing or filtering rows can move the list's selection to another patient, so match it to the panel.
             patientDetailPanel.getShownId().ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
 

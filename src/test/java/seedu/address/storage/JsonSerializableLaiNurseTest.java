@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
@@ -22,6 +23,7 @@ public class JsonSerializableLaiNurseTest {
     private static final Path INVALID_PATIENT_FILE = TEST_DATA_FOLDER.resolve("invalidPatientLaiNurse.json");
     private static final Path DUPLICATE_PATIENT_FILE = TEST_DATA_FOLDER.resolve("duplicatePatientLaiNurse.json");
     private static final Path NOTES_AND_DETAILS_FILE = TEST_DATA_FOLDER.resolve("notesAndDetailsLaiNurse.json");
+    private static final Path PERSONS_KEY_FILE = TEST_DATA_FOLDER.resolve("personsKeyLaiNurse.json");
 
     @Test
     public void toModelType_typicalPatientsFile_success() throws Exception {
@@ -45,6 +47,22 @@ public class JsonSerializableLaiNurseTest {
                 JsonSerializableLaiNurse.class).get();
         assertThrows(IllegalValueException.class, JsonSerializableLaiNurse.MESSAGE_DUPLICATE_PATIENT,
                 dataFromFile::toModelType);
+    }
+
+    @Test
+    public void toModelType_personsKeyOnly_throwsIllegalValueException() throws Exception {
+        // v1.3 and earlier saved the patients under "persons", which is no longer read
+        JsonSerializableLaiNurse dataFromFile = JsonUtil.readJsonFile(PERSONS_KEY_FILE,
+                JsonSerializableLaiNurse.class).get();
+        assertThrows(IllegalValueException.class, JsonSerializableLaiNurse.MESSAGE_MISSING_PATIENTS,
+                dataFromFile::toModelType);
+    }
+
+    @Test
+    public void constructor_typicalPatients_savedUnderPatientsKey() throws Exception {
+        String json = JsonUtil.toJsonString(new JsonSerializableLaiNurse(TypicalPatients.getTypicalLaiNurse()));
+        assertTrue(json.contains("\"patients\" : ["));
+        assertFalse(json.contains("\"persons\""));
     }
 
     @Test

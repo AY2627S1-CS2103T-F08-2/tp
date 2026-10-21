@@ -29,7 +29,15 @@ jobs:
           java-package: jdk+fx
 
       - name: Build and check with Gradle
-        run: ./gradlew check coverage
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            # Linux runners are headless; JavaFX needs a display to start
+            # (the runner image ships xvfb already)
+            xvfb-run -a ./gradlew check coverage
+          else
+            ./gradlew check coverage
+          fi
 
       - name: Upload coverage reports to Codecov
         if: runner.os == 'Linux'

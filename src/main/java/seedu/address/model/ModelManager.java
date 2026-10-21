@@ -3,6 +3,7 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -28,6 +29,7 @@ public class ModelManager implements Model {
     private final LaiNurse laiNurse;
     private final UserPrefs userPrefs;
     private final FilteredList<Patient> filteredPatients;
+    private final SortedList<Patient> sortedPatients;
     private final ObservableList<PatientAppointment> appointments = FXCollections.observableArrayList();
 
     /**
@@ -42,6 +44,7 @@ public class ModelManager implements Model {
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPatients = new FilteredList<>(
                 new SortedList<>(this.laiNurse.getPatientList(), PatientNameComparator.PATIENT_NAME_ORDER));
+        sortedPatients = new SortedList<>(filteredPatients);
         this.laiNurse.getPatientList().addListener((ListChangeListener<Patient>) change -> refreshAppointments());
         refreshAppointments();
     }
@@ -113,18 +116,25 @@ public class ModelManager implements Model {
     //=========== Filtered Patient List Accessors =============================================================
 
     /**
-     * Returns an unmodifiable view of the list of {@code Patient} backed by the internal list of
-     * {@code laiNurse}
+     * Returns an unmodifiable view of the filtered and ordered patients, backed by {@code laiNurse}.
      */
     @Override
     public ObservableList<Patient> getFilteredPatientList() {
-        return filteredPatients;
+        return sortedPatients;
     }
 
     @Override
     public void updateFilteredPatientList(Predicate<Patient> predicate) {
+        updateFilteredPatientList(predicate, null);
+    }
+
+    @Override
+    public void updateFilteredPatientList(Predicate<Patient> predicate, Comparator<Patient> comparator) {
         requireNonNull(predicate);
         filteredPatients.setPredicate(predicate);
+        sortedPatients.setComparator(comparator);
+        logger.fine(() -> "Updated patient filter: " + sortedPatients.size() + " patients, "
+                + (comparator == null ? "name order" : "custom order"));
     }
 
     //=========== Appointment List Accessors ==================================================================
@@ -159,7 +169,7 @@ public class ModelManager implements Model {
 
         return laiNurse.equals(otherModelManager.laiNurse)
                 && userPrefs.equals(otherModelManager.userPrefs)
-                && filteredPatients.equals(otherModelManager.filteredPatients);
+                && sortedPatients.equals(otherModelManager.sortedPatients);
     }
 
 }

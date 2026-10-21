@@ -42,7 +42,6 @@ public class AppointmentListPanel extends UiPart<Region> {
     private static final String THIS_WEEK_STYLE_CLASS = "list-header-note-this";
     private static final String DAY_CELL_STYLE_CLASS = "appointment-day-cell";
     private static final String ENTRY_CELL_STYLE_CLASS = "appointment-entry-cell";
-    private static final String RANGE_HINT = "Esc to show the weekly view";
 
     private final ObservableList<PatientAppointment> allAppointments;
     private final Consumer<Optional<PatientAppointment>> onAppointmentChosen;
@@ -103,6 +102,52 @@ public class AppointmentListPanel extends UiPart<Region> {
         this.range = requireNonNull(range);
         showPage();
         page.firstEntryIndex().ifPresentOrElse(this::select, this::clearSelection);
+    }
+
+    /**
+     * Shows the weekly view of this week, in place of any range, and selects the next appointment from now.
+     */
+    public void showThisWeek() {
+        week = AppointmentWeek.of(LocalDate.now());
+        range = null;
+        showPage();
+        selectNextFromNow();
+    }
+
+    /**
+     * Selects the next appointment from now on the page that is shown: the first that has not passed, or the first
+     * if all have passed. Selects nothing on a page with no appointments.
+     */
+    public void selectNextFromNow() {
+        page.defaultEntryIndex().ifPresentOrElse(this::select, this::clearSelection);
+    }
+
+    /**
+     * Selects {@code appointment} on the page that is shown if it is there, so that a command run on a range stays
+     * on that range. Otherwise shows the weekly view of its week, in place of any range, and selects it there.
+     */
+    public void showAppointment(PatientAppointment appointment) {
+        requireNonNull(appointment);
+        if (page.indexOf(appointment).isEmpty()) {
+            week = AppointmentWeek.of(appointment.getAppointment().getDate());
+            range = null;
+            showPage();
+        }
+        selectAppointment(appointment);
+    }
+
+    /**
+     * Selects {@code appointment} on the page that is shown, and scrolls to it.
+     *
+     * @throws IllegalArgumentException if {@code appointment} is not on the page.
+     */
+    public void selectAppointment(PatientAppointment appointment) {
+        requireNonNull(appointment);
+        OptionalInt index = page.indexOf(appointment);
+        if (index.isEmpty()) {
+            throw new IllegalArgumentException("Appointment " + appointment + " is not on the page shown.");
+        }
+        select(index.getAsInt());
     }
 
     /**
@@ -229,10 +274,9 @@ public class AppointmentListPanel extends UiPart<Region> {
     private void showPage() {
         pageTime = LocalDateTime.now();
         LocalDate today = pageTime.toLocalDate();
-        // A range with a patient narrows the page to that patient's appointments
+        // A range narrows the page to the appointments it contains, of its patient, if it has one
         List<PatientAppointment> pageAppointments = allAppointments.stream()
-                .filter(entry -> range == null || range.patientId() == null
-                        || entry.getPatient().getId().equals(range.patientId()))
+                .filter(entry -> range == null || range.contains(entry))
                 .toList();
         page = range == null
                 ? AppointmentPage.ofWeek(week, pageAppointments, pageTime)
@@ -253,7 +297,7 @@ public class AppointmentListPanel extends UiPart<Region> {
             }
         } else {
             weekDates.setText(AppointmentFormatter.formatRange(range.start(), range.end()));
-            weekRelative.setText(RANGE_HINT);
+            weekRelative.setText("");
         }
         weekCount.setText(describeCount(page.getEntryCount()));
     }
