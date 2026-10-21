@@ -9,9 +9,6 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the
-  originals.}_
-
 * Codebase adapted from [AddressBook-Level3 (AB3)](https://github.com/se-edu/addressbook-level3) developed by the SE-EDU initiative.
 * UI components and controls utilize native [JavaFX 17+](https://openjfx.io/) libraries.
 
@@ -23,6 +20,10 @@ title: Developer Guide
 * AI Use Declaration from Yuhao: "I used Claude Code to write code, tests and documentation, and I review and test the results."
 
 * AI Use Declaration from Yong Kang: "I used Gemini to write and review code, tests and documentation. No automation is done and I go back and forth consistently with AI to ensure I am still largely in charge of the process. AI levels between AI-1 and AI-5."
+
+* AI Use Declaration from Darren: "I used Claude Code to write code, tests and documentation for the `edit` command and
+  the appointment model, and to review my changes. I decide the design and behavior, and I review, test and revise
+  the results before committing them."
 
 --------------------------------------------------------------------------------------------------------------------
 
