@@ -843,39 +843,45 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
   Use case resumes at step 2.
 
-* 2a. The given ID does not match any patient.
+* 2a. The ID is missing or is not a valid ID.
 
-    * 2a1. LaiNurse shows an error message.
+    * 2a1. LaiNurse shows an error message with the command format.
 
       Use case resumes at step 2.
 
-* 2b. No fields to edit are provided.
+* 2b. The given ID does not match any patient.
 
     * 2b1. LaiNurse shows an error message.
 
       Use case resumes at step 2.
 
-* 2c. One or more fields are in an invalid format.
+* 2c. No fields to edit are provided.
 
-    * 2c1. LaiNurse shows an error message with the valid format.
-
-      Use case resumes at step 2.
-
-* 2d. Nurse tries to change the patient's ID.
-
-    * 2d1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
+    * 2c1. LaiNurse shows an error message.
 
       Use case resumes at step 2.
 
-* 2e. An appointment to remove is not one of the patient's appointments.
+* 2d. One or more fields are in an invalid format.
 
-    * 2e1. LaiNurse shows an error message naming the appointment, and makes no changes.
+    * 2d1. LaiNurse shows an error message with the valid format.
 
       Use case resumes at step 2.
 
-* 2f. An appointment to add is one the patient already has.
+* 2e. Nurse tries to change the patient's ID.
 
-    * 2f1. LaiNurse keeps a single copy of the appointment.
+    * 2e1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
+
+      Use case resumes at step 2.
+
+* 2f. An appointment to remove is not one of the patient's appointments.
+
+    * 2f1. LaiNurse shows an error message naming the appointment, and makes no changes.
+
+      Use case resumes at step 2.
+
+* 2g. An appointment to add is one the patient already has.
+
+    * 2g1. LaiNurse keeps a single copy of the appointment.
 
       Use case resumes at step 3.
 
@@ -1555,6 +1561,9 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `edit S1234567A`, with nothing to change<br>
        Expected: No patient is changed. The status message shows `At least one field to edit must be provided.`
+
+    1. Test case: `edit --phone 91234567`, with no ID<br>
+       Expected: No patient is changed. The status message shows the command format.
 
 1. Adding and removing appointments
 
