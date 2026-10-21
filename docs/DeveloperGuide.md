@@ -9,9 +9,6 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the
-  originals.}_
-
 * Codebase adapted from [AddressBook-Level3 (AB3)](https://github.com/se-edu/addressbook-level3) developed by the SE-EDU initiative.
 * UI components and controls utilize native [JavaFX 17+](https://openjfx.io/) libraries.
 
@@ -23,6 +20,10 @@ title: Developer Guide
 * AI Use Declaration from Yuhao: "I used Claude Code to write code, tests and documentation, and I review and test the results."
 
 * AI Use Declaration from Yong Kang: "I used Gemini to write and review code, tests and documentation. No automation is done and I go back and forth consistently with AI to ensure I am still largely in charge of the process. AI levels between AI-1 and AI-5."
+
+* AI Use Declaration from Darren: "I used Claude Code to write code, tests and documentation for the `edit` command and
+  the appointment model, and to review my changes. I decide the design and behavior, and I review, test and revise
+  the results before committing them."
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -348,6 +349,29 @@ patient collection. `ModelManager` keeps one `SortedList` over its `FilteredList
 the same observable view. Filtering and sorting do not change stored records or their order. The single-argument
 filter method clears sorting, as does a null comparator; existing calls from `list`, `add`, `edit` and `viewappt`
 therefore restore name order. The appointment list is independent of this sorting.
+
+### Editing a patient's details
+
+`edit ID [OPTION VALUE]...` changes the fields of the patient with the given ID. The sequence diagram below shows how
+`edit S1234567A --phone 91234567` changes the phone number of patient `S1234567A`.
+
+<img src="images/EditSequenceDiagram.png" width="800" />
+
+`EditCommandParser` reads the ID from the preamble and stores each change in an `EditPatientDescriptor`. A field that
+is not given stays `null` in the descriptor, so `EditCommand#createEditedPatient()` keeps the patient's value for it.
+Each value is checked by the same `ParserUtil` method as in `add`, so a blank value is rejected for every field,
+including the optional medical history and notes. `EditCommand` finds the patient among all patients, not only those
+in the displayed list, then replaces them through `Model#setPatient()`. A new `Patient` is built because `Patient` is
+immutable, so a command that fails leaves the original patient unchanged.
+
+**Design considerations**
+
+* **Identifying the patient: by ID (chosen) or by list number.** An ID stays the same when the list is filtered or
+  sorted, so the nurse cannot edit the wrong patient by using a stale list number, and can edit a patient who is not
+  shown. The cost is typing a longer value, which the command box's ID completion reduces.
+* **A blank optional value: rejected (chosen) or read as clearing the field.** Rejecting it keeps `edit` consistent
+  with `add`, and a stray option cannot remove a medical history or notes by accident. The cost is that `edit` cannot
+  clear these fields.
 
 ### Storing multiple appointments
 
@@ -843,39 +867,45 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
   Use case resumes at step 2.
 
-* 2a. The given ID does not match any patient.
+* 2a. The ID is missing or is not a valid ID.
 
-    * 2a1. LaiNurse shows an error message.
+    * 2a1. LaiNurse shows an error message with the command format.
 
       Use case resumes at step 2.
 
-* 2b. No fields to edit are provided.
+* 2b. The given ID does not match any patient.
 
     * 2b1. LaiNurse shows an error message.
 
       Use case resumes at step 2.
 
-* 2c. One or more fields are in an invalid format.
+* 2c. No fields to edit are provided.
 
-    * 2c1. LaiNurse shows an error message with the valid format.
-
-      Use case resumes at step 2.
-
-* 2d. Nurse tries to change the patient's ID.
-
-    * 2d1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
+    * 2c1. LaiNurse shows an error message.
 
       Use case resumes at step 2.
 
-* 2e. An appointment to remove is not one of the patient's appointments.
+* 2d. One or more fields are in an invalid format.
 
-    * 2e1. LaiNurse shows an error message naming the appointment, and makes no changes.
+    * 2d1. LaiNurse shows an error message with the valid format.
 
       Use case resumes at step 2.
 
-* 2f. An appointment to add is one the patient already has.
+* 2e. Nurse tries to change the patient's ID.
 
-    * 2f1. LaiNurse keeps a single copy of the appointment.
+    * 2e1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
+
+      Use case resumes at step 2.
+
+* 2f. An appointment to remove is not one of the patient's appointments.
+
+    * 2f1. LaiNurse shows an error message naming the appointment, and makes no changes.
+
+      Use case resumes at step 2.
+
+* 2g. An appointment to add is one the patient already has.
+
+    * 2g1. LaiNurse keeps a single copy of the appointment.
 
       Use case resumes at step 3.
 
@@ -1555,6 +1585,9 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `edit S1234567A`, with nothing to change<br>
        Expected: No patient is changed. The status message shows `At least one field to edit must be provided.`
+
+    1. Test case: `edit --phone 91234567`, with no ID<br>
+       Expected: No patient is changed. The status message shows the command format.
 
 1. Adding and removing appointments
 
