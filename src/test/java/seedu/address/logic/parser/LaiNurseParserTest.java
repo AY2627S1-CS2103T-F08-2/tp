@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.logic.commands.ExitCommand;
@@ -23,6 +24,7 @@ import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 import seedu.address.model.patient.PatientId;
@@ -59,6 +61,14 @@ public class LaiNurseParserTest {
     public void parseCommand_view() throws Exception {
         ViewCommand command = (ViewCommand) parser.parseCommand(ViewCommand.COMMAND_WORD + " S1234567A");
         assertEquals(new ViewCommand(new PatientId("S1234567A")), command);
+    }
+
+    @Test
+    public void parseCommand_editAppointment() throws Exception {
+        EditAppointmentCommand command = (EditAppointmentCommand) parser.parseCommand(
+                EditAppointmentCommand.COMMAND_WORD + " S1234567A --appt 2026-10-05 09:30 --to 2026-10-06");
+        assertEquals(new EditAppointmentCommand(new PatientId("S1234567A"), new Appointment("2026-10-05 09:30"),
+                Optional.of(new Appointment("2026-10-06")), Optional.empty()), command);
     }
 
     @Test

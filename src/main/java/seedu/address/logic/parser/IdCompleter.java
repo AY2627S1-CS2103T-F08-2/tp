@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.model.patient.PatientId;
@@ -24,7 +25,8 @@ public class IdCompleter {
             Set.of(ViewCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD);
 
     /** Commands whose first parameter is the ID of an existing patient, and which take options after it. */
-    private static final Set<String> COMMANDS_TAKING_ID_FIRST = Set.of(EditCommand.COMMAND_WORD);
+    private static final Set<String> COMMANDS_TAKING_ID_FIRST =
+            Set.of(EditCommand.COMMAND_WORD, EditAppointmentCommand.COMMAND_WORD);
 
     /**
      * A command word, optionally followed by whitespace and the start of an ID, and then optionally by the rest of
