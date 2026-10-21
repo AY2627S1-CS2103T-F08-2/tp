@@ -506,7 +506,7 @@
 }
 
 /*
- * The patient and appointment lists share a header: what the list shows, a note such as a hint for Esc, and
+ * The patient and appointment lists share a header: what the list shows, a note such as "This week", and
  * a count. The header keeps the height of the week's arrow buttons, also where it has none.
  */
 .list-panel {

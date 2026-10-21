@@ -1,6 +1,6 @@
 {
   "_comment": "LaiNurse save file which contains the same Patient values as in TypicalPatients#getTypicalLaiNurse()",
-  "persons" : [ {
+  "patients" : [ {
     "id" : "S1234567A",
     "name" : "ALICE PAULINE",
     "phone" : "94351253",
