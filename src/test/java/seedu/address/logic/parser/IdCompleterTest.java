@@ -71,6 +71,14 @@ public class IdCompleterTest {
     }
 
     @Test
+    public void complete_deleteApptWithOptionsAfterId_completesIdAndKeepsOptions() {
+        assertEquals(List.of("deleteappt T7654321B --appt 2026-10-05 09:30"),
+                IdCompleter.complete("deleteappt t7 --appt 2026-10-05 09:30", IDS));
+        assertEquals(List.of("deleteappt S1234567A", "deleteappt S1999999C"),
+                IdCompleter.complete("deleteappt s1", IDS));
+    }
+
+    @Test
     public void complete_editWithOptionsAfterId_completesIdAndKeepsOptions() {
         assertEquals(List.of("edit T7654321B --phone 91234567 --add-appt 2026-12-01 10:00"),
                 IdCompleter.complete("edit t7 --phone 91234567 --add-appt 2026-12-01 10:00", IDS));

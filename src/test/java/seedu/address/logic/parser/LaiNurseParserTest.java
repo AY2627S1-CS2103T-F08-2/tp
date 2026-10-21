@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.EditCommand;
@@ -67,6 +68,14 @@ public class LaiNurseParserTest {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " " + targetId.value);
         assertEquals(new DeleteCommand(targetId), command);
+    }
+
+    @Test
+    public void parseCommand_deleteAppointment() throws Exception {
+        DeleteAppointmentCommand command = (DeleteAppointmentCommand) parser.parseCommand(
+                DeleteAppointmentCommand.COMMAND_WORD + " S1234567A --appt 2026-10-05 09:30");
+        assertEquals(new DeleteAppointmentCommand(new PatientId("S1234567A"), new Appointment("2026-10-05 09:30")),
+                command);
     }
 
     @Test
