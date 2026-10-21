@@ -193,6 +193,14 @@ Shift+Down and typed text do there:
 * Shift+Tab does nothing, also in the command box. `MainWindow` consumes it, or JavaFX would move the focus to another
   node.
 
+The menu bar must not take these keys. JavaFX's `MenuBar` selects a menu that the mouse is over, in a focused window,
+and while a menu is selected, a key filter that it adds to the scene takes Left and Right to move between the menus.
+That filter runs before the filters on the tabs and the lists, and the menu stays selected after the mouse has left,
+until a click outside the menu bar. So `MainWindow#ignoreHoverOfClosedMenus` stops the mouse-entered events of the
+menus while no menu is open. As JavaFX then sets no `:hover`, it gives the menu under the mouse the `hovered`
+pseudo-class, which `DarkTheme.css` styles as Modena styles `:hover`. A click still opens a menu, and an open menu
+still follows the mouse to the next one.
+
 `FocusArea`, `BrowseKeys`, `AppointmentWeek`, `AppointmentPage`, `DetailAppointments` and `AppointmentFormatter` hold
 no JavaFX nodes, so unit tests cover these rules, and the UI parts only connect them to JavaFX.
 

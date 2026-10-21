@@ -220,6 +220,12 @@
     -fx-opacity: 1;
 }
 
+/* The closed menu under the mouse, as Modena styles :hover. MainWindow#ignoreHoverOfClosedMenus sets "hovered". */
+.menu-bar > .container > .menu-button:hovered {
+    -fx-background: -fx-selection-bar;
+    -fx-background-color: -fx-background;
+}
+
 .menu .left-container {
     -fx-background-color: black;
 }
