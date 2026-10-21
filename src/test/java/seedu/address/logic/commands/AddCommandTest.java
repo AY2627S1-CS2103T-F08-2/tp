@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
@@ -44,6 +45,7 @@ public class AddCommandTest {
 
         assertEquals(String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPatient)),
                 commandResult.getFeedbackToUser());
+        assertEquals(Optional.of(Navigation.toPatient(validPatient.getId())), commandResult.getNavigation());
         assertEquals(List.of(validPatient), modelStub.patientsAdded);
     }
 

@@ -27,11 +27,15 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.AppointmentRange;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
+import seedu.address.model.patient.PatientId;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -315,6 +319,29 @@ public class MainWindow extends UiPart<Stage> {
         return view == View.PATIENTS ? patientsTab : appointmentsTab;
     }
 
+    /**
+     * Selects the entry that {@code navigation} names in the list of its view, which {@link #showView} has shown,
+     * or the entry to start from if it names none. {@code range} is the range of appointments that the command
+     * showed, if any. {@code LogicManager} has checked that the entry is in the list.
+     */
+    private void navigate(Navigation navigation, Optional<AppointmentRange> range) {
+        if (navigation.view() == View.PATIENTS) {
+            Optional<PatientId> patient = navigation.patient().or(() -> logic.getFilteredPatientList().stream()
+                    .findFirst().map(Patient::getId));
+            // executeCommand then selects the shown patient in the list
+            patient.ifPresentOrElse(patientDetailPanel::show, patientDetailPanel::clear);
+            return;
+        }
+        if (range.isPresent()) {
+            // showRange has shown the range and selected its first appointment, which a result with no navigation keeps
+            navigation.appointment().ifPresentOrElse(appointmentListPanel::selectAppointment,
+                    appointmentListPanel::selectNextFromNow);
+            return;
+        }
+        navigation.appointment().ifPresentOrElse(appointmentListPanel::showAppointment,
+                appointmentListPanel::showThisWeek);
+    }
+
     private void showAppointmentDetails(Optional<PatientAppointment> appointment) {
         appointment.ifPresentOrElse(entry -> appointmentDetailPanel.show(entry.getPatient().getId(),
                 Optional.of(entry.getAppointment())), appointmentDetailPanel::clear);
@@ -550,6 +577,8 @@ public class MainWindow extends UiPart<Stage> {
             commandResult.getAppointmentRange().ifPresent(appointmentListPanel::showRange);
 
             commandResult.getPatientToView().ifPresent(patientDetailPanel::show);
+            commandResult.getNavigation().ifPresent(navigation ->
+                    navigate(navigation, commandResult.getAppointmentRange()));
             // Removing or filtering rows can move the list's selection to another patient, so match it to the panel.
             patientDetailPanel.getShownId().ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
 

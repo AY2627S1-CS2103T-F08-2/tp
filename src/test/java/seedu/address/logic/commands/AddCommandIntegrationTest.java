@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -33,9 +34,11 @@ public class AddCommandIntegrationTest {
         Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
         expectedModel.addPatient(validPatient);
 
-        assertCommandSuccess(new AddCommand(validPatient), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPatient)),
-                expectedModel);
+        // The new patient is selected, as view does
+        CommandResult expectedResult = new CommandResult(
+                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPatient)))
+                .withNavigation(Navigation.toPatient(validPatient.getId()));
+        assertCommandSuccess(new AddCommand(validPatient), model, expectedResult, expectedModel);
     }
 
     @Test

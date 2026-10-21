@@ -13,6 +13,7 @@ import static seedu.address.testutil.TypicalPatients.AMY;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.AppointmentRange;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -33,6 +36,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
+import seedu.address.model.patient.PatientId;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -107,6 +111,74 @@ public class LogicManagerTest {
         // other commands keep the view that is shown
         assertEquals(Optional.empty(), logic.execute("help").getView());
         assertEquals(Optional.empty(), logic.execute("clear").getView());
+    }
+
+    @Test
+    public void checkNavigation_entryShown_success() {
+        Patient patient = new PatientBuilder(AMY).withAppointments("2026-10-06").build();
+        model.addPatient(patient);
+        PatientAppointment entry = new PatientAppointment(patient, new Appointment("2026-10-06"));
+        CommandResult result = new CommandResult("feedback");
+        CommandResult rangeResult = new CommandResult("feedback",
+                new AppointmentRange(LocalDate.of(2026, 10, 6), LocalDate.of(2026, 10, 6)));
+
+        // no navigation, or no entry to select
+        LogicManager.checkNavigation(result, model);
+        LogicManager.checkNavigation(result.withNavigation(Navigation.toView(View.APPOINTMENTS)), model);
+        // a patient in the filtered list
+        LogicManager.checkNavigation(result.withNavigation(Navigation.toPatient(patient.getId())), model);
+        // an appointment with no range, and one in the range
+        LogicManager.checkNavigation(result.withNavigation(Navigation.toAppointment(entry)), model);
+        LogicManager.checkNavigation(rangeResult.withNavigation(Navigation.toAppointment(entry)), model);
+    }
+
+    @Test
+    public void checkNavigation_patientFilteredOut_throwsIllegalStateException() {
+        Patient patient = new PatientBuilder(AMY).build();
+        model.addPatient(patient);
+        model.updateFilteredPatientList(unused -> false);
+        CommandResult result = new CommandResult("feedback").withNavigation(Navigation.toPatient(patient.getId()));
+
+        assertThrows(IllegalStateException.class, () -> LogicManager.checkNavigation(result, model));
+    }
+
+    @Test
+    public void checkNavigation_appointmentOutsideRange_throwsIllegalStateException() {
+        Patient patient = new PatientBuilder(AMY).withAppointments("2026-10-06").build();
+        model.addPatient(patient);
+        PatientAppointment entry = new PatientAppointment(patient, new Appointment("2026-10-06"));
+        CommandResult result = new CommandResult("feedback",
+                new AppointmentRange(LocalDate.of(2026, 10, 7), LocalDate.of(2026, 10, 31)))
+                .withNavigation(Navigation.toAppointment(entry));
+
+        assertThrows(IllegalStateException.class, () -> LogicManager.checkNavigation(result, model));
+    }
+
+    @Test
+    public void checkNavigation_rangeOfOnePatient_checksPatient() {
+        Patient patient = new PatientBuilder(AMY).withAppointments("2026-10-06").build();
+        model.addPatient(patient);
+        PatientAppointment entry = new PatientAppointment(patient, new Appointment("2026-10-06"));
+        LocalDate start = LocalDate.of(2026, 10, 1);
+        LocalDate end = LocalDate.of(2026, 10, 31);
+        Navigation navigation = Navigation.toAppointment(entry);
+
+        // the range's patient
+        LogicManager.checkNavigation(new CommandResult("feedback",
+                new AppointmentRange(start, end, Optional.of(patient.getId()))).withNavigation(navigation), model);
+        // another patient's range, although the date is in it
+        CommandResult otherPatient = new CommandResult("feedback",
+                new AppointmentRange(start, end, Optional.of(new PatientId("S2222222B")))).withNavigation(navigation);
+        assertThrows(IllegalStateException.class, () -> LogicManager.checkNavigation(otherPatient, model));
+    }
+
+    @Test
+    public void checkNavigation_appointmentNotInModel_throwsIllegalStateException() {
+        Patient patient = new PatientBuilder(AMY).withAppointments("2026-10-06").build();
+        PatientAppointment entry = new PatientAppointment(patient, new Appointment("2026-10-06"));
+        CommandResult result = new CommandResult("feedback").withNavigation(Navigation.toAppointment(entry));
+
+        assertThrows(IllegalStateException.class, () -> LogicManager.checkNavigation(result, model));
     }
 
     @Test
