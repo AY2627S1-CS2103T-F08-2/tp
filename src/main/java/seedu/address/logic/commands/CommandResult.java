@@ -28,11 +28,18 @@ public class CommandResult {
     }
 
     /**
-     * The appointments that the appointment view shows on one page, as {@code viewappt} finds them: those on the
-     * dates from {@code start} to {@code end}, both included, and only those of the patient with the ID
-     * {@code patient}, if it is given. An end of {@code LocalDate.MAX} means that the range has no end.
+     * The dates, both included, whose appointments the appointment view shows on one page, as {@code viewappt}
+     * finds them. An end of {@code LocalDate.MAX} means that the range has no end. A patient ID of {@code null}
+     * means that the appointments of every patient are shown; otherwise, only that patient's are.
      */
-    public record AppointmentRange(LocalDate start, LocalDate end, Optional<PatientId> patient) {
+    public record AppointmentRange(LocalDate start, LocalDate end, PatientId patientId) {
+
+        /**
+         * Constructs an {@code AppointmentRange} of every patient's appointments from {@code start} to {@code end}.
+         */
+        public AppointmentRange(LocalDate start, LocalDate end) {
+            this(start, end, null);
+        }
 
         /**
          * Constructs an {@code AppointmentRange}.
@@ -40,17 +47,8 @@ public class CommandResult {
          * @throws IllegalArgumentException if {@code start} is after {@code end}.
          */
         public AppointmentRange {
-            requireAllNonNull(start, end, patient);
+            requireAllNonNull(start, end);
             checkArgument(!start.isAfter(end), "The start of the range must not be after its end.");
-        }
-
-        /**
-         * Constructs an {@code AppointmentRange} of every patient's appointments from {@code start} to {@code end}.
-         *
-         * @throws IllegalArgumentException if {@code start} is after {@code end}.
-         */
-        public AppointmentRange(LocalDate start, LocalDate end) {
-            this(start, end, Optional.empty());
         }
 
         /**
@@ -67,7 +65,7 @@ public class CommandResult {
         public boolean contains(PatientAppointment entry) {
             requireNonNull(entry);
             return contains(entry.getAppointment().getDate())
-                    && patient.map(entry.getPatient().getId()::equals).orElse(true);
+                    && (patientId == null || entry.getPatient().getId().equals(patientId));
         }
     }
 

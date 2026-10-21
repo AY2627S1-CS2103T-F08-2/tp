@@ -165,10 +165,10 @@ public class LogicManagerTest {
 
         // the range's patient
         LogicManager.checkNavigation(new CommandResult("feedback",
-                new AppointmentRange(start, end, Optional.of(patient.getId()))).withNavigation(navigation), model);
+                new AppointmentRange(start, end, patient.getId())).withNavigation(navigation), model);
         // another patient's range, although the date is in it
         CommandResult otherPatient = new CommandResult("feedback",
-                new AppointmentRange(start, end, Optional.of(new PatientId("S2222222B")))).withNavigation(navigation);
+                new AppointmentRange(start, end, new PatientId("S2222222B"))).withNavigation(navigation);
         assertThrows(IllegalStateException.class, () -> LogicManager.checkNavigation(otherPatient, model));
     }
 

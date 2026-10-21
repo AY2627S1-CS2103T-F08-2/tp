@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.AMY;
@@ -217,25 +218,36 @@ public class CommandResultTest {
         assertFalse(RANGE.contains(appointmentOf("2026-11-06")));
 
         // a range of one patient's appointments also checks the patient
-        assertTrue(new AppointmentRange(START, END, Optional.of(AMY.getId())).contains(amyInRange));
-        assertFalse(new AppointmentRange(START, END, Optional.of(new PatientId("S2222222B"))).contains(amyInRange));
+        assertTrue(new AppointmentRange(START, END, AMY.getId()).contains(amyInRange));
+        assertFalse(new AppointmentRange(START, END, new PatientId("S2222222B")).contains(amyInRange));
         assertThrows(NullPointerException.class, () -> RANGE.contains((PatientAppointment) null));
     }
 
     @Test
     public void appointmentRangeConstructor_noPatient_rangeOfEveryPatient() {
-        assertEquals(new AppointmentRange(START, END, Optional.empty()), RANGE);
-        assertEquals(Optional.empty(), RANGE.patient());
-        assertNotEquals(new AppointmentRange(START, END, Optional.of(AMY.getId())), RANGE);
+        assertEquals(new AppointmentRange(START, END, null), RANGE);
+        assertNull(RANGE.patientId());
+        assertFalse(new AppointmentRange(START, END, AMY.getId()).equals(RANGE));
     }
 
     @Test
     public void appointmentRangeConstructor_invalid_throws() {
         assertThrows(NullPointerException.class, () -> new AppointmentRange(null, END));
         assertThrows(NullPointerException.class, () -> new AppointmentRange(START, null));
-        assertThrows(NullPointerException.class, () -> new AppointmentRange(START, END, null));
         assertThrows(IllegalArgumentException.class, () -> new AppointmentRange(END, START));
-        assertThrows(IllegalArgumentException.class, () -> new AppointmentRange(END, START, Optional.empty()));
+        assertThrows(IllegalArgumentException.class, () -> new AppointmentRange(END, START, AMY.getId()));
+    }
+
+    @Test
+    public void appointmentRange_withPatient() {
+        AppointmentRange patientRange = new AppointmentRange(START, END, new PatientId("S1234567A"));
+
+        // The two-arg range is the same as a three-arg range with no patient
+        assertEquals(new AppointmentRange(START, END, null), RANGE);
+        assertEquals(patientRange, new AppointmentRange(START, END, new PatientId("S1234567A")));
+        assertFalse(patientRange.equals(RANGE));
+        assertFalse(patientRange.equals(new AppointmentRange(START, END, new PatientId("S2345678B"))));
+        assertEquals(new PatientId("S1234567A"), patientRange.patientId());
     }
 
     @Test
