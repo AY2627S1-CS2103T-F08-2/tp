@@ -2,12 +2,10 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_REMOVE_APPOINTMENT;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 
 import java.util.List;
@@ -23,8 +21,6 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Address;
-import seedu.address.model.patient.Appointment;
-import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -41,23 +37,17 @@ public class EditCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the patient with the given ID. "
             + "Existing values will be overwritten by the input values. The ID itself cannot be edited.\n"
-            + "Appointments are removed first, then added, so one command can move an appointment.\n"
             + "Parameters: ID "
             + "[" + PREFIX_NAME + "NAME] "
             + "[" + PREFIX_PHONE + "PHONE] "
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL_HISTORY] "
-            + "[" + PREFIX_NOTES + "NOTES] "
-            + "[" + PREFIX_ADD_APPOINTMENT + "DATE_OR_DATETIME]... "
-            + "[" + PREFIX_REMOVE_APPOINTMENT + "DATE_OR_DATETIME]...\n"
+            + "[" + PREFIX_NOTES + "NOTES]\n"
             + "Example: " + COMMAND_WORD + " T0123456B "
-            + PREFIX_PHONE + "91234567 "
-            + PREFIX_REMOVE_APPOINTMENT + "2026-10-20 09:30 "
-            + PREFIX_ADD_APPOINTMENT + "2026-10-22 14:00";
+            + PREFIX_PHONE + "91234567";
 
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
-    public static final String MESSAGE_APPOINTMENT_NOT_FOUND = "Patient %1$s has no appointment on %2$s.";
 
     private static final Logger logger = LogsCenter.getLogger(EditCommand.class);
 
@@ -100,12 +90,9 @@ public class EditCommand extends Command {
     /**
      * Creates and returns a {@code Patient} with the details of {@code patientToEdit}
      * edited with {@code editPatientDescriptor}. The patient ID is never changed.
-     * Appointments to remove are removed before appointments to add are added.
-     *
-     * @throws CommandException if an appointment to remove is not one of the patient's appointments.
+     * The patient's appointments are kept.
      */
-    private static Patient createEditedPatient(Patient patientToEdit, EditPatientDescriptor editPatientDescriptor)
-            throws CommandException {
+    private static Patient createEditedPatient(Patient patientToEdit, EditPatientDescriptor editPatientDescriptor) {
         assert patientToEdit != null;
         assert editPatientDescriptor != null;
 
@@ -116,21 +103,8 @@ public class EditCommand extends Command {
                 .or(patientToEdit::getMedicalHistory);
         Optional<Notes> updatedNotes = editPatientDescriptor.getNotes().or(patientToEdit::getNotes);
 
-        AppointmentSchedule updatedSchedule = patientToEdit.getSchedule();
-        for (Appointment appointment : editPatientDescriptor.getAppointmentsToRemove().asList()) {
-            if (!updatedSchedule.contains(appointment)) {
-                logger.fine("Rejected edit: the patient has no appointment to remove at the given time.");
-                throw new CommandException(
-                        String.format(MESSAGE_APPOINTMENT_NOT_FOUND, patientToEdit.getId(), appointment));
-            }
-            updatedSchedule = updatedSchedule.remove(appointment);
-        }
-        for (Appointment appointment : editPatientDescriptor.getAppointmentsToAdd().asList()) {
-            updatedSchedule = updatedSchedule.add(appointment);
-        }
-
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, updatedNotes, updatedSchedule);
+                updatedMedicalHistory, updatedNotes, patientToEdit.getSchedule());
     }
 
     @Override
@@ -171,8 +145,6 @@ public class EditCommand extends Command {
         private Address address;
         private MedicalHistory medicalHistory;
         private Notes notes;
-        private AppointmentSchedule appointmentsToAdd = AppointmentSchedule.empty();
-        private AppointmentSchedule appointmentsToRemove = AppointmentSchedule.empty();
 
         public EditPatientDescriptor() {}
 
@@ -185,16 +157,13 @@ public class EditCommand extends Command {
             setAddress(toCopy.address);
             setMedicalHistory(toCopy.medicalHistory);
             setNotes(toCopy.notes);
-            setAppointmentsToAdd(toCopy.appointmentsToAdd);
-            setAppointmentsToRemove(toCopy.appointmentsToRemove);
         }
 
         /**
          * Returns true if at least one field is edited.
          */
         public boolean isAnyFieldEdited() {
-            return CollectionUtil.isAnyNonNull(name, phone, address, medicalHistory, notes)
-                    || !appointmentsToAdd.isEmpty() || !appointmentsToRemove.isEmpty();
+            return CollectionUtil.isAnyNonNull(name, phone, address, medicalHistory, notes);
         }
 
         public void setName(Name name) {
@@ -237,34 +206,6 @@ public class EditCommand extends Command {
             return Optional.ofNullable(notes);
         }
 
-        /**
-         * Sets the appointments to add. Must not be null; use {@link AppointmentSchedule#empty()} for none.
-         */
-        public void setAppointmentsToAdd(AppointmentSchedule appointmentsToAdd) {
-            this.appointmentsToAdd = requireNonNull(appointmentsToAdd);
-        }
-
-        /**
-         * Returns the appointments to add, which is empty if none were given.
-         */
-        public AppointmentSchedule getAppointmentsToAdd() {
-            return appointmentsToAdd;
-        }
-
-        /**
-         * Sets the appointments to remove. Must not be null; use {@link AppointmentSchedule#empty()} for none.
-         */
-        public void setAppointmentsToRemove(AppointmentSchedule appointmentsToRemove) {
-            this.appointmentsToRemove = requireNonNull(appointmentsToRemove);
-        }
-
-        /**
-         * Returns the appointments to remove, which is empty if none were given.
-         */
-        public AppointmentSchedule getAppointmentsToRemove() {
-            return appointmentsToRemove;
-        }
-
         @Override
         public boolean equals(Object other) {
             if (other == this) {
@@ -280,9 +221,7 @@ public class EditCommand extends Command {
                     && Objects.equals(phone, otherEditPatientDescriptor.phone)
                     && Objects.equals(address, otherEditPatientDescriptor.address)
                     && Objects.equals(medicalHistory, otherEditPatientDescriptor.medicalHistory)
-                    && Objects.equals(notes, otherEditPatientDescriptor.notes)
-                    && appointmentsToAdd.equals(otherEditPatientDescriptor.appointmentsToAdd)
-                    && appointmentsToRemove.equals(otherEditPatientDescriptor.appointmentsToRemove);
+                    && Objects.equals(notes, otherEditPatientDescriptor.notes);
         }
 
         @Override
@@ -293,8 +232,6 @@ public class EditCommand extends Command {
                     .add("address", address)
                     .add("medicalHistory", medicalHistory)
                     .add("notes", notes)
-                    .add("appointmentsToAdd", appointmentsToAdd)
-                    .add("appointmentsToRemove", appointmentsToRemove)
                     .toString();
         }
     }

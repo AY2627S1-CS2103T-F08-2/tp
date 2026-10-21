@@ -104,54 +104,6 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_addAppointments_success() {
-        // BENSON already has an appointment on 2026-10-05 09:30
-        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
-                .withAppointmentsToAdd("2026-11-03", "2026-10-05 09:30").build();
-        Patient editedPatient = new PatientBuilder(BENSON).withAppointments("2026-10-05 09:30", "2026-11-03").build();
-
-        assertEditSuccess(BENSON, descriptor, editedPatient);
-    }
-
-    @Test
-    public void execute_removeAppointment_success() {
-        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
-                .withAppointmentsToRemove("2026-10-05 09:30").build();
-        Patient editedPatient = new PatientBuilder(BENSON).withAppointments().build();
-
-        assertEditSuccess(BENSON, descriptor, editedPatient);
-    }
-
-    @Test
-    public void execute_removeAndAddAppointment_movesAppointment() {
-        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
-                .withAppointmentsToRemove("2026-10-05 09:30").withAppointmentsToAdd("2026-10-07 14:00").build();
-        Patient editedPatient = new PatientBuilder(BENSON).withAppointments("2026-10-07 14:00").build();
-
-        assertEditSuccess(BENSON, descriptor, editedPatient);
-    }
-
-    @Test
-    public void execute_removeAndAddSameAppointment_keepsAppointment() {
-        // removals happen before additions, so the appointment is still there afterwards
-        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
-                .withAppointmentsToRemove("2026-10-05 09:30").withAppointmentsToAdd("2026-10-05 09:30").build();
-
-        assertEditSuccess(BENSON, descriptor, BENSON);
-    }
-
-    @Test
-    public void execute_removeMissingAppointment_failure() {
-        // BENSON's appointment has a time, so a date-only appointment on the same day does not match
-        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder()
-                .withAppointmentsToRemove("2026-10-05").build();
-        EditCommand editCommand = new EditCommand(BENSON.getId(), descriptor);
-
-        assertCommandFailure(editCommand, model,
-                String.format(EditCommand.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05"));
-    }
-
-    @Test
     public void execute_noFieldSpecified_success() {
         Patient firstPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         EditCommand editCommand = new EditCommand(firstPatient.getId(), new EditPatientDescriptor());

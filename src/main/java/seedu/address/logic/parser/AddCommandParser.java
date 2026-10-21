@@ -2,7 +2,6 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -37,18 +36,16 @@ public class AddCommandParser implements Parser<AddCommand> {
     public AddCommand parse(String args) throws ParseException {
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
                 String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE),
-                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES,
-                PREFIX_APPOINTMENT);
+                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                        PREFIX_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_APPOINTMENT);
+                        PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS)
                 || !argMultimap.getPreamble().isEmpty()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
         }
 
-        // An appointment may be given more than once, so it is not checked for duplicates
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
                 PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
         PatientId id = ParserUtil.parseId(argMultimap.getValue(PREFIX_ID).get());
@@ -63,11 +60,9 @@ public class AddCommandParser implements Parser<AddCommand> {
         Notes notes = argMultimap.getValue(PREFIX_NOTES).isPresent()
                 ? ParserUtil.parseNotes(argMultimap.getValue(PREFIX_NOTES).get())
                 : null;
-        AppointmentSchedule appointments =
-                ParserUtil.parseAppointments(argMultimap.getAllValues(PREFIX_APPOINTMENT));
 
         Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory),
-                Optional.ofNullable(notes), appointments);
+                Optional.ofNullable(notes), AppointmentSchedule.empty());
 
         return new AddCommand(patient);
     }

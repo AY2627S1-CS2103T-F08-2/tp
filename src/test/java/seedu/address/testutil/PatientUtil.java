@@ -1,14 +1,11 @@
 package seedu.address.testutil;
 
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_APPOINTMENT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_REMOVE_APPOINTMENT;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
@@ -28,6 +25,7 @@ public class PatientUtil {
 
     /**
      * Returns the part of command string for the given {@code patient}'s details.
+     * Appointments are not part of the add command; use {@code addappt ...} to set them.
      */
     public static String getPatientDetails(Patient patient) {
         StringBuilder sb = new StringBuilder();
@@ -39,13 +37,12 @@ public class PatientUtil {
             sb.append(PREFIX_MEDICAL_HISTORY + patient.getMedicalHistory().get().value + " ");
         }
         patient.getNotes().ifPresent(notes -> sb.append(PREFIX_NOTES).append(notes.value).append(" "));
-        patient.getSchedule().asList().forEach(appointment ->
-                sb.append(PREFIX_APPOINTMENT + appointment.value + " "));
         return sb.toString();
     }
 
     /**
      * Returns the part of command string for the given {@code EditPatientDescriptor}'s details.
+     * Appointments are not editable via {@code edit}; use {@code addappt} or {@code deleteappt} instead.
      */
     public static String getEditPatientDescriptorDetails(EditPatientDescriptor descriptor) {
         StringBuilder sb = new StringBuilder();
@@ -55,10 +52,6 @@ public class PatientUtil {
         descriptor.getMedicalHistory().ifPresent(medicalHistory ->
                 sb.append(PREFIX_MEDICAL_HISTORY).append(medicalHistory.value).append(" "));
         descriptor.getNotes().ifPresent(notes -> sb.append(PREFIX_NOTES).append(notes.value).append(" "));
-        descriptor.getAppointmentsToAdd().asList().forEach(appointment ->
-                sb.append(PREFIX_ADD_APPOINTMENT).append(appointment.value).append(" "));
-        descriptor.getAppointmentsToRemove().asList().forEach(appointment ->
-                sb.append(PREFIX_REMOVE_APPOINTMENT).append(appointment.value).append(" "));
         return sb.toString();
     }
 }

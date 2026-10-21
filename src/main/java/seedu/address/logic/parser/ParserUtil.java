@@ -4,9 +4,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -17,7 +14,6 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
-import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -171,20 +167,6 @@ public class ParserUtil {
         AppointmentDetails parsedDetails = new AppointmentDetails(trimmedDetails);
         logger.fine("Parsed appointment details.");
         return parsedDetails;
-    }
-
-    /**
-     * Parses {@code Collection<String> appointments} into an {@code AppointmentSchedule}.
-     *
-     * @throws ParseException if any of the given appointments is invalid.
-     */
-    public static AppointmentSchedule parseAppointments(Collection<String> appointments) throws ParseException {
-        requireNonNull(appointments);
-        List<Appointment> appointmentList = new ArrayList<>();
-        for (String appointment : appointments) {
-            appointmentList.add(parseAppointment(appointment));
-        }
-        return new AppointmentSchedule(appointmentList);
     }
 
     /**
