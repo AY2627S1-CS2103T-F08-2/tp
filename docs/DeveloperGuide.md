@@ -349,6 +349,29 @@ the same observable view. Filtering and sorting do not change stored records or 
 filter method clears sorting, as does a null comparator; existing calls from `list`, `add`, `edit` and `viewappt`
 therefore restore name order. The appointment list is independent of this sorting.
 
+### Editing a patient's details
+
+`edit ID [OPTION VALUE]...` changes the fields of the patient with the given ID. The sequence diagram below shows how
+`edit S1234567A --phone 91234567` changes the phone number of patient `S1234567A`.
+
+<img src="images/EditSequenceDiagram.png" width="800" />
+
+`EditCommandParser` reads the ID from the preamble and stores each change in an `EditPatientDescriptor`. A field that
+is not given stays `null` in the descriptor, so `EditCommand#createEditedPatient()` keeps the patient's value for it.
+Each value is checked by the same `ParserUtil` method as in `add`, so a blank value is rejected for every field,
+including the optional medical history and notes. `EditCommand` finds the patient among all patients, not only those
+in the displayed list, then replaces them through `Model#setPatient()`. A new `Patient` is built because `Patient` is
+immutable, so a command that fails leaves the original patient unchanged.
+
+**Design considerations**
+
+* **Identifying the patient: by ID (chosen) or by list number.** An ID stays the same when the list is filtered or
+  sorted, so the nurse cannot edit the wrong patient by using a stale list number, and can edit a patient who is not
+  shown. The cost is typing a longer value, which the command box's ID completion reduces.
+* **A blank optional value: rejected (chosen) or read as clearing the field.** Rejecting it keeps `edit` consistent
+  with `add`, and a stray option cannot remove a medical history or notes by accident. The cost is that `edit` cannot
+  clear these fields.
+
 ### Storing multiple appointments
 
 Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` objects. `add` builds it from every

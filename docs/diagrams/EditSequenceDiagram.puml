@@ -1,0 +1,102 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":LaiNurseParser" as LaiNurseParser LOGIC_COLOR
+participant ":EditCommandParser" as EditCommandParser LOGIC_COLOR
+participant "d:EditPatientDescriptor" as EditPatientDescriptor LOGIC_COLOR
+participant "e:EditCommand" as EditCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+[-> LogicManager : execute("edit S1234567A --phone 91234567")
+activate LogicManager
+
+LogicManager -> LaiNurseParser : parseCommand("edit S1234567A --phone 91234567")
+activate LaiNurseParser
+
+create EditCommandParser
+LaiNurseParser -> EditCommandParser
+activate EditCommandParser
+
+EditCommandParser --> LaiNurseParser
+deactivate EditCommandParser
+
+LaiNurseParser -> EditCommandParser : parse("S1234567A --phone 91234567")
+activate EditCommandParser
+
+create EditPatientDescriptor
+EditCommandParser -> EditPatientDescriptor
+activate EditPatientDescriptor
+
+EditPatientDescriptor --> EditCommandParser
+deactivate EditPatientDescriptor
+
+EditCommandParser -> EditPatientDescriptor : setPhone(91234567)
+activate EditPatientDescriptor
+
+EditPatientDescriptor --> EditCommandParser
+deactivate EditPatientDescriptor
+
+create EditCommand
+EditCommandParser -> EditCommand : EditCommand(S1234567A, d)
+activate EditCommand
+
+EditCommand --> EditCommandParser
+deactivate EditCommand
+
+EditCommandParser --> LaiNurseParser : e
+deactivate EditCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+EditCommandParser -[hidden]-> LaiNurseParser
+destroy EditCommandParser
+
+LaiNurseParser --> LogicManager : e
+deactivate LaiNurseParser
+
+LogicManager -> EditCommand : execute(m)
+activate EditCommand
+
+EditCommand -> Model : getLaiNurse()
+activate Model
+
+Model --> EditCommand : laiNurse
+deactivate Model
+
+EditCommand -> EditCommand : createEditedPatient(p, d)
+activate EditCommand
+
+EditCommand --> EditCommand : editedPatient
+deactivate EditCommand
+
+EditCommand -> Model : setPatient(p, editedPatient)
+activate Model
+
+Model --> EditCommand
+deactivate Model
+
+EditCommand -> Model : updateFilteredPatientList(all)
+activate Model
+
+Model --> EditCommand
+deactivate Model
+
+create CommandResult
+EditCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> EditCommand
+deactivate CommandResult
+
+EditCommand --> LogicManager : r
+deactivate EditCommand
+
+[<--LogicManager
+deactivate LogicManager
+@enduml
