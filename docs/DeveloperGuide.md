@@ -400,9 +400,19 @@ has some.
 not clear notes. Notes are included in patient feedback through `Messages.format`. `find --notes` uses the substring
 search described above, and `view ID` shows the notes using the existing detail panel and its live updates.
 
-No command sets appointment details yet. `--add-appt` and `--remove-appt` keep the details of appointments that they do
-not remove. A command that sets details needs a `Prefix` in `CliSyntax`, a parser that builds `AppointmentDetails` with
-its `isValid` method, and an `Appointment` built with the new value.
+`editappt` sets an appointment's details with the `--details` option defined by `CliSyntax.PREFIX_DETAILS`.
+`ParserUtil.parseAppointmentDetails` rejects blank details, as `parseNotes` does for notes, and logs without the text.
+`--add-appt` and `--remove-appt` keep the details of appointments that they do not remove.
+
+`editappt ID --appt DATE_OR_DATETIME` finds the appointment to edit with `AppointmentSchedule#find`, which returns the
+patient's appointment at that exact date and time, with its details. Because the match is exact, a date alone never
+matches a timed appointment. If there is no match, `EditAppointmentCommand` lists the patient's appointments on that
+day, from `AppointmentSchedule#getOnDate`, in the error message, so that the nurse can retype the right one. The edited
+appointment is built from the new date and time from `--to`, if given, and the new details from `--details`, if given;
+the rest is kept from the old appointment. The command rejects a move onto another of the patient's appointments,
+because the schedule keeps only one appointment at each date and time, and one of them would be lost. Otherwise, it
+replaces the patient through `Model#setPatient()` with a schedule that has the old appointment removed and the edited
+one added, and selects the edited appointment with `Navigation.toAppointment`.
 
 ### Viewing appointments by date
 
@@ -1001,6 +1011,49 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 1e1. LaiNurse normalizes the target using `Locale.ROOT` and displays the syntax details for the matching command.
     * Use case ends.
 
+**Use case: UC08 - Edit an appointment**
+
+**MSS**
+
+1.  Nurse requests to edit a patient's appointment by the patient's ID and the appointment's date and time, with a
+    new date and time, new details, or both
+2.  LaiNurse updates the appointment
+3.  LaiNurse shows the edited appointment
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The ID or the appointment's date and time is missing, or nothing to change is given.
+
+    * 1a1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1b. The given ID does not match any patient.
+
+    * 1b1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1c. The patient has no appointment at the given date and time.
+
+    * 1c1. LaiNurse shows an error message that lists the patient's appointments on that day, if any.
+
+      Use case resumes at step 1.
+
+* 1d. The new date and time is that of another of the patient's appointments.
+
+    * 1d1. LaiNurse shows an error message, and makes no changes.
+
+      Use case resumes at step 1.
+
+* 1e. A date, time or the details are in an invalid format.
+
+    * 1e1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
@@ -1571,6 +1624,36 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `edit S1234567A --add-appt 2026-02-30`, an impossible date<br>
        Expected: No patient is changed. The status message shows the appointment format error.
+
+### Editing an appointment
+
+1. Moving an appointment and setting its details
+
+    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `2026-10-05 09:30`, with
+       the details `INSULIN REVIEW`, and `2026-11-02`, with the details `MONTHLY BLOOD TEST`.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00`<br>
+       Expected: The **Appointments** tab is selected, showing the week of 6 October, with Alex Yeoh's appointment at
+       10:00 selected and still showing `INSULIN REVIEW`. The status message ends with
+       `(moved from 2026-10-05 09:30)`.
+
+    1. Test case: `editappt S1234567A --appt 2026-11-02 --details Fasting blood test`<br>
+       Expected: The 2 November appointment keeps its date, and its details become `FASTING BLOOD TEST`.
+
+1. Editing an appointment that cannot be edited
+
+    1. Prerequisites: Start with the sample data.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 --to 2026-10-06`, a date alone for a timed appointment<br>
+       Expected: No appointment is changed. The status message says that the patient has no appointment on
+       `2026-10-05`, and lists `2026-10-05 09:30` as their appointment that day.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-11-02`<br>
+       Expected: No appointment is changed. The status message says that the patient already has an appointment on
+       `2026-11-02`.
+
+    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30`, with nothing to change<br>
+       Expected: No appointment is changed. The status message says that `--to` or `--details` must be given.
 
 ### Viewing help and command instructions
 
