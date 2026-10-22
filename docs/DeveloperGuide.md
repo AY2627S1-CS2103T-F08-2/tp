@@ -472,7 +472,9 @@ change the filter of the patient list, so a patient hidden by `find` or `viewapp
 `viewappt` takes one date, a range given by `--from`, `--to`, or both, or none of these. A plain `viewappt`, with none
 of these and no `--id`, shows the weekly view of this week: the command filters the patient list to the patients with
 an appointment from this week's Monday to its Sunday, and returns no range, only a `Navigation.toView`, so that
-`MainWindow` shows this week and selects the next appointment from now. `ViewAppointmentCommandParser`
+`MainWindow` shows this week and selects the next appointment from now. The command and the weekly view's
+`AppointmentWeek` both take the week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the
+patient list and the week shown cannot disagree on its days. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
 that starts and ends on that date. When both options are given, the parser rejects a `--from` date that is after the
 `--to` date.
