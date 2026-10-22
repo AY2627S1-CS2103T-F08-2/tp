@@ -8,6 +8,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -17,6 +18,9 @@ import seedu.address.model.patient.PatientId;
  * Parses input arguments and creates a new ViewAppointmentCommand object.
  */
 public class ViewAppointmentCommandParser implements Parser<ViewAppointmentCommand> {
+
+    /** One word of digits and punctuation, with at least one digit. */
+    private static final Pattern DATE_LIKE_WORD = Pattern.compile("[\\d\\p{Punct}]*\\d[\\d\\p{Punct}]*");
 
     /**
      * Parses the given {@code String} of arguments in the context of the ViewAppointmentCommand
@@ -32,15 +36,16 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
                 PREFIX_FROM, PREFIX_TO, PREFIX_ID);
         if (normalizedArgs.isBlank()) {
-            // A plain viewappt shows the upcoming appointments
+            // A plain viewappt shows this week
             return new ViewAppointmentCommand(Optional.empty(), Optional.empty(), Optional.empty());
         }
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
         // Duplicate options are reported whatever the rest of the input looks like
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
-        Optional<LocalDate> date = parseDateOrEmpty(argMultimap.getPreamble());
-        if (date.isPresent()) {
-            return parseWithDate(argMultimap, date.get(), invalidFormatMessage);
+        String preamble = argMultimap.getPreamble();
+        if (isDateLike(preamble)) {
+            // A date that is not real gets the date error, as a date given to --from or --to does
+            return parseWithDate(argMultimap, ParserUtil.parseDate(preamble), invalidFormatMessage);
         }
         return parseWithOptionalDateRange(argMultimap, invalidFormatMessage);
     }
@@ -81,13 +86,13 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         return new ViewAppointmentCommand(startDate, endDate, patientId);
     }
 
-    /** Returns the date, or {@code Optional#empty()} if {@code date} is not a real date in {@code yyyy-MM-dd}. */
-    private static Optional<LocalDate> parseDateOrEmpty(String date) {
-        try {
-            return Optional.of(ParserUtil.parseDate(date));
-        } catch (ParseException e) {
-            return Optional.empty();
-        }
+    /**
+     * Returns true if {@code word} is one word of digits and punctuation, such as {@code 2026-02-30} or
+     * {@code 2026/10/15}, which can only be meant as a date. Any other word, such as {@code invalid}, could be
+     * a mistyped option, so it gets the command format instead of the date error.
+     */
+    private static boolean isDateLike(String word) {
+        return DATE_LIKE_WORD.matcher(word).matches();
     }
 
     /** Returns the date given to {@code prefix}, or {@code Optional#empty()} if the prefix is absent. */

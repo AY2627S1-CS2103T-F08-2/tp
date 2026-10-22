@@ -503,7 +503,9 @@ an appointment from this week's Monday to its Sunday, and returns no range, only
 `AppointmentWeek` both take the week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the
 patient list and the week shown cannot disagree on its days. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
-that starts and ends on that date. When both options are given, the parser rejects a `--from` date that is after the
+that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
+`2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
+`--from` or `--to` does. Any other word, such as `invalid`, could be a mistyped option, so it gets the command format. When both options are given, the parser rejects a `--from` date that is after the
 `--to` date.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
@@ -1561,11 +1563,15 @@ testers are expected to do more *exploratory* testing.
        `0 patient(s) with appointments on 2026-11-11`. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
-       Expected: The list is unchanged. The status message shows the command format, because a date that does not
-       parse is treated like any other invalid input.
+       Expected: The list is unchanged. The status message shows the date format error, as for
+       `viewappt --from 2026-02-30`.
 
     1. Test case: `viewappt 15/10/2026`, a date in the wrong format<br>
-       Expected: The list is unchanged. The status message shows the command format, as above.
+       Expected: The list is unchanged. The status message shows the date format error, as above.
+
+    1. Test case: `viewappt S1234567A`, a patient ID without `--id`<br>
+       Expected: The list is unchanged. The status message shows the command format, because a word with letters could
+       be a mistyped option.
 
     1. Test case: `viewappt`, with no date and no options<br>
        Expected: The weekly view of this week is shown, marked `This week`, with the arrow buttons above the list. Its
@@ -1576,8 +1582,7 @@ testers are expected to do more *exploratory* testing.
 
     1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date),
        `viewappt --from 2026-02-30` (an impossible date for an option)<br>
-       Expected: The list is unchanged. The first shows the command format; the second shows the date format error,
-       because a date given to an option keeps the date error.
+       Expected: The list is unchanged. The first shows the command format; the second shows the date format error.
 
 1. Viewing patients who have an appointment in a date range
 
