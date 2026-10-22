@@ -186,10 +186,12 @@ Shift+Down and typed text do there:
 
 * Enter, and any printable character, move the focus back to the command box. A typed character is added to the text
   there.
-* Esc resets the view, and keeps the selected entry so that it is seen among the rest. In the patient view, it
-  executes `list` through the same `executeCommand` method as a typed command, so the list and the status message are
-  those of `list`. `list` selects the first patient, so `MainWindow#resetView` then selects the patient that was
-  selected before, or nothing if none was. In the appointment view, `AppointmentListPanel#reset` goes back from a
+* Esc resets the view, and keeps the selected entry so that it is seen among the rest. In the patient view,
+  `MainWindow#resetView` calls `Logic#showAllPatients`, which removes the filter of the patient list as `list` does,
+  but runs no command. So nothing is saved, the status message stays, and no `Navigation` selects the first patient;
+  `resetView` only selects again, in the longer list, the patient whose details are shown. (Running `list` itself would
+  show the first patient's details and then the earlier patient's again.) In the appointment view,
+  `AppointmentListPanel#reset` goes back from a
   `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and
   keeps the selection. In the weekly view, there is no range to remove, so Esc does nothing.
 * Tab moves the focus between the tabs and the list. The appointment list always takes the focus, so that Left and
@@ -1316,8 +1318,8 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: after the test cases above, press Esc<br>
        Expected: The list shows all patients again, and the header shows `All patients` and `6 patients`. The status
-       message says that all patients are listed. The patient shown in the panel stays selected, and the focus stays in
-       the list.
+       message does not change, as Esc runs no command. The patient shown in the panel stays selected, and the panel
+       does not show another patient, even for a moment. The focus stays in the list.
 
     1. Test case: with the focus in the list, press Tab twice<br>
        Expected: The focus moves to the **Patients** tab, then back to the list. It never moves to the command box or to

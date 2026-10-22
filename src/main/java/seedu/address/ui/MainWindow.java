@@ -30,7 +30,6 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
-import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Patient;
@@ -393,24 +392,18 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Resets the current view, as Esc does, and keeps the selected entry so that it is seen among the rest. In the
-     * patient view, shows all patients, as the {@code list} command does. In the appointment view, goes back from
-     * the appointments of a range to the weekly view of the selected appointment's week.
+     * patient view, shows all patients, as the {@code list} command does, but without running a command, so the
+     * details panel and the status message stay as they are. In the appointment view, goes back from the
+     * appointments of a range to the weekly view of the selected appointment's week.
      */
     private void resetView() {
         if (shownView == View.APPOINTMENTS) {
             appointmentListPanel.reset();
             return;
         }
-        Optional<PatientId> selected = patientDetailPanel.getShownId();
-        try {
-            executeCommand(ListCommand.COMMAND_WORD);
-        } catch (CommandException | ParseException e) {
-            // executeCommand has already shown the error to the user
-            logger.warning("Showing all patients failed: " + e.getMessage());
-        }
-        // list selects the first patient, but Esc is not a command, so it keeps the patient already selected
-        selected.ifPresentOrElse(patientDetailPanel::show, patientDetailPanel::clear);
-        selected.ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
+        logic.showAllPatients();
+        // Showing more rows can move the list's selection, so match it to the patient in the details panel
+        patientDetailPanel.getShownId().ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
     }
 
     /**

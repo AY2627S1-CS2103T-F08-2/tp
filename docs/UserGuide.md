@@ -136,7 +136,7 @@ Shift+Up and Shift+Down | Scroll the details beside the list.
 Tab | Moves to the view tabs.
 Any letter, digit or space | Goes back to the command box and types it there, after what you typed before.
 Enter | Goes back to the command box, keeping what you typed.
-Esc | In the patient view, shows all patients, as `list` does, but keeps the patient already selected. In the appointment view, goes back from a `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and keeps the selection. In the weekly view, it does nothing.
+Esc | In the patient view, shows all patients, as `list` does, but keeps the patient already selected and the status message, as it runs no command. In the appointment view, goes back from a `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and keeps the selection. In the weekly view, it does nothing.
 
 * Shift+Tab does nothing, in the command box or in the view.
 * The appointment list takes the focus even in a week with no appointments, so that Left and Right still work. Up there moves to the view tabs.
