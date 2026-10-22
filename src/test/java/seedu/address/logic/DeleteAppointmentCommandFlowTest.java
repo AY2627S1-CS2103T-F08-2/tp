@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -132,6 +133,7 @@ public class DeleteAppointmentCommandFlowTest {
         assertEquals(String.format(DeleteAppointmentCommand.MESSAGE_DELETE_APPOINTMENT_SUCCESS, expected.getName(),
                 expected.getId(), expectedAppointmentText), result.getFeedbackToUser());
         assertEquals(Optional.empty(), result.getNavigation(), "no appointment exists to select any more");
+        assertTrue(result.isSelectionCleared(), "the selection is cleared, as with delete and clear");
         assertEquals(expectedLaiNurse, model.getLaiNurse());
         assertEquals(expectedLaiNurse, storage.readLaiNurse().orElseThrow());
     }

@@ -70,7 +70,7 @@ public class DeleteAppointmentCommand extends Command {
 
         String message = String.format(MESSAGE_DELETE_APPOINTMENT_SUCCESS, editedPatient.getName(), targetId,
                 Messages.format(foundAppointment));
-        return new CommandResult(message);
+        return new CommandResult(message).withSelectionCleared();
     }
 
     @Override

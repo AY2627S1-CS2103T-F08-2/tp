@@ -126,7 +126,8 @@ public class DeleteAppointmentCommandTest {
 
     /**
      * Asserts that {@code command} replaces {@code patient} by {@code editedPatient}, reports
-     * {@code expectedAppointmentText}, and returns no navigation, since the appointment no longer exists.
+     * {@code expectedAppointmentText}, and clears the selection with no navigation,
+     * since the appointment no longer exists.
      */
     private void assertDeleteSuccess(Patient patient, DeleteAppointmentCommand command, Patient editedPatient,
             String expectedAppointmentText) {
@@ -134,7 +135,7 @@ public class DeleteAppointmentCommandTest {
                 editedPatient.getName(), editedPatient.getId(), expectedAppointmentText);
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);
-        CommandResult expectedResult = new CommandResult(expectedMessage);
+        CommandResult expectedResult = new CommandResult(expectedMessage).withSelectionCleared();
 
         assertCommandSuccess(command, model, expectedResult, expectedModel);
     }

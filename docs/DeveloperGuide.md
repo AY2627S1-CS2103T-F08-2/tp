@@ -481,10 +481,11 @@ match, the command fails with a `CommandException` that lists the patient's appo
 `AppointmentSchedule#getOnDate`, so the nurse can retype the one they meant, as `editappt` does. Otherwise, it
 replaces the patient through `Model#setPatient()` with a schedule that has the appointment removed.
 
-Unlike `addappt` and `editappt`, the command selects no appointment: after it succeeds, no appointment exists to
-select, and the deleted one cannot be highlighted again. It returns a plain `CommandResult` while `getView()` still
-shows the appointments view, so `MainWindow` switches to that view without a `Navigation`, and `AppointmentListPanel`
-keeps the page that was shown; the deleted row disappears from it. `Model#setPatient()` does not change the filter
+Unlike `addappt` and `editappt`, the command clears the selection with `CommandResult#withSelectionCleared`: after
+it succeeds, no appointment exists to select, and the deleted one cannot be highlighted again. The returned result
+has no `Navigation`, while `getView()` still shows the appointments view, so `MainWindow` switches to that view with
+the selection cleared, and `AppointmentListPanel` keeps the page that was shown; the deleted row disappears from
+it. `Model#setPatient()` does not change the filter
 of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there, as with `addappt`.
 
 ### Viewing appointments by date
@@ -574,7 +575,7 @@ Each command navigates as follows:
 | `list`, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
 | `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt` |
 | `addappt`, `editappt` | `Navigation.toAppointment` of the added or edited appointment, with no range, so the page shown stays if it has the appointment |
-| `delete`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
+| `delete`, `deleteappt`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
 | `help`, `exit` | no navigation: keeps the view and the selection |
 
 Switching the tab by mouse or key runs no command and changes no model state. So the result display, the filtered
