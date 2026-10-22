@@ -12,6 +12,7 @@ import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -29,7 +30,8 @@ public class ViewCommandTest {
     @Test
     public void execute_existingId_showsPatient() {
         PatientId bensonId = new PatientId("S2345678B");
-        CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)", bensonId);
+        CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)")
+                .withNavigation(Navigation.toPatient(bensonId));
         Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
 
         assertCommandSuccess(new ViewCommand(bensonId), model, expectedResult, expectedModel);
@@ -38,22 +40,24 @@ public class ViewCommandTest {
     @Test
     public void execute_lowercaseId_showsPatient() {
         PatientId bensonId = new PatientId("s2345678b");
-        CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)",
-                new PatientId("S2345678B"));
+        CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)")
+                .withNavigation(Navigation.toPatient(new PatientId("S2345678B")));
         Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
 
         assertCommandSuccess(new ViewCommand(bensonId), model, expectedResult, expectedModel);
     }
 
     @Test
-    public void execute_patientHiddenByFilter_showsPatientAndKeepsFilter() {
+    public void execute_patientHiddenByFilter_showsAllPatientsAndSelectsPatient() {
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
         PatientId bensonId = new PatientId("S2345678B");
-        CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)", bensonId);
+        CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)")
+                .withNavigation(Navigation.toPatient(bensonId));
+        // The filter is removed, so that the patient's row is in the list to select
         Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
-        showPatientAtIndex(expectedModel, INDEX_FIRST_PATIENT);
 
         assertCommandSuccess(new ViewCommand(bensonId), model, expectedResult, expectedModel);
+        assertTrue(model.getFilteredPatientList().stream().anyMatch(patient -> patient.getId().equals(bensonId)));
     }
 
     @Test
