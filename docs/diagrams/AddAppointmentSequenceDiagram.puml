@@ -1,0 +1,90 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":LaiNurseParser" as LaiNurseParser LOGIC_COLOR
+participant ":AddAppointmentCommandParser" as AddAppointmentCommandParser LOGIC_COLOR
+participant "a:Appointment" as Appointment LOGIC_COLOR
+participant "d:AddAppointmentCommand" as AddAppointmentCommand LOGIC_COLOR
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+
+[-> LogicManager : execute("addappt S1234567A --appt 2026-12-01 10:00")
+activate LogicManager
+
+LogicManager -> LaiNurseParser : parseCommand("addappt S1234567A --appt 2026-12-01 10:00")
+activate LaiNurseParser
+
+create AddAppointmentCommandParser
+LaiNurseParser -> AddAppointmentCommandParser
+activate AddAppointmentCommandParser
+
+AddAppointmentCommandParser --> LaiNurseParser
+deactivate AddAppointmentCommandParser
+
+LaiNurseParser -> AddAppointmentCommandParser : parse("S1234567A --appt 2026-12-01 10:00")
+activate AddAppointmentCommandParser
+
+create Appointment
+AddAppointmentCommandParser -> Appointment : Appointment("2026-12-01 10:00")
+activate Appointment
+
+Appointment --> AddAppointmentCommandParser
+deactivate Appointment
+
+create AddAppointmentCommand
+AddAppointmentCommandParser -> AddAppointmentCommand : AddAppointmentCommand(S1234567A, a)
+activate AddAppointmentCommand
+
+AddAppointmentCommand --> AddAppointmentCommandParser
+deactivate AddAppointmentCommand
+
+AddAppointmentCommandParser --> LaiNurseParser : d
+deactivate AddAppointmentCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+AddAppointmentCommandParser -[hidden]-> LaiNurseParser
+destroy AddAppointmentCommandParser
+
+LaiNurseParser --> LogicManager : d
+deactivate LaiNurseParser
+
+LogicManager -> AddAppointmentCommand : execute(m)
+activate AddAppointmentCommand
+
+AddAppointmentCommand -> Model : findPatientById(S1234567A)
+activate Model
+
+Model --> AddAppointmentCommand : p
+deactivate Model
+
+AddAppointmentCommand -> AddAppointmentCommand : schedule.add(a)
+activate AddAppointmentCommand
+
+AddAppointmentCommand --> AddAppointmentCommand : editedSchedule
+deactivate AddAppointmentCommand
+
+AddAppointmentCommand -> Model : setPatient(p, editedPatient)
+activate Model
+
+Model --> AddAppointmentCommand
+deactivate Model
+
+create CommandResult
+AddAppointmentCommand -> CommandResult
+activate CommandResult
+
+CommandResult --> AddAppointmentCommand
+deactivate CommandResult
+
+AddAppointmentCommand --> LogicManager : r
+deactivate AddAppointmentCommand
+
+[<--LogicManager
+deactivate LogicManager
+@enduml

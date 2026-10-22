@@ -243,6 +243,11 @@ call as an example.
 <div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
 </div>
 
+The appointment commands follow the same shape. The diagram below shows the `addappt` command, which uses
+`Model#findPatientById()` to find the patient among all patients and adds the appointment to their schedule.
+
+<img src="images/AddAppointmentSequenceDiagram.png" width="800" />
+
 How the `Logic` component works:
 
 1. When `Logic` is called upon to execute a command, the command is passed to a `LaiNurseParser` object, which in
