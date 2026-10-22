@@ -103,6 +103,11 @@ public class LogicManager implements Logic {
     }
 
     @Override
+    public void showAllPatients() {
+        model.updateFilteredPatientList(Model.PREDICATE_SHOW_ALL_PATIENTS);
+    }
+
+    @Override
     public ObservableList<Patient> getPatientList() {
         return model.getLaiNurse().getPatientList();
     }

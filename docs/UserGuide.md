@@ -82,7 +82,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
-  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
+  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. A plain [`viewappt`](#viewing-appointments-viewappt) shows the weekly view of this week. After `viewappt` with a date, a range or `--id`, the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
 
 In both views, the list and the details share the width of the window, and grow and shrink together as you resize it.
 
@@ -90,11 +90,11 @@ An appointment has passed once its time today has gone by, or once its day is ov
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
-Commands switch the view. `viewappt`, `editappt` and `addappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. You can also click a tab, or move to the tabs with the keyboard and press Left or Right. Switching views this way runs no command, so each view still shows what it showed before.
+Commands switch the view. `viewappt`, `editappt` and `addappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
 
 * `add`, `edit` and `view` select the patient that they add, edit or show. `list` and `find` select the first patient in the list.
 * `viewappt` selects the next appointment from now: the first appointment on the page that has not passed, or the first on the page if all have passed.
-* `editappt` selects the appointment that it edits: on the page shown, if that page has it, or else in the weekly view of its week.
+* `addappt` and `editappt` select the appointment that they add or edit: on the page shown, if that page has it, or else in the weekly view of its week.
 * `delete` and `clear` select nothing, and the details beside the list show their starting message.
 * `help`, and a command that fails, change nothing.
 
@@ -136,7 +136,7 @@ Shift+Up and Shift+Down | Scroll the details beside the list.
 Tab | Moves to the view tabs.
 Any letter, digit or space | Goes back to the command box and types it there, after what you typed before.
 Enter | Goes back to the command box, keeping what you typed.
-Esc | In the patient view, shows all patients, as `list` does, but keeps the patient already selected. In the appointment view, goes back from a `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and keeps the selection. In the weekly view, it does nothing.
+Esc | In the patient view, shows all patients, as `list` does, but keeps the patient already selected and the status message, as it runs no command. In the appointment view, goes back from a `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and keeps the selection. In the weekly view, it does nothing.
 
 * Shift+Tab does nothing, in the command box or in the view.
 * The appointment list takes the focus even in a week with no appointments, so that Left and Right still work. Up there moves to the view tabs.

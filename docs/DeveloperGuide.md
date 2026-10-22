@@ -143,9 +143,10 @@ selection. Reading the clock every few seconds, rather than once a minute, also 
 computer wakes from sleep.
 
 `AppointmentListPanel` shows the appointments of `Logic#getAppointmentList()`, which holds every appointment of every
-patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek`, from Monday to Sunday. After
-`viewappt`, the panel shows only the appointments in the command's range, on one page, and hides the week's arrow
-buttons; if the range carries a patient ID, only that patient's appointments. `AppointmentPage#ofWeek` and
+patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek`, from Monday to Sunday, which a plain
+`viewappt` shows for this week. After `viewappt` with a date, a range or `--id`, the panel shows only the appointments
+in the command's range, on one page, and hides the week's arrow buttons; if the range carries a patient ID, only that
+patient's appointments. `AppointmentPage#ofWeek` and
 `AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
 of the week, or for each day in the range that has an appointment, followed by that day's appointments, numbered down
 the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. An appointment with no time comes first in its day, except today, where it comes after the appointments that
@@ -185,10 +186,12 @@ Shift+Down and typed text do there:
 
 * Enter, and any printable character, move the focus back to the command box. A typed character is added to the text
   there.
-* Esc resets the view, and keeps the selected entry so that it is seen among the rest. In the patient view, it
-  executes `list` through the same `executeCommand` method as a typed command, so the list and the status message are
-  those of `list`. `list` selects the first patient, so `MainWindow#resetView` then selects the patient that was
-  selected before, or nothing if none was. In the appointment view, `AppointmentListPanel#reset` goes back from a
+* Esc resets the view, and keeps the selected entry so that it is seen among the rest. In the patient view,
+  `MainWindow#resetView` calls `Logic#showAllPatients`, which removes the filter of the patient list as `list` does,
+  but runs no command. So nothing is saved, the status message stays, and no `Navigation` selects the first patient;
+  `resetView` only selects again, in the longer list, the patient whose details are shown. (Running `list` itself would
+  show the first patient's details and then the earlier patient's again.) In the appointment view,
+  `AppointmentListPanel#reset` goes back from a
   `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and
   keeps the selection. In the weekly view, there is no range to remove, so Esc does nothing.
 * Tab moves the focus between the tabs and the list. The appointment list always takes the focus, so that Left and
@@ -471,7 +474,9 @@ change the filter of the patient list, so a patient hidden by `find` or `viewapp
 `viewappt` takes one date, a range given by `--from`, `--to`, or both, or none of these. A plain `viewappt`, with none
 of these and no `--id`, shows the weekly view of this week: the command filters the patient list to the patients with
 an appointment from this week's Monday to its Sunday, and returns no range, only a `Navigation.toView`, so that
-`MainWindow` shows this week and selects the next appointment from now. `ViewAppointmentCommandParser`
+`MainWindow` shows this week and selects the next appointment from now. The command and the weekly view's
+`AppointmentWeek` both take the week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the
+patient list and the week shown cannot disagree on its days. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
 that starts and ends on that date. When both options are given, the parser rejects a `--from` date that is after the
 `--to` date.
@@ -521,7 +526,9 @@ Other commands keep the view that is shown.
 Each `Command` declares the view it shows by overriding `Command#getView()`, which returns `Optional.empty()` by default.
 `LogicManager#execute` adds that view to the command's `CommandResult` with `CommandResult#withView`, and
 `MainWindow#executeCommand` switches to it. A `CommandResult` can also hold an `AppointmentRange`, as the result of
-`viewappt` does. Then `MainWindow` tells `AppointmentListPanel` to show the appointments in that range on one page.
+`viewappt` with a date, a range or `--id` does. Then `MainWindow` tells `AppointmentListPanel` to show the appointments
+in that range on one page. The result of a plain `viewappt` has no range, so the panel shows the weekly view of this
+week.
 
 A command can also choose the entry to select, by adding a `CommandResult.Navigation` with
 `CommandResult#withNavigation`. `Navigation.toPatient(id)` selects that patient in the patient view, and
@@ -548,7 +555,7 @@ Each command navigates as follows:
 | `add`, `edit`, `view` | `Navigation.toPatient` of the patient that they add, edit or show. All three show all patients first, so that patient is always in the list. |
 | `list`, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
 | `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt` |
-| `editappt` | `Navigation.toAppointment` of the edited appointment, with no range, so the page shown stays if it has the appointment |
+| `addappt`, `editappt` | `Navigation.toAppointment` of the added or edited appointment, with no range, so the page shown stays if it has the appointment |
 | `delete`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
 | `help`, `exit` | no navigation: keeps the view and the selection |
 
@@ -570,9 +577,9 @@ moves it to the tab of the view being shown.
 
 **Design considerations: what the appointment view lists**
 
-* **Alternative 1 (current choice):** The weekly view lists every appointment, a week at a time. `viewappt` shows only
-  the appointments in its range, on one page with a heading for each day that has one, and Esc goes back to the weekly
-  view.
+* **Alternative 1 (current choice):** The weekly view lists every appointment, a week at a time, and a plain `viewappt`
+  shows this week. `viewappt` with a date, a range or `--id` shows only the appointments in its range, on one page with
+  a heading for each day that has one, and Esc goes back to the weekly view.
     * Pros: The view shows exactly the appointments that the command found, however many weeks the range covers, and
       no day looks empty because of a filter. The filter lives in the UI, so the model needs no second filtered list.
     * Cons: The panel has two kinds of page, and the user presses Esc to get back to the weekly view.
@@ -1311,8 +1318,8 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: after the test cases above, press Esc<br>
        Expected: The list shows all patients again, and the header shows `All patients` and `6 patients`. The status
-       message says that all patients are listed. The patient shown in the panel stays selected, and the focus stays in
-       the list.
+       message does not change, as Esc runs no command. The patient shown in the panel stays selected, and the panel
+       does not show another patient, even for a moment. The focus stays in the list.
 
     1. Test case: with the focus in the list, press Tab twice<br>
        Expected: The focus moves to the **Patients** tab, then back to the list. It never moves to the command box or to
@@ -1838,8 +1845,8 @@ testers are expected to do more *exploratory* testing.
     * Test case: `help help`
         * Expected: The syntax and example of the `help` command itself is displayed.
     * Test case: `help viewappt`
-        * Expected: The `viewappt` syntax is displayed: a date, a `--from`/`--to` range, or neither for the upcoming
-          appointments, each with an optional `--id ID`.
+        * Expected: The `viewappt` syntax is displayed: a date, a `--from`/`--to` range, or neither for this week, each
+          with an optional `--id ID`. With `--id ID` alone, it shows all of that patient's appointments.
     * Test case: `help DELETE` or `help VIEW`
         * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
 

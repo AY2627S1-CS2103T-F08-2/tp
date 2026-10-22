@@ -19,12 +19,11 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
+import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
@@ -52,8 +51,6 @@ public class ViewAppointmentCommand extends Command {
             + "Parameters: [DATE] or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE], with an optional ["
             + PREFIX_ID + "ID] (dates in yyyy-MM-dd)\n"
             + "Example: " + COMMAND_WORD + " 2026-10-15";
-
-    private static final int DAYS_IN_WEEK = 7;
 
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;
@@ -147,11 +144,12 @@ public class ViewAppointmentCommand extends Command {
 
     /**
      * Shows the weekly view of this week, from Monday to Sunday, and lists the patients with an appointment in it.
-     * The result has no range, so the appointment view shows the weekly view, not a page of a range.
+     * The result has no range, so the appointment view shows the weekly view, not a page of a range. The week comes
+     * from {@code DateUtil}, as the weekly view's does, so the patient list matches the week shown.
      */
     private CommandResult showThisWeek(Model model, LocalDate today) {
-        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate sunday = monday.plusDays(DAYS_IN_WEEK - 1);
+        LocalDate monday = DateUtil.getStartOfWeek(today);
+        LocalDate sunday = DateUtil.getEndOfWeek(today);
         model.updateFilteredPatientList(new AppointmentBetweenDatesPredicate(monday, sunday));
         int count = model.getFilteredPatientList().size();
         return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW, count, monday, sunday))
