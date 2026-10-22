@@ -166,8 +166,8 @@ When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for 
 command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
 does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
 rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit`, `editappt` and `addappt` take the ID first and options after it, so `IdCompleter` completes the word after
-the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
+end the command. `edit`, `addappt`, `editappt` and `deleteappt` take the ID first and options after it, so
+`IdCompleter` completes the word after the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
 started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
 The keyboard focus is in one of three areas, given by `FocusArea`: the command box, and in the view that is shown, the
@@ -477,7 +477,7 @@ change the filter of the patient list, so a patient hidden by `find` or `viewapp
 
 ### Deleting an appointment
 
-`deleteappt ID --appt DATE_OR_DATETIME` removes one appointment from a patient's schedule. `DeleteAppointmentParser`
+`deleteappt ID --appt DATE_OR_DATETIME` removes one appointment from a patient's schedule. `DeleteAppointmentCommandParser`
 normalizes option separators in the same way as `addappt`, with its `--appt` required; details are not an option,
 because an appointment is found by its date and time alone. `DeleteAppointmentCommand` finds the patient with
 `Model#findPatientById()`, then looks the appointment up with `AppointmentSchedule#find` at the exact date and time,
@@ -503,7 +503,9 @@ an appointment from this week's Monday to its Sunday, and returns no range, only
 `AppointmentWeek` both take the week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the
 patient list and the week shown cannot disagree on its days. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
-that starts and ends on that date. When both options are given, the parser rejects a `--from` date that is after the
+that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
+`2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
+`--from` or `--to` does. Any other word, such as `invalid`, could be a mistyped option, so it gets the command format. When both options are given, the parser rejects a `--from` date that is after the
 `--to` date.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
@@ -1561,11 +1563,15 @@ testers are expected to do more *exploratory* testing.
        `0 patient(s) with appointments on 2026-11-11`. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
-       Expected: The list is unchanged. The status message shows the command format, because a date that does not
-       parse is treated like any other invalid input.
+       Expected: The list is unchanged. The status message shows the date format error, as for
+       `viewappt --from 2026-02-30`.
 
     1. Test case: `viewappt 15/10/2026`, a date in the wrong format<br>
-       Expected: The list is unchanged. The status message shows the command format, as above.
+       Expected: The list is unchanged. The status message shows the date format error, as above.
+
+    1. Test case: `viewappt S1234567A`, a patient ID without `--id`<br>
+       Expected: The list is unchanged. The status message shows the command format, because a word with letters could
+       be a mistyped option.
 
     1. Test case: `viewappt`, with no date and no options<br>
        Expected: The weekly view of this week is shown, marked `This week`, with the arrow buttons above the list. Its
@@ -1576,8 +1582,7 @@ testers are expected to do more *exploratory* testing.
 
     1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date),
        `viewappt --from 2026-02-30` (an impossible date for an option)<br>
-       Expected: The list is unchanged. The first shows the command format; the second shows the date format error,
-       because a date given to an option keeps the date error.
+       Expected: The list is unchanged. The first shows the command format; the second shows the date format error.
 
 1. Viewing patients who have an appointment in a date range
 
@@ -1919,8 +1924,8 @@ testers are expected to do more *exploratory* testing.
        Expected: The appointment of Alex Yeoh, who is not in the list shown, is deleted. The find filter stays, so the
        patient list still shows only Bernice Yu.
 
-    1. Test case: run `viewappt 2026-10-05` first, then `deleteappt S1234567A --appt 2026-10-05 09:30`<br>
-       Expected: The appointments view keeps showing 5 October, now without Alex Yeoh's appointment.
+    1. Test case: run `viewappt 2026-10-07` first, then `deleteappt G1234567E --appt 2026-10-07 14:00`<br>
+       Expected: The appointments view keeps showing 7 October, now without Irfan Ibrahim's appointment.
 
 1. _{ more test cases …​ }_
 

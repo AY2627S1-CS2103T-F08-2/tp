@@ -135,13 +135,25 @@ public class ViewAppointmentCommandParserTest {
 
     @Test
     public void parse_invalidDate_throwsParseException() {
-        for (String date : List.of(WRONG_FORMAT_DATE, NOT_A_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
-            // A bare word that is not a date could be a mistyped option, so the command format is shown
-            assertParseFailure(parser, date, INVALID_FORMAT_MESSAGE);
-            // A date given to an option keeps the date error
+        for (String date : List.of(WRONG_FORMAT_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
+            // A word of digits and punctuation can only be meant as a date, so it gets the date error
+            assertParseFailure(parser, date, DateUtil.MESSAGE_CONSTRAINTS);
+            assertParseFailure(parser, date + " " + ID_FLAG + VALID_ID, DateUtil.MESSAGE_CONSTRAINTS);
+            // A date given to an option gets the same error
             assertParseFailure(parser, FROM_FLAG + date, DateUtil.MESSAGE_CONSTRAINTS);
             assertParseFailure(parser, TO_FLAG + date, DateUtil.MESSAGE_CONSTRAINTS);
         }
+    }
+
+    @Test
+    public void parse_wordWithLetters_showsCommandFormat() {
+        // A bare word with letters could be a mistyped option, so the command format is shown
+        assertParseFailure(parser, NOT_A_DATE, INVALID_FORMAT_MESSAGE);
+        // An ID given without --id
+        assertParseFailure(parser, VALID_ID, INVALID_FORMAT_MESSAGE);
+        // The same word given to an option is a date, so it gets the date error
+        assertParseFailure(parser, FROM_FLAG + NOT_A_DATE, DateUtil.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, TO_FLAG + NOT_A_DATE, DateUtil.MESSAGE_CONSTRAINTS);
     }
 
     @Test

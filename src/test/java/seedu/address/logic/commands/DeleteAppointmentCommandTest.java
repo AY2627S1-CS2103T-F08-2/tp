@@ -65,6 +65,19 @@ public class DeleteAppointmentCommandTest {
     }
 
     @Test
+    public void execute_deleteOneOfSameDay_keepsTheOthers() {
+        // a date-only appointment, one at 00:00 and one at 09:30 on the same day are different appointments
+        Patient bensonSameDay = new PatientBuilder(BENSON)
+                .withAppointments("2026-10-05", "2026-10-05 00:00", "2026-10-05 09:30").build();
+        model.setPatient(BENSON, bensonSameDay);
+        Patient editedBenson = new PatientBuilder(BENSON).withAppointments("2026-10-05", "2026-10-05 09:30").build();
+
+        assertDeleteSuccess(bensonSameDay,
+                new DeleteAppointmentCommand(BENSON.getId(), new Appointment("2026-10-05 00:00")), editedBenson,
+                "2026-10-05 00:00");
+    }
+
+    @Test
     public void execute_dateOnlyDoesNotMatchTimed_failureListsThatDay() {
         DeleteAppointmentCommand command =
                 new DeleteAppointmentCommand(BENSON.getId(), new Appointment("2026-10-05"));
