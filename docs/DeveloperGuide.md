@@ -238,10 +238,20 @@ The sequence diagram below illustrates the interactions within the `Logic` compo
 S1234567A")` API
 call as an example.
 
-![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
+![Interactions Inside the Logic Component for the `delete S1234567A` Command](images/DeleteSequenceDiagram.png)
 
 <div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
 </div>
+
+The appointment commands follow the same shape. The diagram below shows the `addappt` command, which uses
+`Model#findPatientById()` to find the patient among all patients and adds the appointment to their schedule.
+
+<img src="images/AddAppointmentSequenceDiagram.png" width="800" />
+
+The `deleteappt` command also follows this shape, up to the lookup: it finds the matching appointment with
+`AppointmentLookup#find()` and removes it from the patient's schedule.
+
+<img src="images/DeleteAppointmentSequenceDiagram.png" width="800" />
 
 How the `Logic` component works:
 
@@ -451,7 +461,7 @@ only the first appointment at each date and time, so without that check, adding 
 replace nothing and lose the new appointment. The check makes the duplicate slot a `CommandException` instead. The
 command then replaces the patient through `Model#setPatient()` with a schedule that has the appointment added, and
 selects it with `Navigation.toAppointment`, as `editappt` does for the edited one. `Model#setPatient()` does not
-change the find filter, only `add` and `list` do, so a patient hidden by `find` stays hidden in the patient list.
+change the filter of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there.
 
 ### Deleting an appointment
 
@@ -1119,13 +1129,14 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 *{More to be added}*
 
-**Use case: UC10 - Delete an appointment**
+**Use case: UC09 - Add an appointment**
 
 **MSS**
 
-1.  Nurse requests to delete a patient's appointment by the patient's ID and the appointment's date and time
-2.  LaiNurse removes the appointment from the patient's schedule
-3.  LaiNurse shows the appointments view without the deleted appointment
+1.  Nurse requests to add an appointment to a patient's schedule by the patient's ID and the appointment's date and
+    time, with details, if any
+2.  LaiNurse adds the appointment to the patient's schedule
+3.  LaiNurse shows the new appointment, selected in the appointments view
 
     Use case ends.
 
@@ -1143,9 +1154,15 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1c. The patient has no appointment at the given date and time.
+* 1c. The patient already has an appointment at the given date and time.
 
-    * 1c1. LaiNurse shows an error message that lists the patient's appointments on that day, if any.
+    * 1c1. LaiNurse shows an error message, and makes no changes.
+
+      Use case resumes at step 1.
+
+* 1d. The details are blank.
+
+    * 1d1. LaiNurse shows an error message.
 
       Use case resumes at step 1.
 
@@ -1767,11 +1784,11 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data.
 
     1. Test case: `addappt S1234567A --appt 2026-10-05 09:30`<br>
-       Expected: No appointment is added. The status message says that Alex Yeoh already has an appointment on
-       `2026-10-05 09:30`.
+       Expected: No appointment is added. The status message says that the patient `S1234567A` already has an
+       appointment on `2026-10-05 09:30`.
 
     1. Test case: `addappt S0000000Z --appt 2026-10-14`<br>
-       Expected: No appointment is added. The status message says that no patient has the given ID.
+       Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
 
 ### Deleting an appointment
 

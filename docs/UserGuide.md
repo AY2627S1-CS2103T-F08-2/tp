@@ -289,9 +289,8 @@ Adds an appointment to a patient's schedule.
 
 Format: `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`
 
-* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown — even under a `find` filter, which stays: the patient may still be hidden when you return to the Patients view.
-* `--appt` gives the date, or date and time, of the new appointment: a real date in `yyyy-MM-dd` format, optionally followed by a 24-hour time in `HH:mm` format, such as `2026-12-01` or `2026-12-01 10:00`. Past dates are accepted.
-* Appointments have no time zone. They are the local date and time of the visit, as you would write them on a calendar, so changing your computer's time zone does not change them.
+* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
+* `--appt` gives the date, or date and time, of the new appointment, in the same format as in [`add`](#adding-a-patient-add). Past dates are accepted.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * The options may appear in any order after the ID, each at most once.
 * A patient cannot have two appointments at the same date and time, so adding an appointment onto another of the patient's appointments is rejected, whatever its details. A date-only appointment and a timed one on the same day, including `00:00`, can coexist.
@@ -416,8 +415,8 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 
 Action | Format, Examples
 --------|-----------------
-**Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
-**AddAppt** | `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --appt 2026-10-05 09:30 --details Bring insulin pen`
+**Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES] [--appt DATE_OR_DATETIME]…​` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening --appt 2026-11-30 09:00`
+**AddAppt** | `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --appt 2026-12-01 10:00 --details Bring insulin pen`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **DeleteAppt** | `deleteappt ID --appt DATE_OR_DATETIME`<br> e.g., `deleteappt S1234567A --appt 2026-10-05 09:30`
