@@ -3,10 +3,8 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.CollectionUtil;
@@ -33,8 +31,6 @@ public class DeleteAppointmentCommand extends Command {
             + "Example: " + COMMAND_WORD + " S1234567A " + PREFIX_APPOINTMENT + "2026-10-05 09:30";
 
     public static final String MESSAGE_DELETE_APPOINTMENT_SUCCESS = "Deleted appointment of %1$s (%2$s): %3$s";
-    public static final String MESSAGE_APPOINTMENT_NOT_FOUND = "Patient %1$s has no appointment on %2$s.";
-    public static final String MESSAGE_APPOINTMENTS_ON_DATE = " Their appointments on that day: %1$s.";
 
     private static final Logger logger = LogsCenter.getLogger(DeleteAppointmentCommand.class);
 
@@ -63,7 +59,8 @@ public class DeleteAppointmentCommand extends Command {
                     return new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
                 });
 
-        Appointment foundAppointment = findTargetAppointment(patient.getSchedule());
+        Appointment foundAppointment =
+                AppointmentLookup.find(targetId, patient.getSchedule(), targetAppointment, COMMAND_WORD);
 
         AppointmentSchedule editedSchedule = patient.getSchedule().remove(foundAppointment);
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
@@ -72,36 +69,8 @@ public class DeleteAppointmentCommand extends Command {
         logger.fine("Deleted an appointment of patient " + targetId + ".");
 
         String message = String.format(MESSAGE_DELETE_APPOINTMENT_SUCCESS, editedPatient.getName(), targetId,
-                format(foundAppointment));
+                Messages.format(foundAppointment));
         return new CommandResult(message);
-    }
-
-    /**
-     * Returns the patient's appointment at the date and time of {@code targetAppointment}, with its details.
-     *
-     * @throws CommandException if there is none. The message lists the patient's appointments on that day, if any,
-     *         so that the nurse can retype the one they meant.
-     */
-    private Appointment findTargetAppointment(AppointmentSchedule schedule) throws CommandException {
-        Optional<Appointment> found = schedule.find(targetAppointment);
-        if (found.isPresent()) {
-            return found.get();
-        }
-        logger.fine("Rejected deleteappt: the patient has no appointment at the given time.");
-        String message = String.format(MESSAGE_APPOINTMENT_NOT_FOUND, targetId, targetAppointment);
-        List<Appointment> sameDay = schedule.getOnDate(targetAppointment.getDate());
-        if (!sameDay.isEmpty()) {
-            message += String.format(MESSAGE_APPOINTMENTS_ON_DATE,
-                    sameDay.stream().map(Appointment::toString).collect(Collectors.joining(", ")));
-        }
-        throw new CommandException(message);
-    }
-
-    /**
-     * Returns {@code appointment} as shown in the result message: its date and time, and its details, if any.
-     */
-    private static String format(Appointment appointment) {
-        return appointment + appointment.getDetails().map(details -> "; Details: " + details).orElse("");
     }
 
     @Override

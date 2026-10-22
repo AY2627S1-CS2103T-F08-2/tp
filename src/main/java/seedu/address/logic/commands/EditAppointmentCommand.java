@@ -5,10 +5,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.CollectionUtil;
@@ -47,9 +45,6 @@ public class EditAppointmentCommand extends Command {
     public static final String MESSAGE_MOVED_FROM = " (moved from %1$s)";
     public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_TO.toString().trim() + " and "
             + PREFIX_DETAILS.toString().trim() + " must be provided.";
-    public static final String MESSAGE_APPOINTMENT_NOT_FOUND = "Patient %1$s has no appointment on %2$s.";
-    public static final String MESSAGE_APPOINTMENTS_ON_DATE = " Their appointments on that day: %1$s.";
-    public static final String MESSAGE_APPOINTMENT_TAKEN = "Patient %1$s already has an appointment on %2$s.";
 
     private static final Logger logger = LogsCenter.getLogger(EditAppointmentCommand.class);
 
@@ -89,13 +84,14 @@ public class EditAppointmentCommand extends Command {
         }
         Patient patient = foundPatient.get();
         AppointmentSchedule schedule = patient.getSchedule();
-        Appointment oldAppointment = findTargetAppointment(schedule);
+        Appointment oldAppointment =
+                AppointmentLookup.find(targetId, schedule, targetAppointment, COMMAND_WORD);
         Appointment editedAppointment = createEditedAppointment(oldAppointment);
 
         boolean isMoved = !editedAppointment.isSameAppointment(oldAppointment);
         if (isMoved && schedule.contains(editedAppointment)) {
             logger.fine("Rejected editappt: the patient already has an appointment at the new time.");
-            throw new CommandException(String.format(MESSAGE_APPOINTMENT_TAKEN, targetId, editedAppointment));
+            throw new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, targetId, editedAppointment));
         }
 
         AppointmentSchedule editedSchedule = schedule.remove(oldAppointment).add(editedAppointment);
@@ -105,33 +101,12 @@ public class EditAppointmentCommand extends Command {
         logger.fine("Edited an appointment of patient " + targetId + ".");
 
         String message = String.format(MESSAGE_EDIT_APPOINTMENT_SUCCESS, editedPatient.getName(), targetId,
-                format(editedAppointment));
+                Messages.format(editedAppointment));
         if (isMoved) {
             message += String.format(MESSAGE_MOVED_FROM, oldAppointment);
         }
         return new CommandResult(message)
                 .withNavigation(Navigation.toAppointment(new PatientAppointment(editedPatient, editedAppointment)));
-    }
-
-    /**
-     * Returns the patient's appointment at the date and time of {@code targetAppointment}, with its details.
-     *
-     * @throws CommandException if there is none. The message lists the patient's appointments on that day, if any,
-     *         so that the nurse can retype the one they meant.
-     */
-    private Appointment findTargetAppointment(AppointmentSchedule schedule) throws CommandException {
-        Optional<Appointment> found = schedule.find(targetAppointment);
-        if (found.isPresent()) {
-            return found.get();
-        }
-        logger.fine("Rejected editappt: the patient has no appointment at the given time.");
-        String message = String.format(MESSAGE_APPOINTMENT_NOT_FOUND, targetId, targetAppointment);
-        List<Appointment> sameDay = schedule.getOnDate(targetAppointment.getDate());
-        if (!sameDay.isEmpty()) {
-            message += String.format(MESSAGE_APPOINTMENTS_ON_DATE,
-                    sameDay.stream().map(Appointment::toString).collect(Collectors.joining(", ")));
-        }
-        throw new CommandException(message);
     }
 
     /**
@@ -143,13 +118,6 @@ public class EditAppointmentCommand extends Command {
         String dateTime = newDateTime.map(Appointment::toString).orElse(oldAppointment.toString());
         Optional<AppointmentDetails> details = newDetails.or(oldAppointment::getDetails);
         return new Appointment(dateTime, details);
-    }
-
-    /**
-     * Returns {@code appointment} as shown in the result message: its date and time, and its details, if any.
-     */
-    private static String format(Appointment appointment) {
-        return appointment + appointment.getDetails().map(details -> "; Details: " + details).orElse("");
     }
 
     @Override

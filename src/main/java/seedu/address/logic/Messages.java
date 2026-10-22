@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.logic.parser.Prefix;
+import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -33,6 +34,9 @@ public class Messages {
             "The --from date must not be after the --to date.";
     public static final String MESSAGE_DUPLICATE_FIELDS =
             "Multiple values specified for the following single-valued field(s): ";
+    public static final String MESSAGE_APPOINTMENT_TAKEN = "Patient %1$s already has an appointment on %2$s.";
+    public static final String MESSAGE_APPOINTMENT_NOT_FOUND = "Patient %1$s has no appointment on %2$s.";
+    public static final String MESSAGE_APPOINTMENTS_ON_DATE = " Their appointments on that day: %1$s.";
 
     /**
      * Returns an error message indicating the duplicate prefixes.
@@ -64,6 +68,13 @@ public class Messages {
             builder.append("; Appointments: ").append(patient.getSchedule());
         }
         return builder.toString();
+    }
+
+    /**
+     * Returns {@code appointment} as shown in command messages: its date and time, and its details, if any.
+     */
+    public static String format(Appointment appointment) {
+        return appointment + appointment.getDetails().map(details -> "; Details: " + details).orElse("");
     }
 
 }

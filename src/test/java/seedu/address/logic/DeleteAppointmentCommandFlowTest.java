@@ -96,13 +96,13 @@ public class DeleteAppointmentCommandFlowTest {
         // a date alone does not match the timed appointment on that day, which the error lists
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05",
                 CommandException.class,
-                String.format(DeleteAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
-                + String.format(DeleteAppointmentCommand.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
+                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
 
         // nothing on that day
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-20",
                 CommandException.class,
-                String.format(DeleteAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-20"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-20"));
     }
 
     @Test

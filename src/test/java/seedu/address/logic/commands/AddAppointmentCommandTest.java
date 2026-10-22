@@ -86,7 +86,7 @@ public class AddAppointmentCommandTest {
         AddAppointmentCommand command =
                 new AddAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT);
         assertCommandFailure(command, model,
-                String.format(AddAppointmentCommand.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(), "2026-10-05 09:30"));
+                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(), "2026-10-05 09:30"));
     }
 
     @Test

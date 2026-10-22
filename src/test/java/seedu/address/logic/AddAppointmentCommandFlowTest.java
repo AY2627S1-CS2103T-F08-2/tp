@@ -100,7 +100,7 @@ public class AddAppointmentCommandFlowTest {
     @Test
     public void execute_duplicateSlot_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("addappt S1234567A --appt 2026-10-05 09:30", CommandException.class,
-                String.format(AddAppointmentCommand.MESSAGE_APPOINTMENT_TAKEN, ALEX_ID, "2026-10-05 09:30"));
+                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, ALEX_ID, "2026-10-05 09:30"));
     }
 
     @Test

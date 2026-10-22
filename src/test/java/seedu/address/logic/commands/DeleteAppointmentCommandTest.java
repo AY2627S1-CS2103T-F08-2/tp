@@ -69,8 +69,8 @@ public class DeleteAppointmentCommandTest {
         DeleteAppointmentCommand command =
                 new DeleteAppointmentCommand(BENSON.getId(), new Appointment("2026-10-05"));
         assertCommandFailure(command, model,
-                String.format(DeleteAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05")
-                + String.format(DeleteAppointmentCommand.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05")
+                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class DeleteAppointmentCommandTest {
         DeleteAppointmentCommand command =
                 new DeleteAppointmentCommand(BENSON.getId(), new Appointment("2026-10-07"));
         assertCommandFailure(command, model,
-                String.format(DeleteAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-07"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-07"));
     }
 
     @Test
