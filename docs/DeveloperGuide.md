@@ -1796,7 +1796,7 @@ testers are expected to do more *exploratory* testing.
        `2026-10-05`, and lists `2026-10-05 09:30` as their appointment that day.
 
     1. Test case: `deleteappt S0000000Z --appt 2026-10-14`<br>
-       Expected: No appointment is deleted. The status message says that no patient has the given ID.
+       Expected: No appointment is deleted. The status message shows `The patient ID provided is invalid.`
 
     1. Other incorrect deleteappt commands to try: `deleteappt` (missing everything), `deleteappt S1234567A`
        (nothing to delete), `deleteappt S1234567A --appt` (no date and time)<br>
@@ -1819,7 +1819,7 @@ testers are expected to do more *exploratory* testing.
 
 1. Command overview via CLI
     * Test case: `help`
-        * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
+        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `clear`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
     * Test case: `help add`

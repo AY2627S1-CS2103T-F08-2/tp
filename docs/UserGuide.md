@@ -162,7 +162,7 @@ Examples:
 * `help` shows a quick summary list of all available commands in the result display.
 * `help add` shows the exact parameters and examples for adding a patient.
 * `help help` shows the syntax and example of the `help` command.
-* `help edit` shows how to modify patient details and manage appointments.
+* `help edit` shows the exact parameters and examples for editing a patient.
 * `help window` opens the full User Guide window.
 * Pressing <kbd>F1</kbd> opens the full User Guide window.
 
