@@ -248,6 +248,11 @@ The appointment commands follow the same shape. The diagram below shows the `add
 
 <img src="images/AddAppointmentSequenceDiagram.png" width="800" />
 
+The `deleteappt` command also follows this shape, up to the lookup: it finds the matching appointment with
+`AppointmentLookup#find()` and removes it from the patient's schedule.
+
+<img src="images/DeleteAppointmentSequenceDiagram.png" width="800" />
+
 How the `Logic` component works:
 
 1. When `Logic` is called upon to execute a command, the command is passed to a `LaiNurseParser` object, which in
