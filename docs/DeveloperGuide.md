@@ -1764,7 +1764,7 @@ testers are expected to do more *exploratory* testing.
        appointment on `2026-10-05 09:30`.
 
     1. Test case: `addappt S0000000Z --appt 2026-10-14`<br>
-       Expected: No appointment is added. The status message says that no patient has the given ID.
+       Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
 
 ### Viewing help and command instructions
 
