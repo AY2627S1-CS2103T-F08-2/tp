@@ -181,6 +181,7 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * A new patient starts with no appointments. Set their appointments with [`addappt`](#adding-an-appointment-addappt).
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
+* The `--appt` option that `add` accepted in earlier versions is gone. Typing it is rejected with a message that points to [`addappt`](#adding-an-appointment-addappt).
 * After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change. The new patient is selected in the list, and their details are shown, as `view` does.
 
 Examples:
@@ -214,6 +215,7 @@ Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-hi
 * `--name`, `--phone`, `--address`, `--medical-history` and `--notes` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
 * `--notes` can also set notes for a patient who has none. Omitting it keeps the existing notes. A blank value is rejected; notes cannot be cleared through `edit`.
 * The patient's appointments are not changed here. Change them with [`addappt`](#adding-an-appointment-addappt), [`editappt`](#editing-an-appointment-editappt) or [`deleteappt`](#deleting-an-appointment-deleteappt); they keep their details and order otherwise.
+* The `--add-appt` and `--remove-appt` options that `edit` accepted in earlier versions are gone. Typing them is rejected with a message that points to `addappt`, `editappt` and `deleteappt`.
 * After a patient is edited, the list shows all patients again. Renaming a patient moves their row, to keep the list sorted by name.
 
 Examples:

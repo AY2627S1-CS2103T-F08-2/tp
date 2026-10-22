@@ -67,7 +67,7 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_appointmentOptionNotSupported_failure() {
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
+        String expectedMessage = AddCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTION;
 
         // appointments come from addappt, so add no longer accepts --appt
         assertParseFailure(parser, ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB

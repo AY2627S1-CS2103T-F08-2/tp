@@ -18,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.EditCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
@@ -162,15 +163,16 @@ public class EditCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("edit S12345678901 --name Alex", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
 
-        // the ID cannot be edited, and the appointment flags were replaced by addappt/deleteappt
+        // the ID cannot be edited; the retired --appt keeps the generic error, and the add/remove
+        // appointment flags get their own message
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --id S9999999Z", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --appt 2026-10-10", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt 2026-10-20", ParseException.class,
-                INVALID_FORMAT_MESSAGE);
+                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --remove-appt 2026-10-20 09:30", ParseException.class,
-                INVALID_FORMAT_MESSAGE);
+                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
 
         // single-valued field repeated
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --name Alex --name Bob", ParseException.class,
