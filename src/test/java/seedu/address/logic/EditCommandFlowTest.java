@@ -20,13 +20,12 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.EditCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.patient.Appointment;
-import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
@@ -117,54 +116,9 @@ public class EditCommandFlowTest {
     }
 
     @Test
-    public void execute_addAppointmentsOutOfOrder_storedSorted() throws Exception {
-        Patient expected = new PatientBuilder(patient(CHARLOTTE_ID))
-                .withAppointments("2026-11-15", "2026-12-01 10:00").build();
-        assertEditPersisted("edit T0123456C --add-appt 2026-12-01 10:00 --add-appt 2026-11-15",
-                CHARLOTTE_ID, expected);
-        assertEquals("2026-11-15, 2026-12-01 10:00", patient(CHARLOTTE_ID).getSchedule().toString());
-    }
-
-    @Test
-    public void execute_addExistingAppointment_noDuplicate() throws Exception {
-        assertEditPersisted("edit S2345678B --add-appt 2026-10-06", BERNICE_ID, patient(BERNICE_ID));
-    }
-
-    @Test
-    public void execute_moveAppointment_persisted() throws Exception {
-        Patient expected = new PatientBuilder(patient(BERNICE_ID)).withAppointments("2026-10-08 09:00").build();
-        assertEditPersisted("edit S2345678B --remove-appt 2026-10-06 --add-appt 2026-10-08 09:00",
-                BERNICE_ID, expected);
-    }
-
-    @Test
-    public void execute_removeOnlyAppointment_appointmentsEmpty() throws Exception {
-        Patient expected = new PatientBuilder(patient(IRFAN_ID)).withAppointments().build();
-        assertEditPersisted("edit G1234567E --remove-appt 2026-10-07 14:00", IRFAN_ID, expected);
-    }
-
-    @Test
-    public void execute_removeAppointmentAndEditPhone_bothApplied() throws Exception {
-        // the appointment left keeps its details
-        AppointmentSchedule expectedSchedule = patient(ALEX_ID).getSchedule().remove(new Appointment("2026-11-02"));
-        Patient expected = new PatientBuilder(patient(ALEX_ID)).withPhone("99999999")
-                .withSchedule(expectedSchedule).build();
-        assertEditPersisted("edit S1234567A --remove-appt 2026-11-02 --phone 99999999", ALEX_ID, expected);
-    }
-
-    @Test
-    public void execute_dateOnlyAppointment_sortedBeforeTimedSameDay() throws Exception {
-        AppointmentSchedule expectedSchedule = patient(ALEX_ID).getSchedule()
-                .add(new Appointment("2026-10-05 08:00")).add(new Appointment("2026-10-05"));
-        Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(expectedSchedule).build();
-        assertEditPersisted("edit S1234567A --add-appt 2026-10-05 08:00 --add-appt 2026-10-05", ALEX_ID, expected);
-        assertEquals("2026-10-05, 2026-10-05 08:00, 2026-10-05 09:30, 2026-11-02",
-                patient(ALEX_ID).getSchedule().toString());
-    }
-
-    @Test
     public void execute_editPhone_keepsNotesAndAppointmentDetails() throws Exception {
-        // Omitting --notes preserves the notes, and unrelated edits preserve appointment details
+        // Omitting --notes preserves the notes, appointments are kept as-is,
+        // and their details survive unrelated edits
         Patient before = patient(ALEX_ID);
         logic.execute("edit S1234567A --phone 91234567");
         Patient after = patient(ALEX_ID);
@@ -172,13 +126,6 @@ public class EditCommandFlowTest {
         assertEquals(before.getNotes(), after.getNotes());
         assertEquals(before.getSchedule(), after.getSchedule());
         assertTrue(after.getSchedule().asList().get(0).getDetails().isPresent());
-    }
-
-    @Test
-    public void execute_editedAppointmentFoundByViewAppt() throws Exception {
-        logic.execute("edit T0123456C --add-appt 2026-10-20");
-        logic.execute("viewappt 2026-10-20");
-        assertEquals(List.of(patient(CHARLOTTE_ID)), model.getFilteredPatientList());
     }
 
     @Test
@@ -192,27 +139,7 @@ public class EditCommandFlowTest {
     }
 
     @Test
-    public void execute_removeMissingAppointment_rejectedWithoutChanges() throws Exception {
-        // the date-only appointment on 2026-11-02 does not match a timed one, and the phone is not changed either
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone 99999999 --remove-appt 2026-11-02 09:30",
-                CommandException.class,
-                String.format(EditCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-11-02 09:30"));
-    }
-
-    @Test
-    public void execute_addAndRemoveSameNewAppointment_rejectedWithoutChanges() throws Exception {
-        // removals happen before additions, so the appointment is not there yet when it is removed
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt 2026-10-11 --remove-appt 2026-10-11",
-                CommandException.class,
-                String.format(EditCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-11"));
-    }
-
-    @Test
     public void execute_invalidValues_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt 2026-02-30", ParseException.class,
-                Appointment.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --remove-appt 2026-10-05 9:30",
-                ParseException.class, Appointment.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone 12", ParseException.class,
                 Phone.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --medical-history  --name Alex",
@@ -223,8 +150,6 @@ public class EditCommandFlowTest {
                 Notes.MESSAGE_CONSTRAINTS);
 
         // option with no value at the end of the command
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt", ParseException.class,
-                Appointment.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone", ParseException.class,
                 Phone.MESSAGE_CONSTRAINTS);
     }
@@ -240,24 +165,22 @@ public class EditCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("edit S12345678901 --name Alex", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
 
-        // the ID cannot be edited, and --appt belongs to add
+        // the ID cannot be edited; the retired --appt keeps the generic error, and the add/remove
+        // appointment flags get their own message
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --id S9999999Z", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --appt 2026-10-10", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt 2026-10-20", ParseException.class,
+                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --remove-appt 2026-10-20 09:30", ParseException.class,
+                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
 
         // single-valued field repeated
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --name Alex --name Bob", ParseException.class,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME));
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes First --notes Second", ParseException.class,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTES));
-    }
-
-    @Test
-    public void execute_notesWithInvalidAppointment_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes Enjoys gardening"
-                + " --remove-appt 2026-11-02 09:30", CommandException.class,
-                String.format(EditCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-11-02 09:30"));
     }
 
     /**

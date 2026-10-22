@@ -125,7 +125,7 @@ public class EditAppointmentCommandTest {
         EditAppointmentCommand command = new EditAppointmentCommand(BENSON.getId(), new Appointment("2026-10-07"),
                 Optional.of(NEW_TIME), Optional.empty());
         assertCommandFailure(command, model,
-                String.format(EditAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-07"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-07"));
     }
 
     @Test
@@ -138,8 +138,8 @@ public class EditAppointmentCommandTest {
         EditAppointmentCommand command = new EditAppointmentCommand(BENSON.getId(), new Appointment("2026-10-05"),
                 Optional.of(NEW_TIME), Optional.empty());
         assertCommandFailure(command, model,
-                String.format(EditAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05")
-                + String.format(EditAppointmentCommand.MESSAGE_APPOINTMENTS_ON_DATE,
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05")
+                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE,
                         "2026-10-05 09:30, 2026-10-05 14:00"));
     }
 
@@ -152,7 +152,7 @@ public class EditAppointmentCommandTest {
         EditAppointmentCommand command = new EditAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT,
                 Optional.of(new Appointment("2026-10-05 14:00")), Optional.empty());
         assertCommandFailure(command, model,
-                String.format(EditAppointmentCommand.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(), "2026-10-05 14:00"));
+                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(), "2026-10-05 14:00"));
     }
 
     @Test

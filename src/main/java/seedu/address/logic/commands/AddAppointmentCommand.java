@@ -38,7 +38,6 @@ public class AddAppointmentCommand extends Command {
             + PREFIX_DETAILS + "Bring insulin pen";
 
     public static final String MESSAGE_ADD_APPOINTMENT_SUCCESS = "Added appointment of %1$s (%2$s): %3$s";
-    public static final String MESSAGE_APPOINTMENT_TAKEN = "Patient %1$s already has an appointment on %2$s.";
 
     private static final Logger logger = LogsCenter.getLogger(AddAppointmentCommand.class);
 
@@ -70,7 +69,7 @@ public class AddAppointmentCommand extends Command {
         AppointmentSchedule schedule = patient.getSchedule();
         if (schedule.contains(toAdd)) {
             logger.fine("Rejected addappt: the patient already has an appointment at the given time.");
-            throw new CommandException(String.format(MESSAGE_APPOINTMENT_TAKEN, targetId, toAdd));
+            throw new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, targetId, toAdd));
         }
 
         AppointmentSchedule editedSchedule = schedule.add(toAdd);
@@ -81,15 +80,8 @@ public class AddAppointmentCommand extends Command {
 
         PatientAppointment created = new PatientAppointment(editedPatient, toAdd);
         String message = String.format(MESSAGE_ADD_APPOINTMENT_SUCCESS, editedPatient.getName(), targetId,
-                format(toAdd));
+                Messages.format(toAdd));
         return new CommandResult(message).withNavigation(Navigation.toAppointment(created));
-    }
-
-    /**
-     * Returns {@code appointment} as shown in the result message: its date and time, and its details, if any.
-     */
-    private static String format(Appointment appointment) {
-        return appointment + appointment.getDetails().map(details -> "; Details: " + details).orElse("");
     }
 
     @Override

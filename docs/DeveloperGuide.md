@@ -397,10 +397,10 @@ immutable, so a command that fails leaves the original patient unchanged.
 
 ### Storing multiple appointments
 
-Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` objects. `add` builds it from every
-`--appt` value, and `edit` changes it with `--remove-appt` and `--add-appt`. Removals are applied first, so
-one command can move an appointment. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
-so a failed `edit` leaves the patient unchanged.
+Each patient holds an `AppointmentSchedule`, an immutable list of `Appointment` objects. `add` always creates a
+patient whose schedule is empty, and `addappt` adds an appointment to it, `editappt` replaces one, and `deleteappt`
+removes one. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
+so a failed command leaves the patient unchanged.
 
 **Equality.** An `Appointment` stores a date, an optional time and optional details. Its date and time identify it, as
 `Appointment#isSameAppointment` gives, while `equals` also compares the details. Dates and times are parsed with strict
@@ -414,8 +414,8 @@ it is listed at the top of that day. `compareTo` ignores the details, as `isSame
 
 **Duplicates.** Only appointments at the same date and time are duplicates. `2026-10-05` and `2026-10-05 00:00` are
 different appointments: the first has no fixed time, while the second is at midnight. Merging them would lose
-information that the nurse entered. Removing an appointment through `edit` also needs the same date and time, so
-`--remove-appt 2026-10-05` does not remove `2026-10-05 09:30`.
+information that the nurse entered. Deleting an appointment with `deleteappt` also targets the same date and time, so
+`deleteappt` with `--appt 2026-10-05` does not delete `2026-10-05 09:30`.
 
 **Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of objects, such
 as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings
@@ -448,7 +448,7 @@ search described above, and `view ID` shows the notes using the existing detail 
 
 `editappt` sets an appointment's details with the `--details` option defined by `CliSyntax.PREFIX_DETAILS`.
 `ParserUtil.parseAppointmentDetails` rejects blank details, as `parseNotes` does for notes, and logs without the text.
-`--add-appt` and `--remove-appt` keep the details of appointments that they do not remove.
+`editappt` and `deleteappt` touch only the appointment they target; every other appointment keeps its details.
 
 `editappt ID --appt DATE_OR_DATETIME` finds the appointment to edit with `AppointmentSchedule#find`, which returns the
 patient's appointment at that exact date and time, with its details. Because the match is exact, a date alone never
@@ -466,7 +466,7 @@ data file unchanged.
 <img src="images/EditAppointmentActivityDiagram.png" width="750" />
 
 `addappt` adds a new appointment to a patient's schedule with the same options as `editappt` uses to find and set
-one: `--appt` takes the date, or date and time, in the same format as in `add`, and `--details` takes the appointment's
+one: `--appt` takes the date, or date and time, and `--details` takes the appointment's
 details, validated by `ParserUtil.parseAppointmentDetails`. `AddAppointmentCommand` finds the patient by
 `Model#findPatientById()`, then checks `AppointmentSchedule#contains` before adding: `AppointmentSchedule#add` keeps
 only the first appointment at each date and time, so without that check, adding onto an existing slot would silently
@@ -474,6 +474,25 @@ replace nothing and lose the new appointment. The check makes the duplicate slot
 command then replaces the patient through `Model#setPatient()` with a schedule that has the appointment added, and
 selects it with `Navigation.toAppointment`, as `editappt` does for the edited one. `Model#setPatient()` does not
 change the filter of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there.
+
+### Deleting an appointment
+
+`deleteappt ID --appt DATE_OR_DATETIME` removes one appointment from a patient's schedule. `DeleteAppointmentParser`
+normalizes option separators in the same way as `addappt`, with its `--appt` required; details are not an option,
+because an appointment is found by its date and time alone. `DeleteAppointmentCommand` finds the patient with
+`Model#findPatientById()`, then looks the appointment up with `AppointmentSchedule#find` at the exact date and time,
+ignoring details on both sides: whichever appointment is scheduled there, with whatever details, is the one deleted.
+If there is no
+match, the command fails with a `CommandException` that lists the patient's appointments on that day, from
+`AppointmentSchedule#getOnDate`, so the nurse can retype the one they meant, as `editappt` does. Otherwise, it
+replaces the patient through `Model#setPatient()` with a schedule that has the appointment removed.
+
+Unlike `addappt` and `editappt`, the command clears the selection with `CommandResult#withSelectionCleared`: after
+it succeeds, no appointment exists to select, and the deleted one cannot be highlighted again. The returned result
+has no `Navigation`, while `getView()` still shows the appointments view, so `MainWindow` switches to that view with
+the selection cleared, and `AppointmentListPanel` keeps the page that was shown; the deleted row disappears from
+it. `Model#setPatient()` does not change the filter
+of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there, as with `addappt`.
 
 ### Viewing appointments by date
 
@@ -562,7 +581,7 @@ Each command navigates as follows:
 | `list`, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
 | `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt` |
 | `addappt`, `editappt` | `Navigation.toAppointment` of the added or edited appointment, with no range, so the page shown stays if it has the appointment |
-| `delete`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
+| `delete`, `deleteappt`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
 | `help`, `exit` | no navigation: keeps the view and the selection |
 
 Switching the tab by mouse or key runs no command and changes no model state. So the result display, the filtered
@@ -1154,8 +1173,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-*{More to be added}*
-
 **Use case: UC09 - Add an appointment**
 
 **MSS**
@@ -1190,6 +1207,36 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * 1d. The details are blank.
 
     * 1d1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+**Use case: UC10 - Delete an appointment**
+
+**MSS**
+
+1.  Nurse requests to delete a patient's appointment by the patient's ID and the appointment's date and time
+2.  LaiNurse removes the appointment from the patient's schedule
+3.  LaiNurse shows the appointments view without the deleted appointment
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The ID or the appointment's date and time is missing, or in an invalid format.
+
+    * 1a1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
+* 1b. The given ID does not match any patient.
+
+    * 1b1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1c. The patient has no appointment at the given date and time.
+
+    * 1c1. LaiNurse shows an error message that lists the patient's appointments on that day, if any.
 
       Use case resumes at step 1.
 
@@ -1609,8 +1656,9 @@ testers are expected to do more *exploratory* testing.
 
 1. Viewing a date-only appointment next to a timed one on the same day
 
-    1. Prerequisites: Start with the sample data, then add a timed appointment on the same date as Bernice Yu's
-       date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123 Clementi Ave 3, #05-12 --appt 2026-10-06 15:00`.
+    1. Prerequisites: Start with the sample data, then add a patient, and give her a timed appointment on the same
+       date as Bernice Yu's date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123
+       Clementi Ave 3, #05-12`, then `addappt T0456789D --appt 2026-10-06 15:00`.
 
     1. Test case: `viewappt 2026-10-06`<br>
        Expected: Under `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`, then Eve Tan's at 15:00.
@@ -1698,8 +1746,10 @@ testers are expected to do more *exploratory* testing.
 1. Appointments that have passed today
 
     1. Prerequisites: Do these test cases before 23:55. Start with the sample data, and replace `TODAY` below with
-       today's date, such as `2026-10-17`. Add a patient with three appointments today:
-       `add --id T0567890E --name Fay Ong --phone 91234567 --address Blk 1 Bedok North Ave 1 --appt TODAY 00:00 --appt TODAY --appt TODAY 23:59`.
+       today's date, such as `2026-10-17`. Add a patient with no appointments:
+       `add --id T0567890E --name Fay Ong --phone 91234567 --address Blk 1 Bedok North Ave 1`, then give her three
+       appointments today: `addappt T0567890E --appt TODAY 00:00`, then `addappt T0567890E --appt TODAY`, and
+       `addappt T0567890E --appt TODAY 23:59`.
 
     1. Test case: the result of the prerequisite<br>
        Expected: On the **Patients** tab, Fay Ong's row shows `Today` in orange as their next appointment: the one with
@@ -1715,7 +1765,7 @@ testers are expected to do more *exploratory* testing.
        with no time is selected, as the first appointment that has not passed, and the panel shows Fay Ong's details
        with it marked.
 
-    1. Test case: `edit T0567890E --add-appt TODAY HH:MM`, where `HH:MM` is two minutes from now, then
+    1. Test case: `addappt T0567890E --appt TODAY HH:MM`, where `HH:MM` is two minutes from now, then
        `view T0567890E`. Wait until the minute after `HH:MM`, without entering a command.<br>
        Expected: At first, the panel lists the new appointment under **Appointments**, in orange. Within a few seconds
        of the minute after `HH:MM`, when the appointment has passed, it moves under **Past**, dimmed. On the
@@ -1769,21 +1819,14 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `edit --phone 91234567`, with no ID<br>
        Expected: No patient is changed. The status message shows the command format.
 
-1. Adding and removing appointments
+1. Appointments alongside edits
 
-    1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `2026-10-05 09:30` and `2026-11-02`.
+    1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `2026-10-05 09:30`, with the details
+       `INSULIN REVIEW`, and `2026-11-02`.
 
-    1. Test case: `edit S1234567A --add-appt 2026-10-20 --add-appt 2026-12-01 10:00`<br>
-       Expected: The status message lists Alex Yeoh's four appointments, from earliest to latest.
-
-    1. Test case: `edit S1234567A --remove-appt 2026-10-05 09:30 --add-appt 2026-10-06 09:30`<br>
-       Expected: The 5 October appointment is replaced by one on 6 October.
-
-    1. Test case: `edit S1234567A --remove-appt 2026-11-02 09:30`, which does not match the date-only appointment<br>
-       Expected: No patient is changed. The status message shows `Patient S1234567A has no appointment on 2026-11-02 09:30.`
-
-    1. Test case: `edit S1234567A --add-appt 2026-02-30`, an impossible date<br>
-       Expected: No patient is changed. The status message shows the appointment format error.
+    1. Test case: `edit S1234567A --phone 91234567`<br>
+       Expected: Only the phone number changes. Both appointments keep their date and time, and the 5 October
+       appointment keeps its details.
 
 ### Editing an appointment
 
@@ -1839,11 +1882,53 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `addappt S0000000Z --appt 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
 
+### Deleting an appointment
+
+1. Deleting an appointment by its date and time
+
+    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `2026-10-05 09:30` and
+       `2026-11-02`.
+
+    1. Test case: `deleteappt S1234567A --appt 2026-10-05 09:30`<br>
+       Expected: The appointment is deleted. The status message names the patient's ID and the deleted appointment with
+       its details. The **Appointments** tab is selected, on the page that was shown, and the appointment is gone from it.
+
+    1. Test case: `deleteappt S1234567A --appt 2026-11-02`<br>
+       Expected: The date-only appointment on 2 November is deleted, as above.
+
+1. Deleting an appointment that cannot be deleted
+
+    1. Prerequisites: Start with the sample data.
+
+    1. Test case: `deleteappt S1234567A --appt 2026-10-05`<br>
+       Expected: No appointment is deleted. The status message says that the patient `S1234567A` has no appointment on
+       `2026-10-05`, and lists `2026-10-05 09:30` as their appointment that day.
+
+    1. Test case: `deleteappt S0000000Z --appt 2026-10-14`<br>
+       Expected: No appointment is deleted. The status message shows `The patient ID provided is invalid.`
+
+    1. Other incorrect deleteappt commands to try: `deleteappt` (missing everything), `deleteappt S1234567A`
+       (nothing to delete), `deleteappt S1234567A --appt` (no date and time)<br>
+       Expected: No appointment is deleted. The status message shows the correct command format.
+
+1. Deleting an appointment of a patient hidden by a filter
+
+    1. Prerequisites: Start with the sample data. Run `find --name bernice`, so only Bernice Yu is shown.
+
+    1. Test case: `deleteappt S1234567A --appt 2026-10-05 09:30`<br>
+       Expected: The appointment of Alex Yeoh, who is not in the list shown, is deleted. The find filter stays, so the
+       patient list still shows only Bernice Yu.
+
+    1. Test case: run `viewappt 2026-10-05` first, then `deleteappt S1234567A --appt 2026-10-05 09:30`<br>
+       Expected: The appointments view keeps showing 5 October, now without Alex Yeoh's appointment.
+
+1. _{ more test cases …​ }_
+
 ### Viewing help and command instructions
 
 1. Command overview via CLI
     * Test case: `help`
-        * Expected: An alphabetical summary of all available commands (`add`, `clear`, `delete`, `edit`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
+        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `clear`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
     * Test case: `help add`

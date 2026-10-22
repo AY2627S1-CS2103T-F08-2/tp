@@ -2,7 +2,6 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -32,16 +31,14 @@ public class AddCommand extends Command {
             + PREFIX_PHONE + "PHONE "
             + PREFIX_ADDRESS + "ADDRESS "
             + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL HISTORY] "
-            + "[" + PREFIX_NOTES + "NOTES] "
-            + "[" + PREFIX_APPOINTMENT + "DATE_OR_DATETIME]...\n"
+            + "[" + PREFIX_NOTES + "NOTES]\n"
             + "Example: " + COMMAND_WORD + " "
             + PREFIX_ID + "T0123456B "
             + PREFIX_NAME + "Taron Ban "
             + PREFIX_PHONE + "98765432 "
             + PREFIX_ADDRESS + "311, Clementi Ave 2, #02-25 "
             + PREFIX_MEDICAL_HISTORY + "dementia "
-            + PREFIX_NOTES + "Enjoys gardening "
-            + PREFIX_APPOINTMENT + "2026-09-20";
+            + PREFIX_NOTES + "Enjoys gardening";
 
     public static final String MESSAGE_SUCCESS = "New patient added: %1$s";
     public static final String MESSAGE_DUPLICATE_PATIENT = "This patient already exists in LaiNurse.";

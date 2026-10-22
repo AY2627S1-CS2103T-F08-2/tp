@@ -108,20 +108,20 @@ public class EditAppointmentCommandFlowTest {
         // a date alone does not match the timed appointment on that day, which the error lists
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 --to 2026-10-06",
                 CommandException.class,
-                String.format(EditAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
-                + String.format(EditAppointmentCommand.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
+                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
 
         // nothing on that day
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-20 --details Check",
                 CommandException.class,
-                String.format(EditAppointmentCommand.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-20"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-20"));
     }
 
     @Test
     public void execute_moveOntoOtherAppointment_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-11-02",
                 CommandException.class,
-                String.format(EditAppointmentCommand.MESSAGE_APPOINTMENT_TAKEN, ALEX_ID, "2026-11-02"));
+                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, ALEX_ID, "2026-11-02"));
     }
 
     @Test

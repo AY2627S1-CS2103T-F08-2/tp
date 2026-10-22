@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.APPOINTMENT_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.ID_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ID_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.MEDICAL_HISTORY_DESC_BOB;
@@ -34,7 +33,6 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
-import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
@@ -85,16 +83,9 @@ public class AddCommandFlowTest {
     }
 
     @Test
-    public void execute_dateOnlyAppointment_persisted() throws Exception {
-        Patient expectedPatient = new PatientBuilder(AMY).withAppointments("2026-09-20").build();
-        assertAddedPatientPersisted(AddCommand.COMMAND_WORD + " --appt 2026-09-20"
-                + NAME_DESC_AMY + ADDRESS_DESC_AMY + ID_DESC_AMY + PHONE_DESC_AMY, expectedPatient);
-    }
-
-    @Test
     public void execute_allFields_persisted() throws Exception {
-        Patient expectedPatient = new PatientBuilder(BOB).withNotes("Dislikes loud noises").build();
-        assertAddedPatientPersisted(AddCommand.COMMAND_WORD + APPOINTMENT_DESC_BOB + ADDRESS_DESC_BOB
+        Patient expectedPatient = new PatientBuilder(BOB).withAppointments().withNotes("Dislikes loud noises").build();
+        assertAddedPatientPersisted(AddCommand.COMMAND_WORD + ADDRESS_DESC_BOB
                 + NAME_DESC_BOB + MEDICAL_HISTORY_DESC_BOB + PHONE_DESC_BOB + ID_DESC_BOB
                 + " --notes Dislikes loud noises", expectedPatient);
     }
@@ -127,8 +118,6 @@ public class AddCommandFlowTest {
                 MedicalHistory.MESSAGE_CONSTRAINTS);
         assertRejectedCommandLeavesDataUnchanged(command + " --notes \t ", ParseException.class,
                 Notes.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged(command + " --appt", ParseException.class,
-                Appointment.MESSAGE_CONSTRAINTS);
     }
 
     @Test
