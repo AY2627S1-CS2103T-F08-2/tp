@@ -253,6 +253,12 @@ The `deleteappt` command also follows this shape, up to the lookup: it finds the
 
 <img src="images/DeleteAppointmentSequenceDiagram.png" width="800" />
 
+The `viewappt` command follows the same shape: it builds an `AppointmentBetweenDatesPredicate` from the date
+range and filters the patient list with it (`--id` narrows both the appointments and the patient list to one
+patient), then returns a `CommandResult` carrying the range for the appointment view.
+
+<img src="images/ViewAppointmentSequenceDiagram.png" width="800" />
+
 How the `Logic` component works:
 
 1. When `Logic` is called upon to execute a command, the command is passed to a `LaiNurseParser` object, which in
