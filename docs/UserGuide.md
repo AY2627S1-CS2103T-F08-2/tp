@@ -111,7 +111,7 @@ You can use LaiNurse without the mouse. The keyboard focus is in the command box
 Key | What it does
 --------|------------------
 Enter | Runs the command.
-Tab | Finishes typing a patient ID after `view`, `delete`, `edit`, `addappt` or `editappt`. See below. With nothing to finish, such as in an empty command box, it does nothing.
+Tab | Finishes typing a patient ID after `view`, `delete`, `edit`, `addappt`, `editappt` or `deleteappt`. See below. With nothing to finish, such as in an empty command box, it does nothing.
 Up and Down | Go back and forth through the commands you entered since LaiNurse started, including ones that failed. Down after the newest command gives back what you were typing.
 Esc | Moves to the list of the view that is shown, or to the tabs if the patient list is empty. What you typed stays in the command box.
 
@@ -145,7 +145,7 @@ Esc | In the patient view, shows all patients, as `list` does, but keeps the pat
 * For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.
 * To finish a patient ID with Tab, type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
   For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
-  With `addappt`, `edit` and `editappt`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`.
+  With `edit`, `addappt`, `editappt` and `deleteappt`, Tab also works after you have typed the options, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`.
 * The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
 
 ### Viewing help: `help`

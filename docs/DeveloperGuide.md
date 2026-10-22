@@ -166,8 +166,8 @@ When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for 
 command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
 does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
 rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit`, `editappt` and `addappt` take the ID first and options after it, so `IdCompleter` completes the word after
-the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
+end the command. `edit`, `addappt`, `editappt` and `deleteappt` take the ID first and options after it, so
+`IdCompleter` completes the word after the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
 started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
 The keyboard focus is in one of three areas, given by `FocusArea`: the command box, and in the view that is shown, the
@@ -477,7 +477,7 @@ change the filter of the patient list, so a patient hidden by `find` or `viewapp
 
 ### Deleting an appointment
 
-`deleteappt ID --appt DATE_OR_DATETIME` removes one appointment from a patient's schedule. `DeleteAppointmentParser`
+`deleteappt ID --appt DATE_OR_DATETIME` removes one appointment from a patient's schedule. `DeleteAppointmentCommandParser`
 normalizes option separators in the same way as `addappt`, with its `--appt` required; details are not an option,
 because an appointment is found by its date and time alone. `DeleteAppointmentCommand` finds the patient with
 `Model#findPatientById()`, then looks the appointment up with `AppointmentSchedule#find` at the exact date and time,
@@ -1924,8 +1924,8 @@ testers are expected to do more *exploratory* testing.
        Expected: The appointment of Alex Yeoh, who is not in the list shown, is deleted. The find filter stays, so the
        patient list still shows only Bernice Yu.
 
-    1. Test case: run `viewappt 2026-10-05` first, then `deleteappt S1234567A --appt 2026-10-05 09:30`<br>
-       Expected: The appointments view keeps showing 5 October, now without Alex Yeoh's appointment.
+    1. Test case: run `viewappt 2026-10-07` first, then `deleteappt G1234567E --appt 2026-10-07 14:00`<br>
+       Expected: The appointments view keeps showing 7 October, now without Irfan Ibrahim's appointment.
 
 1. _{ more test cases …​ }_
 
