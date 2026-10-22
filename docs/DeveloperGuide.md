@@ -143,9 +143,10 @@ selection. Reading the clock every few seconds, rather than once a minute, also 
 computer wakes from sleep.
 
 `AppointmentListPanel` shows the appointments of `Logic#getAppointmentList()`, which holds every appointment of every
-patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek`, from Monday to Sunday. After
-`viewappt`, the panel shows only the appointments in the command's range, on one page, and hides the week's arrow
-buttons; if the range carries a patient ID, only that patient's appointments. `AppointmentPage#ofWeek` and
+patient, on one of two kinds of page. The weekly view shows one `AppointmentWeek`, from Monday to Sunday, which a plain
+`viewappt` shows for this week. After `viewappt` with a date, a range or `--id`, the panel shows only the appointments
+in the command's range, on one page, and hides the week's arrow buttons; if the range carries a patient ID, only that
+patient's appointments. `AppointmentPage#ofWeek` and
 `AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
 of the week, or for each day in the range that has an appointment, followed by that day's appointments, numbered down
 the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. An appointment with no time comes first in its day, except today, where it comes after the appointments that
@@ -521,7 +522,9 @@ Other commands keep the view that is shown.
 Each `Command` declares the view it shows by overriding `Command#getView()`, which returns `Optional.empty()` by default.
 `LogicManager#execute` adds that view to the command's `CommandResult` with `CommandResult#withView`, and
 `MainWindow#executeCommand` switches to it. A `CommandResult` can also hold an `AppointmentRange`, as the result of
-`viewappt` does. Then `MainWindow` tells `AppointmentListPanel` to show the appointments in that range on one page.
+`viewappt` with a date, a range or `--id` does. Then `MainWindow` tells `AppointmentListPanel` to show the appointments
+in that range on one page. The result of a plain `viewappt` has no range, so the panel shows the weekly view of this
+week.
 
 A command can also choose the entry to select, by adding a `CommandResult.Navigation` with
 `CommandResult#withNavigation`. `Navigation.toPatient(id)` selects that patient in the patient view, and
@@ -570,9 +573,9 @@ moves it to the tab of the view being shown.
 
 **Design considerations: what the appointment view lists**
 
-* **Alternative 1 (current choice):** The weekly view lists every appointment, a week at a time. `viewappt` shows only
-  the appointments in its range, on one page with a heading for each day that has one, and Esc goes back to the weekly
-  view.
+* **Alternative 1 (current choice):** The weekly view lists every appointment, a week at a time, and a plain `viewappt`
+  shows this week. `viewappt` with a date, a range or `--id` shows only the appointments in its range, on one page with
+  a heading for each day that has one, and Esc goes back to the weekly view.
     * Pros: The view shows exactly the appointments that the command found, however many weeks the range covers, and
       no day looks empty because of a filter. The filter lives in the UI, so the model needs no second filtered list.
     * Cons: The panel has two kinds of page, and the user presses Esc to get back to the weekly view.
@@ -1838,8 +1841,8 @@ testers are expected to do more *exploratory* testing.
     * Test case: `help help`
         * Expected: The syntax and example of the `help` command itself is displayed.
     * Test case: `help viewappt`
-        * Expected: The `viewappt` syntax is displayed: a date, a `--from`/`--to` range, or neither for the upcoming
-          appointments, each with an optional `--id ID`.
+        * Expected: The `viewappt` syntax is displayed: a date, a `--from`/`--to` range, or neither for this week, each
+          with an optional `--id ID`. With `--id ID` alone, it shows all of that patient's appointments.
     * Test case: `help DELETE` or `help VIEW`
         * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
 

@@ -82,7 +82,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
-  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. After [`viewappt`](#viewing-appointments-viewappt), the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
+  * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. A plain [`viewappt`](#viewing-appointments-viewappt) shows the weekly view of this week. After `viewappt` with a date, a range or `--id`, the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
 
 In both views, the list and the details share the width of the window, and grow and shrink together as you resize it.
 
