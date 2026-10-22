@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -25,6 +26,7 @@ import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 import seedu.address.model.patient.PatientId;
@@ -41,6 +43,16 @@ public class LaiNurseParserTest {
         Patient patient = new PatientBuilder().build();
         AddCommand command = (AddCommand) parser.parseCommand(PatientUtil.getAddCommand(patient));
         assertEquals(new AddCommand(patient), command);
+    }
+
+    @Test
+    public void parseCommand_addAppointment() throws Exception {
+        AddAppointmentCommand command = (AddAppointmentCommand) parser.parseCommand(
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A --appt 2026-10-05 09:30"
+                        + " --details Bring insulin pen");
+        assertEquals(new AddAppointmentCommand(new PatientId("S1234567A"),
+                new Appointment("2026-10-05 09:30", Optional.of(new AppointmentDetails("Bring insulin pen")))),
+                command);
     }
 
     @Test
