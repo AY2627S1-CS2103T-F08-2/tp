@@ -26,6 +26,12 @@ public interface Logic {
     /** Returns an unmodifiable view of the filtered list of patients */
     ObservableList<Patient> getFilteredPatientList();
 
+    /**
+     * Removes the filter of the patient list, so that it shows all patients in name order, as {@code list} does.
+     * This runs no command, so there is no result to show, nothing is selected, and nothing is saved.
+     */
+    void showAllPatients();
+
     /** Returns an unmodifiable view of the list of all patients, whatever the current filter */
     ObservableList<Patient> getPatientList();
 

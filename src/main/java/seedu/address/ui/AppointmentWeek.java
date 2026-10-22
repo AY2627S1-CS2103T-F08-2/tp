@@ -2,22 +2,20 @@ package seedu.address.ui;
 
 import static java.util.Objects.requireNonNull;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import seedu.address.commons.util.DateUtil;
+
 /**
- * One week of the appointment view, from Monday to Sunday.
+ * One week of the appointment view, from Monday to Sunday, as {@link DateUtil#getStartOfWeek} gives.
  * Guarantees: immutable.
  */
 public final class AppointmentWeek {
-
-    private static final int DAYS_IN_WEEK = 7;
 
     private static final DateTimeFormatter WEEKDAY_DAY = DateTimeFormatter.ofPattern("EEE d", Locale.ENGLISH);
     private static final DateTimeFormatter WEEKDAY_DAY_MONTH =
@@ -36,7 +34,7 @@ public final class AppointmentWeek {
      */
     public static AppointmentWeek of(LocalDate date) {
         requireNonNull(date);
-        return new AppointmentWeek(date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)));
+        return new AppointmentWeek(DateUtil.getStartOfWeek(date));
     }
 
     /**
@@ -50,14 +48,14 @@ public final class AppointmentWeek {
      * Returns the Sunday that ends this week.
      */
     public LocalDate getEnd() {
-        return monday.plusDays(DAYS_IN_WEEK - 1);
+        return DateUtil.getEndOfWeek(monday);
     }
 
     /**
      * Returns the seven days of this week, from Monday to Sunday.
      */
     public List<LocalDate> getDays() {
-        return Stream.iterate(monday, day -> day.plusDays(1)).limit(DAYS_IN_WEEK).toList();
+        return Stream.iterate(monday, day -> day.plusDays(1)).limit(DateUtil.DAYS_IN_WEEK).toList();
     }
 
     /**

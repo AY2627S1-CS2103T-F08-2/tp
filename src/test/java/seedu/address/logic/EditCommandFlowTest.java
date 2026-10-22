@@ -10,12 +10,14 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.EditCommandParser;
@@ -108,9 +110,9 @@ public class EditCommandFlowTest {
         reloadedLogic.execute("find --notes \"enjoys   garden\"");
         assertEquals(List.of(patient(CHARLOTTE_ID)), reloadedModel.getFilteredPatientList());
         CommandResult viewResult = reloadedLogic.execute("view T0123456C");
-        assertEquals(new PatientId(CHARLOTTE_ID), viewResult.getPatientToView().orElseThrow());
-        assertEquals("ENJOYS GARDENING",
-                reloadedModel.getFilteredPatientList().get(0).getNotes().orElseThrow().value);
+        assertEquals(Optional.of(new PatientId(CHARLOTTE_ID)), viewResult.getNavigation().flatMap(Navigation::patient));
+        Patient reloadedCharlotte = reloadedModel.findPatientById(new PatientId(CHARLOTTE_ID)).orElseThrow();
+        assertEquals("ENJOYS GARDENING", reloadedCharlotte.getNotes().orElseThrow().value);
     }
 
     @Test

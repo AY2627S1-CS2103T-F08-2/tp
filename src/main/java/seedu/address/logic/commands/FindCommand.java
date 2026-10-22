@@ -13,6 +13,8 @@ import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.CommandResult.Navigation;
+import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
@@ -28,7 +30,7 @@ public class FindCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds patients matching any supplied field substring "
             + "(case-insensitive) and displays them as a list with index numbers.\n"
-            + "Patients matching more fields appear first; ties are in name order.\n"
+            + "Patients matching more fields appear first; ties are in name order. The first is selected.\n"
             + "Parameters: [" + PREFIX_ID + "ID] [" + PREFIX_NAME + "NAME] [" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_PHONE + "PHONE] [" + PREFIX_MEDICAL_HISTORY + "HISTORY] [" + PREFIX_NOTES + "NOTES]\n"
             + "Supply at least one non-blank value. Double quotes around values are optional.\n"
@@ -51,7 +53,8 @@ public class FindCommand extends Command {
                 .thenComparing(PatientNameComparator.PATIENT_NAME_ORDER);
         model.updateFilteredPatientList(predicate, comparator);
         return new CommandResult(
-                String.format(Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW, model.getFilteredPatientList().size()));
+                String.format(Messages.MESSAGE_PATIENTS_LISTED_OVERVIEW, model.getFilteredPatientList().size()))
+                .withNavigation(Navigation.toView(View.PATIENTS));
     }
 
     @Override
