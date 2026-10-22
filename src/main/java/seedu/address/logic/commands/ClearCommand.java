@@ -20,6 +20,6 @@ public class ClearCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.setLaiNurse(new LaiNurse());
-        return new CommandResult(MESSAGE_SUCCESS).withSelectionCleared();
+        return new CommandResult(MESSAGE_SUCCESS);
     }
 }

@@ -17,9 +17,7 @@ public class ClearCommandTest {
         Model model = new ModelManager();
         Model expectedModel = new ModelManager();
 
-        // A command that removes patients selects nothing
-        assertCommandSuccess(new ClearCommand(), model,
-                new CommandResult(ClearCommand.MESSAGE_SUCCESS).withSelectionCleared(), expectedModel);
+        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
     }
 
     @Test
@@ -28,9 +26,7 @@ public class ClearCommandTest {
         Model expectedModel = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
         expectedModel.setLaiNurse(new LaiNurse());
 
-        // A command that removes patients selects nothing
-        assertCommandSuccess(new ClearCommand(), model,
-                new CommandResult(ClearCommand.MESSAGE_SUCCESS).withSelectionCleared(), expectedModel);
+        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_SUCCESS, expectedModel);
     }
 
 }

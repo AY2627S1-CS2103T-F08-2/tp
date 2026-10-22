@@ -43,8 +43,7 @@ public class DeleteCommand extends Command {
         Patient patientToDelete = listAllPatients.stream().filter(patient -> patient.getId().equals(targetId))
                         .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
         model.deletePatient(patientToDelete);
-        return new CommandResult(String.format(MESSAGE_DELETE_PATIENT_SUCCESS, Messages.format(patientToDelete)))
-                .withSelectionCleared();
+        return new CommandResult(String.format(MESSAGE_DELETE_PATIENT_SUCCESS, Messages.format(patientToDelete)));
     }
 
     @Override

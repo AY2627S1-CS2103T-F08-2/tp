@@ -16,8 +16,6 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import seedu.address.logic.commands.CommandResult.Navigation;
-import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -72,7 +70,7 @@ public class FindCommandTest {
         PatientContainsSubstringsPredicate predicate = prepareNamePredicate("Nobody");
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPatientList(predicate);
-        assertCommandSuccess(command, model, findResult(expectedMessage), expectedModel);
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
         assertEquals(List.of(), model.getFilteredPatientList());
     }
 
@@ -83,7 +81,7 @@ public class FindCommandTest {
                 Optional.of("Elle"), Optional.empty(), Optional.of("tokyo"), Optional.empty(), Optional.empty());
         FindCommand command = new FindCommand(predicate);
         expectedModel.updateFilteredPatientList(predicate);
-        assertCommandSuccess(command, model, findResult(expectedMessage), expectedModel);
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
         assertEquals(List.of(CARL, ELLE, FIONA), model.getFilteredPatientList());
     }
 
@@ -101,12 +99,5 @@ public class FindCommandTest {
     private PatientContainsSubstringsPredicate prepareNamePredicate(String substring) {
         return new PatientContainsSubstringsPredicate(Optional.empty(), Optional.of(substring), Optional.empty(),
                 Optional.empty(), Optional.empty(), Optional.empty());
-    }
-
-    /**
-     * Returns the result of a find command with {@code message}, which selects the first match.
-     */
-    private static CommandResult findResult(String message) {
-        return new CommandResult(message).withNavigation(Navigation.toView(View.PATIENTS));
     }
 }

@@ -128,6 +128,9 @@ public class CommandResult {
     /** The application should exit. */
     private final boolean exit;
 
+    /** The ID of the patient whose details should be shown, or null to keep showing the current patient. */
+    private final PatientId patientToView;
+
     /** The view to switch to, or null to keep the current view. */
     private final View view;
 
@@ -137,14 +140,19 @@ public class CommandResult {
     /** Where the main window goes, or null to keep the selections of both views. */
     private final Navigation navigation;
 
-    /** Both views should select nothing, as after a command that removes patients. */
-    private final boolean isSelectionCleared;
-
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
-        this(feedbackToUser, showHelp, exit, null, null, null, false);
+        this(feedbackToUser, showHelp, exit, null, null, null, null);
+    }
+
+    /**
+     * Constructs a {@code CommandResult} that asks for the details of the patient with {@code patientToView}
+     * to be shown, with other fields set to their default value.
+     */
+    public CommandResult(String feedbackToUser, PatientId patientToView) {
+        this(feedbackToUser, false, false, requireNonNull(patientToView), null, null, null);
     }
 
     /**
@@ -152,7 +160,7 @@ public class CommandResult {
      * {@code appointmentRange} on one page, with other fields set to their default value.
      */
     public CommandResult(String feedbackToUser, AppointmentRange appointmentRange) {
-        this(feedbackToUser, false, false, null, requireNonNull(appointmentRange), null, false);
+        this(feedbackToUser, false, false, null, null, requireNonNull(appointmentRange), null);
     }
 
     /**
@@ -160,18 +168,18 @@ public class CommandResult {
      * and other fields set to their default value.
      */
     public CommandResult(String feedbackToUser) {
-        this(feedbackToUser, false, false, null, null, null, false);
+        this(feedbackToUser, false, false, null, null, null, null);
     }
 
-    private CommandResult(String feedbackToUser, boolean showHelp, boolean exit, View view,
-            AppointmentRange appointmentRange, Navigation navigation, boolean isSelectionCleared) {
+    private CommandResult(String feedbackToUser, boolean showHelp, boolean exit, PatientId patientToView,
+            View view, AppointmentRange appointmentRange, Navigation navigation) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
+        this.patientToView = patientToView;
         this.view = view;
         this.appointmentRange = appointmentRange;
         this.navigation = navigation;
-        this.isSelectionCleared = isSelectionCleared;
     }
 
     /**
@@ -183,34 +191,21 @@ public class CommandResult {
         requireNonNull(view);
         checkArgument(navigation == null || navigation.view() == view,
                 "The view must be the one that the result navigates to.");
-        return new CommandResult(feedbackToUser, showHelp, exit, view, appointmentRange, navigation,
-                isSelectionCleared);
+        return new CommandResult(feedbackToUser, showHelp, exit, patientToView, view, appointmentRange, navigation);
     }
 
     /**
      * Returns a copy of this result that asks the main window to go where {@code navigation} says, which also
      * switches to its view. See {@link Navigation} for what it selects.
      *
-     * @throws IllegalArgumentException if this result already switches to another view, or clears the selection.
+     * @throws IllegalArgumentException if this result already switches to another view.
      */
     public CommandResult withNavigation(Navigation navigation) {
         requireNonNull(navigation);
         checkArgument(view == null || view == navigation.view(),
                 "The view must be the one that the result switches to.");
-        checkArgument(!isSelectionCleared, "A result that clears the selection cannot select an entry.");
-        return new CommandResult(feedbackToUser, showHelp, exit, navigation.view(), appointmentRange, navigation,
-                false);
-    }
-
-    /**
-     * Returns a copy of this result that asks both views to select nothing, and so to show no details, as a
-     * command that removes patients does. The views themselves do not change.
-     *
-     * @throws IllegalArgumentException if this result navigates to an entry.
-     */
-    public CommandResult withSelectionCleared() {
-        checkArgument(navigation == null, "A result that navigates cannot also clear the selection.");
-        return new CommandResult(feedbackToUser, showHelp, exit, view, appointmentRange, null, true);
+        return new CommandResult(feedbackToUser, showHelp, exit, patientToView, navigation.view(), appointmentRange,
+                navigation);
     }
 
     public String getFeedbackToUser() {
@@ -223,6 +218,14 @@ public class CommandResult {
 
     public boolean isExit() {
         return exit;
+    }
+
+    /**
+     * Returns the ID of the patient whose details should be shown, or {@code Optional#empty()} if the
+     * shown patient should not change.
+     */
+    public Optional<PatientId> getPatientToView() {
+        return Optional.ofNullable(patientToView);
     }
 
     /**
@@ -248,13 +251,6 @@ public class CommandResult {
         return Optional.ofNullable(navigation);
     }
 
-    /**
-     * Returns true if both views should select nothing, as after a command that removes patients.
-     */
-    public boolean isSelectionCleared() {
-        return isSelectionCleared;
-    }
-
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -269,15 +265,15 @@ public class CommandResult {
         return feedbackToUser.equals(otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
                 && exit == otherCommandResult.exit
+                && Objects.equals(patientToView, otherCommandResult.patientToView)
                 && view == otherCommandResult.view
                 && Objects.equals(appointmentRange, otherCommandResult.appointmentRange)
-                && Objects.equals(navigation, otherCommandResult.navigation)
-                && isSelectionCleared == otherCommandResult.isSelectionCleared;
+                && Objects.equals(navigation, otherCommandResult.navigation);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit, view, appointmentRange, navigation, isSelectionCleared);
+        return Objects.hash(feedbackToUser, showHelp, exit, patientToView, view, appointmentRange, navigation);
     }
 
     @Override
@@ -286,10 +282,10 @@ public class CommandResult {
                 .add("feedbackToUser", feedbackToUser)
                 .add("showHelp", showHelp)
                 .add("exit", exit)
+                .add("patientToView", patientToView)
                 .add("view", view)
                 .add("appointmentRange", appointmentRange)
                 .add("navigation", navigation)
-                .add("isSelectionCleared", isSelectionCleared)
                 .toString();
     }
 

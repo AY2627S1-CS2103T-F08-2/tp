@@ -38,9 +38,7 @@ public class DeleteCommandTest {
         ModelManager expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
         expectedModel.deletePatient(patientToDelete);
 
-        // A command that removes patients selects nothing
-        assertCommandSuccess(deleteCommand, model, new CommandResult(expectedMessage).withSelectionCleared(),
-                expectedModel);
+        assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
     }
 
     @Test
@@ -66,9 +64,7 @@ public class DeleteCommandTest {
         expectedModel.deletePatient(hiddenFromListPatient);
         showPatientAtIndex(expectedModel, INDEX_FIRST_PATIENT);
 
-        // A command that removes patients selects nothing
-        assertCommandSuccess(deleteCommand, model, new CommandResult(expectedMessage).withSelectionCleared(),
-                expectedModel);
+        assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
     }
 
     @Test

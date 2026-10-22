@@ -151,28 +151,16 @@ public class AppointmentListPanel extends UiPart<Region> {
     }
 
     /**
-     * Resets the list, as Esc does: from a range, shows the weekly view of the selected appointment's week, or of
-     * this week if none is selected, and keeps the selected appointment, or else selects the next appointment from
-     * now. In the weekly view, there is no range to remove, so nothing changes.
+     * Resets the list, as Esc does: from a range, goes back to the weekly view, and in the weekly view, goes to
+     * this week. Then selects the appointment to start from.
      */
     public void reset() {
         if (range == null) {
-            return;
+            week = AppointmentWeek.of(LocalDate.now());
         }
-        Optional<PatientAppointment> selected = page.getEntryAt(
-                appointmentListView.getSelectionModel().getSelectedIndex());
-        week = AppointmentWeek.of(selected.map(entry -> entry.getAppointment().getDate()).orElse(LocalDate.now()));
         range = null;
         showPage();
-        OptionalInt index = selected.map(page::indexOf).orElse(OptionalInt.empty());
-        index.ifPresentOrElse(this::select, this::selectNextFromNow);
-    }
-
-    /**
-     * Selects nothing, and so shows no appointment's details, as after a command that removes patients.
-     */
-    public void selectNothing() {
-        clearSelection();
+        page.defaultEntryIndex().ifPresentOrElse(this::select, this::clearSelection);
     }
 
     /**
@@ -308,9 +296,7 @@ public class AppointmentListPanel extends UiPart<Region> {
                 weekRelative.getStyleClass().add(THIS_WEEK_STYLE_CLASS);
             }
         } else {
-            // A range of one patient's appointments starts with their ID, so that it is not mistaken for everyone's
-            weekDates.setText((range.patientId() == null ? "" : range.patientId().value + ", ")
-                    + AppointmentFormatter.formatRange(range.start(), range.end()));
+            weekDates.setText(AppointmentFormatter.formatRange(range.start(), range.end()));
             weekRelative.setText("");
         }
         weekCount.setText(describeCount(page.getEntryCount()));
