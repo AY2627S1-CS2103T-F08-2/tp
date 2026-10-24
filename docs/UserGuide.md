@@ -68,6 +68,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
+
+* A pasted horizontal space, such as the non-breaking space that formatted text inserts, counts as a space.
 </div>
 
 ### The patient and appointment views

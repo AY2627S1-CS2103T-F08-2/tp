@@ -43,7 +43,12 @@ public class LaiNurseParser {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public Command parseCommand(String userInput) throws ParseException {
-        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(userInput.trim());
+        // \h matches every horizontal whitespace character that \s does not, such as the non-breaking
+        // space that formatted text sources insert in place of a space. Translating here, before the
+        // command word is matched, lets every command, ID and value treat pasted narrow spaces the
+        // same as spaces.
+        final String separatorUserInput = userInput.replaceAll("\\h", " ");
+        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(separatorUserInput.trim());
         if (!matcher.matches()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
         }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.LocalDate;
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
@@ -28,6 +30,7 @@ import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
+import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 import seedu.address.model.patient.PatientId;
@@ -156,6 +159,32 @@ public class LaiNurseParserTest {
                 Optional.of(LocalDate.of(2026, 10, 31)));
         assertEquals(rangeCommand,
                 parser.parseCommand(ViewAppointmentCommand.COMMAND_WORD + " --from 2026-10-01 --to 2026-10-31"));
+    }
+
+    @Test
+    public void parseCommand_horizontalSpaces_actAsSpaces() throws Exception {
+        Patient patient = new PatientBuilder().build();
+
+        // every horizontal space, such as the non-breaking space copied out of formatted text, acts
+        // as if a plain space had been typed, after the command word and around the options too
+        String nbspCommand = "\u00A0"
+                + PatientUtil.getAddCommand(patient).replace(" ", "\u00A0");
+        assertTrue(nbspCommand.contains("\u00A0"), "test input should contain horizontal spaces");
+        assertEquals(parser.parseCommand(PatientUtil.getAddCommand(patient)), parser.parseCommand(nbspCommand));
+    }
+
+    @Test
+    public void parseCommand_horizontalSpaces_blankAndRepeatedValuesStillRejected() {
+        // a value with no text between it and the next option is still blank
+        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(
+                AddCommand.COMMAND_WORD + " --id T0123456B --name\u00A0--phone 91234567"
+                        + " --address Blk 3"));
+
+        // an option repeated with other horizontal spaces between the two is still single-valued
+        String duplicateNameArgs = AddCommand.COMMAND_WORD + " --id T0123456B --name\u00A0Alex"
+                + " --name\u00A0Bob --phone 91234567 --address Blk 4";
+        assertThrows(ParseException.class, Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME), ()
+                -> parser.parseCommand(duplicateNameArgs));
     }
 
     @Test
