@@ -6,6 +6,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +44,9 @@ public class EditAppointmentCommandFlowTest {
     private static final String ALEX_ID = "S1234567A";
     private static final String BERNICE_ID = "S2345678B"; // appointment 2026-10-06, with no details
 
+    // Anchors the sample data to the week of Monday 2026-10-05, matching the appointment dates above.
+    private static final LocalDate SAMPLE_TODAY = LocalDate.parse("2026-10-05");
+
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditAppointmentCommand.MESSAGE_USAGE);
 
@@ -55,7 +59,7 @@ public class EditAppointmentCommandFlowTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        model = new ModelManager(SampleDataUtil.getSampleLaiNurse(), new UserPrefs());
+        model = new ModelManager(SampleDataUtil.getSampleLaiNurse(SAMPLE_TODAY), new UserPrefs());
         storage = new StorageManager(new JsonLaiNurseStorage(temporaryFolder.resolve("laiNurse.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
         storage.saveLaiNurse(model.getLaiNurse());
