@@ -2,7 +2,6 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -28,9 +27,6 @@ import seedu.address.model.patient.Phone;
  */
 public class AddCommandParser implements Parser<AddCommand> {
 
-    public static final String MESSAGE_RETIRED_APPOINTMENT_OPTION =
-            "The --appt option no longer takes appointments. Use addappt instead (see help addappt).";
-
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
      * and returns an AddCommand object for execution.
@@ -39,16 +35,8 @@ public class AddCommandParser implements Parser<AddCommand> {
      */
     public AddCommand parse(String args) throws ParseException {
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
-        String normalizedArgs;
-        try {
-            normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
-                    PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
-        } catch (ParseException pe) {
-            if (hasRetiredAppointmentOption(args)) {
-                throw new ParseException(MESSAGE_RETIRED_APPOINTMENT_OPTION);
-            }
-            throw pe;
-        }
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
+                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
                         PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
@@ -85,13 +73,6 @@ public class AddCommandParser implements Parser<AddCommand> {
      */
     private static boolean arePrefixesPresent(ArgumentMultimap argumentMultimap, Prefix... prefixes) {
         return Stream.of(prefixes).allMatch(prefix -> argumentMultimap.getValue(prefix).isPresent());
-    }
-
-    /**
-     * Returns true if {@code args} contains the retired {@code --appt} option, which add no longer accepts.
-     */
-    private static boolean hasRetiredAppointmentOption(String args) {
-        return ArgumentTokenizer.tokenize(args, PREFIX_APPOINTMENT).getValue(PREFIX_APPOINTMENT).isPresent();
     }
 
 }

@@ -121,13 +121,9 @@ public class AddCommandParserValidationTest {
     @Test
     public void parse_unknownOptions_failure() {
         for (String option : List.of("--medical-histroy dementia", "--name=Bob", "--unknown value", "--",
-                "--number 91234567")) {
+                "--number 91234567", "--appt 2026-11-30 09:00")) {
             assertParseFailure(parser, REQUIRED_ARGUMENTS + " " + option, INVALID_FORMAT_MESSAGE);
         }
-
-        // the retired appointment option is rejected with a message that points to addappt
-        assertParseFailure(parser, REQUIRED_ARGUMENTS + " --appt 2026-11-30 09:00",
-                AddCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTION);
 
         assertParseFailure(parser, ID_DESC_AMY + NAME_DESC_AMY + " --unknown value" + PHONE_DESC_AMY
                 + ADDRESS_DESC_AMY, INVALID_FORMAT_MESSAGE);
