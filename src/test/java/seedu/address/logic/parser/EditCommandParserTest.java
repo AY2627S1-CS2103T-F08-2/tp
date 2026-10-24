@@ -188,15 +188,13 @@ public class EditCommandParserTest {
 
     @Test
     public void parse_unsupportedOption_failure() {
-        // misspelt option, the old name of --phone, add's retired --appt, the id, which cannot be edited,
-        // and the appointment flags, which now get their own hint
+        // misspelt option, the old name of --phone, the id, which cannot be edited, and the retired
+        // appointment flags, which are rejected like any other unknown option
         assertParseFailure(parser, VALID_ID_AMY + " --nmae Alex", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, VALID_ID_AMY + " --number 91234567", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, VALID_ID_AMY + " --appt 2026-10-20", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, VALID_ID_AMY + " --add-appt 2026-10-20",
-                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
-        assertParseFailure(parser, VALID_ID_AMY + " --remove-appt 2026-10-20",
-                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
+        assertParseFailure(parser, VALID_ID_AMY + " --add-appt 2026-10-20", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, VALID_ID_AMY + " --remove-appt 2026-10-20", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, VALID_ID_AMY + " --id S9999999Z", MESSAGE_INVALID_FORMAT);
     }
 

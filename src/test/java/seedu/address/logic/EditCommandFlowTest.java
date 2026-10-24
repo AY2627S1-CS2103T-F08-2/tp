@@ -20,7 +20,6 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
-import seedu.address.logic.parser.EditCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
@@ -165,16 +164,16 @@ public class EditCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("edit S12345678901 --name Alex", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
 
-        // the ID cannot be edited; the retired --appt keeps the generic error, and the add/remove
-        // appointment flags get their own message
+        // the ID cannot be edited, and the retired appointment options are rejected like any
+        // other unknown option
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --id S9999999Z", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --appt 2026-10-10", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt 2026-10-20", ParseException.class,
-                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
+                INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --remove-appt 2026-10-20 09:30", ParseException.class,
-                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
+                INVALID_FORMAT_MESSAGE);
 
         // single-valued field repeated
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --name Alex --name Bob", ParseException.class,
