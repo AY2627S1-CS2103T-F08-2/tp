@@ -24,30 +24,18 @@ public class ArgumentTokenizer {
     private static final Pattern OPTION_PATTERN = Pattern.compile("(?<!\\S)--\\S*");
 
     /**
-     * The non-breaking space, which the user cannot tell apart from a space but which the
-     * option pattern and the value extraction treat as a normal character, because
-     * {@code \s} does not match it.
-     */
-    private static final String NON_BREAKING_SPACE = "\u00A0";
-
-    /**
      * Returns {@code args} with a single space on each side of every option, so that {@link #tokenize} recognizes
      * options separated by tabs or other whitespace, and options with no value at the end of {@code args}.
      * Every whitespace-delimited word starting with "--" must be one of {@code prefixes}.
-     * A non-breaking space, which formatted text sources insert in place of a space, is treated like
-     * any other separator.
+     * Horizontal spaces narrower or wider than a space, such as the non-breaking space pasted from formatted
+     * text, are left as they are here: the command parser translates them to spaces before parsing.
      *
      * @param invalidOptionMessage Message of the exception thrown for an unsupported option.
      * @throws ParseException if {@code args} contains an option that is not one of {@code prefixes}.
      */
     public static String normalizeOptionSeparators(String args, String invalidOptionMessage, Prefix... prefixes)
             throws ParseException {
-        // A non-breaking space beside an option arrives from text copied out of a formatted source.
-        // It displays like a space but is not matched by \s, so without this replacement it glues the
-        // option to the previous word or to its value, and a correctly typed option is rejected as
-        // unknown. Translate it to a space so the option-sized tokens stay recognizable.
-        String separatorArgs = args.replace(NON_BREAKING_SPACE, " ");
-        Matcher matcher = OPTION_PATTERN.matcher(separatorArgs);
+        Matcher matcher = OPTION_PATTERN.matcher(args);
         StringBuilder normalizedArgs = new StringBuilder();
         while (matcher.find()) {
             String option = matcher.group();

@@ -68,6 +68,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
+
+* A pasted horizontal space, such as the non-breaking space that formatted text inserts, counts as a space.
 </div>
 
 ### The patient and appointment views
@@ -183,7 +185,7 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * `--id`, `--name`, `--phone`, and `--address` are required. Each must have a non-blank value.
 * Medical history and notes are independently optional. If an option is supplied, its value must not be blank.
 * Notes record other personal information not covered by the other fields, such as the patient's hobbies, pet peeves and daily routines. Use `--medical-history` for health information.
-* Parameters may appear in any order. Each option may appear only once. Separate options and values using spaces or tabs; values may contain spaces. A non-breaking space, as inserted by formatted text copied from elsewhere, acts as a space.
+* Parameters may appear in any order. Each option may appear only once. Separate options and values using spaces or tabs; values may contain spaces.
 * IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
 * Names, addresses, medical history and notes accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
@@ -217,7 +219,7 @@ Edits the details of an existing patient.
 Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES]`
 
 * Edits the patient with the given `ID`, which is the patient ID shown in their row, not their position in the list. The patient does not have to be in the list currently shown.
-* `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs; a non-breaking space acts as a space.
+* `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs.
 * As in `add`, whitespace-delimited words beginning with `--` are reserved for options. Unknown options, misspellings, and `--id` are rejected with the command usage instructions.
 * The ID itself cannot be edited. To correct a wrong ID, delete the patient and add them again.
 * At least one of the optional parameters must be provided.
@@ -241,7 +243,7 @@ Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--med
 * `find` searches patient details only. To search by appointment date, use [`viewappt`](#viewing-appointments-viewappt).
 
 * Supply at least one option. Each supplied option must have a non-blank value and may appear only once.
-* Parameters may appear in any order. Separate options and values using spaces or tabs; values may contain spaces. A non-breaking space acts as a space.
+* Parameters may appear in any order. Separate options and values using spaces or tabs; values may contain spaces.
 * Values may be unquoted or enclosed in matching straight double quotes (`"Mary"`) or curly double quotes (`“Mary”`). Quotes must surround the complete value; missing or mismatched closing quotes and text after a closing quote are rejected.
 * Matching ignores case and repeated whitespace. For example, `--name han` matches `Hans`, and `--address "marina   bay"` matches `Marina Bay`.
 * Each value is one contiguous substring of its corresponding field. For example, `--address "Marina Bay"` matches that phrase, while `--address "Bay Marina"` does not match `Marina Bay`.

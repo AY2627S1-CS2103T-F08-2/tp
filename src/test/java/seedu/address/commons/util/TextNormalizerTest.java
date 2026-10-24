@@ -19,6 +19,7 @@ public class TextNormalizerTest {
         assertEquals("", TextNormalizer.normalize("")); // Boundary value
         assertEquals("", TextNormalizer.normalize(" "));
         assertEquals("", TextNormalizer.normalize(" \t\r\n "));
+        assertEquals("", TextNormalizer.normalize("\u00A0")); // non-breaking space only
     }
 
     @Test
@@ -34,6 +35,11 @@ public class TextNormalizerTest {
 
         // EP: lower and mixed case
         assertEquals("TAN AH KOW", TextNormalizer.normalize("tan Ah kOW"));
+
+        // EP: horizontal spaces that \s does not match, pasted from formatted text
+        assertEquals("TAN AH", TextNormalizer.normalize("tan\u00A0ah"));
+        assertEquals("TAN AH", TextNormalizer.normalize("tan\u202Fah")); // narrow no-break space
+        assertEquals("TAN AH", TextNormalizer.normalize("tan\u3000ah")); // ideographic space
 
         // EP: digits and symbols are unchanged
         assertEquals("BLK 12 #03-45, +65", TextNormalizer.normalize("blk 12 #03-45, +65"));

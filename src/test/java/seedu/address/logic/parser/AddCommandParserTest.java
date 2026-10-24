@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
@@ -74,19 +73,6 @@ public class AddCommandParserTest {
         assertParseFailure(parser, ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
                         + " --appt 2026-11-30 09:00",
                 expectedMessage);
-    }
-
-    @Test
-    public void parse_nonBreakingSpaceSeparators_success() {
-        Patient expectedPatient = new PatientBuilder(BOB).withAppointments().build();
-
-        // a non-breaking space copied from formatted text acts as a separator beside options
-        String nbspArgs = (ID_DESC_BOB + NAME_DESC_BOB + PHONE_DESC_BOB + ADDRESS_DESC_BOB
-                + MEDICAL_HISTORY_DESC_BOB)
-                .replace(" --name ", "\u00A0--name\u00A0")
-                .replace(" --phone ", "\u00A0--phone\u00A0");
-        assertTrue(nbspArgs.contains("\u00A0"), "test input should contain non-breaking spaces");
-        assertParseSuccess(parser, nbspArgs, new AddCommand(expectedPatient));
     }
 
     @Test
