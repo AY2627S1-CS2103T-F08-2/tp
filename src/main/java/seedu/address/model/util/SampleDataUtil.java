@@ -27,7 +27,7 @@ import seedu.address.model.patient.Phone;
 public class SampleDataUtil {
 
     /**
-     * Returns sample patients whose appointments are on fixed days of the week containing {@code today},
+     * Returns sample patients whose appointments are anchored to the week containing {@code today},
      * where a week is the Monday to Sunday defined by {@link DateUtil#getStartOfWeek}.
      */
     public static Patient[] getSamplePatients(LocalDate today) {
