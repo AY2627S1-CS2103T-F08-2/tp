@@ -176,4 +176,19 @@ public class ArgumentTokenizerTest {
         assertThrows(ParseException.class, "invalid", () ->
                 ArgumentTokenizer.normalizeOptionSeparators("S1 --name=Alex", "invalid", name));
     }
+
+    @Test
+    public void normalizeOptionSeparators_optionWithNonBreakingSpace_normalized() throws Exception {
+        Prefix name = new Prefix("--name ");
+        Prefix phone = new Prefix("--phone ");
+
+        // a non-breaking space from copied text acts as a separator, so the output is the same
+        // as if a space had been typed
+        assertEquals("S1  --name  Alex  --phone  9123", ArgumentTokenizer.normalizeOptionSeparators(
+                "S1\u00A0--name\u00A0Alex\u00A0--phone\u00A09123", "invalid", name, phone));
+
+        // an unsupported option is still rejected, non-breaking space or not
+        assertThrows(ParseException.class, "invalid", () ->
+                ArgumentTokenizer.normalizeOptionSeparators("S1\u00A0--nmae\u00A0Alex", "invalid", name));
+    }
 }
