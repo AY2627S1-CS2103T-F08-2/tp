@@ -1300,7 +1300,7 @@ testers are expected to do more *exploratory* testing.
     1. Download the JAR file and copy it into an empty folder.
 
     1. Double-click the JAR file.<br>
-       Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+       Expected: The GUI opens with the sample patients. The window size may not be optimal.
 
 1. Saving window preferences
 
@@ -1544,23 +1544,29 @@ testers are expected to do more *exploratory* testing.
 
 1. Viewing patients who have an appointment on a given date
 
-    1. Prerequisites: Start with the sample data, which includes patients with the appointments
-       `2026-10-05 09:30` and `2026-11-02` (Alex Yeoh), `2026-10-06` (Bernice Yu) and `2026-10-07 14:00` (Irfan Ibrahim).
-       If you have modified the data, delete the data file and relaunch the app to restore the sample data.
+    1. Prerequisites: Start with the sample data. It anchors Alex Yeoh's appointments to `MON` 09:30 and to `BLOOD`,
+       Bernice Yu's to `TUE`, and Irfan Ibrahim's to `WED` 14:00: `MON`, `TUE` and `WED` are the Monday, Tuesday and
+       Wednesday of the week you launched the app in, `SAT` is that week's Saturday, which has no appointment, and
+       `BLOOD` is the Monday four weeks after `MON`. In the test cases below, write the dates themselves in commands
+       and expect them in messages; for a launch in the week of Monday 5 October 2026, `MON` is `2026-10-05`, `TUE` is
+       `2026-10-06`, `WED` is `2026-10-07`, `SAT` is `2026-10-10`, and `BLOOD` is `2026-11-02`.
+       If you have modified the data, delete the data file and relaunch the app: the sample data anchors to the new
+       launch week.
 
-    1. Test case: `viewappt 2026-10-07`<br>
-       Expected: The **Appointments** tab is selected. Above the list is `Wed 7 Oct 2026`, with no arrow buttons. The
+    1. Test case: `viewappt WED`<br>
+       Expected: The **Appointments** tab is selected. Above the list is the heading for Wednesday, e.g. `Wed 7 Oct
+       2026`, with no arrow buttons. The
        list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
        panel beside the list shows their details with that appointment marked. The status message shows
-       `1 patient(s) with appointments on 2026-10-07`. On the **Patients** tab, only Irfan Ibrahim is listed.
+       `1 patient(s) with appointments on WED`. On the **Patients** tab, only Irfan Ibrahim is listed.
 
-    1. Test case: `viewappt 2026-11-02`, the date of Alex Yeoh's second appointment<br>
-       Expected: Only Alex Yeoh's appointment on Mon 2 Nov is shown, and it is selected. On the **Patients** tab, only
+    1. Test case: `viewappt BLOOD`, the date of Alex Yeoh's second appointment<br>
+       Expected: Only Alex Yeoh's appointment on that Monday is shown, and it is selected. On the **Patients** tab, only
        Alex Yeoh is listed, because every appointment of each patient is checked.
 
-    1. Test case: `viewappt 2026-11-11`, a date on which no patient has an appointment<br>
+    1. Test case: `viewappt SAT`, a date on which no patient has an appointment<br>
        Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
-       `0 patient(s) with appointments on 2026-11-11`. The patient list on the **Patients** tab is empty.
+       `0 patient(s) with appointments on SAT`. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
        Expected: The list is unchanged. The status message shows the date format error, as for
@@ -1588,22 +1594,23 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: The same sample data as above.
 
-    1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`<br>
-       Expected: Above the list is `Thu 1 Oct – Sat 31 Oct 2026`. The list shows the three appointments on 5, 6 and
-       7 Oct, each day under its own heading, with Alex Yeoh's at 09:30 on Mon 5 Oct selected. On the **Patients** tab,
-       Alex Yeoh, Bernice Yu and Irfan Ibrahim are listed. The status message shows
-       `3 patient(s) with appointments from 2026-10-01 to 2026-10-31`.
+    1. Test case: `viewappt --from MON --to SAT`<br>
+       Expected: Above the list is the heading for the range, e.g. `Mon 5 Oct – Sat 10 Oct 2026`. The list shows the
+       three sample appointments, each day under its own heading, with the next appointment from now selected. On the
+       **Patients** tab, Alex Yeoh, Bernice Yu and Irfan Ibrahim are listed. The status message shows
+       `3 patient(s) with appointments from MON to SAT`.
 
-    1. Test case: `viewappt --to 2026-10-06 --from 2026-10-06`<br>
+    1. Test case: `viewappt --to TUE --from TUE`<br>
        Expected: Bernice Yu's appointment is selected, and only Bernice Yu is listed on the **Patients** tab. The
-       options may be in any order, and a one-day range is the same as `viewappt 2026-10-06`, including the status
-       message `1 patient(s) with appointments on 2026-10-06`.
+       options may be in any order, and a one-day range is the same as `viewappt TUE`, including the status
+       message `1 patient(s) with appointments on TUE`.
 
-    1. Test case: `viewappt --from 2026-10-07`<br>
-       Expected: Above the list is `From Wed 7 Oct 2026`. The list shows Irfan Ibrahim's appointment and Alex Yeoh's
-       on 2 Nov. The next appointment from now is selected: Alex Yeoh's on 2 Nov if today is on or before that date,
-       because Irfan Ibrahim's has passed, and otherwise Irfan Ibrahim's, the first on the page. Both are listed on the
-       **Patients** tab. The status message shows `2 patient(s) with appointments on or after 2026-10-07`.
+    1. Test case: `viewappt --from WED`<br>
+       Expected: Above the list is the heading for the open range, e.g. `From Wed 7 Oct 2026`. The list shows Irfan
+       Ibrahim's appointment and Alex Yeoh's blood test. The next appointment from now is selected: Alex Yeoh's if
+       today is on or before that date and Irfan Ibrahim's has passed, and otherwise Irfan Ibrahim's, the first on the
+       page. Both are listed on the
+       **Patients** tab. The status message shows `2 patient(s) with appointments on or after WED`.
 
     1. Test case: `viewappt --to 2099-12-31`<br>
        Expected: Only patients with an appointment from today onwards are listed on the **Patients** tab. The range in
@@ -1625,36 +1632,39 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: The same sample data as above.
 
     1. Test case: `viewappt --id S1234567A`<br>
-       Expected: Above the list is `S1234567A, Mon 5 Oct – Mon 2 Nov 2026`. The page shows both of Alex Yeoh's
-       appointments, past and upcoming, and the next one from now is selected: the one on Mon 2 Nov if today is on or
-       before that date, and otherwise the one on Mon 5 Oct. On the **Patients** tab, only Alex Yeoh is listed. The
+       Expected: Above the list is `S1234567A,` followed by the dates of Alex Yeoh's first and last appointments, e.g.
+       `S1234567A, Mon 5 Oct – Mon 2 Nov 2026`. The page shows both of Alex Yeoh's
+       appointments, past and upcoming, and the next one from now is selected: the one on `BLOOD` if today is on or
+       before that date, and otherwise the one on `MON`. On the **Patients** tab, only Alex Yeoh is listed. The
        status message shows `2 appointment(s) of ALEX YEOH`.
 
-    1. Test case: `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31`<br>
-       Expected: Above the list is `S1234567A, Thu 1 Oct – Sat 31 Oct 2026`. The list shows only Alex Yeoh's
-       appointment at 09:30 on Mon 5 Oct, which is selected. On the
+    1. Test case: `viewappt --id S1234567A --from MON --to SAT`<br>
+       Expected: Above the list is the heading for the range with the ID, e.g. `S1234567A, Mon 5 Oct – Sat 10 Oct 2026`.
+       The list shows only Alex Yeoh's
+       appointment at 09:30 on the Monday, which is selected. On the
        **Patients** tab, only Alex Yeoh is listed. The status message shows
-       `1 appointment(s) of ALEX YEOH from 2026-10-01 to 2026-10-31`.
+       `1 appointment(s) of ALEX YEOH from MON to SAT`.
 
-    1. Test case: `viewappt 2026-10-05 --id S1234567A`, a date before the option<br>
-       Expected: The same page as `viewappt 2026-10-05` gives, but the status message says
-       `1 appointment(s) of ALEX YEOH on 2026-10-05`. A date combines with `--id` when it comes before the options.
+    1. Test case: `viewappt MON --id S1234567A`, a date before the option<br>
+       Expected: The same page as `viewappt MON` gives, but the status message says
+       `1 appointment(s) of ALEX YEOH on MON`. A date combines with `--id` when it comes before the options.
 
-    1. Test case: `viewappt --id S1234567A --from 2026-11-01`<br>
-       Expected: Only Alex Yeoh's appointment on Mon 2 Nov is shown, and the status message shows
-       `1 appointment(s) of ALEX YEOH on or after 2026-11-01`.
+    1. Test case: `viewappt --id S1234567A --from BLOOD`<br>
+       Expected: Only Alex Yeoh's blood-test appointment is shown, and the status message shows
+       `1 appointment(s) of ALEX YEOH on or after BLOOD`.
 
     1. Test case: `viewappt --id s1234567a`, the ID in lower case<br>
        Expected: The same as `viewappt --id S1234567A` gives. IDs are case-insensitive.
 
-    1. Test case: `viewappt --id S1234567A --from 2026-12-01`, a range without appointments<br>
+    1. Test case: `viewappt --id S1234567A --from AFTER`, a range without appointments, where `AFTER` is any date after
+       `BLOOD`, such as the day after it<br>
        Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
-       `0 appointment(s) of ALEX YEOH on or after 2026-12-01`. The patient list on the **Patients** tab is empty.
+       `0 appointment(s) of ALEX YEOH on or after` the date. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
        Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
 
-    1. Other incorrect commands to try: `viewappt --id S1234567A 2026-10-05` (a date after the option, which makes
+    1. Other incorrect commands to try: `viewappt --id S1234567A MON` (a date after the option, which makes
        the ID invalid), `viewappt --id S1234567A --id S2345678B` (repeated option), `viewappt --id` (missing ID)<br>
        Expected: The list is unchanged. The status message shows the patient ID constraints or a duplicate-option
        error.
@@ -1663,12 +1673,13 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data, then add a patient, and give her a timed appointment on the same
        date as Bernice Yu's date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123
-       Clementi Ave 3, #05-12`, then `addappt T0456789D --appt 2026-10-06 15:00`.
+       Clementi Ave 3, #05-12`, then `addappt T0456789D --appt TUE 15:00`.
 
-    1. Test case: `viewappt 2026-10-06`<br>
-       Expected: Under `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`, then Eve Tan's at 15:00.
+    1. Test case: `viewappt TUE`<br>
+       Expected: Under Tuesday's heading, e.g. `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`,
+       then Eve Tan's at 15:00.
        Bernice Yu's appointment is selected. Both are listed on the **Patients** tab. The status message shows
-       `2 patient(s) with appointments on 2026-10-06`.
+       `2 patient(s) with appointments on TUE`.
 
     1. Note: the patient list stays filtered after a `viewappt` command. After testing, enter `list` to show all
        patients again.
@@ -1679,9 +1690,8 @@ testers are expected to do more *exploratory* testing.
 
 1. Browsing a `viewappt` page and the weekly view
 
-    1. Prerequisites: Start with the sample data, which has appointments on Mon 5 Oct (Alex Yeoh, 09:30), Tue 6 Oct
-       (Bernice Yu, no time) and Wed 7 Oct 2026 (Irfan Ibrahim, 14:00). Enter
-       `viewappt --from 2026-10-01 --to 2026-10-31`.
+    1. Prerequisites: Start with the sample data, which has appointments on `MON` 09:30 (Alex Yeoh), `TUE` (Bernice
+       Yu, no time) and `WED` 14:00 (Irfan Ibrahim). Enter `viewappt --from MON --to SAT`.
 
     1. Test case: the result of the prerequisite<br>
        Expected: The **Appointments** tab is selected. The list shows the three appointments numbered 1 to 3, each under
@@ -1689,7 +1699,7 @@ testers are expected to do more *exploratory* testing.
        and the panel shows their details with that appointment marked under **Past** or **Appointments**.
 
     1. Test case: press Esc, then Down<br>
-       Expected: The list gets a blue border. Bernice Yu's appointment is selected, skipping the heading of Tue 6 Oct,
+       Expected: The list gets a blue border. Bernice Yu's appointment is selected, skipping Tuesday's heading,
        and the panel shows their details. Up selects Alex Yeoh's appointment again.
 
     1. Test case: with the focus in the list, press Ctrl+Down, then Ctrl+Up (Cmd on macOS)<br>
@@ -1700,19 +1710,20 @@ testers are expected to do more *exploratory* testing.
        Expected: Nothing changes, because a `viewappt` page has no other weeks.
 
     1. Test case: with the focus in the list, press Esc<br>
-       Expected: The weekly view of the selected appointment's week is shown, `Mon 5 – Sun 11 Oct 2026`, with the
+       Expected: The weekly view of the selected appointment's week is shown, e.g. `Mon 5 – Sun 11 Oct 2026`, with the
        arrow buttons above the list. Alex Yeoh's appointment, selected by Ctrl+Up above, stays selected.
 
     1. Test case: press Esc again<br>
        Expected: Nothing changes, because the weekly view has no range to remove.
 
     1. Test case: press Right, then Left twice, then enter `viewappt`<br>
-       Expected: Right shows the week of Mon 12 Oct, and selects its first appointment, or nothing in a week with no
-       appointments. Left twice shows the week of Mon 28 Sep. `viewappt` goes back to this week, marked `This week`.
+       Expected: Right shows the week after the sample week, e.g. the week of Mon 12 Oct, and selects its first
+       appointment, or nothing in a week with no appointments. Left twice shows the week before the previous one,
+       e.g. the week of Mon 28 Sep. `viewappt` goes back to this week, marked `This week`.
 
 1. Switching views without a command
 
-    1. Prerequisites: Start with the sample data, and enter `viewappt 2026-10-05`.
+    1. Prerequisites: Start with the sample data, and enter `viewappt MON`.
 
     1. Test case: press Esc, so that Alex Yeoh's appointment, the first on the page, is selected, then press Up<br>
        Expected: The **Appointments** tab gets a blue border.
@@ -1741,11 +1752,13 @@ testers are expected to do more *exploratory* testing.
        pixels wide, each takes about half. In a wider window, the details take more, up to 72% when the window is
        1,920 pixels wide. At the narrowest, nothing is cut off at the sides of the window, and neither the list nor the
        details scroll sideways. In the details, long values such as Alex Yeoh's address wrap without breaking a word.
-       Beside Mon 2 Nov, `No time specified` wraps onto two lines, with the appointment's details,
+       Beside Alex Yeoh's blood-test appointment, e.g. Mon 2 Nov, `No time specified` wraps onto two lines, with the
+       appointment's details,
        `MONTHLY BLOOD TEST`, under it. In a wide window, the details of each appointment move beside its time.
 
-    1. Test case: `viewappt --from 2026-10-01 --to 2026-10-31`, then make the window as narrow as it goes<br>
-       Expected: Above the list, `Thu 1 Oct – Sat 31 Oct 2026` stays whole. If the header runs out of room, the count
+    1. Test case: `viewappt --from MON --to BLOOD`, then make the window as narrow as it goes<br>
+       Expected: Above the list, the range heading, e.g. `Mon 5 Oct – Mon 2 Nov 2026`, stays whole. If the header runs
+       out of room, the count
        beside it is cut short instead. Widening the window shows it in full.
 
 1. Appointments that have passed today
@@ -1778,7 +1791,7 @@ testers are expected to do more *exploratory* testing.
 
 1. Commands that keep the view
 
-    1. Prerequisites: Start with the sample data, and enter `viewappt 2026-10-05`.
+    1. Prerequisites: Start with the sample data, and enter `viewappt MON`.
 
     1. Test case: `delete S1234567A`<br>
        Expected: The **Appointments** tab stays selected. Alex Yeoh's appointment disappears from the page, which then
@@ -1793,7 +1806,7 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data. No patient has the ID `T0123456B`.
 
-    1. Test case: `viewappt 2026-10-06`, then `find --name bernice`, then
+    1. Test case: `viewappt TUE`, then `find --name bernice`, then
        `add --id T0123456B --name John Doe --phone 98765432 --address John street, block 123, #01-01`<br>
        Expected: The **Patients** tab is selected, and the list shows all patients again. John Doe's row is
        highlighted, and the panel beside the list shows their details. The status message names the new patient.
@@ -1811,7 +1824,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `edit S1234567A --phone 91234567`<br>
        Expected: Alex Yeoh's phone number changes to `91234567`. The other details are unchanged.
 
-    1. Test case: `viewappt 2026-10-06`, then `find --name bernice`, then `edit S1234567A --phone 91234567`<br>
+    1. Test case: `viewappt TUE`, then `find --name bernice`, then `edit S1234567A --phone 91234567`<br>
        Expected: The **Patients** tab is selected, and the list shows all patients again. Alex Yeoh's row is
        highlighted, and the panel beside the list shows their details.
 
@@ -1826,63 +1839,63 @@ testers are expected to do more *exploratory* testing.
 
 1. Appointments alongside edits
 
-    1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `2026-10-05 09:30`, with the details
-       `INSULIN REVIEW`, and `2026-11-02`.
+    1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `MON 09:30`, with the details
+       `INSULIN REVIEW`, and `BLOOD`.
 
     1. Test case: `edit S1234567A --phone 91234567`<br>
-       Expected: Only the phone number changes. Both appointments keep their date and time, and the 5 October
+       Expected: Only the phone number changes. Both appointments keep their date and time, and the Monday
        appointment keeps its details.
 
 ### Editing an appointment
 
 1. Moving an appointment and setting its details
 
-    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `2026-10-05 09:30`, with
-       the details `INSULIN REVIEW`, and `2026-11-02`, with the details `MONTHLY BLOOD TEST`.
+    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `MON 09:30`, with
+       the details `INSULIN REVIEW`, and `BLOOD`, with the details `MONTHLY BLOOD TEST`.
 
-    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00`<br>
-       Expected: The **Appointments** tab is selected, showing the week of 6 October, with Alex Yeoh's appointment at
+    1. Test case: `editappt S1234567A --appt MON 09:30 --to TUE 10:00`<br>
+       Expected: The **Appointments** tab is selected, showing the sample week, with Alex Yeoh's appointment at
        10:00 selected and still showing `INSULIN REVIEW`. The status message ends with
-       `(moved from 2026-10-05 09:30)`.
+       `(moved from MON 09:30)`.
 
-    1. Test case: `editappt S1234567A --appt 2026-11-02 --details Fasting blood test`<br>
-       Expected: The 2 November appointment keeps its date, and its details become `FASTING BLOOD TEST`.
+    1. Test case: `editappt S1234567A --appt BLOOD --details Fasting blood test`<br>
+       Expected: The blood-test appointment keeps its date, and its details become `FASTING BLOOD TEST`.
 
 1. Editing an appointment that cannot be edited
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `editappt S1234567A --appt 2026-10-05 --to 2026-10-06`, a date alone for a timed appointment<br>
+    1. Test case: `editappt S1234567A --appt MON --to TUE`, a date alone for a timed appointment<br>
        Expected: No appointment is changed. The status message says that the patient has no appointment on
-       `2026-10-05`, and lists `2026-10-05 09:30` as their appointment that day.
+       `MON`, and lists `MON 09:30` as their appointment that day.
 
-    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-11-02`<br>
+    1. Test case: `editappt S1234567A --appt MON 09:30 --to BLOOD`<br>
        Expected: No appointment is changed. The status message says that the patient already has an appointment on
-       `2026-11-02`.
+       `BLOOD`.
 
-    1. Test case: `editappt S1234567A --appt 2026-10-05 09:30`, with nothing to change<br>
+    1. Test case: `editappt S1234567A --appt MON 09:30`, with nothing to change<br>
        Expected: No appointment is changed. The status message says that `--to` or `--details` must be given.
 
 ### Adding an appointment
 
 1. Adding an appointment
 
-    1. Prerequisites: Start with the sample data. Bernice Yu (`S2345678B`) has no appointment on 14 October.
+    1. Prerequisites: Start with the sample data. Bernice Yu (`S2345678B`) has an appointment only on `TUE`.
 
-    1. Test case: `addappt S2345678B --appt 2026-10-14 --details Check blood pressure`<br>
-       Expected: The **Appointments** tab is selected, showing the week of 14 October, with Bernice Yu's appointment
+    1. Test case: `addappt S2345678B --appt SAT --details Check blood pressure`<br>
+       Expected: The **Appointments** tab is selected, showing the sample week, with Bernice Yu's appointment
        selected and showing `CHECK BLOOD PRESSURE`. The list shows the appointment with no time.
 
-    1. Test case: `addappt S1234567A --appt 2026-12-01 10:00`<br>
-       Expected: The week of 1 December is shown, with Alex Yeoh's appointment at 10:00 selected.
+    1. Test case: `addappt S1234567A --appt AFTER 10:00`<br>
+       Expected: The week of `AFTER` is shown, with Alex Yeoh's appointment at 10:00 selected.
 
 1. Adding an appointment that cannot be added
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `addappt S1234567A --appt 2026-10-05 09:30`<br>
+    1. Test case: `addappt S1234567A --appt MON 09:30`<br>
        Expected: No appointment is added. The status message says that the patient `S1234567A` already has an
-       appointment on `2026-10-05 09:30`.
+       appointment on `MON 09:30`.
 
     1. Test case: `addappt S0000000Z --appt 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
@@ -1891,23 +1904,23 @@ testers are expected to do more *exploratory* testing.
 
 1. Deleting an appointment by its date and time
 
-    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `2026-10-05 09:30` and
-       `2026-11-02`.
+    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `MON 09:30` and
+       `BLOOD`.
 
-    1. Test case: `deleteappt S1234567A --appt 2026-10-05 09:30`<br>
+    1. Test case: `deleteappt S1234567A --appt MON 09:30`<br>
        Expected: The appointment is deleted. The status message names the patient's ID and the deleted appointment with
        its details. The **Appointments** tab is selected, on the page that was shown, and the appointment is gone from it.
 
-    1. Test case: `deleteappt S1234567A --appt 2026-11-02`<br>
-       Expected: The date-only appointment on 2 November is deleted, as above.
+    1. Test case: `deleteappt S1234567A --appt BLOOD`<br>
+       Expected: The date-only blood-test appointment is deleted, as above.
 
 1. Deleting an appointment that cannot be deleted
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `deleteappt S1234567A --appt 2026-10-05`<br>
+    1. Test case: `deleteappt S1234567A --appt MON`<br>
        Expected: No appointment is deleted. The status message says that the patient `S1234567A` has no appointment on
-       `2026-10-05`, and lists `2026-10-05 09:30` as their appointment that day.
+       `MON`, and lists `MON 09:30` as their appointment that day.
 
     1. Test case: `deleteappt S0000000Z --appt 2026-10-14`<br>
        Expected: No appointment is deleted. The status message shows `The patient ID provided is invalid.`
@@ -1920,12 +1933,12 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data. Run `find --name bernice`, so only Bernice Yu is shown.
 
-    1. Test case: `deleteappt S1234567A --appt 2026-10-05 09:30`<br>
+    1. Test case: `deleteappt S1234567A --appt MON 09:30`<br>
        Expected: The appointment of Alex Yeoh, who is not in the list shown, is deleted. The find filter stays, so the
        patient list still shows only Bernice Yu.
 
-    1. Test case: run `viewappt 2026-10-07` first, then `deleteappt G1234567E --appt 2026-10-07 14:00`<br>
-       Expected: The appointments view keeps showing 7 October, now without Irfan Ibrahim's appointment.
+    1. Test case: run `viewappt WED` first, then `deleteappt G1234567E --appt WED 14:00`<br>
+       Expected: The appointments view keeps showing Wednesday, now without Irfan Ibrahim's appointment.
 
 1. _{ more test cases …​ }_
 
