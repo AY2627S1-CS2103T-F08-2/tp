@@ -506,7 +506,9 @@ normalizes option separators in the same way as `add`, so unknown options are re
 that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
 `2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
 `--from` or `--to` does. Any other word, such as `invalid`, could be a mistyped option, so it gets the command format. When both options are given, the parser rejects a `--from` date that is after the
-`--to` date.
+`--to` date. `DateUtil#parseDate` further requires the year to be exactly four digits without a sign, because the
+`uuuu` pattern behind it otherwise accepts a wider signed year such as `+12345-01-01`; year `0000` stays valid, as
+ISO-8601 allows it.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
 when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Today is

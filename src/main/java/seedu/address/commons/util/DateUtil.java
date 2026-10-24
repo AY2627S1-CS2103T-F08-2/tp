@@ -6,8 +6,10 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.time.temporal.TemporalAdjusters;
+import java.util.regex.Pattern;
 
 /**
  * Contains date parsing and formatting utilities, and the week that a date is in.
@@ -24,17 +26,27 @@ public final class DateUtil {
     // "uuuu" is the proleptic year, which strict resolving requires in place of "yyyy".
     public static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT);
+
+    // The "uuuu" pattern also accepts a sign and digits beyond four, such as "+12345-01-01",
+    // which is not a shape a nurse would type, so only four unsigned digits are accepted.
+    private static final Pattern PARSED_DATE_SHAPE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
+
     public static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern(TIME_FORMAT).withResolverStyle(ResolverStyle.STRICT);
 
     private DateUtil() {}
 
     /**
-     * Parses {@code String date} into a {@code LocalDate}.
+     * Parses {@code String date} into a {@code LocalDate}. The year must be exactly four digits
+     * without a sign, so {@code 0000-01-01} is a valid date while {@code +12345-01-01} is not.
      *
      * @throws DateTimeParseException if the given {@code date} is invalid.
      */
     public static LocalDate parseDate(String date) {
+        if (!PARSED_DATE_SHAPE.matcher(date).matches()) {
+            throw new DateTimeParseException(
+                    "Text could not be parsed: the year must have exactly four digits", date, 0);
+        }
         return LocalDate.parse(date, DATE_FORMATTER);
     }
 

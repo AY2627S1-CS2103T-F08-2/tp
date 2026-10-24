@@ -270,7 +270,7 @@ Shows only the appointments on a date, or between two dates, in the appointment 
 
 Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`
 
-* All dates must be real dates in `yyyy-MM-dd` format.
+* All dates must be real dates in `yyyy-MM-dd` format, with a year of exactly four digits and no sign; a wider or signed year such as `+12345` is rejected.
 * `viewappt DATE` looks for appointments on `DATE`.
 * With `--from` and `--to`, the range includes both dates. Give one of them or both, in any order, each at most once.
 * Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week, and the patient list shows the patients with an appointment this week. To see the appointments from today onwards, give `--from` with today's date.
