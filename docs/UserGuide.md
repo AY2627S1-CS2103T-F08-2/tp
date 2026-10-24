@@ -21,7 +21,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar lainurse.jar`.<br>
    LaiNurse keeps its data in the folder you launch it from, so always launch it from this folder.<br>
-   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
+   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data: the sample appointments fall on the Monday, Tuesday and Wednesday of the week you first launch the app in, and Alex Yeoh has another one four weeks later.<br>
    ![Ui](images/Ui.png)
 
 1. Type a command in the command box and press <kbd>Enter</kbd> to execute it. For example, type `help` to view the summary of all commands in the result display, type `help add` to see help specific to adding patients, or press <kbd>F1</kbd> / select **Help** > **Help** / `help window` to open the Help window with the full user guide.<br><br>
@@ -34,7 +34,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
    * `view S1234567A` : Shows the details of the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
-   * `viewappt 2026-10-05` : Switches to the **Appointments** view, and shows only the appointments on October 5, 2026, with the first one selected.
+   * `viewappt` : Switches to the **Appointments** view, and shows the weekly view of this week, with the next appointment from now selected.
 
    * `delete S1234567A` : Deletes the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
@@ -291,7 +291,7 @@ Examples:
 * `viewappt --to 2026-10-31` shows the appointments from today to October 31, 2026.
 * `viewappt --from 2026-12-01` shows the appointments on or after December 1, 2026.
 * `viewappt --id S1234567A` shows all of Alex Yeoh's appointments.
-* `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31` shows Alex Yeoh's appointments in October 2026.
+* `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31` shows the appointments Alex Yeoh has in that range.
 
 ### Adding an appointment: `addappt`
 
@@ -327,9 +327,9 @@ Format: `editappt ID --appt DATE_OR_DATETIME [--to NEW_DATE_OR_DATETIME] [--deta
 * LaiNurse switches to the **Appointments** view and selects the edited appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
-* `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00` moves Alex Yeoh's appointment from 5 October, 09:30 to 6 October, 10:00, keeping its details.
-* `editappt S2345678B --appt 2026-10-06 --details Check blood pressure` sets the details of Bernice Yu's appointment on 6 October.
-* `editappt S1234567A --appt 2026-11-02 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's appointment on 2 November to 3 November, 08:00, and replaces its details.
+* `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00` moves Alex Yeoh's insulin review from its Monday 09:30 slot to the next day, 10:00, keeping its details. The sample appointments fall in the week you first launched the app in; the dates here are for the week of Monday 5 October 2026.
+* `editappt S2345678B --appt 2026-10-06 --details Check blood pressure` sets the details of Bernice Yu's appointment on the Tuesday of the sample week.
+* `editappt S1234567A --appt 2026-11-02 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's monthly blood test, on the Monday four weeks later, to the following day, 08:00, and replaces its details.
 
 ### Deleting an appointment: `deleteappt`
 
@@ -344,8 +344,8 @@ Format: `deleteappt ID --appt DATE_OR_DATETIME`
 * LaiNurse switches to the **Appointments** view and keeps the page that is shown; the deleted appointment disappears from it. No other appointment, page or filter is changed.
 
 Examples:
-* `deleteappt S1234567A --appt 2026-10-05 09:30` deletes Alex Yeoh's appointment on 5 October at 09:30, with its details.
-* `deleteappt S1234567A --appt 2026-11-02` deletes Alex Yeoh's appointment on 2 November, which has no time.
+* `deleteappt S1234567A --appt 2026-10-05 09:30` deletes Alex Yeoh's insulin review, on the Monday of the sample week at 09:30, with its details.
+* `deleteappt S1234567A --appt 2026-11-02` deletes Alex Yeoh's monthly blood test, four weeks later, which has no time.
 
 ### Viewing a patient's details: `view`
 
