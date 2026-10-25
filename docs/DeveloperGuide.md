@@ -346,6 +346,8 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+Every date and time in the app goes through `DateUtil`, which accepts a date only in `yyyy-MM-dd` with the year exactly four digits and no sign, and a time only in `HH:mm`; `0000-01-01` stays valid, as ISO-8601 allows it, while `+12345-01-01`, `-2026-10-05` and `9:00` are rejected. A rejected date's exception text names the part whose shape is wrong, the year, the month or the day.
+
 ### Finding patients by substrings
 
 `FindCommandParser` recognizes the six patient-detail options defined in `CliSyntax`: ID, name, phone number, address,
@@ -422,9 +424,12 @@ information that the nurse entered. Deleting an appointment with `deleteappt` al
 `deleteappt` with `--appt 2026-10-05` does not delete `2026-10-05 09:30`.
 
 **Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of objects, such
-as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings
-from older data files. `JsonSerializableLaiNurse` saves the patients under the `"patients"` key. A data file without
-it, such as one from v1.3 that saved them under `"persons"`, fails to load, and LaiNurse starts with an empty list.
+as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. A `dateTime` is written `yyyy-MM-dd` or
+`yyyy-MM-dd HH:mm`, the same format a command takes, with the year exactly four digits and no sign. It still reads
+appointments saved as plain strings from older data files. `JsonSerializableLaiNurse` saves the patients under the
+`"patients"` key. A data file without it, such as one from v1.3 that saved them under `"persons"`, fails to load, and
+LaiNurse starts with an empty list. A data file from an earlier version with a signed or wider year, such as
+`+12345-01-01` or `-2026-10-05`, also fails to load.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
