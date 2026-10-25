@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,8 +17,8 @@ import seedu.address.model.patient.AppointmentDetails;
 /**
  * Tests that the sample appointments are anchored to the week containing the given date. The anchors cover
  * the week boundaries (Monday and Sunday), and Sundays whose weeks cross a month and a year boundary. The
- * expected appointments are built in one place, {@code expectedAppointmentsFor}, so that a change to the
- * sample data only requires updating it.
+ * expected appointments are built in one place, {@code expectedAppointmentsFor}, by patient, so that a change
+ * to the sample data only requires updating it.
  */
 public class SampleDataUtilTest {
 
@@ -51,29 +53,34 @@ public class SampleDataUtilTest {
     }
 
     /**
-     * Asserts that the sample data anchored to {@code today} contains the sample appointments of the week
-     * starting on {@code monday}: three in that week, and the monthly blood test on the Monday four weeks later.
+     * Asserts that the sample data anchored to {@code today} gives each patient the sample appointments of the
+     * week starting on {@code monday}: three in that week, and the monthly blood test on the Monday four weeks later.
      */
     private static void assertSampleAppointments(String today, String monday) {
         ReadOnlyLaiNurse laiNurse = SampleDataUtil.getSampleLaiNurse(LocalDate.parse(today));
-        List<Appointment> actualAppointments = laiNurse.getPatientList().stream()
-                .flatMap(patient -> patient.getSchedule().asList().stream())
-                .sorted()
-                .toList();
+        Map<String, List<Appointment>> actualAppointments = laiNurse.getPatientList().stream()
+                .collect(Collectors.toMap(patient -> patient.getId().value,
+                        patient -> patient.getSchedule().asList()));
         assertEquals(expectedAppointmentsFor(LocalDate.parse(monday)), actualAppointments);
     }
 
     /**
-     * Builds the sample appointments expected for the week starting on {@code monday}: the insulin review at
-     * Monday 09:30, an appointment on Tuesday, the wound dressing at Wednesday 14:00, and the monthly blood
-     * test on the Monday four weeks later.
+     * Builds the sample appointments expected for the week starting on {@code monday}, by patient ID: the insulin
+     * review at Monday 09:30 and the monthly blood test four weeks later for Alex Yeoh (S1234567A), an appointment
+     * on the Tuesday for Bernice Yu (S2345678B), and the wound dressing at Wednesday 14:00 for Irfan Ibrahim
+     * (G1234567E). The other three patients have none.
      */
-    private static List<Appointment> expectedAppointmentsFor(LocalDate monday) {
-        return List.of(
-                appointment(monday + " 09:30", "Insulin review"),
-                new Appointment(monday.plusDays(1).toString()),
-                appointment(monday.plusDays(2) + " 14:00", "Dress the wound on the left foot"),
-                appointment(monday.plusWeeks(4).toString(), "Monthly blood test"));
+    private static Map<String, List<Appointment>> expectedAppointmentsFor(LocalDate monday) {
+        return Map.of(
+                "S1234567A", List.of(
+                        appointment(monday + " 09:30", "Insulin review"),
+                        appointment(monday.plusWeeks(4).toString(), "Monthly blood test")),
+                "S2345678B", List.of(new Appointment(monday.plusDays(1).toString())),
+                "G1234567E", List.of(
+                        appointment(monday.plusDays(2) + " 14:00", "Dress the wound on the left foot")),
+                "T0123456C", List.of(),
+                "S3456789D", List.of(),
+                "S4567890F", List.of());
     }
 
     private static Appointment appointment(String dateTime, String details) {
