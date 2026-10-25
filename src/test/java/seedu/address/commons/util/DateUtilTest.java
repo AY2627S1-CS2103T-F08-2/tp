@@ -66,5 +66,28 @@ public class DateUtilTest {
         // the uuuu pattern alone would parse these, so the shape guard rejects them
         assertThrows(DateTimeParseException.class, () -> DateUtil.parseDate("+12345-01-01"));
         assertThrows(DateTimeParseException.class, () -> DateUtil.parseDate("+2026-01-01"));
+        assertThrows(DateTimeParseException.class, () -> DateUtil.parseDate("-2026-01-01"));
+    }
+
+    @Test
+    public void parseDate_oneDigitMonthOrDay_throwsDateTimeParseException() {
+        // the shape guard rejects a month or day that does not have two digits
+        assertThrows(DateTimeParseException.class, () -> DateUtil.parseDate("2026-1-05"));
+        assertThrows(DateTimeParseException.class, () -> DateUtil.parseDate("2026-01-5"));
+    }
+
+    @Test
+    public void parseDate_wrongShape_namesThePartThatIsWrong() {
+        // the exception text names the first part that breaks the shape, not the year every time
+        assertThrows(DateTimeParseException.class,
+                "Text '+2026-01-01' is not in the form yyyy-MM-dd: "
+                        + "the year must have exactly four digits without a sign", ()
+                -> DateUtil.parseDate("+2026-01-01"));
+        assertThrows(DateTimeParseException.class,
+                "Text '2026-1-05' is not in the form yyyy-MM-dd: the month must have two digits", ()
+                -> DateUtil.parseDate("2026-1-05"));
+        assertThrows(DateTimeParseException.class,
+                "Text '2026-01-5' is not in the form yyyy-MM-dd: the day must have two digits", ()
+                -> DateUtil.parseDate("2026-01-5"));
     }
 }

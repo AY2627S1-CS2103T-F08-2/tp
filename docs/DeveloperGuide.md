@@ -346,6 +346,8 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+Every date and time in the app goes through `DateUtil`, which accepts a date only in `yyyy-MM-dd` with the year exactly four digits and no sign, and a time only in `HH:mm`; `0000-01-01` stays valid, as ISO-8601 allows it, while `+12345-01-01` and `9:00` are rejected. A rejected date's exception text names the part whose shape is wrong, the year, the month or the day.
+
 ### Finding patients by substrings
 
 `FindCommandParser` recognizes the six patient-detail options defined in `CliSyntax`: ID, name, phone number, address,
@@ -506,9 +508,7 @@ normalizes option separators in the same way as `add`, so unknown options are re
 that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
 `2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
 `--from` or `--to` does. Any other word, such as `invalid`, could be a mistyped option, so it gets the command format. When both options are given, the parser rejects a `--from` date that is after the
-`--to` date. `DateUtil#parseDate` further requires the year to be exactly four digits without a sign, because the
-`uuuu` pattern behind it otherwise accepts a wider signed year such as `+12345-01-01`; year `0000` stays valid, as
-ISO-8601 allows it.
+`--to` date.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
 when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Today is

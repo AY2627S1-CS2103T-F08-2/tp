@@ -67,6 +67,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
+* An appointment date is written `yyyy-MM-dd`, such as `2026-10-05`, and a time, when you give one, `HH:mm`, such as `09:00`. The year has exactly four digits and no sign, and the month, day, hour and minute each have two digits. Dates such as `+12345-01-01` and `2026-1-5` are rejected, and so is a time such as `9:00`. This applies to `addappt`, `editappt`, `deleteappt` and `viewappt`.
+
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </div>
 
@@ -270,7 +272,7 @@ Shows only the appointments on a date, or between two dates, in the appointment 
 
 Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`
 
-* All dates must be real dates in `yyyy-MM-dd` format, with a year of exactly four digits and no sign; a wider or signed year such as `+12345` is rejected.
+* All dates must be real dates, in the appointment date format described in the notes about the command format above.
 * `viewappt DATE` looks for appointments on `DATE`.
 * With `--from` and `--to`, the range includes both dates. Give one of them or both, in any order, each at most once.
 * Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week, and the patient list shows the patients with an appointment this week. To see the appointments from today onwards, give `--from` with today's date.
@@ -300,7 +302,7 @@ Adds an appointment to a patient's schedule.
 Format: `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
-* `--appt` gives the date, or date and time, of the new appointment, in the same format as in [`add`](#adding-a-patient-add). Past dates are accepted.
+* `--appt` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. Past dates are accepted.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * The options may appear in any order after the ID, each at most once.
 * A patient cannot have two appointments at the same date and time, so adding an appointment onto another of the patient's appointments is rejected, whatever its details. A date-only appointment and a timed one on the same day, including `00:00`, can coexist.
