@@ -1596,7 +1596,8 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `viewappt --from MON --to SAT`<br>
        Expected: Above the list is the heading for the range, e.g. `Mon 5 Oct – Sat 10 Oct 2026`. The list shows the
-       three sample appointments, each day under its own heading, with the next appointment from now selected. On the
+       three sample appointments, each day under its own heading, with the next appointment from now selected, or the
+       first on the page if all three have passed. On the
        **Patients** tab, Alex Yeoh, Bernice Yu and Irfan Ibrahim are listed. The status message shows
        `3 patient(s) with appointments from MON to SAT`.
 
@@ -1634,8 +1635,8 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --id S1234567A`<br>
        Expected: Above the list is `S1234567A,` followed by the dates of Alex Yeoh's first and last appointments, e.g.
        `S1234567A, Mon 5 Oct – Mon 2 Nov 2026`. The page shows both of Alex Yeoh's
-       appointments, past and upcoming, and the next one from now is selected: the one on `BLOOD` if today is on or
-       before that date, and otherwise the one on `MON`. On the **Patients** tab, only Alex Yeoh is listed. The
+       appointments, past and upcoming, and the next one from now is selected: the insulin review on `MON` if it has
+       not passed yet, and otherwise the one on `BLOOD`. On the **Patients** tab, only Alex Yeoh is listed. The
        status message shows `2 appointment(s) of ALEX YEOH`.
 
     1. Test case: `viewappt --id S1234567A --from MON --to SAT`<br>
@@ -1695,11 +1696,14 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: the result of the prerequisite<br>
        Expected: The **Appointments** tab is selected. The list shows the three appointments numbered 1 to 3, each under
-       a heading for its day, and no heading for the days without appointments. Alex Yeoh's appointment is selected,
-       and the panel shows their details with that appointment marked under **Past** or **Appointments**.
+       a heading for its day, and no heading for the days without appointments. The next appointment from now is
+       selected: Alex Yeoh's, Bernice Yu's or Irfan Ibrahim's, whichever is the first that has not passed, or Alex
+       Yeoh's again, as the first on the page, once all three have passed. The panel shows its details with that
+       appointment marked under **Past** or **Appointments**.
 
-    1. Test case: press Esc, then Down<br>
-       Expected: The list gets a blue border. Bernice Yu's appointment is selected, skipping Tuesday's heading,
+    1. Test case: press Esc, then Ctrl+Up, then Down<br>
+       Expected: The list gets a blue border. Ctrl+Up selects Alex Yeoh's appointment, the first on the page, whatever
+       the time. Down then selects Bernice Yu's appointment, skipping Tuesday's heading,
        and the panel shows their details. Up selects Alex Yeoh's appointment again.
 
     1. Test case: with the focus in the list, press Ctrl+Down, then Ctrl+Up (Cmd on macOS)<br>
