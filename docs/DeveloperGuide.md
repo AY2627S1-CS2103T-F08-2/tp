@@ -420,9 +420,12 @@ information that the nurse entered. Deleting an appointment with `deleteappt` al
 `deleteappt` with `--appt 2026-10-05` does not delete `2026-10-05 09:30`.
 
 **Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of objects, such
-as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings
-from older data files. `JsonSerializableLaiNurse` saves the patients under the `"patients"` key. A data file without
-it, such as one from v1.3 that saved them under `"persons"`, fails to load, and LaiNurse starts with an empty list.
+as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. A `dateTime` is written `yyyy-MM-dd` or
+`yyyy-MM-dd HH:mm`, the same format a command takes, with the year exactly four digits and no sign. It still reads
+appointments saved as plain strings from older data files. `JsonSerializableLaiNurse` saves the patients under the
+`"patients"` key. A data file without it, such as one from v1.3 that saved them under `"persons"`, fails to load, and
+LaiNurse starts with an empty list. A file from an earlier version with a signed or wider year, such as
+`+12345-01-01`, also fails to load.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which

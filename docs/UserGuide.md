@@ -67,7 +67,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
-* An appointment date is written `yyyy-MM-dd`, such as `2026-10-05`, and a time, when you give one, `HH:mm`, such as `09:00`. The year has exactly four digits and no sign, and the month, day, hour and minute each have two digits. Dates such as `+12345-01-01` and `2026-1-5` are rejected, and so is a time such as `9:00`. This applies to `addappt`, `editappt`, `deleteappt` and `viewappt`.
+* An appointment date is written `yyyy-MM-dd`, such as `2026-10-05`, and a time, when you give one, `HH:mm`, such as `09:00`. The year has exactly four digits and no sign, and the month, day, hour and minute each have two digits. Dates such as `+12345-01-01` and `2026-1-5` are rejected, and so is a time such as `9:00`. This applies to `addappt`, `editappt`, `deleteappt`, `viewappt`, and to appointments in the data file.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </div>
