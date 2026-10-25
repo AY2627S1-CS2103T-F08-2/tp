@@ -27,8 +27,9 @@ import seedu.address.model.patient.Phone;
 public class SampleDataUtil {
 
     /**
-     * Returns sample patients whose appointments are anchored to the week containing {@code today},
-     * where a week is the Monday to Sunday defined by {@link DateUtil#getStartOfWeek}.
+     * Returns sample patients whose appointments are based on the week containing {@code today}, where a week
+     * is the Monday to Sunday defined by {@link DateUtil#getStartOfWeek}. Three fall in that week, and the monthly
+     * blood test is on the Monday four weeks later.
      */
     public static Patient[] getSamplePatients(LocalDate today) {
         LocalDate weekStart = DateUtil.getStartOfWeek(today);
@@ -82,14 +83,15 @@ public class SampleDataUtil {
     }
 
     /**
-     * Returns a {@code LaiNurse} with the sample patients, whose appointments are in the week containing today.
+     * Returns a {@code LaiNurse} with the sample patients, whose appointments are based on the week containing
+     * today.
      */
     public static ReadOnlyLaiNurse getSampleLaiNurse() {
         return getSampleLaiNurse(LocalDate.now());
     }
 
     /**
-     * Returns a {@code LaiNurse} with the sample patients, whose appointments are in the week containing
+     * Returns a {@code LaiNurse} with the sample patients, whose appointments are based on the week containing
      * {@code today}. Tests pass a fixed date here so that the sample appointments land on known dates.
      */
     public static ReadOnlyLaiNurse getSampleLaiNurse(LocalDate today) {
