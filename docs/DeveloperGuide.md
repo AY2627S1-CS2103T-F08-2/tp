@@ -406,25 +406,32 @@ patient whose schedule is empty, and `addappt` adds an appointment to it, `edita
 removes one. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
 so a failed command leaves the patient unchanged.
 
-**Equality.** An `Appointment` stores a date, an optional time and optional details. Its date and time identify it, as
-`Appointment#isSameAppointment` gives, while `equals` also compares the details. Dates and times are parsed with strict
-formatters that accept only one spelling of each value, so equal text means the same date and the same time (or both
-having no time).
+**Identity and order.** An `Appointment` has a patient-local immutable positive number, a date, optional time
+and optional details. Existing date/time constructors create unnumbered inputs. `AppointmentSchedule` assigns
+missing numbers before exposing its immutable list. `isSameAppointment` compares assigned numbers; `equals` and
+`hashCode` also compare date/time and details. `hasSameDateTime` handles timestamp matching independently of identity.
+`PatientAppointment#isSameEntry` combines patient ID and appointment number, so moving a visit preserves selection.
+The entry constructor verifies that the patient owns that exact numbered appointment.
 
-**Order.** Appointments are ordered by date, then by time. On the same day, an appointment with only a date comes before
-any appointment with a time. A date-only appointment means "sometime that day", like an all-day event in a calendar, so
-it is listed at the top of that day. `compareTo` ignores the details, as `isSameAppointment` does, so
-`AppointmentSchedule` can use a `TreeSet` to sort the appointments and keep one at each date and time.
+Schedules sort by date, optional time (absent first), then number. The global appointment list retains date/time,
+patient name and ID ordering, then uses number to distinguish a patient's simultaneous visits. Explicit duplicate
+numbers are rejected before sorting; timestamp duplicates are preserved. `addappt` assigns the highest remaining
+number plus one, starting at 1. Deletion leaves gaps and does not reserve deleted numbers; reaching the maximum
+integer number produces a `CommandException` before mutation.
 
-**Duplicates.** Only appointments at the same date and time are duplicates. `2026-10-05` and `2026-10-05 00:00` are
-different appointments: the first has no fixed time, while the second is at midnight. Merging them would lose
-information that the nurse entered. Deleting an appointment with `deleteappt` also targets the same date and time, so
-`deleteappt` with `--appt 2026-10-05` does not delete `2026-10-05 09:30`.
+**Storage and compatibility.** `JsonAdaptedAppointment` saves `number`, `dateTime` and optional `details`, such as
+`{"number": 2, "dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It accepts legacy strings and objects
+without numbers. Missing numbers are assigned in chronological order, preserving input order for equal timestamps,
+using the lowest unused positive numbers while retaining every explicit number. A local JSON-node creator rejects
+non-integer, null, non-positive and out-of-range number values without changing global Jackson settings.
+`JsonAdaptedPatient` translates duplicate-number validation into the existing `IllegalValueException` loading path.
+Migration does not save immediately; the normal save after a successful command persists the assigned numbers.
+`JsonSerializableLaiNurse` continues to require the `patients` key.
 
-**Storage and compatibility.** `JsonAdaptedPatient` saves the appointments as an `"appointments"` list of objects, such
-as `{"dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It still reads appointments saved as plain strings
-from older data files. `JsonSerializableLaiNurse` saves the patients under the `"patients"` key. A data file without
-it, such as one from v1.3 that saved them under `"persons"`, fails to load, and LaiNurse starts with an empty list.
+**Clashes.** `AppointmentClashes.find` compares exact date and optional time over the unfiltered appointment list,
+excluding only the target's patient ID and number. Two date-only visits on one day clash; a date-only visit and a
+timed visit do not. Both commands and UI use this query. Clashes never reject commands or data files, and are not
+stored as flags. Add/edit success messages include every conflicting patient and appointment number.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
@@ -454,42 +461,34 @@ search described above, and `view ID` shows the notes using the existing detail 
 `ParserUtil.parseAppointmentDetails` rejects blank details, as `parseNotes` does for notes, and logs without the text.
 `editappt` and `deleteappt` touch only the appointment they target; every other appointment keeps its details.
 
-`editappt ID --appt DATE_OR_DATETIME` finds the appointment to edit with `AppointmentSchedule#find`, which returns the
-patient's appointment at that exact date and time, with its details. Because the match is exact, a date alone never
-matches a timed appointment. If there is no match, `EditAppointmentCommand` lists the patient's appointments on that
-day, from `AppointmentSchedule#getOnDate`, in the error message, so that the nurse can retype the right one. The edited
-appointment is built from the new date and time from `--to`, if given, and the new details from `--details`, if given;
-the rest is kept from the old appointment. The command rejects a move onto another of the patient's appointments,
-because the schedule keeps only one appointment at each date and time, and one of them would be lost. Otherwise, it
-replaces the patient through `Model#setPatient()` with a schedule that has the old appointment removed and the edited
-one added, and selects the edited appointment with `Navigation.toAppointment`.
+`editappt ID NUMBER` selects a visit by patient-local number; the legacy `--appt DATE_OR_DATETIME` selector
+still works. Both parsers require exactly one selector and retain the existing option normalization and duplicate
+option checks. `ParserUtil.parseAppointmentNumber` rejects signs, fractions and integer overflow.
+`AppointmentLookup.Target` represents exactly one number or timestamp. Number lookup uses `findByNumber`; timestamp
+lookup uses `findAtDateTime` and requires exactly one match. An ambiguous timestamp lists matching numbers and
+details without mutation. Missing timestamps retain numbered same-day suggestions.
+
+An edit builds the replacement with the old appointment number and preserves date/time or details not supplied.
+It removes the old identity, adds the replacement and uses `Model#setPatient()` and `Navigation.toAppointment`.
+Moving onto another visit is permitted. After updating the model, `Messages.formatClashWarning` describes all
+other visits at the resulting time, including on details-only edits.
 
 The activity diagram below shows the checks that `editappt` makes, in order. Every error leaves the patient and the
 data file unchanged.
 
 <img src="images/EditAppointmentActivityDiagram.png" width="750" />
 
-`addappt` adds a new appointment to a patient's schedule with the same options as `editappt` uses to find and set
-one: `--appt` takes the date, or date and time, and `--details` takes the appointment's
-details, validated by `ParserUtil.parseAppointmentDetails`. `AddAppointmentCommand` finds the patient by
-`Model#findPatientById()`, then checks `AppointmentSchedule#contains` before adding: `AppointmentSchedule#add` keeps
-only the first appointment at each date and time, so without that check, adding onto an existing slot would silently
-replace nothing and lose the new appointment. The check makes the duplicate slot a `CommandException` instead. The
-command then replaces the patient through `Model#setPatient()` with a schedule that has the appointment added, and
-selects it with `Navigation.toAppointment`, as `editappt` does for the edited one. `Model#setPatient()` does not
-change the filter of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there.
+`addappt` retains its existing syntax and validation. It finds the patient through `Model#findPatientById()`,
+assigns `schedule.getNextNumber()`, adds the numbered appointment, and replaces the patient. The result names its
+number and navigates to that exact stored appointment, followed by any clash warning. The existing patient filter
+is retained, including when the patient or a clashing visit is hidden.
 
 ### Deleting an appointment
 
-`deleteappt ID --appt DATE_OR_DATETIME` removes one appointment from a patient's schedule. `DeleteAppointmentCommandParser`
-normalizes option separators in the same way as `addappt`, with its `--appt` required; details are not an option,
-because an appointment is found by its date and time alone. `DeleteAppointmentCommand` finds the patient with
-`Model#findPatientById()`, then looks the appointment up with `AppointmentSchedule#find` at the exact date and time,
-ignoring details on both sides: whichever appointment is scheduled there, with whatever details, is the one deleted.
-If there is no
-match, the command fails with a `CommandException` that lists the patient's appointments on that day, from
-`AppointmentSchedule#getOnDate`, so the nurse can retype the one they meant, as `editappt` does. Otherwise, it
-replaces the patient through `Model#setPatient()` with a schedule that has the appointment removed.
+`deleteappt ID NUMBER` removes exactly one numbered visit; `deleteappt ID --appt DATE_OR_DATETIME` uses the
+same unambiguous timestamp lookup as editing. `AppointmentLookup` reports missing numbers, missing timestamps or
+ambiguous timestamps before any change. The command replaces the patient with the selected identity removed;
+every other number and every other visit's details remain intact.
 
 Unlike `addappt` and `editappt`, the command clears the selection with `CommandResult#withSelectionCleared`: after
 it succeeds, no appointment exists to select, and the deleted one cannot be highlighted again. The returned result
@@ -1042,7 +1041,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to edit a patient's appointment by the patient's ID and the appointment's date and time, with a
+1.  Nurse requests to edit a patient's appointment by the patient's ID and the appointment's number or unambiguous date/time, with a
     new date and time, new details, or both
 2.  LaiNurse updates the appointment
 3.  LaiNurse shows the edited appointment
@@ -1051,7 +1050,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The ID or the appointment's date and time is missing, or nothing to change is given.
+* 1a. The ID or appointment selector is missing, or nothing to change is given.
 
     * 1a1. LaiNurse shows an error message.
 
@@ -1063,17 +1062,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1c. The patient has no appointment at the given date and time.
+* 1c. The selector matches no appointment, or the timestamp matches several appointments.
 
-    * 1c1. LaiNurse shows an error message that lists the patient's appointments on that day, if any.
-
-      Use case resumes at step 1.
-
-* 1d. The new date and time is that of another of the patient's appointments.
-
-    * 1d1. LaiNurse shows an error message, and makes no changes.
+    * 1c1. LaiNurse shows an error with numbered matching visits or same-day suggestions, where applicable.
 
       Use case resumes at step 1.
+
+* 2a. The edited appointment clashes with another visit, including to the same patient.
+
+    * 2a1. LaiNurse keeps the edit and appends a warning naming the other patients and appointment numbers.
+
+      Use case resumes at step 3.
 
 * 1e. A date, time or the details are in an invalid format.
 
@@ -1094,7 +1093,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The ID or the appointment's date and time is missing, or in an invalid format.
+* 1a. The ID or appointment selector is missing, or in an invalid format.
 
     * 1a1. LaiNurse shows an error message with the valid format.
 
@@ -1106,11 +1105,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1c. The patient already has an appointment at the given date and time.
+* 2a. Another appointment has the given date and time, including one of this patient's visits.
 
-    * 1c1. LaiNurse shows an error message, and makes no changes.
+    * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other patients and visit numbers.
 
-      Use case resumes at step 1.
+      Use case resumes at step 3.
 
 * 1d. The details are blank.
 
@@ -1122,7 +1121,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to delete a patient's appointment by the patient's ID and the appointment's date and time
+1.  Nurse requests to delete a patient's appointment by the patient's ID and the appointment's number or unambiguous date/time
 2.  LaiNurse removes the appointment from the patient's schedule
 3.  LaiNurse shows the appointments view without the deleted appointment
 
@@ -1130,7 +1129,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The ID or the appointment's date and time is missing, or in an invalid format.
+* 1a. The ID or appointment selector is missing, or in an invalid format.
 
     * 1a1. LaiNurse shows an error message with the valid format.
 
@@ -1142,9 +1141,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1c. The patient has no appointment at the given date and time.
+* 1c. The selector matches no appointment, or the timestamp matches several appointments.
 
-    * 1c1. LaiNurse shows an error message that lists the patient's appointments on that day, if any.
+    * 1c1. LaiNurse shows an error with numbered matching visits or same-day suggestions, where applicable.
 
       Use case resumes at step 1.
 
@@ -1771,7 +1770,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `editappt S1234567A --appt BLOOD --details Fasting blood test`<br>
        Expected: The blood-test appointment keeps its date, and its details become `FASTING BLOOD TEST`.
 
-1. Editing an appointment that cannot be edited
+1. Resolving lookup errors and moving onto an occupied time
 
     1. Prerequisites: Start with the sample data.
 
@@ -1780,8 +1779,8 @@ testers are expected to do more *exploratory* testing.
        `MON`, and lists `MON 09:30` as their appointment that day.
 
     1. Test case: `editappt S1234567A --appt MON 09:30 --to BLOOD`<br>
-       Expected: No appointment is changed. The status message says that the patient already has an appointment on
-       `BLOOD`.
+       Expected: The appointment moves to `BLOOD`, keeps its number and details, and both visits are preserved.
+       The result warns about the other appointment number; both dates/times appear in red.
 
     1. Test case: `editappt S1234567A --appt MON 09:30`, with nothing to change<br>
        Expected: No appointment is changed. The status message says that `--to` or `--details` must be given.
@@ -1799,13 +1798,13 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `addappt S1234567A --appt AFTER 10:00`<br>
        Expected: The week of `AFTER` is shown, with Alex Yeoh's appointment at 10:00 selected.
 
-1. Adding an appointment that cannot be added
+1. Adding at an occupied time and rejecting an unknown patient
 
     1. Prerequisites: Start with the sample data.
 
     1. Test case: `addappt S1234567A --appt MON 09:30`<br>
-       Expected: No appointment is added. The status message says that the patient `S1234567A` already has an
-       appointment on `MON 09:30`.
+       Expected: Appointment #3 is added at `MON 09:30`. Both visits remain, and the result warns about appointment
+       #1 of Alex Yeoh. Their times and that day's heading appear in red.
 
     1. Test case: `addappt S0000000Z --appt 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
@@ -1851,6 +1850,28 @@ testers are expected to do more *exploratory* testing.
        Expected: The appointments view keeps showing Wednesday, now without Irfan Ibrahim's appointment.
 
 1. _{ more test cases …​ }_
+
+### Appointment numbers, migration and clash highlighting
+
+1. Start with sample data. Run `addappt S2345678B --appt MON 09:30`, using the sample week's Monday for `MON`.
+   Expected: Bernice's new appointment is #2. The warning names Alex Yeoh, ID `S1234567A`, appointment #1.
+   Both times and Monday's heading are red. A `viewappt --id S2345678B` filter still shows the warning color.
+1. Run `addappt S1234567A --appt MON 09:30 --details Second visit`.
+   Expected: Alex's new visit is #3 and the warning names Alex's #1 and Bernice's #2. Both Alex visits survive.
+1. Run `editappt S1234567A --appt MON 09:30 --details Review`, then the equivalent `deleteappt` selector.
+   Expected: Each fails without saving changes and lists Alex's #1 and #3 with their details.
+1. Run `editappt S1234567A 3 --to TUE 10:00`, then `view S1234567A`.
+   Expected: Only #3 moves; its number/details and selection survive the move. The detail date starts with `#3`.
+1. Run `deleteappt S1234567A 3`, restart, then add another visit to Alex.
+   Expected: Surviving numbers stay #1 and #2. The new visit receives #3.
+1. Load a legacy file with two appointment objects for one patient at the same time and different details, plus
+   an earlier plain-string appointment. Expected: All three load, numbered chronologically. Equal-time visits
+   keep their file order and appear red immediately. After a successful command and restart, all numbers persist.
+1. Check clashing visits from yesterday and today, including selected rows and the marked detail appointment.
+   Expected: Date/time text remains red. Other past text stays dimmed, today's non-clashing dates stay orange,
+   and selection backgrounds stay blue. Moving/deleting the other visit removes obsolete red highlighting.
+1. Resize to a narrow window. Expected: `#N`, dates, times and long details remain readable with wrapping;
+   page positions remain distinct from patient-local appointment numbers.
 
 ### Viewing help and command instructions
 

@@ -63,7 +63,12 @@ activate Model
 Model --> AddAppointmentCommand : p
 deactivate Model
 
-AddAppointmentCommand -> AddAppointmentCommand : schedule.add(a)
+AddAppointmentCommand -> AddAppointmentCommand : new Appointment(schedule.getNextNumber(), a.value, a.getDetails())
+activate AddAppointmentCommand
+AddAppointmentCommand --> AddAppointmentCommand : numbered
+deactivate AddAppointmentCommand
+
+AddAppointmentCommand -> AddAppointmentCommand : schedule.add(numbered)
 activate AddAppointmentCommand
 
 AddAppointmentCommand --> AddAppointmentCommand : editedSchedule
@@ -75,8 +80,16 @@ activate Model
 Model --> AddAppointmentCommand
 deactivate Model
 
+AddAppointmentCommand -> Model : getAppointmentList()
+activate Model
+Model --> AddAppointmentCommand : allAppointments
+deactivate Model
+
+AddAppointmentCommand -> AddAppointmentCommand : Messages.formatClashWarning(allAppointments, created)
+
+
 create CommandResult
-AddAppointmentCommand -> CommandResult
+AddAppointmentCommand -> CommandResult : CommandResult(message)
 activate CommandResult
 
 CommandResult --> AddAppointmentCommand

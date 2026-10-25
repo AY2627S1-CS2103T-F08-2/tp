@@ -24,7 +24,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -63,6 +65,7 @@ public class PatientDetailPanel extends UiPart<Region> {
     private static final double SCROLL_STEP = 40;
 
     private final ObservableList<Patient> allPatients;
+    private final ObservableList<PatientAppointment> allAppointments;
     /** The width of the date in every appointment row, so that the times line up. */
     private final DoubleProperty dateWidth = new SimpleDoubleProperty(DATE_WIDTH);
     /** The time and details of each appointment row shown, which {@link #updateRowLayout()} arranges. */
@@ -106,12 +109,15 @@ public class PatientDetailPanel extends UiPart<Region> {
      * Creates a {@code PatientDetailPanel} that looks patients up in {@code allPatients}, and shows
      * {@code placeholderText} while no patient is shown.
      */
-    public PatientDetailPanel(ObservableList<Patient> allPatients, String placeholderText) {
+    public PatientDetailPanel(ObservableList<Patient> allPatients, ObservableList<PatientAppointment> allAppointments,
+            String placeholderText) {
         super(FXML);
-        requireAllNonNull(allPatients, placeholderText);
+        requireAllNonNull(allPatients, allAppointments, placeholderText);
         this.allPatients = allPatients;
+        this.allAppointments = allAppointments;
         placeholder.setText(placeholderText);
         allPatients.addListener((ListChangeListener<Patient>) change -> refresh());
+        allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> refresh());
         upcomingRows.widthProperty().addListener((unused, oldWidth, width) -> updateRowLayout());
         refresh();
     }
@@ -210,9 +216,9 @@ public class PatientDetailPanel extends UiPart<Region> {
                 Optional.ofNullable(markedAppointment));
         upcomingNote.setText(appointments.describeUpcoming());
         rowParts.clear();
-        upcomingRows.getChildren().setAll(createRows(appointments.getUpcoming(), now));
+        upcomingRows.getChildren().setAll(createRows(patient, appointments.getUpcoming(), now));
         pastNote.setText(appointments.describePast());
-        pastRows.getChildren().setAll(createRows(appointments.getPastShown(), now));
+        pastRows.getChildren().setAll(createRows(patient, appointments.getPastShown(), now));
         // The new rows need their styles, such as the font of today's rows, before their times can be measured
         upcomingRows.applyCss();
         pastRows.applyCss();
@@ -223,8 +229,8 @@ public class PatientDetailPanel extends UiPart<Region> {
         setShown(details, true);
     }
 
-    private List<Node> createRows(List<Appointment> appointments, LocalDateTime now) {
-        return appointments.stream().map(appointment -> createRow(appointment, now)).toList();
+    private List<Node> createRows(Patient patient, List<Appointment> appointments, LocalDateTime now) {
+        return appointments.stream().map(appointment -> createRow(patient, appointment, now)).toList();
     }
 
     /**
@@ -233,10 +239,13 @@ public class PatientDetailPanel extends UiPart<Region> {
      * today. {@link #updateRowLayout()} decides how the parts share the row, so that it is never wider than the
      * panel.
      */
-    private Node createRow(Appointment appointment, LocalDateTime now) {
+    private Node createRow(Patient patient, Appointment appointment, LocalDateTime now) {
         LocalDate today = now.toLocalDate();
-        Label date = new Label(AppointmentFormatter.formatDetailDate(appointment.getDate(), today));
+        Label date = new Label("#" + appointment.getNumber() + " · "
+                + AppointmentFormatter.formatDetailDate(appointment.getDate(), today));
         date.getStyleClass().add("detail-appointment-date");
+        date.setWrapText(true);
+        date.setMinHeight(Region.USE_PREF_SIZE);
         date.minWidthProperty().bind(dateWidth);
         date.prefWidthProperty().bind(dateWidth);
         Label time = new Label(AppointmentFormatter.formatDetailTime(appointment));
@@ -265,6 +274,9 @@ public class PatientDetailPanel extends UiPart<Region> {
         }
         if (appointment.isSameAppointment(markedAppointment)) {
             row.getStyleClass().add(MARKED_STYLE_CLASS);
+        }
+        if (!AppointmentClashes.find(allAppointments, new PatientAppointment(patient, appointment)).isEmpty()) {
+            row.getStyleClass().add("detail-appointment-clash");
         }
         return row;
     }

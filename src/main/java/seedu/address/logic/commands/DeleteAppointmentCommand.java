@@ -10,6 +10,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.AppointmentLookup.Target;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -26,16 +27,16 @@ public class DeleteAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "deleteappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Deletes an appointment of the patient with the "
-            + "given ID, at the given date and time.\n"
-            + "Parameters: ID " + PREFIX_APPOINTMENT + "DATE_OR_DATETIME\n"
-            + "Example: " + COMMAND_WORD + " S1234567A " + PREFIX_APPOINTMENT + "2026-10-05 09:30";
+            + "given ID, using its number or an unambiguous date/time.\n"
+            + "Parameters: ID (NUMBER | " + PREFIX_APPOINTMENT + "DATE_OR_DATETIME)\n"
+            + "Example: " + COMMAND_WORD + " S1234567A 2";
 
-    public static final String MESSAGE_DELETE_APPOINTMENT_SUCCESS = "Deleted appointment of %1$s (%2$s): %3$s";
+    public static final String MESSAGE_DELETE_APPOINTMENT_SUCCESS = "Deleted appointment %1$d of %2$s (%3$s): %4$s";
 
     private static final Logger logger = LogsCenter.getLogger(DeleteAppointmentCommand.class);
 
     private final PatientId targetId;
-    private final Appointment targetAppointment;
+    private final Target targetAppointment;
 
     /**
      * Creates a DeleteAppointmentCommand to delete the appointment of the patient with {@code targetId} at the
@@ -45,6 +46,20 @@ public class DeleteAppointmentCommand extends Command {
      * @param targetAppointment The date and time of the appointment to delete. Its details are ignored.
      */
     public DeleteAppointmentCommand(PatientId targetId, Appointment targetAppointment) {
+        this(targetId, new Target(targetAppointment));
+    }
+
+    /**
+     * Creates a command selecting an appointment by its patient-local number.
+     */
+    public DeleteAppointmentCommand(PatientId targetId, int number) {
+        this(targetId, new Target(number));
+    }
+
+    /**
+     * Creates a command with exactly one appointment selector.
+     */
+    private DeleteAppointmentCommand(PatientId targetId, Target targetAppointment) {
         CollectionUtil.requireAllNonNull(targetId, targetAppointment);
         this.targetId = targetId;
         this.targetAppointment = targetAppointment;
@@ -66,10 +81,10 @@ public class DeleteAppointmentCommand extends Command {
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);
-        logger.fine("Deleted an appointment of patient " + targetId + ".");
+        logger.fine("Deleted appointment #" + foundAppointment.getNumber() + " of patient " + targetId + ".");
 
-        String message = String.format(MESSAGE_DELETE_APPOINTMENT_SUCCESS, editedPatient.getName(), targetId,
-                Messages.format(foundAppointment));
+        String message = String.format(MESSAGE_DELETE_APPOINTMENT_SUCCESS, foundAppointment.getNumber(),
+                editedPatient.getName(), targetId, Messages.format(foundAppointment));
         return new CommandResult(message).withSelectionCleared();
     }
 

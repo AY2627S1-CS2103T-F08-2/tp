@@ -72,4 +72,23 @@ public class DeleteAppointmentCommandParserTest {
         assertParseFailure(parser, "S1234567A --appt 2026-10-05 --to 2026-10-06", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "S1234567A --appt 2026-10-05 --details Bring pen", MESSAGE_INVALID_FORMAT);
     }
+    @Test
+    public void parse_numberSelector_success() {
+        assertParseSuccess(parser, "s1234567a\t2", new DeleteAppointmentCommand(ID, 2));
+    }
+
+    @Test
+    public void parse_invalidNumber_failure() {
+        for (String number : new String[] {"0", "-1", "+1", "1.5", "two", "2147483648"}) {
+            assertParseFailure(parser, "S1234567A " + number + "",
+                    Appointment.MESSAGE_NUMBER_CONSTRAINTS);
+        }
+    }
+
+    @Test
+    public void parse_conflictingOrExtraSelectors_failure() {
+        assertParseFailure(parser, "S1234567A 2 --appt 2026-10-05", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "S1234567A 2 3", MESSAGE_INVALID_FORMAT);
+    }
+
 }

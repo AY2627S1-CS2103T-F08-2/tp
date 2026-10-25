@@ -70,7 +70,8 @@ public class DeleteAppointmentCommandTest {
         Patient bensonSameDay = new PatientBuilder(BENSON)
                 .withAppointments("2026-10-05", "2026-10-05 00:00", "2026-10-05 09:30").build();
         model.setPatient(BENSON, bensonSameDay);
-        Patient editedBenson = new PatientBuilder(BENSON).withAppointments("2026-10-05", "2026-10-05 09:30").build();
+        Patient editedBenson = new PatientBuilder(BENSON).withSchedule(bensonSameDay.getSchedule()
+                .remove(bensonSameDay.getSchedule().findByNumber(2).orElseThrow())).build();
 
         assertDeleteSuccess(bensonSameDay,
                 new DeleteAppointmentCommand(BENSON.getId(), new Appointment("2026-10-05 00:00")), editedBenson,
@@ -83,7 +84,7 @@ public class DeleteAppointmentCommandTest {
                 new DeleteAppointmentCommand(BENSON.getId(), new Appointment("2026-10-05"));
         assertCommandFailure(command, model,
                 String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05")
-                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
+                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "#1: 2026-10-05 09:30"));
     }
 
     @Test
@@ -145,6 +146,9 @@ public class DeleteAppointmentCommandTest {
     private void assertDeleteSuccess(Patient patient, DeleteAppointmentCommand command, Patient editedPatient,
             String expectedAppointmentText) {
         String expectedMessage = String.format(DeleteAppointmentCommand.MESSAGE_DELETE_APPOINTMENT_SUCCESS,
+                patient.getSchedule().asList().stream()
+                        .filter(appointment -> expectedAppointmentText.split(";", 2)[0].equals(appointment.value))
+                        .findFirst().orElseThrow().getNumber(),
                 editedPatient.getName(), editedPatient.getId(), expectedAppointmentText);
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);

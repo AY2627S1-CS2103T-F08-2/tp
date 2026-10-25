@@ -1,12 +1,16 @@
 package seedu.address.logic;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.logic.parser.Prefix;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 
 /**
  * Container for user visible messages.
@@ -37,9 +41,11 @@ public class Messages {
             "The --from date must not be after the --to date.";
     public static final String MESSAGE_DUPLICATE_FIELDS =
             "Multiple values specified for the following single-valued field(s): ";
-    public static final String MESSAGE_APPOINTMENT_TAKEN = "Patient %1$s already has an appointment on %2$s.";
     public static final String MESSAGE_APPOINTMENT_NOT_FOUND = "Patient %1$s has no appointment on %2$s.";
     public static final String MESSAGE_APPOINTMENTS_ON_DATE = " Their appointments on that day: %1$s.";
+    public static final String MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND = "Patient %1$s has no appointment #%2$d.";
+    public static final String MESSAGE_APPOINTMENT_AMBIGUOUS = "Patient %1$s has several appointments on %2$s: %3$s. "
+            + "Use an appointment number instead of --appt.";
 
     /**
      * Returns an error message indicating the duplicate prefixes.
@@ -78,6 +84,27 @@ public class Messages {
      */
     public static String format(Appointment appointment) {
         return appointment + appointment.getDetails().map(details -> "; Details: " + details).orElse("");
+    }
+
+    /**
+     * Formats a stored appointment with its patient-local number.
+     */
+    public static String formatNumbered(Appointment appointment) {
+        return "#" + appointment.getNumber() + ": " + format(appointment);
+    }
+
+    /**
+     * Describes clashes after a successful appointment change, including other visits of the same patient.
+     */
+    public static String formatClashWarning(Collection<PatientAppointment> appointments, PatientAppointment target) {
+        List<PatientAppointment> clashes = AppointmentClashes.find(appointments, target);
+        if (clashes.isEmpty()) {
+            return "";
+        }
+        return "\nWarning: it clashes with " + clashes.stream()
+                .map(entry -> entry.getPatient().getName() + " (" + entry.getPatient().getId()
+                        + "), appointment #" + entry.getAppointment().getNumber())
+                .collect(Collectors.joining("; ")) + ".";
     }
 
 }

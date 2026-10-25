@@ -74,8 +74,9 @@ public class SampleDataUtilTest {
         return Map.of(
                 "S1234567A", List.of(
                         appointment(monday + " 09:30", "Insulin review"),
-                        appointment(monday.plusWeeks(4).toString(), "Monthly blood test")),
-                "S2345678B", List.of(new Appointment(monday.plusDays(1).toString())),
+                        new Appointment(2, monday.plusWeeks(4).toString(),
+                                Optional.of(new AppointmentDetails("Monthly blood test")))),
+                "S2345678B", List.of(new Appointment(monday.plusDays(1).toString()).withNumber(1)),
                 "G1234567E", List.of(
                         appointment(monday.plusDays(2) + " 14:00", "Dress the wound on the left foot")),
                 "T0123456C", List.of(),
@@ -84,6 +85,6 @@ public class SampleDataUtilTest {
     }
 
     private static Appointment appointment(String dateTime, String details) {
-        return new Appointment(dateTime, Optional.of(new AppointmentDetails(details)));
+        return new Appointment(dateTime, Optional.of(new AppointmentDetails(details))).withNumber(1);
     }
 }

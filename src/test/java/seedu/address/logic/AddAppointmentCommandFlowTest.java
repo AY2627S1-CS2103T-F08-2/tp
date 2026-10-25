@@ -25,6 +25,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
@@ -98,9 +99,13 @@ public class AddAppointmentCommandFlowTest {
     }
 
     @Test
-    public void execute_duplicateSlot_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("addappt S1234567A --appt 2026-10-05 09:30", CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, ALEX_ID, "2026-10-05 09:30"));
+    public void execute_duplicateSlot_warnsAndPersistsBoth() throws Exception {
+        CommandResult result = logic.execute("addappt S1234567A --appt 2026-10-05 09:30");
+        assertEquals("Added appointment 3 of ALEX YEOH (S1234567A): 2026-10-05 09:30\n"
+                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #1.", result.getFeedbackToUser());
+        assertEquals(List.of(1, 3), patient(ALEX_ID).getSchedule()
+                .findAtDateTime(new Appointment("2026-10-05 09:30")).stream().map(Appointment::getNumber).toList());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
     }
 
     @Test
@@ -121,13 +126,17 @@ public class AddAppointmentCommandFlowTest {
      */
     private void assertAddPersisted(String command, Patient expected, Appointment expectedAppointment,
             String expectedAppointmentText) throws Exception {
+        expectedAppointment = expected.getSchedule().findAtDateTime(expectedAppointment).getLast();
         LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
         expectedLaiNurse.setPatient(patient(expected.getId().value), expected);
 
         CommandResult result = logic.execute(command);
 
-        assertEquals(String.format(AddAppointmentCommand.MESSAGE_ADD_APPOINTMENT_SUCCESS, expected.getName(),
-                expected.getId(), expectedAppointmentText), result.getFeedbackToUser());
+        assertEquals(String.format(AddAppointmentCommand.MESSAGE_ADD_APPOINTMENT_SUCCESS,
+                expectedAppointment.getNumber(), expected.getName(),
+                expected.getId(), expectedAppointmentText)
+                + Messages.formatClashWarning(model.getAppointmentList(),
+                        new PatientAppointment(expected, expectedAppointment)), result.getFeedbackToUser());
         assertEquals(Optional.of(Navigation.toAppointment(new PatientAppointment(expected, expectedAppointment))),
                 result.getNavigation());
         assertEquals(expectedLaiNurse, model.getLaiNurse());
@@ -160,4 +169,39 @@ public class AddAppointmentCommandFlowTest {
     private static Appointment appointment(String dateTime, String details) {
         return new Appointment(dateTime, Optional.of(new AppointmentDetails(details)));
     }
+    @Test
+    public void execute_crossPatientClash_warnsEvenWhenPatientHidden() throws Exception {
+        logic.execute("find --name bernice");
+        CommandResult result = logic.execute("addappt S2345678B --appt 2026-10-05 09:30");
+        assertEquals("Added appointment 2 of BERNICE YU (S2345678B): 2026-10-05 09:30\n"
+                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #1.", result.getFeedbackToUser());
+        assertEquals(List.of(patient(BERNICE_ID)), model.getFilteredPatientList());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
+    @Test
+    public void execute_deletedHighestNumber_reusedAfterRestart() throws Exception {
+        logic.execute("addappt S1234567A --appt 2026-12-01");
+        logic.execute("deleteappt S1234567A 3");
+        model = new ModelManager(storage.readLaiNurse().orElseThrow(), new UserPrefs());
+        logic = new LogicManager(model, storage);
+        CommandResult result = logic.execute("addappt S1234567A --appt 2026-09-01");
+        assertEquals(3, result.getNavigation().orElseThrow().appointment().orElseThrow()
+                .getAppointment().getNumber());
+        assertEquals(List.of(3, 1, 2), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(Appointment::getNumber).toList());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
+    @Test
+    public void execute_numberExhausted_rejectedWithoutChanges() throws Exception {
+        Patient original = patient(ALEX_ID);
+        Patient full = new PatientBuilder(original).withSchedule(new AppointmentSchedule(
+                List.of(new Appointment("2026-10-05").withNumber(Integer.MAX_VALUE)))).build();
+        model.setPatient(original, full);
+        storage.saveLaiNurse(model.getLaiNurse());
+        assertRejectedCommandLeavesDataUnchanged("addappt S1234567A --appt 2026-10-06", CommandException.class,
+                AppointmentSchedule.MESSAGE_NUMBER_EXHAUSTED);
+    }
+
 }

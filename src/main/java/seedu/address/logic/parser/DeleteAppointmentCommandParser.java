@@ -28,19 +28,23 @@ public class DeleteAppointmentCommandParser implements Parser<DeleteAppointmentC
                 PREFIX_APPOINTMENT);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_APPOINTMENT);
 
+        boolean usesDateTime = argMultimap.getValue(PREFIX_APPOINTMENT).isPresent();
+        String[] preamble = argMultimap.getPreamble().split("\\s+");
+        if (preamble.length != (usesDateTime ? 1 : 2)) {
+            throw new ParseException(invalidFormatMessage);
+        }
         PatientId id;
         try {
-            id = ParserUtil.parseId(argMultimap.getPreamble());
+            id = ParserUtil.parseId(preamble[0]);
         } catch (ParseException pe) {
             throw new ParseException(invalidFormatMessage, pe);
         }
-        if (argMultimap.getValue(PREFIX_APPOINTMENT).isEmpty()) {
-            throw new ParseException(invalidFormatMessage);
-        }
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_APPOINTMENT);
 
-        Appointment targetAppointment = ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_APPOINTMENT).get());
-
-        return new DeleteAppointmentCommand(id, targetAppointment);
+        if (usesDateTime) {
+            Appointment target = ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_APPOINTMENT).orElseThrow());
+            return new DeleteAppointmentCommand(id, target);
+        }
+        return new DeleteAppointmentCommand(id, ParserUtil.parseAppointmentNumber(preamble[1]));
     }
 }

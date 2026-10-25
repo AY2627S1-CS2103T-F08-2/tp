@@ -64,7 +64,7 @@ activate Model
 Model --> DeleteAppointmentCommand : p
 deactivate Model
 
-DeleteAppointmentCommand -> AppointmentLookup : find(S1234567A, p.getSchedule(), a)
+DeleteAppointmentCommand -> AppointmentLookup : find(S1234567A, p.getSchedule(), target, COMMAND_WORD)
 activate AppointmentLookup
 
 AppointmentLookup --> DeleteAppointmentCommand : foundAppointment

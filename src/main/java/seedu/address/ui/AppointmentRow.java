@@ -35,6 +35,13 @@ public class AppointmentRow extends UiPart<Region> {
      * Creates an {@code AppointmentRow} that shows {@code entry}, greyed out if it has passed at {@code now}.
      */
     public AppointmentRow(AppointmentPage.Entry entry, LocalDateTime now) {
+        this(entry, now, false);
+    }
+
+    /**
+     * Creates a row whose time is marked red when it clashes with another visit.
+     */
+    public AppointmentRow(AppointmentPage.Entry entry, LocalDateTime now, boolean isClashing) {
         super(FXML);
         Appointment appointment = entry.appointment().getAppointment();
         Patient patient = entry.appointment().getPatient();
@@ -42,13 +49,16 @@ public class AppointmentRow extends UiPart<Region> {
         time.setText(AppointmentFormatter.formatTime(appointment));
         time.getStyleClass().add(appointment.getTime().isPresent() ? TIME_STYLE_CLASS : NO_TIME_STYLE_CLASS);
         name.setText(patient.getName().fullName);
-        patientId.setText(patient.getId().value);
+        patientId.setText(patient.getId().value + " #" + appointment.getNumber());
         details.setText(appointment.getDetails().map(Object::toString).orElse(""));
         // A row with no details stays one line high
         details.setVisible(appointment.getDetails().isPresent());
         details.setManaged(appointment.getDetails().isPresent());
         if (AppointmentFormatter.hasPassed(appointment, now)) {
             getRoot().getStyleClass().add(PASSED_STYLE_CLASS);
+        }
+        if (isClashing) {
+            getRoot().getStyleClass().add("appointment-entry-clash");
         }
     }
 }

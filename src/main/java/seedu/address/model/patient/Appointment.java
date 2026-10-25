@@ -14,11 +14,9 @@ import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
- * Represents one of a Patient's appointments: its date, optionally its time, and optionally its details.
- * Appointments are ordered by date, then by time; an appointment with only a date comes before
- * any appointment with a time on the same date. The details play no part in the order: two appointments at the
- * same date and time are the same appointment, as {@link #isSameAppointment(Appointment)} gives, even if their
- * details differ. {@link #equals(Object)} compares the details too.
+ * Represents a patient's appointment, identified within that patient by its number.
+ * Date/time constructors create unnumbered inputs; a schedule assigns numbers before exposing appointments.
+ * Ordered by date, optional time, then number. Full equality also compares the date/time and details.
  * Guarantees: immutable; is valid as declared in {@link #isValidAppointment(String)}
  */
 public class Appointment implements Comparable<Appointment> {
@@ -26,12 +24,15 @@ public class Appointment implements Comparable<Appointment> {
     public static final String MESSAGE_CONSTRAINTS = "Appointments should be a real date in the format "
             + DateUtil.DATE_FORMAT + ", optionally followed by a 24-hour time in the format " + DateUtil.TIME_FORMAT
             + ", e.g. 2026-09-20 or 2026-09-20 14:00";
+    public static final String MESSAGE_NUMBER_CONSTRAINTS =
+            "Appointment numbers must be positive integers from 1 to " + Integer.MAX_VALUE + ".";
 
     /** The date, and the time if there is one, as in "2026-09-20" or "2026-09-20 14:00". */
     public final String value;
     private final LocalDate date;
     private final LocalTime time;
     private final AppointmentDetails details; // null if none
+    private final Integer number; // null for an unnumbered input
 
     /**
      * Constructs an {@code Appointment} with no details.
@@ -49,6 +50,18 @@ public class Appointment implements Comparable<Appointment> {
      * @param details The details of the appointment, if it has any.
      */
     public Appointment(String appointment, Optional<AppointmentDetails> details) {
+        this(null, appointment, details);
+    }
+
+    /**
+     * Constructs a numbered appointment. Numbers are unique within a patient's schedule.
+     */
+    public Appointment(int number, String appointment, Optional<AppointmentDetails> details) {
+        this(Integer.valueOf(number), appointment, details);
+        checkArgument(number > 0, MESSAGE_NUMBER_CONSTRAINTS);
+    }
+
+    private Appointment(Integer number, String appointment, Optional<AppointmentDetails> details) {
         requireNonNull(appointment);
         requireNonNull(details);
         checkArgument(isValidAppointment(appointment), MESSAGE_CONSTRAINTS);
@@ -57,6 +70,34 @@ public class Appointment implements Comparable<Appointment> {
         date = DateUtil.parseDate(parts[0]);
         time = parts.length == 2 ? DateUtil.parseTime(parts[1]) : null;
         this.details = details.orElse(null);
+        this.number = number;
+    }
+
+    /**
+     * Returns whether this appointment has been assigned a number.
+     */
+    public boolean isNumbered() {
+        return number != null;
+    }
+
+    /**
+     * Returns this appointment's number.
+     *
+     * @throws IllegalStateException if this is an unnumbered input.
+     */
+    public int getNumber() {
+        if (!isNumbered()) {
+            throw new IllegalStateException("The appointment has not been assigned a number.");
+        }
+        return number;
+    }
+
+    /**
+     * Assigns a number to an unnumbered input, or returns this appointment if it already has that number.
+     */
+    public Appointment withNumber(int number) {
+        checkArgument(!isNumbered() || this.number == number, "An appointment's number cannot change.");
+        return isNumbered() ? this : new Appointment(number, value, getDetails());
     }
 
     /**
@@ -101,16 +142,21 @@ public class Appointment implements Comparable<Appointment> {
     }
 
     /**
-     * Returns true if {@code other} is at the same date and time, whatever the details of either.
-     * This defines a weaker notion of equality between two appointments, as {@link Patient#isSamePatient} does
-     * for patients.
+     * Returns true if both appointments have the same assigned number within their patient's schedule.
      */
     public boolean isSameAppointment(Appointment other) {
-        return other != null && compareTo(other) == 0;
+        return other != null && isNumbered() && Objects.equals(number, other.number);
     }
 
     /**
-     * Compares appointments by date, then by time.
+     * Matches date and optional time, independently of identity and details.
+     */
+    public boolean hasSameDateTime(Appointment other) {
+        return other != null && date.equals(other.date) && Objects.equals(time, other.time);
+    }
+
+    /**
+     * Compares appointments by date, then by time, then by number (unnumbered inputs first).
      * An appointment with only a date comes before any appointment with a time on the same day.
      * The details are not compared, so this order is inconsistent with {@link #equals(Object)}.
      */
@@ -118,6 +164,7 @@ public class Appointment implements Comparable<Appointment> {
     public int compareTo(Appointment other) {
         return Comparator.comparing(Appointment::getDate)
                 .thenComparing(appointment -> appointment.time, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(appointment -> appointment.number, Comparator.nullsFirst(Comparator.naturalOrder()))
                 .compare(this, other);
     }
 
@@ -137,12 +184,13 @@ public class Appointment implements Comparable<Appointment> {
             return false;
         }
 
-        return value.equals(otherAppointment.value) && Objects.equals(details, otherAppointment.details);
+        return Objects.equals(number, otherAppointment.number) && value.equals(otherAppointment.value)
+                && Objects.equals(details, otherAppointment.details);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, details);
+        return Objects.hash(number, value, details);
     }
 
 }

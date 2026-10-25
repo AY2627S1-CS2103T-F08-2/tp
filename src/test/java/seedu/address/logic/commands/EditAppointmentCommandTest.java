@@ -140,19 +140,20 @@ public class EditAppointmentCommandTest {
         assertCommandFailure(command, model,
                 String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, BENSON.getId(), "2026-10-05")
                 + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE,
-                        "2026-10-05 09:30, 2026-10-05 14:00"));
+                        "#1: 2026-10-05 09:30, #2: 2026-10-05 14:00"));
     }
 
     @Test
-    public void execute_moveOntoOtherAppointment_failure() {
-        Patient bensonWithTwo = new PatientBuilder(BENSON).withAppointments("2026-10-05 09:30", "2026-10-05 14:00")
+    public void execute_moveOntoOtherAppointment_warnsAndKeepsNumbers() {
+        Patient original = new PatientBuilder(BENSON).withAppointments("2026-10-05 09:30", "2026-10-05 14:00")
                 .build();
-        model.setPatient(BENSON, bensonWithTwo);
-
-        EditAppointmentCommand command = new EditAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT,
-                Optional.of(new Appointment("2026-10-05 14:00")), Optional.empty());
-        assertCommandFailure(command, model,
-                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(), "2026-10-05 14:00"));
+        model.setPatient(BENSON, original);
+        Appointment moved = new Appointment("2026-10-05 14:00").withNumber(1);
+        Patient expected = new PatientBuilder(original).withSchedule(original.getSchedule()
+                .remove(original.getSchedule().findByNumber(1).orElseThrow()).add(moved)).build();
+        assertEditSuccess(original, new EditAppointmentCommand(BENSON.getId(), 1,
+                Optional.of(new Appointment("2026-10-05 14:00")), Optional.empty()), expected, moved,
+                "2026-10-05 14:00", "2026-10-05 09:30");
     }
 
     @Test
@@ -206,13 +207,18 @@ public class EditAppointmentCommandTest {
      */
     private void assertEditSuccess(Patient patient, EditAppointmentCommand command, Patient editedPatient,
             Appointment editedAppointment, String expectedAppointmentText, String movedFrom) {
+        editedAppointment = editedAppointment.isNumbered()
+                ? editedPatient.getSchedule().findByNumber(editedAppointment.getNumber()).orElseThrow()
+                : editedPatient.getSchedule().findAtDateTime(editedAppointment).getLast();
         String expectedMessage = String.format(EditAppointmentCommand.MESSAGE_EDIT_APPOINTMENT_SUCCESS,
-                editedPatient.getName(), editedPatient.getId(), expectedAppointmentText);
+                editedAppointment.getNumber(), editedPatient.getName(), editedPatient.getId(), expectedAppointmentText);
         if (movedFrom != null) {
             expectedMessage += String.format(EditAppointmentCommand.MESSAGE_MOVED_FROM, movedFrom);
         }
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);
+        expectedMessage += Messages.formatClashWarning(expectedModel.getAppointmentList(),
+                new PatientAppointment(editedPatient, editedAppointment));
         CommandResult expectedResult = new CommandResult(expectedMessage)
                 .withNavigation(Navigation.toAppointment(new PatientAppointment(editedPatient, editedAppointment)));
 

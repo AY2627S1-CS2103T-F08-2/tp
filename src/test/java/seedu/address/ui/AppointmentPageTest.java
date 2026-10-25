@@ -240,6 +240,7 @@ public class AppointmentPageTest {
     }
 
     private static PatientAppointment entry(Patient patient, String appointment) {
-        return new PatientAppointment(patient, new Appointment(appointment));
+        return new PatientAppointment(patient, patient.getSchedule()
+                .findAtDateTime(new Appointment(appointment)).getFirst());
     }
 }

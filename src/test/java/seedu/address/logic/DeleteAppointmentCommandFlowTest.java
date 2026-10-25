@@ -63,8 +63,8 @@ public class DeleteAppointmentCommandFlowTest {
 
     @Test
     public void execute_deleteTimedAppointment_persists() throws Exception {
-        Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
-                .withAppointment("2026-11-02", "Monthly blood test").build();
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(patient(ALEX_ID).getSchedule()
+                        .remove(patient(ALEX_ID).getSchedule().findByNumber(1).orElseThrow())).build();
         assertDeletePersisted("deleteappt S1234567A --appt 2026-10-05 09:30", expected,
                 "2026-10-05 09:30; Details: INSULIN REVIEW");
     }
@@ -81,8 +81,8 @@ public class DeleteAppointmentCommandFlowTest {
     public void execute_patientNotInDisplayedList_deleted() throws Exception {
         logic.execute("find --name bernice");
         List<Patient> expectedFilteredList = List.copyOf(model.getFilteredPatientList());
-        Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
-                .withAppointment("2026-11-02", "Monthly blood test").build();
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(patient(ALEX_ID).getSchedule()
+                        .remove(patient(ALEX_ID).getSchedule().findByNumber(1).orElseThrow())).build();
 
         CommandResult result = logic.execute("deleteappt S1234567A --appt 2026-10-05 09:30");
 
@@ -98,7 +98,8 @@ public class DeleteAppointmentCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05",
                 CommandException.class,
                 String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
-                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
+                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE,
+                        "#1: 2026-10-05 09:30; Details: INSULIN REVIEW"));
 
         // nothing on that day
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-20",
@@ -125,12 +126,16 @@ public class DeleteAppointmentCommandFlowTest {
      */
     private void assertDeletePersisted(String command, Patient expected, String expectedAppointmentText)
             throws Exception {
+        int deletedNumber = patient(expected.getId().value).getSchedule().asList().stream()
+                .filter(appointment -> expectedAppointmentText.split(";", 2)[0].equals(appointment.value))
+                .findFirst().orElseThrow().getNumber();
         LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
         expectedLaiNurse.setPatient(patient(expected.getId().value), expected);
 
         CommandResult result = logic.execute(command);
 
-        assertEquals(String.format(DeleteAppointmentCommand.MESSAGE_DELETE_APPOINTMENT_SUCCESS, expected.getName(),
+        assertEquals(String.format(DeleteAppointmentCommand.MESSAGE_DELETE_APPOINTMENT_SUCCESS, deletedNumber,
+                expected.getName(),
                 expected.getId(), expectedAppointmentText), result.getFeedbackToUser());
         assertEquals(Optional.empty(), result.getNavigation(), "no appointment exists to select any more");
         assertTrue(result.isSelectionCleared(), "the selection is cleared, as with delete and clear");
@@ -160,4 +165,16 @@ public class DeleteAppointmentCommandFlowTest {
         return model.getLaiNurse().getPatientList().stream()
                 .filter(patient -> patient.getId().equals(patientId)).findFirst().orElseThrow();
     }
+    @Test
+    public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndNumbers() throws Exception {
+        logic.execute("addappt S1234567A --appt 2026-10-05 09:30");
+        CommandResult result = logic.execute("deleteappt S1234567A 1");
+        assertEquals("Deleted appointment 1 of ALEX YEOH (S1234567A): "
+                + "2026-10-05 09:30; Details: INSULIN REVIEW", result.getFeedbackToUser());
+        assertEquals(List.of(3, 2), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(Appointment::getNumber).toList());
+        assertTrue(result.isSelectionCleared());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
 }

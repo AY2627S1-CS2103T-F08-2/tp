@@ -109,7 +109,8 @@ public class EditAppointmentCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 --to 2026-10-06",
                 CommandException.class,
                 String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
-                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
+                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE,
+                        "#1: 2026-10-05 09:30; Details: INSULIN REVIEW"));
 
         // nothing on that day
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-20 --details Check",
@@ -118,10 +119,14 @@ public class EditAppointmentCommandFlowTest {
     }
 
     @Test
-    public void execute_moveOntoOtherAppointment_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-11-02",
-                CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, ALEX_ID, "2026-11-02"));
+    public void execute_moveOntoOtherAppointment_warnsAndPersistsBoth() throws Exception {
+        CommandResult result = logic.execute("editappt S1234567A 1 --to 2026-11-02");
+        assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-11-02; Details: INSULIN REVIEW"
+                + " (moved from 2026-10-05 09:30)\n"
+                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #2.", result.getFeedbackToUser());
+        assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(Appointment::getNumber).toList());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
     }
 
     @Test
@@ -145,13 +150,17 @@ public class EditAppointmentCommandFlowTest {
      */
     private void assertEditPersisted(String command, Patient expected, Appointment expectedAppointment,
             String expectedAppointmentText) throws Exception {
+        expectedAppointment = expected.getSchedule().findAtDateTime(expectedAppointment).getLast();
         LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
         expectedLaiNurse.setPatient(patient(expected.getId().value), expected);
 
         CommandResult result = logic.execute(command);
 
-        assertEquals(String.format(EditAppointmentCommand.MESSAGE_EDIT_APPOINTMENT_SUCCESS, expected.getName(),
-                expected.getId(), expectedAppointmentText), result.getFeedbackToUser());
+        assertEquals(String.format(EditAppointmentCommand.MESSAGE_EDIT_APPOINTMENT_SUCCESS,
+                expectedAppointment.getNumber(), expected.getName(),
+                expected.getId(), expectedAppointmentText)
+                + Messages.formatClashWarning(model.getAppointmentList(),
+                        new PatientAppointment(expected, expectedAppointment)), result.getFeedbackToUser());
         assertEquals(Optional.of(Navigation.toAppointment(new PatientAppointment(expected, expectedAppointment))),
                 result.getNavigation());
         assertEquals(expectedLaiNurse, model.getLaiNurse());
@@ -184,4 +193,46 @@ public class EditAppointmentCommandFlowTest {
     private static Appointment appointment(String dateTime, String details) {
         return new Appointment(dateTime, Optional.of(new AppointmentDetails(details)));
     }
+    @Test
+    public void execute_ambiguousTimestamp_rejectedWithoutChanges() throws Exception {
+        logic.execute("addappt S1234567A --appt 2026-10-05 09:30 --details Second visit");
+        String expected = String.format(Messages.MESSAGE_APPOINTMENT_AMBIGUOUS, ALEX_ID, "2026-10-05 09:30",
+                "#1: 2026-10-05 09:30; Details: INSULIN REVIEW, #3: 2026-10-05 09:30; Details: SECOND VISIT");
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06",
+                CommandException.class, expected);
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05 09:30",
+                CommandException.class, expected);
+    }
+
+    @Test
+    public void execute_numberSelectsDuplicate_keepsIdentityAfterMove() throws Exception {
+        logic.execute("addappt S1234567A --appt 2026-10-05 09:30 --details Second visit");
+        CommandResult result = logic.execute("editappt S1234567A 3 --to 2026-09-01");
+        Appointment moved = patient(ALEX_ID).getSchedule().findByNumber(3).orElseThrow();
+        assertEquals("2026-09-01", moved.value);
+        assertEquals("SECOND VISIT", moved.getDetails().orElseThrow().value);
+        assertEquals(3, result.getNavigation().orElseThrow().appointment().orElseThrow()
+                .getAppointment().getNumber());
+        assertEquals(1, patient(ALEX_ID).getSchedule().findAtDateTime(new Appointment("2026-10-05 09:30")).size());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
+    @Test
+    public void execute_missingNumber_rejectedWithoutChanges() throws Exception {
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 99 --details Review", CommandException.class,
+                "Patient S1234567A has no appointment #99.");
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A 99", CommandException.class,
+                "Patient S1234567A has no appointment #99.");
+    }
+
+    @Test
+    public void execute_detailsOnlyClash_warnsAboutEveryOtherVisit() throws Exception {
+        logic.execute("addappt S1234567A --appt 2026-10-05 09:30");
+        logic.execute("addappt S2345678B --appt 2026-10-05 09:30");
+        CommandResult result = logic.execute("editappt S1234567A 1 --details Review");
+        assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: REVIEW\n"
+                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #3; "
+                + "BERNICE YU (S2345678B), appointment #2.", result.getFeedbackToUser());
+    }
+
 }

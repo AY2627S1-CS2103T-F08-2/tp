@@ -34,18 +34,22 @@ public class EditAppointmentCommandParser implements Parser<EditAppointmentComma
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_APPOINTMENT, PREFIX_TO,
                 PREFIX_DETAILS);
 
+        boolean usesDateTime = argMultimap.getValue(PREFIX_APPOINTMENT).isPresent();
+        String[] preamble = argMultimap.getPreamble().split("\\s+");
+        if (preamble.length != (usesDateTime ? 1 : 2)) {
+            throw new ParseException(invalidFormatMessage);
+        }
         PatientId id;
         try {
-            id = ParserUtil.parseId(argMultimap.getPreamble());
+            id = ParserUtil.parseId(preamble[0]);
         } catch (ParseException pe) {
             throw new ParseException(invalidFormatMessage, pe);
         }
-        if (argMultimap.getValue(PREFIX_APPOINTMENT).isEmpty()) {
-            throw new ParseException(invalidFormatMessage);
-        }
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_APPOINTMENT, PREFIX_TO, PREFIX_DETAILS);
 
-        Appointment targetAppointment = ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_APPOINTMENT).get());
+        Appointment targetAppointment = usesDateTime
+                ? ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_APPOINTMENT).orElseThrow()) : null;
+        int number = usesDateTime ? 0 : ParserUtil.parseAppointmentNumber(preamble[1]);
         Optional<Appointment> newDateTime = argMultimap.getValue(PREFIX_TO).isPresent()
                 ? Optional.of(ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_TO).get()))
                 : Optional.empty();
@@ -56,6 +60,7 @@ public class EditAppointmentCommandParser implements Parser<EditAppointmentComma
             throw new ParseException(EditAppointmentCommand.MESSAGE_NOT_EDITED);
         }
 
-        return new EditAppointmentCommand(id, targetAppointment, newDateTime, newDetails);
+        return usesDateTime ? new EditAppointmentCommand(id, targetAppointment, newDateTime, newDetails)
+                : new EditAppointmentCommand(id, number, newDateTime, newDetails);
     }
 }

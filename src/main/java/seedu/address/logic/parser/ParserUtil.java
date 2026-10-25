@@ -152,6 +152,26 @@ public class ParserUtil {
     }
 
     /**
+     * Parses a patient-local appointment number without accepting signs, fractions or integer overflow.
+     */
+    public static int parseAppointmentNumber(String number) throws ParseException {
+        requireNonNull(number);
+        try {
+            if (!number.matches("[0-9]+")) {
+                throw new NumberFormatException();
+            }
+            int parsed = Integer.parseInt(number);
+            if (parsed <= 0) {
+                throw new NumberFormatException();
+            }
+            return parsed;
+        } catch (NumberFormatException e) {
+            logger.fine("Rejected invalid appointment number.");
+            throw new ParseException(Appointment.MESSAGE_NUMBER_CONSTRAINTS, e);
+        }
+    }
+
+    /**
      * Parses {@code String details} into {@code AppointmentDetails}.
      * Leading and trailing whitespaces will be trimmed.
      *
