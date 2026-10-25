@@ -9,7 +9,6 @@ import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,12 +31,12 @@ import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
-import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PatientBuilder;
+import seedu.address.testutil.SampleData;
 
 /**
  * Tests edit commands from user input through model updates and JSON persistence, starting from the sample data.
@@ -47,9 +46,6 @@ public class EditCommandFlowTest {
     private static final String BERNICE_ID = "S2345678B"; // appointment 2026-10-06
     private static final String CHARLOTTE_ID = "T0123456C"; // no medical history or appointments
     private static final String IRFAN_ID = "G1234567E"; // appointment 2026-10-07 14:00
-
-    // Anchors the sample data to the week of Monday 2026-10-05, matching the appointment dates above.
-    private static final LocalDate SAMPLE_TODAY = LocalDate.parse("2026-10-05");
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
@@ -63,7 +59,7 @@ public class EditCommandFlowTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        model = new ModelManager(SampleDataUtil.getSampleLaiNurse(SAMPLE_TODAY), new UserPrefs());
+        model = new ModelManager(SampleData.getSampleLaiNurse(), new UserPrefs());
         storage = new StorageManager(new JsonLaiNurseStorage(temporaryFolder.resolve("laiNurse.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
         storage.saveLaiNurse(model.getLaiNurse());

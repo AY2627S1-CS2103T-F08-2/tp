@@ -6,7 +6,6 @@ import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,12 +28,12 @@ import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
-import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PatientBuilder;
+import seedu.address.testutil.SampleData;
 
 /**
  * Tests editappt commands from user input through model updates and JSON persistence, starting from the sample data.
@@ -43,9 +42,6 @@ public class EditAppointmentCommandFlowTest {
     // appointments 2026-10-05 09:30 (INSULIN REVIEW) and 2026-11-02 (MONTHLY BLOOD TEST)
     private static final String ALEX_ID = "S1234567A";
     private static final String BERNICE_ID = "S2345678B"; // appointment 2026-10-06, with no details
-
-    // Anchors the sample data to the week of Monday 2026-10-05, matching the appointment dates above.
-    private static final LocalDate SAMPLE_TODAY = LocalDate.parse("2026-10-05");
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditAppointmentCommand.MESSAGE_USAGE);
@@ -59,7 +55,7 @@ public class EditAppointmentCommandFlowTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        model = new ModelManager(SampleDataUtil.getSampleLaiNurse(SAMPLE_TODAY), new UserPrefs());
+        model = new ModelManager(SampleData.getSampleLaiNurse(), new UserPrefs());
         storage = new StorageManager(new JsonLaiNurseStorage(temporaryFolder.resolve("laiNurse.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
         storage.saveLaiNurse(model.getLaiNurse());
