@@ -129,6 +129,112 @@ public class AppointmentClashUiTest {
         return new PatientBuilder().withId(id).withAppointments(dateTime).build();
     }
 
+    @Test
+    public void completion_bothStatuses_visibleInRowsAndNarrowDetails() throws Exception {
+        onFxThread(() -> {
+            for (boolean done : List.of(false, true)) {
+                Appointment appointment = new Appointment(LocalDate.now().minusDays(1).toString())
+                        .withNumber(1).withDone(done);
+                Patient patient = new PatientBuilder().withSchedule(new AppointmentSchedule(List.of(appointment)))
+                        .build();
+                AppointmentRow row = new AppointmentRow(new AppointmentPage.Entry(1, entry(patient)),
+                        LocalDateTime.now());
+                StackPane rowRoot = new StackPane(row.getRoot());
+                styleAndLayout(rowRoot, 500);
+                assertEquals(done ? "Done" : "Undone", label(rowRoot, ".appointment-entry-status").getText());
+                assertEquals(AppointmentFormatter.NO_TIME, label(rowRoot, ".appointment-entry-no-time").getText());
+
+                ModelManager model = model(patient);
+                PatientDetailPanel details = new PatientDetailPanel(model.getLaiNurse().getPatientList(),
+                        model.getAppointmentList(), "Choose a patient");
+                details.show(patient.getId(), Optional.of(appointment));
+                StackPane detailRoot = new StackPane(details.getRoot());
+                styleAndLayout(detailRoot, 320);
+                Label status = label(detailRoot, ".detail-appointment-status");
+                assertEquals(done ? "Done" : "Undone", status.getText());
+                assertTrue(status.isVisible());
+                assertTrue(status.isWrapText());
+                assertTrue(status.getBoundsInLocal().getWidth() >= status.prefWidth(-1));
+            }
+        });
+    }
+
+    @Test
+    public void completion_hiddenOtherPatient_refreshesClashesAndLabelsInBothDirections() throws Exception {
+        onFxThread(() -> {
+            LocalDate today = LocalDate.now();
+            Patient alex = patient("S1234567A", today + " 09:30");
+            Patient ben = patient("S2345678B", today + " 09:30");
+            ModelManager model = model(alex, ben);
+            AppointmentListPanel list = new AppointmentListPanel(model.getAppointmentList(), ignored -> { }, () -> { });
+            list.showRange(new AppointmentRange(today, today, alex.getId()));
+            PatientDetailPanel details = new PatientDetailPanel(model.getLaiNurse().getPatientList(),
+                    model.getAppointmentList(), "Choose a patient");
+            details.show(alex.getId(), Optional.of(entry(alex).getAppointment()));
+            StackPane listRoot = new StackPane(list.getRoot());
+            StackPane detailRoot = new StackPane(details.getRoot());
+            styleAndLayout(listRoot, 800);
+            styleAndLayout(detailRoot, 320);
+            assertEquals(CLASH_COLOR, label(listRoot, ".appointment-entry-time").getTextFill());
+
+            Patient doneBen = withDone(ben, 1, true);
+            model.setPatient(ben, doneBen);
+            styleAndLayout(listRoot, 800);
+            styleAndLayout(detailRoot, 320);
+            assertTrue(listRoot.lookupAll(".appointment-day-clash").isEmpty());
+            assertNotEquals(CLASH_COLOR, label(listRoot, ".appointment-entry-time").getTextFill());
+            assertTrue(detailRoot.lookupAll(".detail-appointment-clash").isEmpty());
+
+            model.setPatient(doneBen, ben);
+            styleAndLayout(listRoot, 800);
+            styleAndLayout(detailRoot, 320);
+            assertEquals(CLASH_COLOR, label(listRoot, ".appointment-entry-time").getTextFill());
+            assertFalse(detailRoot.lookupAll(".detail-appointment-clash").isEmpty());
+
+            model.setPatient(alex, withDone(alex, 1, true));
+            styleAndLayout(listRoot, 800);
+            styleAndLayout(detailRoot, 320);
+            assertEquals("Done", label(listRoot, ".appointment-entry-status").getText());
+            assertEquals("Done", label(detailRoot, ".detail-appointment-status").getText());
+            assertTrue(listRoot.lookupAll(".appointment-entry-clash").isEmpty());
+            assertTrue(detailRoot.lookupAll(".detail-appointment-clash").isEmpty());
+        });
+    }
+
+    @Test
+    public void completion_patientNextAppointment_refreshesAndHidesWhenAllDone() throws Exception {
+        onFxThread(() -> {
+            LocalDate tomorrow = LocalDate.now().plusDays(1);
+            Patient patient = new PatientBuilder().withAppointments(tomorrow.toString(),
+                    tomorrow.plusDays(1).toString()).build();
+            ModelManager model = model(patient);
+            PatientListPanel panel = new PatientListPanel(model.getFilteredPatientList(),
+                    model.getLaiNurse().getPatientList(), ignored -> { }, () -> { });
+            StackPane root = new StackPane(panel.getRoot());
+            styleAndLayout(root, 800);
+            assertEquals("Tomorrow", label(root, ".patient-row-appointment").getText());
+            Patient firstDone = withDone(patient, 1, true);
+            model.setPatient(patient, firstDone);
+            styleAndLayout(root, 800);
+            assertEquals(AppointmentFormatter.formatShort(firstDone.getSchedule().findByNumber(2).orElseThrow(),
+                    tomorrow.minusDays(1)), label(root, ".patient-row-appointment").getText());
+            Patient allDone = withDone(firstDone, 2, true);
+            model.setPatient(firstDone, allDone);
+            styleAndLayout(root, 800);
+            assertFalse(label(root, ".patient-row-appointment").isVisible());
+            model.setPatient(allDone, patient);
+            styleAndLayout(root, 800);
+            assertEquals("Tomorrow", label(root, ".patient-row-appointment").getText());
+            assertTrue(label(root, ".patient-row-appointment").isVisible());
+        });
+    }
+
+    private static Patient withDone(Patient patient, int number, boolean done) {
+        Appointment appointment = patient.getSchedule().findByNumber(number).orElseThrow();
+        return new PatientBuilder(patient).withSchedule(patient.getSchedule().remove(appointment)
+                .add(appointment.withDone(done))).build();
+    }
+
     private static ModelManager model(Patient... patients) {
         LaiNurse data = new LaiNurse();
         for (Patient patient : patients) {
@@ -146,8 +252,11 @@ public class AppointmentClashUiTest {
     }
 
     private static void styleAndLayout(StackPane root, double width) {
-        Scene scene = new Scene(root, width, 600);
-        scene.getStylesheets().add(AppointmentClashUiTest.class.getResource("/view/DarkTheme.css").toExternalForm());
+        if (root.getScene() == null) {
+            Scene scene = new Scene(root, width, 600);
+            scene.getStylesheets().add(AppointmentClashUiTest.class
+                    .getResource("/view/DarkTheme.css").toExternalForm());
+        }
         root.resize(width, 600);
         root.applyCss();
         root.layout();

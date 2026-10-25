@@ -15,11 +15,11 @@ or --details or both])
         if () then ([selector resolves to
 exactly one appointment])
             :Build the edited appointment from NEW and
-            DETAILS, keeping its number and values not given;
+            DETAILS, keeping its number, completion status
+            and values not given;
             :Replace the old appointment
             with the edited one;
-            if () then ([another visit has the
-same date and optional time])
+            if () then ([two undone visits clash])
                 :Append a warning naming the
                 other patients and appointment numbers;
             endif

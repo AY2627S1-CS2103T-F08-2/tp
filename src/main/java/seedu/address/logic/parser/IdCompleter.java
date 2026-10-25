@@ -13,6 +13,8 @@ import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.MarkAppointmentCommand;
+import seedu.address.logic.commands.UnmarkAppointmentCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.model.patient.PatientId;
 
@@ -26,10 +28,11 @@ public class IdCompleter {
     private static final Set<String> COMMANDS_TAKING_ONLY_ID =
             Set.of(ViewCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD);
 
-    /** Commands whose first parameter is the ID of an existing patient, and which take options after it. */
+    /** Commands whose first parameter is the ID of an existing patient, with further arguments after it. */
     private static final Set<String> COMMANDS_TAKING_ID_FIRST =
             Set.of(EditCommand.COMMAND_WORD, EditAppointmentCommand.COMMAND_WORD,
-                    AddAppointmentCommand.COMMAND_WORD, DeleteAppointmentCommand.COMMAND_WORD);
+                    AddAppointmentCommand.COMMAND_WORD, DeleteAppointmentCommand.COMMAND_WORD,
+                    MarkAppointmentCommand.COMMAND_WORD, UnmarkAppointmentCommand.COMMAND_WORD);
 
     /**
      * A command word, optionally followed by whitespace and the start of an ID, and then optionally by the rest of

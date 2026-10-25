@@ -21,6 +21,16 @@ public class IdCompleterTest {
     }
 
     @Test
+    public void complete_statusCommands_keepsAppointmentNumber() {
+        for (String command : List.of("markappt", "unmarkappt")) {
+            assertEquals(List.of(command + " S1234567A 2", command + " S1999999C 2"),
+                    IdCompleter.complete(command + " s1 2", IDS));
+            assertEquals(List.of(command + " S1234567A", command + " T7654321B", command + " S1999999C"),
+                    IdCompleter.complete(command, IDS));
+        }
+    }
+
+    @Test
     public void complete_lowercasePartialId_matchesIgnoringCase() {
         assertEquals(List.of("view T7654321B"), IdCompleter.complete("view t76", IDS));
     }

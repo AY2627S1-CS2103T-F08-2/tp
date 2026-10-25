@@ -74,6 +74,22 @@ public class AppointmentPageTest {
     }
 
     @Test
+    public void completion_keepsDateBasedSelectionOrderAndCounts() {
+        Appointment done = TODAY_BEN.getAppointment().withDone(true);
+        Patient patient = new PatientBuilder(BEN).withSchedule(BEN.getSchedule()
+                .remove(TODAY_BEN.getAppointment()).add(done)).build();
+        PatientAppointment doneEntry = new PatientAppointment(patient, done);
+        AppointmentPage page = AppointmentPage.ofRange(TODAY, TODAY, List.of(TODAY_ALEX, doneEntry), NOW);
+        assertEquals(2, page.getEntryCount());
+        assertEquals(Optional.of(doneEntry), page.getEntryAt(page.defaultEntryIndex().orElseThrow()));
+        assertEquals(List.of(new DayHeading(TODAY, 2), new Entry(1, doneEntry), new Entry(2, TODAY_ALEX)),
+                page.getRows());
+        DetailAppointments details = DetailAppointments.of(patient.getSchedule(), NOW, Optional.of(done));
+        assertEquals(List.of(done), details.getUpcoming());
+        assertEquals(1, details.getPastCount());
+    }
+
+    @Test
     public void getRows_emptyWeek_onlyHeadings() {
         AppointmentPage page = AppointmentPage.ofWeek(THIS_WEEK.next().next(), ALL, NOW);
         assertEquals(7, page.getRows().size());

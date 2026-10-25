@@ -130,7 +130,8 @@ its starting message after the patient is deleted, whatever the filter on the di
 An appointment has passed once its time today has gone by, or once its day is over if it has no time.
 `AppointmentFormatter#hasPassed` holds this rule, and the three places that show appointments use it:
 
-* A patient's row shows their first appointment that has not passed, from `AppointmentFormatter#findFirstNotPassed`.
+* A patient's row filters out done visits, then shows their first appointment that has not passed, from
+  `AppointmentFormatter#findFirstNotPassed`. Completion does not affect the other date-based rules below.
 * `DetailAppointments` picks the appointments that the details list: every one that has not passed, and the latest ten
   that have, plus a marked older one.
 * The appointment list greys out the appointments that have passed.
@@ -166,8 +167,9 @@ When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for 
 command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
 does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
 rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit`, `addappt`, `editappt` and `deleteappt` take the ID first and options after it, so
-`IdCompleter` completes the word after the command word and keeps the options. `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
+end the command. `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt` take the ID first, so
+`IdCompleter` completes the word after the command word and keeps later options or appointment numbers.
+`CommandBox` also keeps a `CommandHistory` of the commands entered since the app
 started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
 The keyboard focus is in one of three areas, given by `FocusArea`: the command box, and in the view that is shown, the
@@ -407,9 +409,12 @@ removes one. Each change returns a new `AppointmentSchedule` instead of modifyin
 so a failed command leaves the patient unchanged.
 
 **Identity and order.** An `Appointment` has a patient-local immutable positive number, a date, optional time
-and optional details. Existing date/time constructors create unnumbered inputs. `AppointmentSchedule` assigns
+and optional details, plus a manually set completion boolean. Existing date/time constructors create unnumbered,
+undone inputs. `AppointmentSchedule` assigns
 missing numbers before exposing its immutable list. `isSameAppointment` compares assigned numbers; `equals` and
-`hashCode` also compare date/time and details. `hasSameDateTime` handles timestamp matching independently of identity.
+`hashCode` also compare date/time, details and completion. `hasSameDateTime` handles timestamp matching independently
+of identity and completion. `isDone()` reads completion; `withDone(boolean)` copies the appointment with a new status,
+preserving every other value. Assigning a number also preserves completion. Ordering and `toString()` remain date-based.
 `PatientAppointment#isSameEntry` combines patient ID and appointment number, so moving a visit preserves selection.
 The entry constructor verifies that the patient owns that exact numbered appointment.
 
@@ -419,19 +424,23 @@ numbers are rejected before sorting; timestamp duplicates are preserved. `addapp
 number plus one, starting at 1. Deletion leaves gaps and does not reserve deleted numbers; reaching the maximum
 integer number produces a `CommandException` before mutation.
 
-**Storage and compatibility.** `JsonAdaptedAppointment` saves `number`, `dateTime` and optional `details`, such as
-`{"number": 2, "dateTime": "2026-10-05 09:30", "details": "INSULIN REVIEW"}`. It accepts legacy strings and objects
+**Storage and compatibility.** `JsonAdaptedAppointment` saves `number`, `dateTime`, boolean `done` and optional
+`details`, such as `{"number": 2, "dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`.
+It accepts legacy strings and objects
 without numbers. Missing numbers are assigned in chronological order, preserving input order for equal timestamps,
 using the lowest unused positive numbers while retaining every explicit number. A local JSON-node creator rejects
 non-integer, null, non-positive and out-of-range number values without changing global Jackson settings.
+Missing `done` fields default to false. An explicit `done` must be a JSON boolean: null, strings, numbers and
+other JSON types produce an `IllegalValueException`, without coercion. Both statuses persist across restarts.
 `JsonAdaptedPatient` translates duplicate-number validation into the existing `IllegalValueException` loading path.
 Migration does not save immediately; the normal save after a successful command persists the assigned numbers.
 `JsonSerializableLaiNurse` continues to require the `patients` key.
 
 **Clashes.** `AppointmentClashes.find` compares exact date and optional time over the unfiltered appointment list,
-excluding only the target's patient ID and number. Two date-only visits on one day clash; a date-only visit and a
+excluding the target's patient ID and number and every done visit. A done target has no clashes. Two date-only
+undone visits on one day clash; a date-only visit and a
 timed visit do not. Both commands and UI use this query. Clashes never reject commands or data files, and are not
-stored as flags. Add/edit success messages include every conflicting patient and appointment number.
+stored as flags. Add/edit/unmark success messages include every conflicting patient and appointment number.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
@@ -446,8 +455,8 @@ bring. Both follow `MedicalHistory`: `TextNormalizer` trims the text, collapses 
 blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
 
 The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
-in a narrow panel. `AppointmentRow` shows an appointment's details on a second line under its patient, and only when it
-has some.
+in a narrow panel. `AppointmentRow` shows its Done/Undone status under its patient and its details below that,
+only when it has some. The detail panel shows the same status under the appointment's date.
 
 `add` and `edit` accept the optional, single-valued `--notes` option defined by `CliSyntax.PREFIX_NOTES`.
 `ParserUtil.parseNotes` validates it using `Notes.isValidNotes` and throws a `ParseException` with
@@ -468,10 +477,11 @@ option checks. `ParserUtil.parseAppointmentNumber` rejects signs, fractions and 
 lookup uses `findAtDateTime` and requires exactly one match. An ambiguous timestamp lists matching numbers and
 details without mutation. Missing timestamps retain numbered same-day suggestions.
 
-An edit builds the replacement with the old appointment number and preserves date/time or details not supplied.
+An edit builds the replacement with the old appointment number and completion status, and preserves date/time
+or details not supplied.
 It removes the old identity, adds the replacement and uses `Model#setPatient()` and `Navigation.toAppointment`.
 Moving onto another visit is permitted. After updating the model, `Messages.formatClashWarning` describes all
-other visits at the resulting time, including on details-only edits.
+other undone visits at the resulting time when the edited appointment is undone, including on details-only edits.
 
 The activity diagram below shows the checks that `editappt` makes, in order. Every error leaves the patient and the
 data file unchanged.
@@ -496,6 +506,27 @@ has no `Navigation`, while `getView()` still shows the appointments view, so `Ma
 the selection cleared, and `AppointmentListPanel` keeps the page that was shown; the deleted row disappears from
 it. `Model#setPatient()` does not change the filter
 of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there, as with `addappt`.
+
+### Marking and unmarking appointments
+
+`markappt ID NUMBER` sets an appointment to done; `unmarkappt ID NUMBER` sets it back to undone. Each has its own
+command and parser. The parsers require exactly two positional arguments, reuse `ParserUtil.parseId` and
+`parseAppointmentNumber`, and reject date/time selectors and extra arguments. Both commands are registered in
+`LaiNurseParser`, `HelpCommand` and `IdCompleter`.
+
+The package-private `AppointmentStatusCommand` base shares execution. It finds the patient in the full model and
+resolves the number through `AppointmentLookup.Target`. A missing patient, missing appointment or repeated status
+throws a `CommandException` before any mutation. The base uses `withDone`, replaces the appointment in the immutable
+schedule and calls `Model#setPatient`, preserving the patient filter. Assertions check that identity, date/time and
+details survive; `FINE` logging records rejection or success without appointment details.
+
+The result navigates to the updated appointment using the same page-preservation behavior as `editappt`. Unmarking
+appends `Messages.formatClashWarning` after the update. The normal `LogicManager` save persists completion. Existing
+model listeners redraw status labels, next-appointment summaries and clashes, including conflicts with hidden
+patients. Done visits remain visible and keep their date-based grouping, counts, ordering and automatic selection.
+Both commands allow any date; editing preserves completion until an explicit status command changes it.
+
+<img src="images/MarkUnmarkAppointmentActivityDiagram.png" width="450" />
 
 ### Viewing appointments by date
 
@@ -585,7 +616,7 @@ Each command navigates as follows:
 | `add`, `edit`, `view` | `Navigation.toPatient` of the patient that they add, edit or show. All three show all patients first, so that patient is always in the list. |
 | `list`, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
 | `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt` |
-| `addappt`, `editappt` | `Navigation.toAppointment` of the added or edited appointment, with no range, so the page shown stays if it has the appointment |
+| `addappt`, `editappt`, `markappt`, `unmarkappt` | `Navigation.toAppointment` of the changed appointment, with no range, so the page shown stays if it has the appointment |
 | `delete`, `deleteappt`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
 | `help`, `exit` | no navigation: keeps the view and the selection |
 
@@ -736,6 +767,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | delete a patient I no longer care for                                                                | my list shows only my current patients                       |
 | `* * *`  | home-based nurse | add an appointment for a patient with a date and time                                                | I can plan my home visits in advance                         |
 | `* * *`  | home-based nurse | reschedule an appointment in one command                                                            | I don't have to delete and re-add it                         |
+| `* * *`  | home-based nurse | mark an appointment as done by patient ID and appointment number                                      | I can record completed visits                               |
+| `* * *`  | home-based nurse | unmark a done appointment                                                                            | I can correct its completion status                         |
 | `* * *`  | home-based nurse | view patients with appointments on a specific date                                                   | I can plan my visits for that day                            |
 | `* * *`  | home-based nurse | view patients with appointments over the next few days or weeks                                      | I know how busy I'll be and can plan ahead                   |
 | `* * *`  | home-based nurse | record and view a patient's medical profile (conditions, allergies, medications, next-of-kin)        | I know their health details and whom to call in an emergency |
@@ -1105,7 +1138,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 2a. Another appointment has the given date and time, including one of this patient's visits.
+* 2a. Another undone appointment has the given date and time, including one of this patient's visits.
 
     * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other patients and visit numbers.
 
@@ -1146,6 +1179,31 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 1c1. LaiNurse shows an error with numbered matching visits or same-day suggestions, where applicable.
 
       Use case resumes at step 1.
+
+**Use case: UC11 - Mark or unmark an appointment**
+
+**MSS**
+
+1. Nurse requests to mark or unmark an appointment using its patient ID and appointment number.
+2. LaiNurse changes only the appointment's completion status and saves the data.
+3. LaiNurse shows and selects the updated appointment, with its Done/Undone label.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The arguments are missing, invalid or include extra parameters.
+    * 1a1. LaiNurse displays an error describing the valid format or appointment number.
+    * Use case resumes at step 1.
+* 1b. The patient or appointment does not exist.
+    * 1b1. LaiNurse displays the existing missing-patient or missing-appointment error.
+    * Use case resumes at step 1.
+* 1c. The appointment already has the requested status.
+    * 1c1. LaiNurse reports the existing status and changes nothing.
+    * Use case resumes at step 1.
+* 2a. Unmarking restores a clash with another undone visit.
+    * 2a1. LaiNurse keeps the change and appends the clash warning, including hidden patients.
+    * Use case resumes at step 3.
 
 *{More to be added}*
 
@@ -1873,11 +1931,55 @@ testers are expected to do more *exploratory* testing.
 1. Resize to a narrow window. Expected: `#N`, dates, times and long details remain readable with wrapping;
    page positions remain distinct from patient-local appointment numbers.
 
+### Marking and unmarking appointments
+
+1. Completion, preservation and persistence
+
+    1. Prerequisites: Start with sample data. Alex Yeoh (`S1234567A`) has appointments #1 and #2.
+    1. Test case: `markappt S1234567A 2`<br>
+       Expected: Appointment #2 shows **Done** in the list and details and is selected in **Appointments**.
+       Its number, date, time and details stay unchanged. Appointment #1 stays undone. If #2 is in the future,
+       it is no longer eligible for Alex's next-appointment summary, but stays in its date-based group.
+    1. Test case: `markappt S1234567A 2` again<br>
+       Expected: An already-done error; model, page, selection and saved file stay unchanged.
+    1. Test case: `editappt S1234567A 2 --to 2099-12-31 --details Follow up`, then restart<br>
+       Expected: #2 keeps **Done**, its number and the new details after rescheduling and restart.
+    1. Test case: `unmarkappt S1234567A 2`, then the same command again<br>
+       Expected: The first command changes only the status to **Undone** and selects #2. The second reports
+       already undone and changes nothing. Restarting preserves the undone status.
+
+1. Clashes, hidden patients and page preservation
+
+    1. Prerequisites: Start with sample data; use its Monday date for `MON`.
+    1. Test case: `addappt S2345678B --appt MON 09:30`, then `viewappt --id S1234567A`<br>
+       Expected: Alex's #1 clashes with Bernice's #2, even though Bernice is hidden on this appointment page.
+    1. Test case: `markappt S2345678B 2`, then `viewappt --id S1234567A`<br>
+       Expected: Alex's #1 and the day heading are no longer red. Bernice's visit remains visible when viewed.
+    1. Test case: `unmarkappt S2345678B 2`<br>
+       Expected: The warning names Alex and #1. Both undone visits clash again; the updated visit is selected.
+    1. Test case: `viewappt --id S2345678B`, then `markappt S2345678B 2`<br>
+       Expected: The page stays, #2 remains selected and shows **Done**. The list and details update immediately,
+       including in a narrow window. Done status does not itself grey out a future visit.
+
+1. Invalid commands and completion
+
+    1. Test cases: `markappt S0000000Z 1`, `unmarkappt S1234567A 99`, `markappt S1234567A 0`,
+       `unmarkappt S1234567A 2147483648`, `markappt S1234567A`, `markappt S1234567A 1 extra`,
+       `unmarkappt S1234567A --appt MON`<br>
+       Expected: The applicable missing-patient, missing-number, number-constraint or syntax error; no changes.
+    1. Test case: type `markappt s12 2`, then press Tab<br>
+       Expected: The patient ID is completed and the appointment number is kept. Try `unmarkappt` likewise.
+    1. Test cases: `help markappt`, `help unmarkappt`<br>
+       Expected: The correct two-positional-argument syntax and examples appear.
+    1. Test case: load a legacy file without `done` fields<br>
+       Expected: Every visit starts undone. Saving writes booleans; an explicit non-boolean `done` value is
+       rejected through the existing invalid-data loading behavior.
+
 ### Viewing help and command instructions
 
 1. Command overview via CLI
     * Test case: `help`
-        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `clear`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `view`, `viewappt`) is displayed in the result box.
+        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `clear`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `markappt`, `unmarkappt`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
     * Test case: `help add`

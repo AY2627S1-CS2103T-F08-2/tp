@@ -16,7 +16,7 @@ import seedu.address.commons.util.TextNormalizer;
 /**
  * Represents a patient's appointment, identified within that patient by its number.
  * Date/time constructors create unnumbered inputs; a schedule assigns numbers before exposing appointments.
- * Ordered by date, optional time, then number. Full equality also compares the date/time and details.
+ * Ordered by date, optional time, then number. Full equality also compares the date/time, details and completion.
  * Guarantees: immutable; is valid as declared in {@link #isValidAppointment(String)}
  */
 public class Appointment implements Comparable<Appointment> {
@@ -33,6 +33,7 @@ public class Appointment implements Comparable<Appointment> {
     private final LocalTime time;
     private final AppointmentDetails details; // null if none
     private final Integer number; // null for an unnumbered input
+    private final boolean done;
 
     /**
      * Constructs an {@code Appointment} with no details.
@@ -58,12 +59,16 @@ public class Appointment implements Comparable<Appointment> {
      */
     public Appointment(int number, String appointment, Optional<AppointmentDetails> details) {
         this(Integer.valueOf(number), appointment, details);
-        checkArgument(number > 0, MESSAGE_NUMBER_CONSTRAINTS);
     }
 
     private Appointment(Integer number, String appointment, Optional<AppointmentDetails> details) {
+        this(number, appointment, details, false);
+    }
+
+    private Appointment(Integer number, String appointment, Optional<AppointmentDetails> details, boolean done) {
         requireNonNull(appointment);
         requireNonNull(details);
+        checkArgument(number == null || number > 0, MESSAGE_NUMBER_CONSTRAINTS);
         checkArgument(isValidAppointment(appointment), MESSAGE_CONSTRAINTS);
         value = TextNormalizer.normalize(appointment);
         String[] parts = value.split(" ");
@@ -71,6 +76,7 @@ public class Appointment implements Comparable<Appointment> {
         time = parts.length == 2 ? DateUtil.parseTime(parts[1]) : null;
         this.details = details.orElse(null);
         this.number = number;
+        this.done = done;
     }
 
     /**
@@ -97,7 +103,21 @@ public class Appointment implements Comparable<Appointment> {
      */
     public Appointment withNumber(int number) {
         checkArgument(!isNumbered() || this.number == number, "An appointment's number cannot change.");
-        return isNumbered() ? this : new Appointment(number, value, getDetails());
+        return isNumbered() ? this : new Appointment(Integer.valueOf(number), value, getDetails(), done);
+    }
+
+    /**
+     * Returns whether this appointment has been marked as done, independently of its date and time.
+     */
+    public boolean isDone() {
+        return done;
+    }
+
+    /**
+     * Returns a copy with the given completion status, preserving its number, date, time and details.
+     */
+    public Appointment withDone(boolean done) {
+        return this.done == done ? this : new Appointment(number, value, getDetails(), done);
     }
 
     /**
@@ -158,7 +178,7 @@ public class Appointment implements Comparable<Appointment> {
     /**
      * Compares appointments by date, then by time, then by number (unnumbered inputs first).
      * An appointment with only a date comes before any appointment with a time on the same day.
-     * The details are not compared, so this order is inconsistent with {@link #equals(Object)}.
+     * Details and completion are not compared, so this order is inconsistent with {@link #equals(Object)}.
      */
     @Override
     public int compareTo(Appointment other) {
@@ -185,12 +205,12 @@ public class Appointment implements Comparable<Appointment> {
         }
 
         return Objects.equals(number, otherAppointment.number) && value.equals(otherAppointment.value)
-                && Objects.equals(details, otherAppointment.details);
+                && Objects.equals(details, otherAppointment.details) && done == otherAppointment.done;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(number, value, details);
+        return Objects.hash(number, value, details, done);
     }
 
 }

@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
@@ -15,6 +16,40 @@ import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.Patient;
 
 public class JsonAdaptedAppointmentTest {
+
+    @Test
+    public void toModelType_completion_roundTripsBothStatusesWithDetailsAndNumber() throws Exception {
+        for (boolean done : List.of(false, true)) {
+            Patient patient = readPatient("[{\"number\":7,\"dateTime\":\"2026-10-05 09:30\","
+                    + "\"details\":\"Insulin review\",\"done\":" + done + "}]");
+            Appointment appointment = patient.getSchedule().findByNumber(7).orElseThrow();
+            assertEquals(done, appointment.isDone());
+            assertEquals("INSULIN REVIEW", appointment.getDetails().orElseThrow().value);
+            String json = JsonUtil.toJsonString(new JsonAdaptedPatient(patient));
+            assertTrue(json.contains("\"done\" : " + done));
+            assertEquals(patient, JsonUtil.fromJsonString(json, JsonAdaptedPatient.class).toModelType());
+        }
+    }
+
+    @Test
+    public void toModelType_missingCompletion_defaultsToUndoneAndPreservesNumbering() throws Exception {
+        Patient patient = readPatient("[\"2026-10-05\",{\"dateTime\":\"2026-10-06\"},"
+                + "{\"number\":7,\"dateTime\":\"2026-10-07\"}]");
+        assertEquals(List.of(1, 2, 7), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
+        patient.getSchedule().asList().forEach(appointment -> assertFalse(appointment.isDone()));
+        Patient doneLegacy = readPatient("[{\"dateTime\":\"2026-10-05\",\"done\":true}]");
+        assertTrue(doneLegacy.getSchedule().findByNumber(1).orElseThrow().isDone());
+    }
+
+    @Test
+    public void toModelType_invalidCompletion_rejectsWithoutCoercion() throws Exception {
+        for (String done : List.of("null", "0", "1", "\"true\"", "\"false\"", "{}", "[]")) {
+            String json = "{\"dateTime\":\"2026-10-05\",\"done\":" + done + "}";
+            JsonAdaptedAppointment adapted = JsonUtil.fromJsonString(json, JsonAdaptedAppointment.class);
+            assertThrows(IllegalValueException.class, JsonAdaptedAppointment.MESSAGE_DONE_CONSTRAINTS,
+                    adapted::toModelType);
+        }
+    }
 
     @Test
     public void toModelType_invalidNumber_rejectsWithoutCoercion() throws Exception {

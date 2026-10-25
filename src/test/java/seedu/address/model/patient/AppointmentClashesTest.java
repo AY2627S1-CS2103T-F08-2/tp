@@ -50,4 +50,18 @@ public class AppointmentClashesTest {
     private static PatientAppointment entry(Patient patient, int number) {
         return new PatientAppointment(patient, patient.getSchedule().findByNumber(number).orElseThrow());
     }
+
+    @Test
+    public void find_doneAppointments_neitherCauseNorReceiveClashes() {
+        Appointment first = new Appointment("2026-10-05 09:30").withNumber(1);
+        Appointment second = new Appointment("2026-10-05 09:30").withNumber(2).withDone(true);
+        Appointment third = new Appointment("2026-10-05 09:30").withNumber(3);
+        Patient patient = new PatientBuilder().withSchedule(new AppointmentSchedule(List.of(first, second, third)))
+                .build();
+        List<PatientAppointment> entries = patient.getSchedule().asList().stream()
+                .map(appointment -> new PatientAppointment(patient, appointment)).toList();
+        assertEquals(List.of(entry(patient, 3)), AppointmentClashes.find(entries, entry(patient, 1)));
+        assertEquals(List.of(), AppointmentClashes.find(entries, entry(patient, 2)));
+        assertEquals(List.of(entry(patient, 1)), AppointmentClashes.find(entries, entry(patient, 3)));
+    }
 }

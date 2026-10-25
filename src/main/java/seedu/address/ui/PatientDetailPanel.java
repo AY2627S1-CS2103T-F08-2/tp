@@ -234,7 +234,7 @@ public class PatientDetailPanel extends UiPart<Region> {
     }
 
     /**
-     * Returns one row of the appointments: the date, the time, then the appointment's details, if it has any,
+     * Returns one row of the appointments: the date and completion status, the time, then optional details,
      * which wrap onto more lines if they are long. An appointment that has passed is dimmed, also one earlier
      * today. {@link #updateRowLayout()} decides how the parts share the row, so that it is never wider than the
      * panel.
@@ -248,6 +248,11 @@ public class PatientDetailPanel extends UiPart<Region> {
         date.setMinHeight(Region.USE_PREF_SIZE);
         date.minWidthProperty().bind(dateWidth);
         date.prefWidthProperty().bind(dateWidth);
+        Label status = new Label(AppointmentFormatter.formatStatus(appointment));
+        status.getStyleClass().addAll("detail-appointment-status", "detail-appointment-details");
+        status.setWrapText(true);
+        status.setMinHeight(Region.USE_PREF_SIZE);
+        status.prefWidthProperty().bind(dateWidth);
         Label time = new Label(AppointmentFormatter.formatDetailTime(appointment));
         time.getStyleClass().add(appointment.getTime().isPresent()
                 ? "detail-appointment-time" : "detail-appointment-no-time");
@@ -265,7 +270,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         rowParts.add(timeAndDetails);
         HBox.setHgrow(timeAndDetails.grid(), Priority.ALWAYS);
 
-        HBox row = new HBox(ROW_SPACING, date, timeAndDetails.grid());
+        HBox row = new HBox(ROW_SPACING, new VBox(2, date, status), timeAndDetails.grid());
         row.getStyleClass().add(ROW_STYLE_CLASS);
         if (AppointmentFormatter.hasPassed(appointment, now)) {
             row.getStyleClass().add(PAST_STYLE_CLASS);

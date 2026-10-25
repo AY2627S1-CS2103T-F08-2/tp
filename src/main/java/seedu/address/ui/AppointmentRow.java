@@ -10,7 +10,7 @@ import seedu.address.model.patient.Patient;
 
 /**
  * A UI component that displays one appointment as a row of the appointment list: its number on the page, its time,
- * its patient's name and ID, and under them the appointment's details, if it has any. An appointment that has
+ * its patient's name and ID, and under them its completion status and optional details. An appointment that has
  * passed is greyed out. {@link AppointmentListPanel} draws the day headings between the rows.
  */
 public class AppointmentRow extends UiPart<Region> {
@@ -28,6 +28,8 @@ public class AppointmentRow extends UiPart<Region> {
     private Label name;
     @FXML
     private Label patientId;
+    @FXML
+    private Label status;
     @FXML
     private Label details;
 
@@ -50,8 +52,9 @@ public class AppointmentRow extends UiPart<Region> {
         time.getStyleClass().add(appointment.getTime().isPresent() ? TIME_STYLE_CLASS : NO_TIME_STYLE_CLASS);
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value + " #" + appointment.getNumber());
+        status.setText(AppointmentFormatter.formatStatus(appointment));
         details.setText(appointment.getDetails().map(Object::toString).orElse(""));
-        // A row with no details stays one line high
+        // Hide absent details without leaving an empty line below the status
         details.setVisible(appointment.getDetails().isPresent());
         details.setManaged(appointment.getDetails().isPresent());
         if (AppointmentFormatter.hasPassed(appointment, now)) {

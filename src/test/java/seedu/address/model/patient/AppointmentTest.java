@@ -14,6 +14,37 @@ import org.junit.jupiter.api.Test;
 public class AppointmentTest {
 
     @Test
+    public void withDone_preservesValuesAndOriginal() {
+        Appointment original = new Appointment(7, "2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Bring insulin pen")));
+        Appointment done = original.withDone(true);
+        assertFalse(original.isDone());
+        assertTrue(done.isDone());
+        assertEquals(7, done.getNumber());
+        assertEquals(original.getDate(), done.getDate());
+        assertEquals(original.getTime(), done.getTime());
+        assertEquals(original.getDetails(), done.getDetails());
+        assertEquals(original.toString(), done.toString());
+        assertTrue(original.isSameAppointment(done));
+        assertEquals(0, original.compareTo(done));
+        assertFalse(original.equals(done));
+        assertEquals(original, done.withDone(false));
+        assertEquals(done, original.withDone(true));
+        assertEquals(done.hashCode(), original.withDone(true).hashCode());
+    }
+
+    @Test
+    public void withNumber_doneInput_preservesCompletion() {
+        Appointment input = new Appointment("2026-10-05").withDone(true);
+        Appointment numbered = input.withNumber(3);
+        assertTrue(numbered.isDone());
+        assertFalse(input.isNumbered());
+        assertEquals(numbered, numbered.withNumber(3));
+        assertEquals(numbered, numbered.withDone(true));
+        assertEquals(3, numbered.getNumber());
+    }
+
+    @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new Appointment(null));
     }

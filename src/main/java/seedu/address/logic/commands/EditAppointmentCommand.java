@@ -32,7 +32,7 @@ public class EditAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "editappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the appointment of the patient with the "
-            + "given ID, using its number or an unambiguous date/time. Moving it keeps its number and details.\n"
+            + "given ID, using its number or an unambiguous date/time. Keeps its number and completion status.\n"
             + "Parameters: ID (NUMBER | " + PREFIX_APPOINTMENT + "DATE_OR_DATETIME) "
             + "[" + PREFIX_TO + "NEW_DATE_OR_DATETIME] "
             + "[" + PREFIX_DETAILS + "DETAILS]\n"
@@ -132,7 +132,7 @@ public class EditAppointmentCommand extends Command {
         assert oldAppointment.isNumbered();
         String dateTime = newDateTime.map(Appointment::toString).orElse(oldAppointment.toString());
         Optional<AppointmentDetails> details = newDetails.or(oldAppointment::getDetails);
-        return new Appointment(oldAppointment.getNumber(), dateTime, details);
+        return new Appointment(oldAppointment.getNumber(), dateTime, details).withDone(oldAppointment.isDone());
     }
 
     @Override
