@@ -351,12 +351,16 @@ This section describes some noteworthy details on how certain features are imple
 `FindCommandParser` recognizes the six patient-detail options defined in `CliSyntax`: ID, name, phone number, address,
 medical history and notes. It reuses `ArgumentTokenizer.normalizeOptionSeparators`, as `add` and `edit` do,
 then uses `ArgumentTokenizer` and `ArgumentMultimap` to extract values and reject
-duplicate options. At least one option is required, and every supplied value must be non-blank. Matching straight or
+duplicate options. `LaiNurseParser` translates every horizontal whitespace character, such as the non-breaking space
+pasted from formatted text, to a plain space before the command word is matched, so every command accepts them around
+options, IDs and values. At least one option is required, and every supplied value must be non-blank. Matching straight or
 curly double quotes surrounding a complete value are removed. Unknown options, unexpected preamble text, and malformed
 quotes cause a `ParseException` before the displayed list is changed. Words beginning with `--` remain reserved for
 options, including inside quoted values.
 
-`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by `TextNormalizer`. Each criterion
+`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by `TextNormalizer`, which like the
+command parser replaces horizontal spaces such as the non-breaking space with plain spaces before collapsing repeated
+whitespace. Each criterion
 is a literal, contiguous substring of its corresponding stored field. `countMatchingFields()` counts each matching
 supplied field once, and `test()` includes a patient when this count exceeds zero, preserving the OR search. Repeated
 occurrences of a substring in one field contribute only one match. Missing medical history or notes contributes no

@@ -27,6 +27,8 @@ public class ArgumentTokenizer {
      * Returns {@code args} with a single space on each side of every option, so that {@link #tokenize} recognizes
      * options separated by tabs or other whitespace, and options with no value at the end of {@code args}.
      * Every whitespace-delimited word starting with "--" must be one of {@code prefixes}.
+     * Horizontal spaces narrower or wider than a space, such as the non-breaking space pasted from formatted
+     * text, are left as they are here: the command parser translates them to spaces before parsing.
      *
      * @param invalidOptionMessage Message of the exception thrown for an unsupported option.
      * @throws ParseException if {@code args} contains an option that is not one of {@code prefixes}.

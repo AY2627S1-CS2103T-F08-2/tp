@@ -176,4 +176,16 @@ public class ArgumentTokenizerTest {
         assertThrows(ParseException.class, "invalid", () ->
                 ArgumentTokenizer.normalizeOptionSeparators("S1 --name=Alex", "invalid", name));
     }
+
+    @Test
+    public void normalizeOptionSeparators_narrowSpacesLeftToTheCommandParser() throws Exception {
+        Prefix name = new Prefix("--name ");
+        Prefix phone = new Prefix("--phone ");
+
+        // horizontal spaces such as the non-breaking space are not translated here; the command
+        // parser translates them before parsing, so a word they join is not passed over as an option
+        String narrowSpaced = "S1\u00A0--name\u00A0Alex\u00A0--phone\u00A09123";
+        assertEquals(narrowSpaced,
+                ArgumentTokenizer.normalizeOptionSeparators(narrowSpaced, "invalid", name, phone));
+    }
 }
