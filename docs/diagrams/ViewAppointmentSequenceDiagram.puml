@@ -6,13 +6,13 @@ box Logic LOGIC_COLOR_T1
 participant ":LogicManager" as LogicManager LOGIC_COLOR
 participant ":LaiNurseParser" as LaiNurseParser LOGIC_COLOR
 participant ":ViewAppointmentCommandParser" as ViewAppointmentCommandParser LOGIC_COLOR
-participant "i:PatientId" as PatientId LOGIC_COLOR
 participant "d:ViewAppointmentCommand" as ViewAppointmentCommand LOGIC_COLOR
-participant "inRange:AppointmentBetweenDatesPredicate" as AppointmentBetweenDatesPredicate LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
 
 box Model MODEL_COLOR_T1
+participant "i:PatientId" as PatientId MODEL_COLOR
+participant "inRange:AppointmentBetweenDatesPredicate" as AppointmentBetweenDatesPredicate MODEL_COLOR
 participant "m:Model" as Model MODEL_COLOR
 end box
 
@@ -71,20 +71,14 @@ activate Model
 Model --> ViewAppointmentCommand : p
 deactivate Model
 
-ViewAppointmentCommand -> Model : updateFilteredPatientList(candidate -> candidate.getId().equals(i) && inRange.test(candidate))
+ViewAppointmentCommand -> Model : updateFilteredPatientList(...)
 activate Model
 
 Model --> ViewAppointmentCommand
 deactivate Model
 
-ViewAppointmentCommand -> ViewAppointmentCommand : count p's appointments in range
-activate ViewAppointmentCommand
-
-ViewAppointmentCommand --> ViewAppointmentCommand : count
-deactivate ViewAppointmentCommand
-
 create CommandResult
-ViewAppointmentCommand -> CommandResult : CommandResult(message, new AppointmentRange(start, end, i))
+ViewAppointmentCommand -> CommandResult : CommandResult(..., AppointmentRange(start, end, i))
 activate CommandResult
 
 CommandResult --> ViewAppointmentCommand
