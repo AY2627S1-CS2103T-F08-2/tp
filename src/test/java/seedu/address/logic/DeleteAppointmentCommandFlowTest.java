@@ -3,7 +3,6 @@ package seedu.address.logic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Files;
@@ -65,7 +64,7 @@ public class DeleteAppointmentCommandFlowTest {
     public void execute_deleteTimedAppointment_persists() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(patient(ALEX_ID).getSchedule()
                         .remove(patient(ALEX_ID).getSchedule().findByNumber(1).orElseThrow())).build();
-        assertDeletePersisted("deleteappt S1234567A --appt 2026-10-05 09:30", expected,
+        assertDeletePersisted("deleteappt S1234567A 1", expected,
                 "2026-10-05 09:30; Details: INSULIN REVIEW");
     }
 
@@ -73,7 +72,7 @@ public class DeleteAppointmentCommandFlowTest {
     public void execute_deleteDateOnlyAppointment_persists() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
                 .withAppointment("2026-10-05 09:30", "Insulin review").build();
-        assertDeletePersisted("deleteappt s1234567a\t--appt\t2026-11-02", expected,
+        assertDeletePersisted("deleteappt s1234567a\t2", expected,
                 "2026-11-02; Details: MONTHLY BLOOD TEST");
     }
 
@@ -84,7 +83,7 @@ public class DeleteAppointmentCommandFlowTest {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(patient(ALEX_ID).getSchedule()
                         .remove(patient(ALEX_ID).getSchedule().findByNumber(1).orElseThrow())).build();
 
-        CommandResult result = logic.execute("deleteappt S1234567A --appt 2026-10-05 09:30");
+        CommandResult result = logic.execute("deleteappt S1234567A 1");
 
         assertEquals(expected, patient(ALEX_ID));
         assertEquals(Optional.of(View.APPOINTMENTS), result.getView());
@@ -94,29 +93,25 @@ public class DeleteAppointmentCommandFlowTest {
 
     @Test
     public void execute_missingAppointment_rejectedWithoutChanges() throws Exception {
-        // a date alone does not match the timed appointment on that day, which the error lists
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05",
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A 99",
                 CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
-                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE,
-                        "#1: 2026-10-05 09:30; Details: INSULIN REVIEW"));
-
-        // nothing on that day
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-20",
-                CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-20"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, ALEX_ID, 99));
     }
 
     @Test
     public void execute_invalidInput_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S0000000Z --appt 2026-10-05 09:30",
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S0000000Z 1",
                 CommandException.class, Messages.MESSAGE_INVALID_PATIENT_ID);
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A", ParseException.class, INVALID_FORMAT_MESSAGE);
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-02-30", ParseException.class,
-                Appointment.MESSAGE_CONSTRAINTS);
+        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648", "2026-10-05")) {
+            assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A " + number, ParseException.class,
+                    Appointment.MESSAGE_NUMBER_CONSTRAINTS);
+        }
         assertRejectedCommandLeavesDataUnchanged(
-                "deleteappt S1234567A --appt 2026-10-05 09:30 --appt 2026-11-02", ParseException.class,
-                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_APPOINTMENT));
+                "deleteappt S1234567A 1 --appt 2026-11-02", ParseException.class,
+                INVALID_FORMAT_MESSAGE);
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05", ParseException.class,
+                INVALID_FORMAT_MESSAGE);
     }
 
     /**
@@ -167,7 +162,7 @@ public class DeleteAppointmentCommandFlowTest {
     }
     @Test
     public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndNumbers() throws Exception {
-        logic.execute("addappt S1234567A --appt 2026-10-05 09:30");
+        logic.execute("addappt S1234567A 2026-10-05 09:30");
         CommandResult result = logic.execute("deleteappt S1234567A 1");
         assertEquals("Deleted appointment 1 of ALEX YEOH (S1234567A): "
                 + "2026-10-05 09:30; Details: INSULIN REVIEW", result.getFeedbackToUser());

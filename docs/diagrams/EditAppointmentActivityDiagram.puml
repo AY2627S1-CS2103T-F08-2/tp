@@ -3,7 +3,7 @@ skin rose
 skinparam ActivityFontSize 15
 skinparam ArrowFontSize 12
 start
-:User enters editappt ID (NUMBER or ~--appt OLD)
+:User enters editappt ID NUMBER
 [~--to NEW] [~--details DETAILS];
 
 'Since the beta syntax does not support placing the condition outside the
@@ -12,8 +12,7 @@ start
 if () then ([input is valid, with --to
 or --details or both])
     if () then ([a patient has ID])
-        if () then ([selector resolves to
-exactly one appointment])
+        if () then ([patient has appointment NUMBER])
             :Build the edited appointment from NEW and
             DETAILS, keeping its number, completion status
             and values not given;
@@ -28,8 +27,7 @@ exactly one appointment])
             select the edited appointment by identity;
             stop
         else ([else])
-            :Show missing-number or timestamp error,
-            listing numbered matches or same-day visits;
+            :Show missing appointment number error;
             stop
         endif
     else ([else])

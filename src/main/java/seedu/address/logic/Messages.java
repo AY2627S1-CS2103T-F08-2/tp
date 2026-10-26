@@ -41,11 +41,7 @@ public class Messages {
             "The --from date must not be after the --to date.";
     public static final String MESSAGE_DUPLICATE_FIELDS =
             "Multiple values specified for the following single-valued field(s): ";
-    public static final String MESSAGE_APPOINTMENT_NOT_FOUND = "Patient %1$s has no appointment on %2$s.";
-    public static final String MESSAGE_APPOINTMENTS_ON_DATE = " Their appointments on that day: %1$s.";
     public static final String MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND = "Patient %1$s has no appointment #%2$d.";
-    public static final String MESSAGE_APPOINTMENT_AMBIGUOUS = "Patient %1$s has several appointments on %2$s: %3$s. "
-            + "Use an appointment number instead of --appt.";
 
     /**
      * Returns an error message indicating the duplicate prefixes.
@@ -84,13 +80,6 @@ public class Messages {
      */
     public static String format(Appointment appointment) {
         return appointment + appointment.getDetails().map(details -> "; Details: " + details).orElse("");
-    }
-
-    /**
-     * Formats a stored appointment with its patient-local number.
-     */
-    public static String formatNumbered(Appointment appointment) {
-        return "#" + appointment.getNumber() + ": " + format(appointment);
     }
 
     /**

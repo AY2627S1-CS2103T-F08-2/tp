@@ -67,6 +67,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
+* An appointment date is written `yyyy-MM-dd`, such as `2026-10-05`, and a time, when you give one, `HH:mm`, such as `09:00`. The year has exactly four digits and no sign, and the month, day, hour and minute each have two digits. Dates such as `+12345-01-01` and `-2026-10-05` are rejected, and so are `2026-1-5` and a time such as `9:00`. This applies to `addappt`, the new date supplied to `editappt`, `viewappt`, and to appointments in the data file.
+
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 
 * A pasted horizontal space, such as the non-breaking space that formatted text inserts, counts as a space.
@@ -200,7 +202,6 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * A new patient starts with no appointments. Set their appointments with [`addappt`](#adding-an-appointment-addappt).
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
-* The `--appt` option that `add` accepted in earlier versions is gone. Typing it is rejected with a message that points to [`addappt`](#adding-an-appointment-addappt).
 * After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change. The new patient is selected in the list, and their details are shown, as `view` does.
 
 Examples:
@@ -280,7 +281,7 @@ Shows only the appointments on a date, or between two dates, in the appointment 
 
 Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`
 
-* All dates must be real dates in `yyyy-MM-dd` format.
+* All dates must be real dates, in the appointment date format described in the notes about the command format above.
 * `viewappt DATE` looks for appointments on `DATE`.
 * With `--from` and `--to`, the range includes both dates. Give one of them or both, in any order, each at most once.
 * Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week, and the patient list shows the patients with an appointment this week. To see the appointments from today onwards, give `--from` with today's date.
@@ -307,12 +308,12 @@ Examples:
 
 Adds an appointment to a patient's schedule.
 
-Format: `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`
+Format: `addappt ID DATE_OR_DATETIME [--details DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
-* `--appt` gives the date, or date and time, of the new appointment, in the same format as in [`add`](#adding-a-patient-add). Past dates are accepted.
+* `DATE_OR_DATETIME` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. It must follow the ID, before any details. Past dates are accepted.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
-* The options may appear in any order after the ID, each at most once.
+* The optional `--details` follows the date or date and time, and may be given at most once.
 * The new appointment starts **Undone** and receives the patient's highest remaining appointment number plus one, starting at #1.
   Deleting a visit leaves the other numbers unchanged. If the highest number is deleted, it can be reused.
 * Clashes are allowed, including several undone visits to the same patient at exactly the same time. The result warns
@@ -320,58 +321,48 @@ Format: `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`
 * LaiNurse switches to the **Appointments** view and selects the new appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
-* `addappt S1234567A --appt 2026-10-12 09:30` gives Alex Yeoh an appointment on 12 October at 09:30.
-* `addappt S2345678B --appt 2026-10-14 --details Check blood pressure` gives Bernice Yu an appointment on 14 October with no time, and details.
-* `addappt S1234567A --appt 2026-12-01 10:00 --details Bring insulin pen` gives Alex Yeoh an appointment on 1 December at 10:00 with details.
+* `addappt S1234567A 2026-10-12 09:30` gives Alex Yeoh an appointment on 12 October at 09:30.
+* `addappt S2345678B 2026-10-14 --details Check blood pressure` gives Bernice Yu an appointment on 14 October with no time, and details.
+* `addappt S1234567A 2026-12-01 10:00 --details Bring insulin pen` gives Alex Yeoh an appointment on 1 December at 10:00 with details.
 
 ### Editing an appointment: `editappt`
 
 Moves one of a patient's appointments to another date or time, or sets its details, or both.
 
-Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`<br>
-Legacy format: `editappt ID --appt DATE_OR_DATETIME [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`
+Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
-* `NUMBER` is the appointment's positive number shown as `#N`, without the `#`. Give either this number or
-  `--appt`, never both. Numbers belong to a patient; they are different from the positions down the appointment page.
-* `--appt` gives the date, or date and time, of the appointment to edit. It must match the appointment exactly: `--appt 2026-10-05` means an appointment on 5 October with no time, and does not match `2026-10-05 09:30`. If the patient has no such appointment, the error lists their appointments on that day, if any, so you can retype the one you meant.
+* `NUMBER` is the appointment's positive number shown as `#N`, without the `#`. Numbers belong to a patient;
+  they are different from the positions down the appointment page. If the patient has no such number, nothing is changed.
 * `--to` moves the appointment to a new date, or date and time, in the same format as in [`addappt`](#adding-an-appointment-addappt). Giving a date alone turns it into an appointment with no time.
 * `--details` sets the appointment's details, such as what to do or bring, replacing any it had. Like notes, details are stored in upper case, and cannot be blank.
-* Give at least one of `--to` and `--details`. The options may appear in any order after the ID, each at most once.
+* Give at least one of `--to` and `--details`. The options may appear in any order after the ID and number, each at most once.
 * Moving an appointment keeps its details, unless `--details` is also given.
 * Moving an appointment or changing its details keeps its number and Done/Undone status. Use `unmarkappt` to
   reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
   warning if both visits are undone. An edit that changes only details also warns if the visit clashes.
-* If `--appt` matches several visits, nothing is changed. The error lists the matching numbers and details;
-  select one using `NUMBER` instead.
 * LaiNurse switches to the **Appointments** view and selects the edited appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
-* `editappt S1234567A 2 --to 2026-10-06 10:00` moves appointment #2, keeping its number and details.
-* `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00` moves Alex Yeoh's insulin review from its Monday 09:30 slot to the next day, 10:00, keeping its details. The sample appointments fall in the week you first launched the app in; the dates here are for the week of Monday 5 October 2026.
-* `editappt S2345678B --appt 2026-10-06 --details Check blood pressure` sets the details of Bernice Yu's appointment on the Tuesday of the sample week.
-* `editappt S1234567A --appt 2026-11-02 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's monthly blood test, on the Monday four weeks later, to the following day, 08:00, and replaces its details.
+* `editappt S1234567A 1 --to 2026-10-06 10:00` moves Alex Yeoh's insulin review (#1) from its Monday 09:30 slot to the next day, 10:00, keeping its number and details. The sample appointments fall in the week you first launched the app in; the dates here are for the week of Monday 5 October 2026.
+* `editappt S2345678B 1 --details Check blood pressure` sets the details of Bernice Yu's appointment (#1) on the Tuesday of the sample week.
+* `editappt S1234567A 2 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's monthly blood test (#2), on the Monday four weeks later, to the following day, 08:00, and replaces its details.
 
 ### Deleting an appointment: `deleteappt`
 
-Deletes one appointment of a patient, identified by its number or an unambiguous date and time.
+Deletes one appointment of a patient, identified by its number.
 
-Format: `deleteappt ID NUMBER`<br>
-Legacy format: `deleteappt ID --appt DATE_OR_DATETIME`
+Format: `deleteappt ID NUMBER`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
-* `--appt` gives the date, or date and time, of the appointment to delete, in the same format as in [`addappt`](#adding-an-appointment-addappt). It must match the appointment exactly: `--appt 2026-10-05` means an appointment on 5 October with no time, and does not match `2026-10-05 09:30`.
-* `NUMBER` is the positive appointment number shown as `#N`, without the `#`. Give either the number or
-  `--appt`, never both. Only that visit is removed; surviving appointments keep their numbers.
-* If several visits match `--appt`, nothing is deleted. The error lists their numbers and details so that you
-  can select one by number. Details do not otherwise affect timestamp matching.
-* If the patient has no such appointment, nothing is changed, and the error lists their appointments on that day, if any, so you can retype the one you meant.
+* `NUMBER` is the positive appointment number shown as `#N`, without the `#`. Only that visit is removed;
+  surviving appointments keep their numbers, even when they share the same date and time.
+* If the patient has no appointment with that number, nothing is changed, and the error names the missing number.
 * LaiNurse switches to the **Appointments** view and keeps the page that is shown; the deleted appointment disappears from it. No other appointment, page or filter is changed.
 
 Examples:
-* `deleteappt S1234567A 2` deletes appointment #2 of Alex Yeoh.
-* `deleteappt S1234567A --appt 2026-10-05 09:30` deletes Alex Yeoh's insulin review, on the Monday of the sample week at 09:30, with its details.
-* `deleteappt S1234567A --appt 2026-11-02` deletes Alex Yeoh's monthly blood test, four weeks later, which has no time.
+* `deleteappt S1234567A 1` deletes Alex Yeoh's insulin review (#1), on the Monday of the sample week at 09:30, with its details.
+* `deleteappt S1234567A 2` deletes Alex Yeoh's monthly blood test (#2), four weeks later, which has no time.
 
 ### Marking an appointment as done: `markappt`
 
@@ -470,7 +461,7 @@ between 1 and 2147483647. A missing `done` field defaults to false (undone). If 
 boolean `true` or `false`; strings, numbers and null are invalid.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, LaiNurse starts with an empty patient list the next time it launches. The next command that succeeds, even `list` or `help`, then overwrites the invalid file with the empty list, and the data in it is lost. Back up the file before you edit it. If LaiNurse starts empty after an edit, close the window without running any command (the `exit` command also saves), and restore your backup.<br>
+If your changes make the data file invalid, LaiNurse starts with an empty patient list the next time it launches. The next command that succeeds, even `list` or `help`, then overwrites the invalid file with the empty list, and the data in it is lost. Back up the file before you edit it. Appointment dates and times in the file follow the formats above, and a file saved by an earlier version with a signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load. If LaiNurse starts empty after an edit, close the window without running any command (the `exit` command also saves), and restore your backup.<br>
 Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
@@ -497,12 +488,12 @@ Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g.
 Action | Format, Examples
 --------|-----------------
 **Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
-**AddAppt** | `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --appt 2026-12-01 10:00 --details Bring insulin pen`
+**AddAppt** | `addappt ID DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A 2026-12-01 10:00 --details Bring insulin pen`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
-**DeleteAppt** | `deleteappt ID NUMBER` or `deleteappt ID --appt DATE_OR_DATETIME`<br> e.g., `deleteappt S1234567A --appt 2026-10-05 09:30`
+**DeleteAppt** | `deleteappt ID NUMBER`<br> e.g., `deleteappt S1234567A 1`
 **Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES]`<br> e.g., `edit S1234567A --notes Walks every morning`
-**EditAppt** | `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details DETAILS]` or the legacy `--appt` selector<br> e.g., `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00`
+**EditAppt** | `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`<br> e.g., `editappt S1234567A 1 --to 2026-10-06 10:00`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one option required)
 **List** | `list`
 **MarkAppt** | `markappt ID NUMBER`<br> e.g., `markappt S1234567A 2`

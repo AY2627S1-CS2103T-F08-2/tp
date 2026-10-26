@@ -1,7 +1,6 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
@@ -32,8 +31,8 @@ public class EditAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "editappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the appointment of the patient with the "
-            + "given ID, using its number or an unambiguous date/time. Keeps its number and completion status.\n"
-            + "Parameters: ID (NUMBER | " + PREFIX_APPOINTMENT + "DATE_OR_DATETIME) "
+            + "given ID, using its number. Keeps its number and completion status.\n"
+            + "Parameters: ID NUMBER "
             + "[" + PREFIX_TO + "NEW_DATE_OR_DATETIME] "
             + "[" + PREFIX_DETAILS + "DETAILS]\n"
             + "Example: " + COMMAND_WORD + " S1234567A 2 "
@@ -53,38 +52,21 @@ public class EditAppointmentCommand extends Command {
     private final Optional<AppointmentDetails> newDetails;
 
     /**
-     * Creates an EditAppointmentCommand to edit the appointment of the patient with {@code targetId} at the date and
-     * time of {@code targetAppointment}.
+     * Creates a command selecting an appointment by its patient-local number.
      *
      * @param targetId The ID of the patient whose appointment to edit.
-     * @param targetAppointment The date and time of the appointment to edit. Its details are ignored.
+     * @param number The patient-local appointment number to edit.
      * @param newDateTime The date and time to move the appointment to, if it moves. Its details are ignored.
      * @param newDetails The new details of the appointment, if they change.
      */
-    public EditAppointmentCommand(PatientId targetId, Appointment targetAppointment, Optional<Appointment> newDateTime,
-            Optional<AppointmentDetails> newDetails) {
-        this(targetId, new Target(targetAppointment), newDateTime, newDetails);
-    }
-
-    /**
-     * Creates a command selecting an appointment by its patient-local number.
-     */
     public EditAppointmentCommand(PatientId targetId, int number, Optional<Appointment> newDateTime,
             Optional<AppointmentDetails> newDetails) {
-        this(targetId, new Target(number), newDateTime, newDetails);
-    }
-
-    /**
-     * Creates a command with exactly one appointment selector.
-     */
-    private EditAppointmentCommand(PatientId targetId, Target targetAppointment, Optional<Appointment> newDateTime,
-            Optional<AppointmentDetails> newDetails) {
-        CollectionUtil.requireAllNonNull(targetId, targetAppointment, newDateTime, newDetails);
+        CollectionUtil.requireAllNonNull(targetId, newDateTime, newDetails);
         if (newDateTime.isEmpty() && newDetails.isEmpty()) {
             throw new IllegalArgumentException(MESSAGE_NOT_EDITED);
         }
         this.targetId = targetId;
-        this.targetAppointment = targetAppointment;
+        this.targetAppointment = new Target(number);
         this.newDateTime = newDateTime;
         this.newDetails = newDetails;
     }
@@ -107,6 +89,7 @@ public class EditAppointmentCommand extends Command {
         assert editedAppointment.getNumber() == oldAppointment.getNumber();
 
         AppointmentSchedule editedSchedule = schedule.remove(oldAppointment).add(editedAppointment);
+        assert editedSchedule.findByNumber(targetAppointment.number()).orElseThrow().equals(editedAppointment);
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);

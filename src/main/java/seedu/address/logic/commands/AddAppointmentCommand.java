@@ -1,7 +1,6 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 
 import java.util.Optional;
@@ -30,11 +29,9 @@ public class AddAppointmentCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds an appointment to the patient with the "
             + "given ID, at the given date and time.\n"
-            + "Parameters: ID "
-            + PREFIX_APPOINTMENT + "DATE_OR_DATETIME "
+            + "Parameters: ID DATE_OR_DATETIME "
             + "[" + PREFIX_DETAILS + "DETAILS]\n"
-            + "Example: " + COMMAND_WORD + " S1234567A "
-            + PREFIX_APPOINTMENT + "2026-12-01 10:00 "
+            + "Example: " + COMMAND_WORD + " S1234567A 2026-12-01 10:00 "
             + PREFIX_DETAILS + "Bring insulin pen";
 
     public static final String MESSAGE_ADD_APPOINTMENT_SUCCESS = "Added appointment %1$d of %2$s (%3$s): %4$s";

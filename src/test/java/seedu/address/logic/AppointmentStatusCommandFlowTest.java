@@ -97,8 +97,8 @@ public class AppointmentStatusCommandFlowTest {
 
     @Test
     public void execute_sameTimeVisits_usesNumberAndWarnsAboutHiddenPatientOnUnmark() throws Exception {
-        logic.execute("addappt S1234567A --appt 2026-10-05 09:30 --details Second visit");
-        logic.execute("addappt S2345678B --appt 2026-10-05 09:30");
+        logic.execute("addappt S1234567A 2026-10-05 09:30 --details Second visit");
+        logic.execute("addappt S2345678B 2026-10-05 09:30");
         logic.execute("find --name alex");
         CommandResult marked = logic.execute("markappt S1234567A 3");
         assertFalse(appointment(1).isDone());
@@ -123,7 +123,7 @@ public class AppointmentStatusCommandFlowTest {
         assertFalse(moved.getFeedbackToUser().contains("Warning:"));
         logic.execute("edit S1234567A --phone 91234567");
         assertTrue(appointment(1).isDone());
-        logic.execute("addappt S1234567A --appt 2026-12-01");
+        logic.execute("addappt S1234567A 2026-12-01");
         assertFalse(appointment(3).isDone());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
         logic.execute("deleteappt S1234567A 1");

@@ -348,6 +348,8 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+Every date and time in the app goes through `DateUtil`, which accepts a date only in `yyyy-MM-dd` with the year exactly four digits and no sign, and a time only in `HH:mm`; `0000-01-01` stays valid, as ISO-8601 allows it, while `+12345-01-01`, `-2026-10-05` and `9:00` are rejected. A rejected date's exception text names the part whose shape is wrong, the year, the month or the day.
+
 ### Finding patients by substrings
 
 `FindCommandParser` recognizes the six patient-detail options defined in `CliSyntax`: ID, name, phone number, address,
@@ -436,6 +438,11 @@ other JSON types produce an `IllegalValueException`, without coercion. Both stat
 Migration does not save immediately; the normal save after a successful command persists the assigned numbers.
 `JsonSerializableLaiNurse` continues to require the `patients` key.
 
+An appointment date is written `yyyy-MM-dd`, optionally followed by a time in `HH:mm`, with the year exactly
+four digits and no sign. A data file without the `patients` key, such as one from v1.3 that saved them under
+`persons`, fails to load, and LaiNurse starts with an empty list. A data file from an earlier version with a
+signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load.
+
 **Clashes.** `AppointmentClashes.find` compares exact date and optional time over the unfiltered appointment list,
 excluding the target's patient ID and number and every done visit. A done target has no clashes. Two date-only
 undone visits on one day clash; a date-only visit and a
@@ -470,12 +477,11 @@ search described above, and `view ID` shows the notes using the existing detail 
 `ParserUtil.parseAppointmentDetails` rejects blank details, as `parseNotes` does for notes, and logs without the text.
 `editappt` and `deleteappt` touch only the appointment they target; every other appointment keeps its details.
 
-`editappt ID NUMBER` selects a visit by patient-local number; the legacy `--appt DATE_OR_DATETIME` selector
-still works. Both parsers require exactly one selector and retain the existing option normalization and duplicate
-option checks. `ParserUtil.parseAppointmentNumber` rejects signs, fractions and integer overflow.
-`AppointmentLookup.Target` represents exactly one number or timestamp. Number lookup uses `findByNumber`; timestamp
-lookup uses `findAtDateTime` and requires exactly one match. An ambiguous timestamp lists matching numbers and
-details without mutation. Missing timestamps retain numbered same-day suggestions.
+`editappt ID NUMBER` selects a visit by patient-local number. Both the edit and delete parsers require the ID and
+number before any options and retain the existing option normalization and duplicate option checks.
+`ParserUtil.parseAppointmentNumber` rejects signs, fractions and integer overflow. `AppointmentLookup.Target`
+holds a positive number; the shared lookup uses `findByNumber` and reports a missing number before any mutation.
+An assertion checks that the resolved appointment has the requested number.
 
 An edit builds the replacement with the old appointment number and completion status, and preserves date/time
 or details not supplied.
@@ -488,17 +494,21 @@ data file unchanged.
 
 <img src="images/EditAppointmentActivityDiagram.png" width="750" />
 
-`addappt` retains its existing syntax and validation. It finds the patient through `Model#findPatientById()`,
+`addappt ID DATE_OR_DATETIME [--details DETAILS]` takes the appointment date after the ID and before optional
+details. Its parser reuses `ArgumentTokenizer` and `ParserUtil.parseAppointment`, preserving strict date validation
+and whitespace normalization, and rejecting duplicate details options. It logs parsing success or a missing
+positional argument at `FINE` level without logging appointment details. It finds the patient through
+`Model#findPatientById()`,
 assigns `schedule.getNextNumber()`, adds the numbered appointment, and replaces the patient. The result names its
 number and navigates to that exact stored appointment, followed by any clash warning. The existing patient filter
 is retained, including when the patient or a clashing visit is hidden.
 
 ### Deleting an appointment
 
-`deleteappt ID NUMBER` removes exactly one numbered visit; `deleteappt ID --appt DATE_OR_DATETIME` uses the
-same unambiguous timestamp lookup as editing. `AppointmentLookup` reports missing numbers, missing timestamps or
-ambiguous timestamps before any change. The command replaces the patient with the selected identity removed;
-every other number and every other visit's details remain intact.
+`deleteappt ID NUMBER` removes exactly one numbered visit. `AppointmentLookup` reports a missing number before
+any change. The command replaces the patient with the selected identity removed; every other number and every
+other visit's details remain intact, even when visits share a timestamp. An assertion checks that the removed
+number is absent from the resulting schedule.
 
 Unlike `addappt` and `editappt`, the command clears the selection with `CommandResult#withSelectionCleared`: after
 it succeeds, no appointment exists to select, and the deleted one cannot be highlighted again. The returned result
@@ -1074,7 +1084,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to edit a patient's appointment by the patient's ID and the appointment's number or unambiguous date/time, with a
+1.  Nurse requests to edit a patient's appointment by the patient's ID and the appointment's number, with a
     new date and time, new details, or both
 2.  LaiNurse updates the appointment
 3.  LaiNurse shows the edited appointment
@@ -1083,7 +1093,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The ID or appointment selector is missing, or nothing to change is given.
+* 1a. The ID or appointment number is missing or invalid, or nothing to change is given.
 
     * 1a1. LaiNurse shows an error message.
 
@@ -1095,9 +1105,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1c. The selector matches no appointment, or the timestamp matches several appointments.
+* 1c. The patient has no appointment with the given number.
 
-    * 1c1. LaiNurse shows an error with numbered matching visits or same-day suggestions, where applicable.
+    * 1c1. LaiNurse shows an error naming the missing appointment number.
 
       Use case resumes at step 1.
 
@@ -1126,7 +1136,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The ID or appointment selector is missing, or in an invalid format.
+* 1a. The ID or appointment date is missing, or in an invalid format.
 
     * 1a1. LaiNurse shows an error message with the valid format.
 
@@ -1154,7 +1164,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 
-1.  Nurse requests to delete a patient's appointment by the patient's ID and the appointment's number or unambiguous date/time
+1.  Nurse requests to delete a patient's appointment by the patient's ID and the appointment's number
 2.  LaiNurse removes the appointment from the patient's schedule
 3.  LaiNurse shows the appointments view without the deleted appointment
 
@@ -1162,7 +1172,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The ID or appointment selector is missing, or in an invalid format.
+* 1a. The ID or appointment number is missing, or in an invalid format.
 
     * 1a1. LaiNurse shows an error message with the valid format.
 
@@ -1174,9 +1184,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1c. The selector matches no appointment, or the timestamp matches several appointments.
+* 1c. The patient has no appointment with the given number.
 
-    * 1c1. LaiNurse shows an error with numbered matching visits or same-day suggestions, where applicable.
+    * 1c1. LaiNurse shows an error naming the missing appointment number.
 
       Use case resumes at step 1.
 
@@ -1637,7 +1647,7 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data, then add a patient, and give her a timed appointment on the same
        date as Bernice Yu's date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123
-       Clementi Ave 3, #05-12`, then `addappt T0456789D --appt TUE 15:00`.
+       Clementi Ave 3, #05-12`, then `addappt T0456789D TUE 15:00`.
 
     1. Test case: `viewappt TUE`<br>
        Expected: Under Tuesday's heading, e.g. `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`,
@@ -1733,8 +1743,8 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Do these test cases before 23:55. Start with the sample data, and replace `TODAY` below with
        today's date, such as `2026-10-17`. Add a patient with no appointments:
        `add --id T0567890E --name Fay Ong --phone 91234567 --address Blk 1 Bedok North Ave 1`, then give her three
-       appointments today: `addappt T0567890E --appt TODAY 00:00`, then `addappt T0567890E --appt TODAY`, and
-       `addappt T0567890E --appt TODAY 23:59`.
+       appointments today: `addappt T0567890E TODAY 00:00`, then `addappt T0567890E TODAY`, and
+       `addappt T0567890E TODAY 23:59`.
 
     1. Test case: the result of the prerequisite<br>
        Expected: On the **Patients** tab, Fay Ong's row shows `Today` in orange as their next appointment: the one with
@@ -1750,7 +1760,7 @@ testers are expected to do more *exploratory* testing.
        with no time is selected, as the first appointment that has not passed, and the panel shows Fay Ong's details
        with it marked.
 
-    1. Test case: `addappt T0567890E --appt TODAY HH:MM`, where `HH:MM` is two minutes from now, then
+    1. Test case: `addappt T0567890E TODAY HH:MM`, where `HH:MM` is two minutes from now, then
        `view T0567890E`. Wait until the minute after `HH:MM`, without entering a command.<br>
        Expected: At first, the panel lists the new appointment under **Appointments**, in orange. Within a few seconds
        of the minute after `HH:MM`, when the appointment has passed, it moves under **Past**, dimmed. On the
@@ -1817,30 +1827,29 @@ testers are expected to do more *exploratory* testing.
 
 1. Moving an appointment and setting its details
 
-    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `MON 09:30`, with
-       the details `INSULIN REVIEW`, and `BLOOD`, with the details `MONTHLY BLOOD TEST`.
+    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has appointment #1 at `MON 09:30`, with
+       the details `INSULIN REVIEW`, and #2 at `BLOOD`, with the details `MONTHLY BLOOD TEST`.
 
-    1. Test case: `editappt S1234567A --appt MON 09:30 --to TUE 10:00`<br>
+    1. Test case: `editappt S1234567A 1 --to TUE 10:00`<br>
        Expected: The **Appointments** tab is selected, showing the sample week, with Alex Yeoh's appointment at
        10:00 selected and still showing `INSULIN REVIEW`. The status message ends with
        `(moved from MON 09:30)`.
 
-    1. Test case: `editappt S1234567A --appt BLOOD --details Fasting blood test`<br>
+    1. Test case: `editappt S1234567A 2 --details Fasting blood test`<br>
        Expected: The blood-test appointment keeps its date, and its details become `FASTING BLOOD TEST`.
 
 1. Resolving lookup errors and moving onto an occupied time
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `editappt S1234567A --appt MON --to TUE`, a date alone for a timed appointment<br>
-       Expected: No appointment is changed. The status message says that the patient has no appointment on
-       `MON`, and lists `MON 09:30` as their appointment that day.
+    1. Test case: `editappt S1234567A 99 --to TUE`, an appointment number the patient does not have<br>
+       Expected: No appointment is changed. The status message says `Patient S1234567A has no appointment #99.`
 
-    1. Test case: `editappt S1234567A --appt MON 09:30 --to BLOOD`<br>
+    1. Test case: `editappt S1234567A 1 --to BLOOD`<br>
        Expected: The appointment moves to `BLOOD`, keeps its number and details, and both visits are preserved.
        The result warns about the other appointment number; both dates/times appear in red.
 
-    1. Test case: `editappt S1234567A --appt MON 09:30`, with nothing to change<br>
+    1. Test case: `editappt S1234567A 1`, with nothing to change<br>
        Expected: No appointment is changed. The status message says that `--to` or `--details` must be given.
 
 ### Adding an appointment
@@ -1849,75 +1858,74 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data. Bernice Yu (`S2345678B`) has an appointment only on `TUE`.
 
-    1. Test case: `addappt S2345678B --appt SAT --details Check blood pressure`<br>
+    1. Test case: `addappt S2345678B SAT --details Check blood pressure`<br>
        Expected: The **Appointments** tab is selected, showing the sample week, with Bernice Yu's appointment
        selected and showing `CHECK BLOOD PRESSURE`. The list shows the appointment with no time.
 
-    1. Test case: `addappt S1234567A --appt AFTER 10:00`<br>
+    1. Test case: `addappt S1234567A AFTER 10:00`<br>
        Expected: The week of `AFTER` is shown, with Alex Yeoh's appointment at 10:00 selected.
 
 1. Adding at an occupied time and rejecting an unknown patient
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `addappt S1234567A --appt MON 09:30`<br>
+    1. Test case: `addappt S1234567A MON 09:30`<br>
        Expected: Appointment #3 is added at `MON 09:30`. Both visits remain, and the result warns about appointment
        #1 of Alex Yeoh. Their times and that day's heading appear in red.
 
-    1. Test case: `addappt S0000000Z --appt 2026-10-14`<br>
+    1. Test case: `addappt S0000000Z 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
 
 ### Deleting an appointment
 
-1. Deleting an appointment by its date and time
+1. Deleting an appointment by its number
 
-    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has the appointments `MON 09:30` and
-       `BLOOD`.
+    1. Prerequisites: Start with the sample data. Alex Yeoh (`S1234567A`) has appointment #1 at `MON 09:30` and
+       #2 at `BLOOD`.
 
-    1. Test case: `deleteappt S1234567A --appt MON 09:30`<br>
+    1. Test case: `deleteappt S1234567A 1`<br>
        Expected: The appointment is deleted. The status message names the patient's ID and the deleted appointment with
        its details. The **Appointments** tab is selected, on the page that was shown, and the appointment is gone from it.
 
-    1. Test case: `deleteappt S1234567A --appt BLOOD`<br>
+    1. Test case: `deleteappt S1234567A 2`<br>
        Expected: The date-only blood-test appointment is deleted, as above.
 
 1. Deleting an appointment that cannot be deleted
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `deleteappt S1234567A --appt MON`<br>
-       Expected: No appointment is deleted. The status message says that the patient `S1234567A` has no appointment on
-       `MON`, and lists `MON 09:30` as their appointment that day.
+    1. Test case: `deleteappt S1234567A 99`<br>
+       Expected: No appointment is deleted. The status message says `Patient S1234567A has no appointment #99.`
 
-    1. Test case: `deleteappt S0000000Z --appt 2026-10-14`<br>
+    1. Test case: `deleteappt S0000000Z 1`<br>
        Expected: No appointment is deleted. The status message shows `The patient ID provided is invalid.`
 
     1. Other incorrect deleteappt commands to try: `deleteappt` (missing everything), `deleteappt S1234567A`
-       (nothing to delete), `deleteappt S1234567A --appt` (no date and time)<br>
+       (missing number), `deleteappt S1234567A 1 extra` (extra argument)<br>
        Expected: No appointment is deleted. The status message shows the correct command format.
 
 1. Deleting an appointment of a patient hidden by a filter
 
     1. Prerequisites: Start with the sample data. Run `find --name bernice`, so only Bernice Yu is shown.
 
-    1. Test case: `deleteappt S1234567A --appt MON 09:30`<br>
+    1. Test case: `deleteappt S1234567A 1`<br>
        Expected: The appointment of Alex Yeoh, who is not in the list shown, is deleted. The find filter stays, so the
        patient list still shows only Bernice Yu.
 
-    1. Test case: run `viewappt WED` first, then `deleteappt G1234567E --appt WED 14:00`<br>
+    1. Test case: run `viewappt WED` first, then `deleteappt G1234567E 1`<br>
        Expected: The appointments view keeps showing Wednesday, now without Irfan Ibrahim's appointment.
 
 1. _{ more test cases …​ }_
 
 ### Appointment numbers, migration and clash highlighting
 
-1. Start with sample data. Run `addappt S2345678B --appt MON 09:30`, using the sample week's Monday for `MON`.
+1. Start with sample data. Run `addappt S2345678B MON 09:30`, using the sample week's Monday for `MON`.
    Expected: Bernice's new appointment is #2. The warning names Alex Yeoh, ID `S1234567A`, appointment #1.
    Both times and Monday's heading are red. A `viewappt --id S2345678B` filter still shows the warning color.
-1. Run `addappt S1234567A --appt MON 09:30 --details Second visit`.
+1. Run `addappt S1234567A MON 09:30 --details Second visit`.
    Expected: Alex's new visit is #3 and the warning names Alex's #1 and Bernice's #2. Both Alex visits survive.
 1. Run `editappt S1234567A --appt MON 09:30 --details Review`, then the equivalent `deleteappt` selector.
-   Expected: Each fails without saving changes and lists Alex's #1 and #3 with their details.
+   Expected: Each rejects the unsupported option, shows its number-based command format and saves no changes.
 1. Run `editappt S1234567A 3 --to TUE 10:00`, then `view S1234567A`.
    Expected: Only #3 moves; its number/details and selection survive the move. The detail date starts with `#3`.
 1. Run `deleteappt S1234567A 3`, restart, then add another visit to Alex.
@@ -1951,7 +1959,7 @@ testers are expected to do more *exploratory* testing.
 1. Clashes, hidden patients and page preservation
 
     1. Prerequisites: Start with sample data; use its Monday date for `MON`.
-    1. Test case: `addappt S2345678B --appt MON 09:30`, then `viewappt --id S1234567A`<br>
+    1. Test case: `addappt S2345678B MON 09:30`, then `viewappt --id S1234567A`<br>
        Expected: Alex's #1 clashes with Bernice's #2, even though Bernice is hidden on this appointment page.
     1. Test case: `markappt S2345678B 2`, then `viewappt --id S1234567A`<br>
        Expected: Alex's #1 and the day heading are no longer red. Bernice's visit remains visible when viewed.

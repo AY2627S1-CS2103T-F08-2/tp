@@ -1,13 +1,11 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 
 import java.util.Optional;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
-import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AppointmentLookup.Target;
@@ -27,8 +25,8 @@ public class DeleteAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "deleteappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Deletes an appointment of the patient with the "
-            + "given ID, using its number or an unambiguous date/time.\n"
-            + "Parameters: ID (NUMBER | " + PREFIX_APPOINTMENT + "DATE_OR_DATETIME)\n"
+            + "given ID, using its number.\n"
+            + "Parameters: ID NUMBER\n"
             + "Example: " + COMMAND_WORD + " S1234567A 2";
 
     public static final String MESSAGE_DELETE_APPOINTMENT_SUCCESS = "Deleted appointment %1$d of %2$s (%3$s): %4$s";
@@ -39,30 +37,15 @@ public class DeleteAppointmentCommand extends Command {
     private final Target targetAppointment;
 
     /**
-     * Creates a DeleteAppointmentCommand to delete the appointment of the patient with {@code targetId} at the
-     * date and time of {@code targetAppointment}.
+     * Creates a command selecting an appointment by its patient-local number.
      *
      * @param targetId The ID of the patient whose appointment is deleted.
-     * @param targetAppointment The date and time of the appointment to delete. Its details are ignored.
-     */
-    public DeleteAppointmentCommand(PatientId targetId, Appointment targetAppointment) {
-        this(targetId, new Target(targetAppointment));
-    }
-
-    /**
-     * Creates a command selecting an appointment by its patient-local number.
+     * @param number The patient-local appointment number to delete.
      */
     public DeleteAppointmentCommand(PatientId targetId, int number) {
-        this(targetId, new Target(number));
-    }
-
-    /**
-     * Creates a command with exactly one appointment selector.
-     */
-    private DeleteAppointmentCommand(PatientId targetId, Target targetAppointment) {
-        CollectionUtil.requireAllNonNull(targetId, targetAppointment);
+        requireNonNull(targetId);
         this.targetId = targetId;
-        this.targetAppointment = targetAppointment;
+        this.targetAppointment = new Target(number);
     }
 
     @Override
@@ -78,6 +61,7 @@ public class DeleteAppointmentCommand extends Command {
                 AppointmentLookup.find(targetId, patient.getSchedule(), targetAppointment, COMMAND_WORD);
 
         AppointmentSchedule editedSchedule = patient.getSchedule().remove(foundAppointment);
+        assert editedSchedule.findByNumber(targetAppointment.number()).isEmpty();
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);
