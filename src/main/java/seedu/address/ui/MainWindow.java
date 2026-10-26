@@ -561,6 +561,13 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
+     * Shows {@code feedback} in the result display, as if a command had returned it.
+     */
+    void showFeedback(String feedback) {
+        resultDisplay.setFeedbackToUser(feedback);
+    }
+
+    /**
      * Executes the command and returns the result.
      *
      * @see seedu.address.logic.Logic#execute(String)

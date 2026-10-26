@@ -13,15 +13,13 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
-import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
-import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
+import seedu.address.storage.LaiNurseLoader;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
 import seedu.address.ui.Ui;
@@ -43,6 +41,9 @@ public class MainApp extends Application {
     protected Storage storage;
     protected Model model;
 
+    /** The message to show the user when the window opens, if the data did not come from the data file. */
+    private Optional<String> startupMessage = Optional.empty();
+
     @Override
     public void init() throws Exception {
         logger.info("=============================[ Initializing LaiNurse ]===========================");
@@ -57,33 +58,20 @@ public class MainApp extends Application {
 
         logic = new LogicManager(model, storage);
 
-        ui = new UiManager(logic, storage.getLaiNurseFilePath());
+        ui = new UiManager(logic, storage.getLaiNurseFilePath(), startupMessage);
     }
 
     /**
      * Returns a {@code ModelManager} with the data from {@code storage}'s data file and {@code userPrefs}. <br>
      * The sample data will be used instead if {@code storage}'s data file is not found,
-     * or an empty {@code LaiNurse} will be used instead if errors occur when reading {@code storage}'s data file.
+     * or the data from its backup will be used instead if errors occur when reading {@code storage}'s data file,
+     * as {@link LaiNurseLoader#load(Storage)} describes.
+     * Any message about where the data came from is kept in {@link #startupMessage}.
      */
     private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
-        logger.info("Using data file : " + storage.getLaiNurseFilePath());
-
-        Optional<ReadOnlyLaiNurse> laiNurseOptional;
-        ReadOnlyLaiNurse initialData;
-        try {
-            laiNurseOptional = storage.readLaiNurse();
-            if (laiNurseOptional.isEmpty()) {
-                logger.info("Creating a new data file " + storage.getLaiNurseFilePath()
-                        + " populated with sample data.");
-            }
-            initialData = laiNurseOptional.orElseGet(SampleDataUtil::getSampleLaiNurse);
-        } catch (DataLoadingException e) {
-            logger.warning("Data file at " + storage.getLaiNurseFilePath() + " could not be loaded."
-                    + " Will be starting with an empty patient list.");
-            initialData = new LaiNurse();
-        }
-
-        return new ModelManager(initialData, userPrefs);
+        LaiNurseLoader.Result loaded = LaiNurseLoader.load(storage);
+        startupMessage = loaded.message();
+        return new ModelManager(loaded.data(), userPrefs);
     }
 
     /**
