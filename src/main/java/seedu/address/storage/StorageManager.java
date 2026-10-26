@@ -54,6 +54,16 @@ public class StorageManager implements Storage {
     }
 
     @Override
+    public Path getLaiNurseBackupFilePath() {
+        return laiNurseStorage.getLaiNurseBackupFilePath();
+    }
+
+    @Override
+    public Path getLaiNurseCorruptFilePath() {
+        return laiNurseStorage.getLaiNurseCorruptFilePath();
+    }
+
+    @Override
     public Optional<ReadOnlyLaiNurse> readLaiNurse() throws DataLoadingException {
         logger.fine("Attempting to read data from file: " + laiNurseStorage.getLaiNurseFilePath());
         return laiNurseStorage.readLaiNurse();
@@ -63,6 +73,18 @@ public class StorageManager implements Storage {
     public void saveLaiNurse(ReadOnlyLaiNurse laiNurse) throws IOException {
         logger.fine("Attempting to write to data file: " + laiNurseStorage.getLaiNurseFilePath());
         laiNurseStorage.saveLaiNurse(laiNurse);
+    }
+
+    @Override
+    public Optional<ReadOnlyLaiNurse> readLaiNurseBackup() throws DataLoadingException {
+        logger.fine("Attempting to read data from backup file: " + laiNurseStorage.getLaiNurseBackupFilePath());
+        return laiNurseStorage.readLaiNurseBackup();
+    }
+
+    @Override
+    public void keepCorruptLaiNurseFile() throws IOException {
+        logger.fine("Attempting to copy data file to: " + laiNurseStorage.getLaiNurseCorruptFilePath());
+        laiNurseStorage.keepCorruptLaiNurseFile();
     }
 
 }
