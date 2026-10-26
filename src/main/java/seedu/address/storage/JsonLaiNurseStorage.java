@@ -116,7 +116,13 @@ public class JsonLaiNurseStorage {
      */
     public void saveLaiNurse(ReadOnlyLaiNurse laiNurse) throws IOException {
         saveLaiNurse(laiNurse, filePath);
-        saveLaiNurse(laiNurse, backupFilePath);
+        try {
+            saveLaiNurse(laiNurse, backupFilePath);
+        } catch (IOException e) {
+            logger.warning("Saved data to " + filePath + " but could not back it up to " + backupFilePath + ": " + e);
+            throw e;
+        }
+        logger.fine("Saved data to " + filePath + " and backed it up to " + backupFilePath);
     }
 
     /**
