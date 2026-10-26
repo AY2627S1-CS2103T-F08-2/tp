@@ -21,13 +21,13 @@ public class DetailAppointmentsTest {
     /** Midnight today, so that every appointment today is still to come. */
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 16, 0, 0);
 
-    private static final Appointment FIRST_VISIT = new Appointment("2026-10-05 09:30");
-    private static final Appointment SECOND_VISIT = new Appointment("2026-10-07");
-    private static final Appointment THIRD_VISIT = new Appointment("2026-10-09 09:30");
-    private static final Appointment YESTERDAY = new Appointment("2026-10-15 16:00");
-    private static final Appointment TODAY_EARLY = new Appointment("2026-10-16 00:00");
-    private static final Appointment NEXT_WEEK = new Appointment("2026-10-23 09:30");
-    private static final Appointment NEXT_MONTH = new Appointment("2026-11-02");
+    private static final Appointment FIRST_VISIT = new Appointment("2026-10-05 09:30").withNumber(1);
+    private static final Appointment SECOND_VISIT = new Appointment("2026-10-07").withNumber(2);
+    private static final Appointment THIRD_VISIT = new Appointment("2026-10-09 09:30").withNumber(3);
+    private static final Appointment YESTERDAY = new Appointment("2026-10-15 16:00").withNumber(4);
+    private static final Appointment TODAY_EARLY = new Appointment("2026-10-16 00:00").withNumber(5);
+    private static final Appointment NEXT_WEEK = new Appointment("2026-10-23 09:30").withNumber(6);
+    private static final Appointment NEXT_MONTH = new Appointment("2026-11-02").withNumber(7);
 
     @Test
     public void of_null_throwsNullPointerException() {
@@ -96,8 +96,8 @@ public class DetailAppointmentsTest {
 
     @Test
     public void of_earlierToday_listedAsPast() {
-        Appointment todayNoTime = new Appointment("2026-10-16");
-        Appointment todayLater = new Appointment("2026-10-16 14:00");
+        Appointment todayNoTime = new Appointment("2026-10-16").withNumber(8);
+        Appointment todayLater = new Appointment("2026-10-16 14:00").withNumber(9);
         DetailAppointments appointments = DetailAppointments.of(schedule(YESTERDAY, TODAY_EARLY, todayNoTime,
                 todayLater), LocalDateTime.of(2026, 10, 16, 10, 0), Optional.empty());
 
@@ -116,7 +116,7 @@ public class DetailAppointmentsTest {
      */
     private static List<Appointment> pastVisits(int count) {
         return IntStream.range(0, count)
-                .mapToObj(i -> new Appointment(LocalDate.of(2026, 9, 1).plusDays(i) + " 09:30"))
+                .mapToObj(i -> new Appointment(LocalDate.of(2026, 9, 1).plusDays(i) + " 09:30").withNumber(i + 1))
                 .toList();
     }
 
@@ -125,10 +125,10 @@ public class DetailAppointmentsTest {
         // the marked appointment can be an older copy, from before its details were edited
         List<Appointment> past = new ArrayList<>(pastVisits(12));
         Appointment firstVisitWithDetails = new Appointment("2026-09-01 09:30",
-                Optional.of(new AppointmentDetails("First visit")));
+                Optional.of(new AppointmentDetails("First visit"))).withNumber(1);
         past.set(0, firstVisitWithDetails);
         DetailAppointments appointments = DetailAppointments.of(new AppointmentSchedule(past), NOW,
-                Optional.of(new Appointment("2026-09-01 09:30")));
+                Optional.of(new Appointment("2026-09-01 09:30").withNumber(1)));
         assertEquals(11, appointments.getPastShown().size());
         assertEquals(firstVisitWithDetails, appointments.getPastShown().get(10));
     }

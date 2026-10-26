@@ -28,6 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
+import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.PatientAppointment;
 
 /**
@@ -444,6 +445,15 @@ public class AppointmentListPanel extends UiPart<Region> {
             LocalDate today = pageTime.toLocalDate();
             Label day = new Label(AppointmentFormatter.formatDayHeading(heading.date(), today));
             day.getStyleClass().add(heading.date().equals(today) ? "appointment-day-today" : "appointment-day");
+            boolean hasClash = page.getRows().stream()
+                    .filter(AppointmentPage.Entry.class::isInstance)
+                    .map(AppointmentPage.Entry.class::cast)
+                    .map(AppointmentPage.Entry::appointment)
+                    .filter(entry -> entry.getAppointment().getDate().equals(heading.date()))
+                    .anyMatch(entry -> !AppointmentClashes.find(allAppointments, entry).isEmpty());
+            if (hasClash) {
+                day.getStyleClass().add("appointment-day-clash");
+            }
             Label count = new Label(heading.appointmentCount() == 0
                     ? "None" : String.valueOf(heading.appointmentCount()));
             count.getStyleClass().add("appointment-day-count");
@@ -456,7 +466,8 @@ public class AppointmentListPanel extends UiPart<Region> {
         }
 
         private Node createEntry(AppointmentPage.Entry entry) {
-            return new AppointmentRow(entry, pageTime).getRoot();
+            boolean isClashing = !AppointmentClashes.find(allAppointments, entry.appointment()).isEmpty();
+            return new AppointmentRow(entry, pageTime, isClashing).getRoot();
         }
     }
 }

@@ -2,11 +2,9 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 
 import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -15,8 +13,7 @@ import seedu.address.model.patient.PatientId;
 public class DeleteAppointmentCommandParser implements Parser<DeleteAppointmentCommand> {
 
     /**
-     * Parses the given {@code String} of arguments in the context of the DeleteAppointmentCommand
-     * and returns a DeleteAppointmentCommand object for execution.
+     * Parses exactly a patient ID followed by a positive appointment number.
      *
      * @throws ParseException if the user input does not conform to the expected format.
      */
@@ -24,23 +21,19 @@ public class DeleteAppointmentCommandParser implements Parser<DeleteAppointmentC
         requireNonNull(args);
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT,
                 DeleteAppointmentCommand.MESSAGE_USAGE);
-        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
-                PREFIX_APPOINTMENT);
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_APPOINTMENT);
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs);
 
+        String[] preamble = argMultimap.getPreamble().split("\\s+");
+        if (preamble.length != 2) {
+            throw new ParseException(invalidFormatMessage);
+        }
         PatientId id;
         try {
-            id = ParserUtil.parseId(argMultimap.getPreamble());
+            id = ParserUtil.parseId(preamble[0]);
         } catch (ParseException pe) {
             throw new ParseException(invalidFormatMessage, pe);
         }
-        if (argMultimap.getValue(PREFIX_APPOINTMENT).isEmpty()) {
-            throw new ParseException(invalidFormatMessage);
-        }
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_APPOINTMENT);
-
-        Appointment targetAppointment = ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_APPOINTMENT).get());
-
-        return new DeleteAppointmentCommand(id, targetAppointment);
+        return new DeleteAppointmentCommand(id, ParserUtil.parseAppointmentNumber(preamble[1]));
     }
 }

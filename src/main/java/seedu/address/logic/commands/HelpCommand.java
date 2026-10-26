@@ -39,6 +39,8 @@ public class HelpCommand extends Command {
         map.put(FindCommand.COMMAND_WORD, FindCommand.MESSAGE_USAGE);
         map.put(HelpCommand.COMMAND_WORD, HelpCommand.MESSAGE_USAGE);
         map.put(ListCommand.COMMAND_WORD, ListCommand.MESSAGE_USAGE);
+        map.put(MarkAppointmentCommand.COMMAND_WORD, MarkAppointmentCommand.MESSAGE_USAGE);
+        map.put(UnmarkAppointmentCommand.COMMAND_WORD, UnmarkAppointmentCommand.MESSAGE_USAGE);
         map.put(ViewCommand.COMMAND_WORD, ViewCommand.MESSAGE_USAGE);
         map.put(ViewAppointmentCommand.COMMAND_WORD, ViewAppointmentCommand.MESSAGE_USAGE);
         COMMAND_USAGE_MAP = Collections.unmodifiableMap(map);

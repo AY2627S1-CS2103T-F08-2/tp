@@ -3,11 +3,13 @@ package seedu.address.storage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
@@ -27,6 +29,8 @@ import seedu.address.model.patient.Phone;
 class JsonAdaptedPatient {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Patient's %s field is missing!";
+
+    private static final Logger logger = LogsCenter.getLogger(JsonAdaptedPatient.class);
 
     private final String id;
     private final String name;
@@ -126,7 +130,15 @@ class JsonAdaptedPatient {
             }
             modelAppointmentList.add(appointment.toModelType());
         }
-        final AppointmentSchedule modelSchedule = new AppointmentSchedule(modelAppointmentList);
+        final AppointmentSchedule modelSchedule;
+        try {
+            modelSchedule = new AppointmentSchedule(modelAppointmentList);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalValueException("Patient " + modelId + ": " + e.getMessage(), e);
+        }
+        if (modelAppointmentList.stream().anyMatch(appointment -> !appointment.isNumbered())) {
+            logger.fine("Assigned missing appointment numbers for patient " + modelId + ".");
+        }
 
         return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelNotes,
                 modelSchedule);

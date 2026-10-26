@@ -16,6 +16,7 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
+import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -67,7 +68,7 @@ public class EditAppointmentCommandFlowTest {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
                 .withAppointment("2026-10-06 10:00", "Insulin review")
                 .withAppointment("2026-11-02", "Monthly blood test").build();
-        assertEditPersisted("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00", expected,
+        assertEditPersisted("editappt S1234567A 1 --to 2026-10-06 10:00", expected,
                 appointment("2026-10-06 10:00", "Insulin review"),
                 "2026-10-06 10:00; Details: INSULIN REVIEW (moved from 2026-10-05 09:30)");
     }
@@ -76,7 +77,7 @@ public class EditAppointmentCommandFlowTest {
     public void execute_setDetails_persists() throws Exception {
         Patient expected = new PatientBuilder(patient(BERNICE_ID)).withAppointments()
                 .withAppointment("2026-10-06", "Check blood pressure").build();
-        assertEditPersisted("editappt s2345678b --details Check   blood pressure --appt 2026-10-06", expected,
+        assertEditPersisted("editappt s2345678b 1 --details Check   blood pressure", expected,
                 appointment("2026-10-06", "Check blood pressure"), "2026-10-06; Details: CHECK BLOOD PRESSURE");
     }
 
@@ -85,7 +86,7 @@ public class EditAppointmentCommandFlowTest {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
                 .withAppointment("2026-10-05 09:30", "Insulin review")
                 .withAppointment("2026-11-03 08:00", "Fasting blood test").build();
-        assertEditPersisted("editappt S1234567A\t--appt\t2026-11-02\t--to\t2026-11-03 08:00"
+        assertEditPersisted("editappt S1234567A\t2\t--to\t2026-11-03 08:00"
                 + "\t--details\tFasting blood test", expected, appointment("2026-11-03 08:00", "Fasting blood test"),
                 "2026-11-03 08:00; Details: FASTING BLOOD TEST (moved from 2026-11-02)");
     }
@@ -97,7 +98,7 @@ public class EditAppointmentCommandFlowTest {
                 .withAppointment("2026-10-05 09:30", "Bring insulin pen")
                 .withAppointment("2026-11-02", "Monthly blood test").build();
 
-        CommandResult result = logic.execute("editappt S1234567A --appt 2026-10-05 09:30 --details Bring insulin pen");
+        CommandResult result = logic.execute("editappt S1234567A 1 --details Bring insulin pen");
 
         assertEquals(expected, patient(ALEX_ID));
         assertEquals(Optional.of(View.APPOINTMENTS), result.getView());
@@ -105,37 +106,38 @@ public class EditAppointmentCommandFlowTest {
 
     @Test
     public void execute_missingAppointment_rejectedWithoutChanges() throws Exception {
-        // a date alone does not match the timed appointment on that day, which the error lists
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 --to 2026-10-06",
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 99 --to 2026-10-06",
                 CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
-                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
-
-        // nothing on that day
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-20 --details Check",
-                CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-20"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, ALEX_ID, 99));
     }
 
     @Test
-    public void execute_moveOntoOtherAppointment_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-11-02",
-                CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, ALEX_ID, "2026-11-02"));
+    public void execute_moveOntoOtherAppointment_warnsAndPersistsBoth() throws Exception {
+        CommandResult result = logic.execute("editappt S1234567A 1 --to 2026-11-02");
+        assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-11-02; Details: INSULIN REVIEW"
+                + " (moved from 2026-10-05 09:30)\n"
+                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #2.", result.getFeedbackToUser());
+        assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(Appointment::getNumber).toList());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
     }
 
     @Test
     public void execute_invalidInput_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("editappt S0000000Z --appt 2026-10-05 --to 2026-10-06",
+        assertRejectedCommandLeavesDataUnchanged("editappt S0000000Z 1 --to 2026-10-06",
                 CommandException.class, Messages.MESSAGE_INVALID_PATIENT_ID);
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30",
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1",
                 ParseException.class, EditAppointmentCommand.MESSAGE_NOT_EDITED);
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --to 2026-10-06", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-02-30",
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --to 2026-02-30",
                 ParseException.class, Appointment.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --details",
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --details",
                 ParseException.class, AppointmentDetails.MESSAGE_CONSTRAINTS);
+        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648")) {
+            assertRejectedCommandLeavesDataUnchanged("editappt S1234567A " + number + " --details Review",
+                    ParseException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS);
+        }
     }
 
     /**
@@ -145,13 +147,17 @@ public class EditAppointmentCommandFlowTest {
      */
     private void assertEditPersisted(String command, Patient expected, Appointment expectedAppointment,
             String expectedAppointmentText) throws Exception {
+        expectedAppointment = expected.getSchedule().findAtDateTime(expectedAppointment).getLast();
         LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
         expectedLaiNurse.setPatient(patient(expected.getId().value), expected);
 
         CommandResult result = logic.execute(command);
 
-        assertEquals(String.format(EditAppointmentCommand.MESSAGE_EDIT_APPOINTMENT_SUCCESS, expected.getName(),
-                expected.getId(), expectedAppointmentText), result.getFeedbackToUser());
+        assertEquals(String.format(EditAppointmentCommand.MESSAGE_EDIT_APPOINTMENT_SUCCESS,
+                expectedAppointment.getNumber(), expected.getName(),
+                expected.getId(), expectedAppointmentText)
+                + Messages.formatClashWarning(model.getAppointmentList(),
+                        new PatientAppointment(expected, expectedAppointment)), result.getFeedbackToUser());
         assertEquals(Optional.of(Navigation.toAppointment(new PatientAppointment(expected, expectedAppointment))),
                 result.getNavigation());
         assertEquals(expectedLaiNurse, model.getLaiNurse());
@@ -184,4 +190,45 @@ public class EditAppointmentCommandFlowTest {
     private static Appointment appointment(String dateTime, String details) {
         return new Appointment(dateTime, Optional.of(new AppointmentDetails(details)));
     }
+    @Test
+    public void execute_legacySelector_rejectedWithoutChanges() throws Exception {
+        logic.execute("addappt S1234567A 2026-10-05 09:30 --details Second visit");
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06",
+                ParseException.class, INVALID_FORMAT_MESSAGE);
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05 09:30",
+                ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteAppointmentCommand.MESSAGE_USAGE));
+    }
+
+    @Test
+    public void execute_numberSelectsDuplicate_keepsIdentityAfterMove() throws Exception {
+        logic.execute("addappt S1234567A 2026-10-05 09:30 --details Second visit");
+        CommandResult result = logic.execute("editappt S1234567A 3 --to 2026-09-01");
+        Appointment moved = patient(ALEX_ID).getSchedule().findByNumber(3).orElseThrow();
+        assertEquals("2026-09-01", moved.value);
+        assertEquals("SECOND VISIT", moved.getDetails().orElseThrow().value);
+        assertEquals(3, result.getNavigation().orElseThrow().appointment().orElseThrow()
+                .getAppointment().getNumber());
+        assertEquals(1, patient(ALEX_ID).getSchedule().findAtDateTime(new Appointment("2026-10-05 09:30")).size());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
+    @Test
+    public void execute_missingNumber_rejectedWithoutChanges() throws Exception {
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 99 --details Review", CommandException.class,
+                "Patient S1234567A has no appointment #99.");
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A 99", CommandException.class,
+                "Patient S1234567A has no appointment #99.");
+    }
+
+    @Test
+    public void execute_detailsOnlyClash_warnsAboutEveryOtherVisit() throws Exception {
+        logic.execute("addappt S1234567A 2026-10-05 09:30");
+        logic.execute("addappt S2345678B 2026-10-05 09:30");
+        CommandResult result = logic.execute("editappt S1234567A 1 --details Review");
+        assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: REVIEW\n"
+                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #3; "
+                + "BERNICE YU (S2345678B), appointment #2.", result.getFeedbackToUser());
+    }
+
 }

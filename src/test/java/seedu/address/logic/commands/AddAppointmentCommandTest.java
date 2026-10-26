@@ -82,13 +82,11 @@ public class AddAppointmentCommandTest {
     }
 
     @Test
-    public void execute_duplicateSlot_failure() {
-        String expectedMessage = String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, BENSON.getId(),
-                "2026-10-05 09:30");
-        assertCommandFailure(new AddAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT), model, expectedMessage);
-        // the slot is taken whatever the details of the new appointment
-        assertCommandFailure(new AddAppointmentCommand(BENSON.getId(),
-                new Appointment("2026-10-05 09:30", Optional.of(DETAILS))), model, expectedMessage);
+    public void execute_duplicateSlot_warnsAndKeepsBoth() {
+        Patient expected = new PatientBuilder(BENSON)
+                .withSchedule(BENSON.getSchedule().add(BENSON_APPOINTMENT)).build();
+        assertAddSuccess(BENSON, new AddAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT), expected,
+                BENSON_APPOINTMENT, "2026-10-05 09:30");
     }
 
     @Test
@@ -138,10 +136,13 @@ public class AddAppointmentCommandTest {
      */
     private void assertAddSuccess(Patient patient, AddAppointmentCommand command, Patient editedPatient,
             Appointment appointment, String expectedAppointmentText) {
+        appointment = editedPatient.getSchedule().findAtDateTime(appointment).getLast();
         String expectedMessage = String.format(AddAppointmentCommand.MESSAGE_ADD_APPOINTMENT_SUCCESS,
-                editedPatient.getName(), editedPatient.getId(), expectedAppointmentText);
+                appointment.getNumber(), editedPatient.getName(), editedPatient.getId(), expectedAppointmentText);
         Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
         expectedModel.setPatient(patient, editedPatient);
+        expectedMessage += Messages.formatClashWarning(expectedModel.getAppointmentList(),
+                new PatientAppointment(editedPatient, appointment));
         CommandResult expectedResult = new CommandResult(expectedMessage)
                 .withNavigation(Navigation.toAppointment(new PatientAppointment(editedPatient, appointment)));
 

@@ -208,14 +208,16 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        patientDetailPanel = new PatientDetailPanel(logic.getPatientList(), PATIENT_PLACEHOLDER);
+        patientDetailPanel = new PatientDetailPanel(logic.getPatientList(), logic.getAppointmentList(),
+                PATIENT_PLACEHOLDER);
         patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
         patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), logic.getPatientList(),
                 patientDetailPanel::show, this::focusViewTabs);
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
 
-        appointmentDetailPanel = new PatientDetailPanel(logic.getPatientList(), APPOINTMENT_PLACEHOLDER);
+        appointmentDetailPanel = new PatientDetailPanel(logic.getPatientList(), logic.getAppointmentList(),
+                APPOINTMENT_PLACEHOLDER);
         appointmentDetailPanelPlaceholder.getChildren().add(appointmentDetailPanel.getRoot());
 
         appointmentListPanel = new AppointmentListPanel(logic.getAppointmentList(), this::showAppointmentDetails,

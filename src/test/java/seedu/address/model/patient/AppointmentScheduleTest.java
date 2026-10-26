@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 
 public class AppointmentScheduleTest {
 
-    private static final Appointment EARLY = new Appointment("2026-10-05");
-    private static final Appointment MIDDLE = new Appointment("2026-10-05 09:30");
-    private static final Appointment LATE = new Appointment("2026-11-02 14:00");
+    private static final Appointment EARLY = new Appointment("2026-10-05").withNumber(1);
+    private static final Appointment MIDDLE = new Appointment("2026-10-05 09:30").withNumber(2);
+    private static final Appointment LATE = new Appointment("2026-11-02 14:00").withNumber(3);
 
     @Test
     public void constructor_null_throwsNullPointerException() {
@@ -23,9 +23,10 @@ public class AppointmentScheduleTest {
     }
 
     @Test
-    public void constructor_unsortedWithDuplicates_sortedWithoutDuplicates() {
-        AppointmentSchedule appointments = new AppointmentSchedule(List.of(LATE, EARLY, MIDDLE, LATE));
-        assertEquals(List.of(EARLY, MIDDLE, LATE), appointments.asList());
+    public void constructor_duplicateNumbers_throwsIllegalArgumentException() {
+        List<Appointment> duplicates = List.of(LATE, EARLY, MIDDLE, LATE);
+        String message = AppointmentSchedule.MESSAGE_DUPLICATE_NUMBER;
+        assertThrows(IllegalArgumentException.class, message, () -> new AppointmentSchedule(duplicates));
     }
 
     @Test
@@ -41,8 +42,8 @@ public class AppointmentScheduleTest {
         // added in order
         assertEquals(List.of(EARLY, LATE), appointments.add(EARLY).asList());
 
-        // adding an existing appointment has no effect
-        assertEquals(appointments, appointments.add(LATE));
+        // duplicate numbers are rejected instead of silently dropping information
+        assertThrows(IllegalArgumentException.class, () -> appointments.add(LATE));
 
         // original is unchanged
         assertEquals(List.of(LATE), appointments.asList());
@@ -64,14 +65,14 @@ public class AppointmentScheduleTest {
     @Test
     public void contains() {
         AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY));
-        assertTrue(appointments.contains(new Appointment("2026-10-05")));
+        assertTrue(appointments.contains(EARLY));
         assertFalse(appointments.contains(MIDDLE));
     }
 
     @Test
     public void find() {
         Appointment middleWithDetails = new Appointment("2026-10-05 09:30",
-                Optional.of(new AppointmentDetails("Insulin review")));
+                Optional.of(new AppointmentDetails("Insulin review"))).withNumber(2);
         AppointmentSchedule appointments = new AppointmentSchedule(List.of(EARLY, middleWithDetails));
 
         // the stored appointment is returned with its own details
@@ -162,15 +163,60 @@ public class AppointmentScheduleTest {
     }
 
     @Test
-    public void sameDateAndTime_isSameAppointmentWhateverItsDetails() {
+    public void sameNumber_isSameAppointmentWhateverItsDetails() {
         Appointment middleWithDetails = new Appointment("2026-10-05 09:30",
-                Optional.of(new AppointmentDetails("Insulin review")));
+                Optional.of(new AppointmentDetails("Insulin review"))).withNumber(2);
         AppointmentSchedule schedule = new AppointmentSchedule(List.of(EARLY, middleWithDetails));
 
         assertTrue(schedule.contains(MIDDLE));
-        // adding the same date and time keeps the appointment that is there, with its details
-        assertEquals(schedule, schedule.add(MIDDLE));
+        // duplicate identity is rejected, but a different number at the same time is allowed
+        assertThrows(IllegalArgumentException.class, () -> schedule.add(MIDDLE));
+        assertEquals(3, schedule.add(new Appointment("2026-10-05 09:30")).asList().size());
         // removing by date and time removes it, whatever its details
         assertEquals(new AppointmentSchedule(List.of(EARLY)), schedule.remove(MIDDLE));
     }
+    @Test
+    public void constructor_legacyDuplicates_preservesAndNumbersInTimeOrder() {
+        Appointment first = new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("First")));
+        Appointment second = new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Second")));
+        AppointmentSchedule schedule = new AppointmentSchedule(List.of(new Appointment("2026-11-02"), first, second));
+        assertEquals(List.of(first.withNumber(1), second.withNumber(2),
+                new Appointment("2026-11-02").withNumber(3)), schedule.asList());
+    }
+
+    @Test
+    public void add_deleteAndMove_usesHighestRemainingNumber() {
+        AppointmentSchedule schedule = new AppointmentSchedule(List.of(EARLY, MIDDLE, LATE));
+        schedule = schedule.remove(MIDDLE).add(new Appointment("2026-09-01"));
+        assertEquals(4, schedule.findAtDateTime(new Appointment("2026-09-01")).getFirst().getNumber());
+        assertEquals(1, schedule.asList().get(1).getNumber());
+        schedule = schedule.remove(schedule.findByNumber(4).orElseThrow()).remove(LATE);
+        assertEquals(2, schedule.getNextNumber());
+        Appointment moved = new Appointment(1, "2027-01-01", Optional.empty());
+        assertTrue(schedule.contains(moved));
+        assertEquals(List.of(moved), schedule.remove(EARLY).add(moved).asList());
+        assertEquals(1, AppointmentSchedule.empty().getNextNumber());
+    }
+
+    @Test
+    public void constructor_mixedNumbers_preservesExplicitAndFillsGaps() {
+        Appointment explicit = new Appointment("2026-09-01").withNumber(2);
+        AppointmentSchedule schedule = new AppointmentSchedule(List.of(new Appointment("2026-11-01"), explicit,
+                new Appointment("2026-10-01")));
+        assertEquals(List.of(2, 1, 3), schedule.asList().stream().map(Appointment::getNumber).toList());
+    }
+
+    @Test
+    public void getNextNumber_maximumNumber_throwsWithoutOverflow() {
+        AppointmentSchedule schedule = new AppointmentSchedule(List.of(LATE.withNumber(3)));
+        Appointment maximum = new Appointment("2026-10-05").withNumber(Integer.MAX_VALUE);
+        schedule = schedule.add(maximum);
+        AppointmentSchedule full = schedule;
+        assertThrows(IllegalArgumentException.class, AppointmentSchedule.MESSAGE_NUMBER_EXHAUSTED,
+                full::getNextNumber);
+        assertThrows(IllegalArgumentException.class, () -> full.add(new Appointment("2026-10-06")));
+    }
+
 }

@@ -21,6 +21,16 @@ public class IdCompleterTest {
     }
 
     @Test
+    public void complete_statusCommands_keepsAppointmentNumber() {
+        for (String command : List.of("markappt", "unmarkappt")) {
+            assertEquals(List.of(command + " S1234567A 2", command + " S1999999C 2"),
+                    IdCompleter.complete(command + " s1 2", IDS));
+            assertEquals(List.of(command + " S1234567A", command + " T7654321B", command + " S1999999C"),
+                    IdCompleter.complete(command, IDS));
+        }
+    }
+
+    @Test
     public void complete_lowercasePartialId_matchesIgnoringCase() {
         assertEquals(List.of("view T7654321B"), IdCompleter.complete("view t76", IDS));
     }
@@ -58,22 +68,22 @@ public class IdCompleterTest {
 
     @Test
     public void complete_editApptWithOptionsAfterId_completesIdAndKeepsOptions() {
-        assertEquals(List.of("editappt T7654321B --appt 2026-10-05 09:30 --to 2026-10-06"),
-                IdCompleter.complete("editappt t7 --appt 2026-10-05 09:30 --to 2026-10-06", IDS));
+        assertEquals(List.of("editappt T7654321B 2 --to 2026-10-06"),
+                IdCompleter.complete("editappt t7 2 --to 2026-10-06", IDS));
         assertEquals(List.of("editappt S1234567A", "editappt S1999999C"), IdCompleter.complete("editappt S1", IDS));
     }
 
     @Test
     public void complete_addApptWithOptionsAfterId_completesIdAndKeepsOptions() {
-        assertEquals(List.of("addappt T7654321B --appt 2026-10-05 09:30 --details Bring pen"),
-                IdCompleter.complete("addappt t7 --appt 2026-10-05 09:30 --details Bring pen", IDS));
+        assertEquals(List.of("addappt T7654321B 2026-10-05 09:30 --details Bring pen"),
+                IdCompleter.complete("addappt t7 2026-10-05 09:30 --details Bring pen", IDS));
         assertEquals(List.of("addappt S1234567A", "addappt S1999999C"), IdCompleter.complete("addappt s1", IDS));
     }
 
     @Test
-    public void complete_deleteApptWithOptionsAfterId_completesIdAndKeepsOptions() {
-        assertEquals(List.of("deleteappt T7654321B --appt 2026-10-05 09:30"),
-                IdCompleter.complete("deleteappt t7 --appt 2026-10-05 09:30", IDS));
+    public void complete_deleteApptWithNumberAfterId_completesIdAndKeepsNumber() {
+        assertEquals(List.of("deleteappt T7654321B 2"),
+                IdCompleter.complete("deleteappt t7 2", IDS));
         assertEquals(List.of("deleteappt S1234567A", "deleteappt S1999999C"),
                 IdCompleter.complete("deleteappt s1", IDS));
     }
