@@ -1,0 +1,73 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as LogicManager LOGIC_COLOR
+participant ":LaiNurseParser" as LaiNurseParser LOGIC_COLOR
+participant ":FindCommandParser" as FindCommandParser LOGIC_COLOR
+participant "command:FindCommand" as FindCommand LOGIC_COLOR
+end box
+
+box Model MODEL_COLOR_T1
+participant "predicate:PatientContainsSubstringsPredicate" as Predicate MODEL_COLOR
+participant "model:ModelManager" as ModelManager MODEL_COLOR
+end box
+
+[-> LogicManager : execute("find ~--name Alex ~--address Serangoon")
+activate LogicManager
+
+LogicManager -> LaiNurseParser : parseCommand("find ~--name Alex ~--address Serangoon")
+activate LaiNurseParser
+
+create FindCommandParser
+LaiNurseParser -> FindCommandParser : FindCommandParser()
+activate FindCommandParser
+
+FindCommandParser --> LaiNurseParser
+deactivate FindCommandParser
+
+LaiNurseParser -> FindCommandParser : parse(" ~--name Alex ~--address Serangoon")
+activate FindCommandParser
+
+create Predicate
+FindCommandParser -> Predicate : PatientContainsSubstringsPredicate(...)
+activate Predicate
+
+Predicate --> FindCommandParser
+deactivate Predicate
+
+create FindCommand
+FindCommandParser -> FindCommand : FindCommand(predicate)
+activate FindCommand
+
+FindCommand --> FindCommandParser
+deactivate FindCommand
+
+FindCommandParser --> LaiNurseParser : command
+deactivate FindCommandParser
+
+LaiNurseParser --> LogicManager : command
+deactivate LaiNurseParser
+
+LogicManager -> FindCommand : execute(model)
+activate FindCommand
+
+FindCommand -> ModelManager : updateFilteredPatientList(predicate, comparator)
+activate ModelManager
+
+ModelManager --> FindCommand
+deactivate ModelManager
+
+FindCommand -> ModelManager : getFilteredPatientList()
+activate ModelManager
+
+ModelManager --> FindCommand : patients
+deactivate ModelManager
+
+FindCommand --> LogicManager : searchResult
+deactivate FindCommand
+
+[<-- LogicManager : finalResult
+deactivate LogicManager
+@enduml

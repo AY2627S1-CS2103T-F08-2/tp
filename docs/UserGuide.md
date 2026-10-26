@@ -21,7 +21,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar lainurse.jar`.<br>
    LaiNurse keeps its data in the folder you launch it from, so always launch it from this folder.<br>
-   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
+   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data: the sample appointments fall on the Monday, Tuesday and Wednesday of the week you first launch the app in, and Alex Yeoh has another one four weeks later.<br>
    ![Ui](images/Ui.png)
 
 1. Type a command in the command box and press <kbd>Enter</kbd> to execute it. For example, type `help` to view the summary of all commands in the result display, type `help add` to see help specific to adding patients, or press <kbd>F1</kbd> / select **Help** > **Help** / `help window` to open the Help window with the full user guide.<br><br>
@@ -34,7 +34,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
    * `view S1234567A` : Shows the details of the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
-   * `viewappt 2026-10-05` : Switches to the **Appointments** view, and shows only the appointments on October 5, 2026, with the first one selected.
+   * `viewappt` : Switches to the **Appointments** view, and shows the weekly view of this week, with the next appointment from now selected.
 
    * `delete S1234567A` : Deletes the patient with the ID `S1234567A` (Alex Yeoh, in the sample data).
 
@@ -67,7 +67,11 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
+* An appointment date is written `yyyy-MM-dd`, such as `2026-10-05`, and a time, when you give one, `HH:mm`, such as `09:00`. The year has exactly four digits and no sign, and the month, day, hour and minute each have two digits. Dates such as `+12345-01-01` and `-2026-10-05` are rejected, and so are `2026-1-5` and a time such as `9:00`. This applies to `addappt`, `editappt`, `deleteappt`, `viewappt`, and to appointments in the data file.
+
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
+
+* A pasted horizontal space, such as the non-breaking space that formatted text inserts, counts as a space.
 </div>
 
 ### The patient and appointment views
@@ -224,7 +228,6 @@ Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-hi
 * `--name`, `--phone`, `--address`, `--medical-history` and `--notes` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
 * `--notes` can also set notes for a patient who has none. Omitting it keeps the existing notes. A blank value is rejected; notes cannot be cleared through `edit`.
 * The patient's appointments are not changed here. Change them with [`addappt`](#adding-an-appointment-addappt), [`editappt`](#editing-an-appointment-editappt) or [`deleteappt`](#deleting-an-appointment-deleteappt); they keep their details and order otherwise.
-* The `--add-appt` and `--remove-appt` options that `edit` accepted in earlier versions are gone. Typing them is rejected with a message that points to `addappt`, `editappt` and `deleteappt`.
 * After a patient is edited, the list shows all patients again. The edited patient is selected in the list, and their details are shown, as `view` does. Renaming a patient moves their row, to keep the list sorted by name.
 
 Examples:
@@ -270,7 +273,7 @@ Shows only the appointments on a date, or between two dates, in the appointment 
 
 Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`
 
-* All dates must be real dates in `yyyy-MM-dd` format.
+* All dates must be real dates, in the appointment date format described in the notes about the command format above.
 * `viewappt DATE` looks for appointments on `DATE`.
 * With `--from` and `--to`, the range includes both dates. Give one of them or both, in any order, each at most once.
 * Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week, and the patient list shows the patients with an appointment this week. To see the appointments from today onwards, give `--from` with today's date.
@@ -291,7 +294,7 @@ Examples:
 * `viewappt --to 2026-10-31` shows the appointments from today to October 31, 2026.
 * `viewappt --from 2026-12-01` shows the appointments on or after December 1, 2026.
 * `viewappt --id S1234567A` shows all of Alex Yeoh's appointments.
-* `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31` shows Alex Yeoh's appointments in October 2026.
+* `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31` shows the appointments Alex Yeoh has in that range.
 
 ### Adding an appointment: `addappt`
 
@@ -300,7 +303,7 @@ Adds an appointment to a patient's schedule.
 Format: `addappt ID --appt DATE_OR_DATETIME [--details DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
-* `--appt` gives the date, or date and time, of the new appointment, in the same format as in [`add`](#adding-a-patient-add). Past dates are accepted.
+* `--appt` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. Past dates are accepted.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * The options may appear in any order after the ID, each at most once.
 * A patient cannot have two appointments at the same date and time, so adding an appointment onto another of the patient's appointments is rejected, whatever its details. A date-only appointment and a timed one on the same day, including `00:00`, can coexist.
@@ -327,9 +330,9 @@ Format: `editappt ID --appt DATE_OR_DATETIME [--to NEW_DATE_OR_DATETIME] [--deta
 * LaiNurse switches to the **Appointments** view and selects the edited appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
-* `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00` moves Alex Yeoh's appointment from 5 October, 09:30 to 6 October, 10:00, keeping its details.
-* `editappt S2345678B --appt 2026-10-06 --details Check blood pressure` sets the details of Bernice Yu's appointment on 6 October.
-* `editappt S1234567A --appt 2026-11-02 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's appointment on 2 November to 3 November, 08:00, and replaces its details.
+* `editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06 10:00` moves Alex Yeoh's insulin review from its Monday 09:30 slot to the next day, 10:00, keeping its details. The sample appointments fall in the week you first launched the app in; the dates here are for the week of Monday 5 October 2026.
+* `editappt S2345678B --appt 2026-10-06 --details Check blood pressure` sets the details of Bernice Yu's appointment on the Tuesday of the sample week.
+* `editappt S1234567A --appt 2026-11-02 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's monthly blood test, on the Monday four weeks later, to the following day, 08:00, and replaces its details.
 
 ### Deleting an appointment: `deleteappt`
 
@@ -344,8 +347,8 @@ Format: `deleteappt ID --appt DATE_OR_DATETIME`
 * LaiNurse switches to the **Appointments** view and keeps the page that is shown; the deleted appointment disappears from it. No other appointment, page or filter is changed.
 
 Examples:
-* `deleteappt S1234567A --appt 2026-10-05 09:30` deletes Alex Yeoh's appointment on 5 October at 09:30, with its details.
-* `deleteappt S1234567A --appt 2026-11-02` deletes Alex Yeoh's appointment on 2 November, which has no time.
+* `deleteappt S1234567A --appt 2026-10-05 09:30` deletes Alex Yeoh's insulin review, on the Monday of the sample week at 09:30, with its details.
+* `deleteappt S1234567A --appt 2026-11-02` deletes Alex Yeoh's monthly blood test, four weeks later, which has no time.
 
 ### Viewing a patient's details: `view`
 
@@ -400,7 +403,7 @@ LaiNurse saves your data automatically after every command that succeeds. You do
 LaiNurse saves its data as a JSON file, `data/lainurse.json`, inside the folder you launched it from. If you followed the [Quick start](#quick-start), that is the folder containing the JAR file. Advanced users are welcome to update data directly by editing that data file.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, LaiNurse starts with an empty patient list the next time it launches. The next command that succeeds, even `list` or `help`, then overwrites the invalid file with the empty list, and the data in it is lost. Back up the file before you edit it. If LaiNurse starts empty after an edit, close the window without running any command (the `exit` command also saves), and restore your backup.<br>
+If your changes make the data file invalid, LaiNurse starts with an empty patient list the next time it launches. The next command that succeeds, even `list` or `help`, then overwrites the invalid file with the empty list, and the data in it is lost. Back up the file before you edit it. Appointment dates and times in the file follow the formats above, and a file saved by an earlier version with a signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load. If LaiNurse starts empty after an edit, close the window without running any command (the `exit` command also saves), and restore your backup.<br>
 Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 

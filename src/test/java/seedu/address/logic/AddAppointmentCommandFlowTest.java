@@ -28,12 +28,12 @@ import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
-import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PatientBuilder;
+import seedu.address.testutil.SampleData;
 
 /**
  * Tests addappt commands from user input through model updates and JSON persistence, starting from the sample data.
@@ -55,7 +55,7 @@ public class AddAppointmentCommandFlowTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        model = new ModelManager(SampleDataUtil.getSampleLaiNurse(), new UserPrefs());
+        model = new ModelManager(SampleData.getSampleLaiNurse(), new UserPrefs());
         storage = new StorageManager(new JsonLaiNurseStorage(temporaryFolder.resolve("laiNurse.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
         storage.saveLaiNurse(model.getLaiNurse());

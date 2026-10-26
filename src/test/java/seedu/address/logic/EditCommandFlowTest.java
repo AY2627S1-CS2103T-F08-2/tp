@@ -20,7 +20,6 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
-import seedu.address.logic.parser.EditCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
@@ -31,12 +30,12 @@ import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
-import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PatientBuilder;
+import seedu.address.testutil.SampleData;
 
 /**
  * Tests edit commands from user input through model updates and JSON persistence, starting from the sample data.
@@ -59,7 +58,7 @@ public class EditCommandFlowTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        model = new ModelManager(SampleDataUtil.getSampleLaiNurse(), new UserPrefs());
+        model = new ModelManager(SampleData.getSampleLaiNurse(), new UserPrefs());
         storage = new StorageManager(new JsonLaiNurseStorage(temporaryFolder.resolve("laiNurse.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")));
         storage.saveLaiNurse(model.getLaiNurse());
@@ -165,16 +164,16 @@ public class EditCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("edit S12345678901 --name Alex", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
 
-        // the ID cannot be edited; the retired --appt keeps the generic error, and the add/remove
-        // appointment flags get their own message
+        // the ID cannot be edited, and the retired appointment options are rejected like any
+        // other unknown option
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --id S9999999Z", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --appt 2026-10-10", ParseException.class,
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-appt 2026-10-20", ParseException.class,
-                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
+                INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --remove-appt 2026-10-20 09:30", ParseException.class,
-                EditCommandParser.MESSAGE_RETIRED_APPOINTMENT_OPTIONS);
+                INVALID_FORMAT_MESSAGE);
 
         // single-valued field repeated
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --name Alex --name Bob", ParseException.class,
