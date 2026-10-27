@@ -1015,12 +1015,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 2.
 
-* 2e. Nurse asks to both replace and add to the medical history, or the notes.
-
-    * 2e1. LaiNurse shows an error message saying that the two options cannot be given together.
-
-      Use case resumes at step 2.
-
 * 2e. Nurse tries to change the patient's ID.
 
     * 2e1. LaiNurse does not accept an ID among the fields to change, and shows the command format.
@@ -1038,6 +1032,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2g1. LaiNurse keeps a single copy of the appointment.
 
       Use case resumes at step 3.
+
+* 2h. Nurse asks to both replace and add to the medical history, or the notes.
+
+    * 2h1. LaiNurse shows an error message saying that the two options cannot be given together.
+
+      Use case resumes at step 2.
 
 **Use case: UC05 - View appointments**
 

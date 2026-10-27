@@ -344,7 +344,7 @@ Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [-
 * `--details` sets the appointment's details, such as what to do or bring, replacing any it had. Like notes, details are stored in upper case. With no value, `--details` clears the details.
 * `--add-details` adds text to the end of the details, after `; `, or sets the details if the appointment has none. The text to add cannot be blank. `--details` and `--add-details` cannot be given together.
 * Give at least one of `--to`, `--details` and `--add-details`. The options may appear in any order after the ID and number, each at most once.
-* Moving an appointment keeps its details, unless `--details` is also given.
+* Moving an appointment keeps its details, unless `--details` is also given to replace or clear them, or `--add-details` to add to them.
 * Moving an appointment or changing its details keeps its number and Done/Undone status. Use `unmarkappt` to
   reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
   warning if both visits are undone. An edit that changes only details also warns if the visit clashes.
