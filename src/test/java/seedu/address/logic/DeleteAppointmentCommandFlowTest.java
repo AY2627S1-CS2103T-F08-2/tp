@@ -3,7 +3,6 @@ package seedu.address.logic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Files;
@@ -63,9 +62,9 @@ public class DeleteAppointmentCommandFlowTest {
 
     @Test
     public void execute_deleteTimedAppointment_persists() throws Exception {
-        Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
-                .withAppointment("2026-11-02", "Monthly blood test").build();
-        assertDeletePersisted("deleteappt S1234567A --appt 2026-10-05 09:30", expected,
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(patient(ALEX_ID).getSchedule()
+                        .remove(patient(ALEX_ID).getSchedule().findByNumber(1).orElseThrow())).build();
+        assertDeletePersisted("deleteappt S1234567A 1", expected,
                 "2026-10-05 09:30; Details: INSULIN REVIEW");
     }
 
@@ -73,7 +72,7 @@ public class DeleteAppointmentCommandFlowTest {
     public void execute_deleteDateOnlyAppointment_persists() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
                 .withAppointment("2026-10-05 09:30", "Insulin review").build();
-        assertDeletePersisted("deleteappt s1234567a\t--appt\t2026-11-02", expected,
+        assertDeletePersisted("deleteappt s1234567a\t2", expected,
                 "2026-11-02; Details: MONTHLY BLOOD TEST");
     }
 
@@ -81,10 +80,10 @@ public class DeleteAppointmentCommandFlowTest {
     public void execute_patientNotInDisplayedList_deleted() throws Exception {
         logic.execute("find --name bernice");
         List<Patient> expectedFilteredList = List.copyOf(model.getFilteredPatientList());
-        Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
-                .withAppointment("2026-11-02", "Monthly blood test").build();
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withSchedule(patient(ALEX_ID).getSchedule()
+                        .remove(patient(ALEX_ID).getSchedule().findByNumber(1).orElseThrow())).build();
 
-        CommandResult result = logic.execute("deleteappt S1234567A --appt 2026-10-05 09:30");
+        CommandResult result = logic.execute("deleteappt S1234567A 1");
 
         assertEquals(expected, patient(ALEX_ID));
         assertEquals(Optional.of(View.APPOINTMENTS), result.getView());
@@ -94,28 +93,25 @@ public class DeleteAppointmentCommandFlowTest {
 
     @Test
     public void execute_missingAppointment_rejectedWithoutChanges() throws Exception {
-        // a date alone does not match the timed appointment on that day, which the error lists
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05",
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A 99",
                 CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-05")
-                + String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE, "2026-10-05 09:30"));
-
-        // nothing on that day
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-20",
-                CommandException.class,
-                String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, ALEX_ID, "2026-10-20"));
+                String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, ALEX_ID, 99));
     }
 
     @Test
     public void execute_invalidInput_rejectedWithoutChanges() throws Exception {
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S0000000Z --appt 2026-10-05 09:30",
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S0000000Z 1",
                 CommandException.class, Messages.MESSAGE_INVALID_PATIENT_ID);
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A", ParseException.class, INVALID_FORMAT_MESSAGE);
-        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-02-30", ParseException.class,
-                Appointment.MESSAGE_CONSTRAINTS);
+        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648", "2026-10-05")) {
+            assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A " + number, ParseException.class,
+                    Appointment.MESSAGE_NUMBER_CONSTRAINTS);
+        }
         assertRejectedCommandLeavesDataUnchanged(
-                "deleteappt S1234567A --appt 2026-10-05 09:30 --appt 2026-11-02", ParseException.class,
-                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_APPOINTMENT));
+                "deleteappt S1234567A 1 --appt 2026-11-02", ParseException.class,
+                INVALID_FORMAT_MESSAGE);
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05", ParseException.class,
+                INVALID_FORMAT_MESSAGE);
     }
 
     /**
@@ -125,12 +121,16 @@ public class DeleteAppointmentCommandFlowTest {
      */
     private void assertDeletePersisted(String command, Patient expected, String expectedAppointmentText)
             throws Exception {
+        int deletedNumber = patient(expected.getId().value).getSchedule().asList().stream()
+                .filter(appointment -> expectedAppointmentText.split(";", 2)[0].equals(appointment.value))
+                .findFirst().orElseThrow().getNumber();
         LaiNurse expectedLaiNurse = new LaiNurse(model.getLaiNurse());
         expectedLaiNurse.setPatient(patient(expected.getId().value), expected);
 
         CommandResult result = logic.execute(command);
 
-        assertEquals(String.format(DeleteAppointmentCommand.MESSAGE_DELETE_APPOINTMENT_SUCCESS, expected.getName(),
+        assertEquals(String.format(DeleteAppointmentCommand.MESSAGE_DELETE_APPOINTMENT_SUCCESS, deletedNumber,
+                expected.getName(),
                 expected.getId(), expectedAppointmentText), result.getFeedbackToUser());
         assertEquals(Optional.empty(), result.getNavigation(), "no appointment exists to select any more");
         assertTrue(result.isSelectionCleared(), "the selection is cleared, as with delete and clear");
@@ -160,4 +160,16 @@ public class DeleteAppointmentCommandFlowTest {
         return model.getLaiNurse().getPatientList().stream()
                 .filter(patient -> patient.getId().equals(patientId)).findFirst().orElseThrow();
     }
+    @Test
+    public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndNumbers() throws Exception {
+        logic.execute("addappt S1234567A 2026-10-05 09:30");
+        CommandResult result = logic.execute("deleteappt S1234567A 1");
+        assertEquals("Deleted appointment 1 of ALEX YEOH (S1234567A): "
+                + "2026-10-05 09:30; Details: INSULIN REVIEW", result.getFeedbackToUser());
+        assertEquals(List.of(3, 2), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(Appointment::getNumber).toList());
+        assertTrue(result.isSelectionCleared());
+        assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
 }

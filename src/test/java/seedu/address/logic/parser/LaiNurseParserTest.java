@@ -52,7 +52,7 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_addAppointment() throws Exception {
         AddAppointmentCommand command = (AddAppointmentCommand) parser.parseCommand(
-                AddAppointmentCommand.COMMAND_WORD + " S1234567A --appt 2026-10-05 09:30"
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A 2026-10-05 09:30"
                         + " --details Bring insulin pen");
         assertEquals(new AddAppointmentCommand(new PatientId("S1234567A"),
                 new Appointment("2026-10-05 09:30", Optional.of(new AppointmentDetails("Bring insulin pen")))),
@@ -76,9 +76,8 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_deleteAppointment() throws Exception {
         DeleteAppointmentCommand command = (DeleteAppointmentCommand) parser.parseCommand(
-                DeleteAppointmentCommand.COMMAND_WORD + " S1234567A --appt 2026-10-05 09:30");
-        assertEquals(new DeleteAppointmentCommand(new PatientId("S1234567A"), new Appointment("2026-10-05 09:30")),
-                command);
+                DeleteAppointmentCommand.COMMAND_WORD + " S1234567A 1");
+        assertEquals(new DeleteAppointmentCommand(new PatientId("S1234567A"), 1), command);
     }
 
     @Test
@@ -90,9 +89,20 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_editAppointment() throws Exception {
         EditAppointmentCommand command = (EditAppointmentCommand) parser.parseCommand(
-                EditAppointmentCommand.COMMAND_WORD + " S1234567A --appt 2026-10-05 09:30 --to 2026-10-06");
-        assertEquals(new EditAppointmentCommand(new PatientId("S1234567A"), new Appointment("2026-10-05 09:30"),
+                EditAppointmentCommand.COMMAND_WORD + " S1234567A 1 --to 2026-10-06");
+        assertEquals(new EditAppointmentCommand(new PatientId("S1234567A"), 1,
                 Optional.of(new Appointment("2026-10-06")), Optional.empty()), command);
+    }
+
+    @Test
+    public void parseCommand_appointmentHorizontalSpaces_success() throws Exception {
+        assertEquals(new AddAppointmentCommand(new PatientId("S1234567A"), new Appointment("2026-10-05 09:30")),
+                parser.parseCommand("addappt\u00a0s1234567a\u202f2026-10-05\u00a009:30"));
+        assertEquals(new DeleteAppointmentCommand(new PatientId("S1234567A"), 1),
+                parser.parseCommand("deleteappt\u00a0s1234567a\u202f1"));
+        assertEquals(new EditAppointmentCommand(new PatientId("S1234567A"), 1,
+                Optional.of(new Appointment("2026-10-06")), Optional.empty()),
+                parser.parseCommand("editappt\u00a0s1234567a\u202f1\u00a0--to\u202f2026-10-06"));
     }
 
     @Test

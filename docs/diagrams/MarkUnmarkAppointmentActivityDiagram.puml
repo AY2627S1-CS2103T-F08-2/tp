@@ -1,0 +1,37 @@
+@startuml
+skin rose
+skinparam ActivityFontSize 15
+skinparam ArrowFontSize 12
+start
+:User enters markappt ID NUMBER
+or unmarkappt ID NUMBER;
+
+if () then ([invalid arguments])
+    :Report invalid format or appointment number;
+    stop
+endif
+if () then ([no patient has ID])
+    :Report missing patient;
+    stop
+endif
+if () then ([patient has no NUMBER])
+    :Report missing appointment number;
+    stop
+endif
+if () then ([status would not change])
+    :Report already done or already undone;
+    stop
+endif
+:Copy the appointment with its new status,
+preserving number, date, time and details;
+:Replace the appointment in the schedule
+and update the patient without changing filters;
+if () then ([unmarking restores a clash])
+    :Append a warning naming the other
+    patients and appointment numbers;
+endif
+:Save the data file;
+:Show Appointments and select the updated visit,
+keeping the page if it contains the visit;
+stop
+@enduml

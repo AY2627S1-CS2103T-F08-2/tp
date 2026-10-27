@@ -2,7 +2,6 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
@@ -20,8 +19,7 @@ import seedu.address.model.patient.PatientId;
 public class EditAppointmentCommandParser implements Parser<EditAppointmentCommand> {
 
     /**
-     * Parses the given {@code String} of arguments in the context of the EditAppointmentCommand
-     * and returns an EditAppointmentCommand object for execution.
+     * Parses a patient ID and appointment number followed by a new date/time, new details or both.
      *
      * @throws ParseException if the user input does not conform to the expected format.
      */
@@ -30,22 +28,22 @@ public class EditAppointmentCommandParser implements Parser<EditAppointmentComma
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT,
                 EditAppointmentCommand.MESSAGE_USAGE);
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
-                PREFIX_APPOINTMENT, PREFIX_TO, PREFIX_DETAILS);
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_APPOINTMENT, PREFIX_TO,
-                PREFIX_DETAILS);
+                PREFIX_TO, PREFIX_DETAILS);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_TO, PREFIX_DETAILS);
 
+        String[] preamble = argMultimap.getPreamble().split("\\s+");
+        if (preamble.length != 2) {
+            throw new ParseException(invalidFormatMessage);
+        }
         PatientId id;
         try {
-            id = ParserUtil.parseId(argMultimap.getPreamble());
+            id = ParserUtil.parseId(preamble[0]);
         } catch (ParseException pe) {
             throw new ParseException(invalidFormatMessage, pe);
         }
-        if (argMultimap.getValue(PREFIX_APPOINTMENT).isEmpty()) {
-            throw new ParseException(invalidFormatMessage);
-        }
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_APPOINTMENT, PREFIX_TO, PREFIX_DETAILS);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_TO, PREFIX_DETAILS);
 
-        Appointment targetAppointment = ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_APPOINTMENT).get());
+        int number = ParserUtil.parseAppointmentNumber(preamble[1]);
         Optional<Appointment> newDateTime = argMultimap.getValue(PREFIX_TO).isPresent()
                 ? Optional.of(ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_TO).get()))
                 : Optional.empty();
@@ -56,6 +54,6 @@ public class EditAppointmentCommandParser implements Parser<EditAppointmentComma
             throw new ParseException(EditAppointmentCommand.MESSAGE_NOT_EDITED);
         }
 
-        return new EditAppointmentCommand(id, targetAppointment, newDateTime, newDetails);
+        return new EditAppointmentCommand(id, number, newDateTime, newDetails);
     }
 }

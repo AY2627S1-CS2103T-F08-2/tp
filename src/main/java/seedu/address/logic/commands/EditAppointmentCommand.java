@@ -1,7 +1,6 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
@@ -12,6 +11,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.AppointmentLookup.Target;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -31,17 +31,15 @@ public class EditAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "editappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the appointment of the patient with the "
-            + "given ID at the given date and time. Moving it keeps its details, unless new details are given.\n"
-            + "Parameters: ID "
-            + PREFIX_APPOINTMENT + "DATE_OR_DATETIME "
+            + "given ID, using its number. Keeps its number and completion status.\n"
+            + "Parameters: ID NUMBER "
             + "[" + PREFIX_TO + "NEW_DATE_OR_DATETIME] "
             + "[" + PREFIX_DETAILS + "DETAILS]\n"
-            + "Example: " + COMMAND_WORD + " S1234567A "
-            + PREFIX_APPOINTMENT + "2026-10-05 09:30 "
+            + "Example: " + COMMAND_WORD + " S1234567A 2 "
             + PREFIX_TO + "2026-10-06 10:00 "
             + PREFIX_DETAILS + "Bring insulin pen";
 
-    public static final String MESSAGE_EDIT_APPOINTMENT_SUCCESS = "Edited appointment of %1$s (%2$s): %3$s";
+    public static final String MESSAGE_EDIT_APPOINTMENT_SUCCESS = "Edited appointment %1$d of %2$s (%3$s): %4$s";
     public static final String MESSAGE_MOVED_FROM = " (moved from %1$s)";
     public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_TO.toString().trim() + " and "
             + PREFIX_DETAILS.toString().trim() + " must be provided.";
@@ -49,27 +47,26 @@ public class EditAppointmentCommand extends Command {
     private static final Logger logger = LogsCenter.getLogger(EditAppointmentCommand.class);
 
     private final PatientId targetId;
-    private final Appointment targetAppointment;
+    private final Target targetAppointment;
     private final Optional<Appointment> newDateTime;
     private final Optional<AppointmentDetails> newDetails;
 
     /**
-     * Creates an EditAppointmentCommand to edit the appointment of the patient with {@code targetId} at the date and
-     * time of {@code targetAppointment}.
+     * Creates a command selecting an appointment by its patient-local number.
      *
      * @param targetId The ID of the patient whose appointment to edit.
-     * @param targetAppointment The date and time of the appointment to edit. Its details are ignored.
+     * @param number The patient-local appointment number to edit.
      * @param newDateTime The date and time to move the appointment to, if it moves. Its details are ignored.
      * @param newDetails The new details of the appointment, if they change.
      */
-    public EditAppointmentCommand(PatientId targetId, Appointment targetAppointment, Optional<Appointment> newDateTime,
+    public EditAppointmentCommand(PatientId targetId, int number, Optional<Appointment> newDateTime,
             Optional<AppointmentDetails> newDetails) {
-        CollectionUtil.requireAllNonNull(targetId, targetAppointment, newDateTime, newDetails);
+        CollectionUtil.requireAllNonNull(targetId, newDateTime, newDetails);
         if (newDateTime.isEmpty() && newDetails.isEmpty()) {
             throw new IllegalArgumentException(MESSAGE_NOT_EDITED);
         }
         this.targetId = targetId;
-        this.targetAppointment = targetAppointment;
+        this.targetAppointment = new Target(number);
         this.newDateTime = newDateTime;
         this.newDetails = newDetails;
     }
@@ -88,25 +85,26 @@ public class EditAppointmentCommand extends Command {
                 AppointmentLookup.find(targetId, schedule, targetAppointment, COMMAND_WORD);
         Appointment editedAppointment = createEditedAppointment(oldAppointment);
 
-        boolean isMoved = !editedAppointment.isSameAppointment(oldAppointment);
-        if (isMoved && schedule.contains(editedAppointment)) {
-            logger.fine("Rejected editappt: the patient already has an appointment at the new time.");
-            throw new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, targetId, editedAppointment));
-        }
+        boolean isMoved = !editedAppointment.hasSameDateTime(oldAppointment);
+        assert editedAppointment.getNumber() == oldAppointment.getNumber();
 
         AppointmentSchedule editedSchedule = schedule.remove(oldAppointment).add(editedAppointment);
+        assert editedSchedule.findByNumber(targetAppointment.number()).orElseThrow().equals(editedAppointment);
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);
-        logger.fine("Edited an appointment of patient " + targetId + ".");
 
-        String message = String.format(MESSAGE_EDIT_APPOINTMENT_SUCCESS, editedPatient.getName(), targetId,
-                Messages.format(editedAppointment));
+        String message = String.format(MESSAGE_EDIT_APPOINTMENT_SUCCESS, editedAppointment.getNumber(),
+                editedPatient.getName(), targetId, Messages.format(editedAppointment));
         if (isMoved) {
             message += String.format(MESSAGE_MOVED_FROM, oldAppointment);
         }
-        return new CommandResult(message)
-                .withNavigation(Navigation.toAppointment(new PatientAppointment(editedPatient, editedAppointment)));
+        PatientAppointment editedEntry = new PatientAppointment(editedPatient, editedAppointment);
+        String warning = Messages.formatClashWarning(model.getAppointmentList(), editedEntry);
+        message += warning;
+        logger.fine("Edited appointment #" + editedAppointment.getNumber() + " of patient " + targetId
+                + (warning.isEmpty() ? "." : " with a clash warning."));
+        return new CommandResult(message).withNavigation(Navigation.toAppointment(editedEntry));
     }
 
     /**
@@ -114,10 +112,10 @@ public class EditAppointmentCommand extends Command {
      * What is not changed is kept from {@code oldAppointment}.
      */
     private Appointment createEditedAppointment(Appointment oldAppointment) {
-        assert oldAppointment.isSameAppointment(targetAppointment);
+        assert oldAppointment.isNumbered();
         String dateTime = newDateTime.map(Appointment::toString).orElse(oldAppointment.toString());
         Optional<AppointmentDetails> details = newDetails.or(oldAppointment::getDetails);
-        return new Appointment(dateTime, details);
+        return new Appointment(oldAppointment.getNumber(), dateTime, details).withDone(oldAppointment.isDone());
     }
 
     @Override

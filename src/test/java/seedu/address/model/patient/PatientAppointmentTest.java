@@ -21,8 +21,8 @@ public class PatientAppointmentTest {
     private static final Patient OTHER_BEN = new PatientBuilder().withId("S0000001A").withName("Ben Tan")
             .withAppointments("2026-10-16 09:30").build();
 
-    private static final Appointment TODAY = new Appointment("2026-10-16");
-    private static final Appointment TODAY_MORNING = new Appointment("2026-10-16 09:30");
+    private static final Appointment TODAY = new Appointment("2026-10-16").withNumber(1);
+    private static final Appointment TODAY_MORNING = new Appointment("2026-10-16 09:30").withNumber(2);
 
     @Test
     public void constructor_null_throwsNullPointerException() {
@@ -39,8 +39,9 @@ public class PatientAppointmentTest {
     public void compareTo_ordersByAppointmentThenNameThenId() {
         PatientAppointment alexDateOnly = new PatientAppointment(ALEX, TODAY);
         PatientAppointment alexMorning = new PatientAppointment(ALEX, TODAY_MORNING);
-        PatientAppointment benMorning = new PatientAppointment(BEN, TODAY_MORNING);
-        PatientAppointment otherBenMorning = new PatientAppointment(OTHER_BEN, TODAY_MORNING);
+        PatientAppointment benMorning = new PatientAppointment(BEN, BEN.getSchedule().asList().getFirst());
+        PatientAppointment otherBenMorning =
+                new PatientAppointment(OTHER_BEN, OTHER_BEN.getSchedule().asList().getFirst());
 
         List<PatientAppointment> sorted = Stream.of(benMorning, otherBenMorning, alexMorning, alexDateOnly)
                 .sorted().toList();
@@ -56,8 +57,8 @@ public class PatientAppointmentTest {
         assertTrue(entry.isSameEntry(new PatientAppointment(ALEX, TODAY)));
         assertTrue(entry.isSameEntry(new PatientAppointment(renamedAlex, TODAY)));
         assertFalse(entry.isSameEntry(new PatientAppointment(ALEX, TODAY_MORNING)));
-        assertFalse(new PatientAppointment(BEN, TODAY_MORNING)
-                .isSameEntry(new PatientAppointment(OTHER_BEN, TODAY_MORNING)));
+        assertFalse(new PatientAppointment(BEN, BEN.getSchedule().asList().getFirst())
+                .isSameEntry(new PatientAppointment(OTHER_BEN, OTHER_BEN.getSchedule().asList().getFirst())));
         assertFalse(entry.isSameEntry(null));
     }
 
@@ -97,10 +98,11 @@ public class PatientAppointmentTest {
     @Test
     public void isSameEntry_appointmentDetailsChanged_returnsTrue() {
         Patient alexWithDetails = new PatientBuilder(ALEX).withAppointments()
+                .withAppointment("2026-10-16", "First visit")
                 .withAppointment("2026-10-16 09:30", "Insulin review").build();
         PatientAppointment before = new PatientAppointment(ALEX, TODAY_MORNING);
         PatientAppointment after = new PatientAppointment(alexWithDetails,
-                alexWithDetails.getSchedule().asList().get(0));
+                alexWithDetails.getSchedule().asList().get(1));
         assertTrue(before.isSameEntry(after));
     }
 }

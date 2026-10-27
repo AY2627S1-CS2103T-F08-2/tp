@@ -50,7 +50,8 @@ public class PatientRow extends UiPart<Region> {
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);
         LocalDateTime now = LocalDateTime.now();
-        AppointmentFormatter.findFirstNotPassed(patient.getSchedule().asList(), now)
+        AppointmentFormatter.findFirstNotPassed(patient.getSchedule().asList().stream()
+                .filter(appointment -> !appointment.isDone()).toList(), now)
                 .ifPresentOrElse(appointment -> showNextAppointment(appointment, now.toLocalDate()), () -> {
                     nextAppointment.setVisible(false);
                     nextAppointment.setManaged(false);

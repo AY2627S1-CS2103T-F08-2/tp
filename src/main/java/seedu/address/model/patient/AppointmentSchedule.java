@@ -1,34 +1,62 @@
 package seedu.address.model.patient;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Represents all the appointments of a Patient, in chronological order, with at most one at each date and time.
- * Two appointments at the same date and time are the same appointment, whatever their details, as
- * {@link Appointment#isSameAppointment(Appointment)} gives.
- * Guarantees: immutable; never contains null
+ * A patient's appointments, sorted by date, optional time and number.
+ * Guarantees: immutable; no nulls; every appointment has a unique positive number.
  */
 public class AppointmentSchedule {
+
+    public static final String MESSAGE_DUPLICATE_NUMBER = "A patient's appointment numbers must be unique.";
+    public static final String MESSAGE_NUMBER_EXHAUSTED = "No appointment number is available for this patient.";
 
     private static final AppointmentSchedule EMPTY = new AppointmentSchedule(List.of());
 
     private final List<Appointment> appointments;
 
     /**
-     * Constructs an {@code AppointmentSchedule} holding the given appointments, sorted.
-     * Of several appointments at the same date and time, only the first is kept.
+     * Preserves explicit numbers and assigns missing ones in chronological order, using the lowest unused
+     * positive numbers. Equal timestamps retain their input order when assigning numbers.
+     *
+     * @throws IllegalArgumentException if explicit numbers are duplicated.
      */
     public AppointmentSchedule(Collection<Appointment> appointments) {
         requireNonNull(appointments);
-        this.appointments = List.copyOf(new TreeSet<>(appointments));
+        Set<Integer> used = new HashSet<>();
+        for (Appointment appointment : appointments) {
+            requireNonNull(appointment);
+            if (appointment.isNumbered()) {
+                checkArgument(used.add(appointment.getNumber()), MESSAGE_DUPLICATE_NUMBER);
+            }
+        }
+        List<Appointment> numbered = new ArrayList<>();
+        int candidate = 1;
+        for (Appointment appointment : appointments.stream().sorted().toList()) {
+            if (appointment.isNumbered()) {
+                numbered.add(appointment);
+                continue;
+            }
+            while (used.contains(candidate)) {
+                checkArgument(candidate < Integer.MAX_VALUE, MESSAGE_NUMBER_EXHAUSTED);
+                candidate++;
+            }
+            numbered.add(appointment.withNumber(candidate));
+            used.add(candidate);
+        }
+        this.appointments = numbered.stream().sorted().toList();
+        assert this.appointments.stream().allMatch(Appointment::isNumbered);
     }
 
     /**
@@ -40,29 +68,27 @@ public class AppointmentSchedule {
 
     /**
      * Returns a copy of these appointments with {@code appointment} added.
-     * Adding an appointment at a date and time that already has one has no effect, whatever their details.
+     * An unnumbered input receives the highest remaining number plus one.
      */
     public AppointmentSchedule add(Appointment appointment) {
         requireNonNull(appointment);
-        TreeSet<Appointment> updated = new TreeSet<>(appointments);
-        updated.add(appointment);
+        List<Appointment> updated = new ArrayList<>(appointments);
+        updated.add(appointment.isNumbered() ? appointment : appointment.withNumber(getNextNumber()));
         return new AppointmentSchedule(updated);
     }
 
     /**
-     * Returns a copy of these appointments without the one at the date and time of {@code appointment}, whatever
-     * its details. Removing an appointment that is not present has no effect.
+     * Removes the appointment with the given identity without renumbering the others.
      */
     public AppointmentSchedule remove(Appointment appointment) {
         requireNonNull(appointment);
-        TreeSet<Appointment> updated = new TreeSet<>(appointments);
-        updated.remove(appointment);
+        List<Appointment> updated = appointments.stream().filter(stored -> !stored.isSameAppointment(appointment))
+                .toList();
         return new AppointmentSchedule(updated);
     }
 
     /**
-     * Returns true if one of these appointments is at the date and time of {@code appointment}, whatever its
-     * details.
+     * Returns whether an appointment with this number exists, regardless of its date/time or details.
      */
     public boolean contains(Appointment appointment) {
         requireNonNull(appointment);
@@ -70,12 +96,38 @@ public class AppointmentSchedule {
     }
 
     /**
-     * Returns the appointment at the date and time of {@code appointment}, with its own details, or
-     * {@code Optional#empty()} if there is none.
+     * Looks up a numbered appointment by identity, returning the stored date/time and details.
      */
     public Optional<Appointment> find(Appointment appointment) {
         requireNonNull(appointment);
         return appointments.stream().filter(appointment::isSameAppointment).findFirst();
+    }
+
+    /**
+     * Returns the appointment with {@code number}, if present.
+     */
+    public Optional<Appointment> findByNumber(int number) {
+        checkArgument(number > 0, Appointment.MESSAGE_NUMBER_CONSTRAINTS);
+        return appointments.stream().filter(appointment -> appointment.getNumber() == number).findFirst();
+    }
+
+    /**
+     * Returns every appointment at the exact date and optional time, in number order.
+     */
+    public List<Appointment> findAtDateTime(Appointment target) {
+        requireNonNull(target);
+        return appointments.stream().filter(target::hasSameDateTime).toList();
+    }
+
+    /**
+     * Returns the highest remaining number plus one, or 1 for an empty schedule.
+     *
+     * @throws IllegalArgumentException if the highest number cannot be incremented.
+     */
+    public int getNextNumber() {
+        int highest = appointments.stream().mapToInt(Appointment::getNumber).max().orElse(0);
+        checkArgument(highest < Integer.MAX_VALUE, MESSAGE_NUMBER_EXHAUSTED);
+        return highest + 1;
     }
 
     /**

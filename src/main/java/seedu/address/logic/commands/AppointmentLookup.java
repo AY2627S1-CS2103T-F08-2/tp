@@ -1,11 +1,11 @@
 package seedu.address.logic.commands;
 
-import java.util.List;
-import java.util.Optional;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.AppUtil;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.patient.Appointment;
@@ -22,25 +22,36 @@ public final class AppointmentLookup {
     private AppointmentLookup() {}
 
     /**
-     * Returns the appointment of the patient with {@code patientId} at the date and time of {@code target}.
-     * The details of {@code target} are ignored.
-     *
-     * @throws CommandException if there is no such appointment. The message says so and lists the patient's
-     *         appointments on that day, if any, so that the nurse can retype the one they meant.
+     * A positive patient-local appointment number.
      */
-    public static Appointment find(PatientId patientId, AppointmentSchedule schedule, Appointment target,
+    public record Target(int number) {
+        /**
+         * Validates that the appointment number is positive.
+         */
+        public Target {
+            AppUtil.checkArgument(number > 0, Appointment.MESSAGE_NUMBER_CONSTRAINTS);
+        }
+
+        @Override
+        public String toString() {
+            return "#" + number;
+        }
+    }
+
+    /**
+     * Resolves a patient-local appointment number without changing the schedule.
+     *
+     * @throws CommandException if the patient has no appointment with the given number.
+     */
+    public static Appointment find(PatientId patientId, AppointmentSchedule schedule, Target target,
             String commandWord) throws CommandException {
-        Optional<Appointment> found = schedule.find(target);
-        if (found.isPresent()) {
-            return found.get();
-        }
-        logger.fine("Rejected " + commandWord + ": the patient has no appointment at the given time.");
-        String message = String.format(Messages.MESSAGE_APPOINTMENT_NOT_FOUND, patientId, target);
-        List<Appointment> sameDay = schedule.getOnDate(target.getDate());
-        if (!sameDay.isEmpty()) {
-            message += String.format(Messages.MESSAGE_APPOINTMENTS_ON_DATE,
-                    sameDay.stream().map(Appointment::toString).collect(Collectors.joining(", ")));
-        }
-        throw new CommandException(message);
+        requireAllNonNull(patientId, schedule, target, commandWord);
+        Appointment found = schedule.findByNumber(target.number()).orElseThrow(() -> {
+            logger.fine("Rejected " + commandWord + ": no appointment has the given number.");
+            return new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND,
+                    patientId, target.number()));
+        });
+        assert found.getNumber() == target.number();
+        return found;
     }
 }

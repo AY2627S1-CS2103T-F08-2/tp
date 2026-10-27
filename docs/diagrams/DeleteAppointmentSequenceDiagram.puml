@@ -6,7 +6,6 @@ box Logic LOGIC_COLOR_T1
 participant ":LogicManager" as LogicManager LOGIC_COLOR
 participant ":LaiNurseParser" as LaiNurseParser LOGIC_COLOR
 participant ":DeleteAppointmentCommandParser" as DeleteAppointmentCommandParser LOGIC_COLOR
-participant "a:Appointment" as Appointment LOGIC_COLOR
 participant "l:AppointmentLookup" as AppointmentLookup LOGIC_COLOR
 participant "d:DeleteAppointmentCommand" as DeleteAppointmentCommand LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
@@ -16,10 +15,10 @@ box Model MODEL_COLOR_T1
 participant "m:Model" as Model MODEL_COLOR
 end box
 
-[-> LogicManager : execute("deleteappt S1234567A --appt 2026-10-05 09:30")
+[-> LogicManager : execute("deleteappt S1234567A 1")
 activate LogicManager
 
-LogicManager -> LaiNurseParser : parseCommand("deleteappt S1234567A --appt 2026-10-05 09:30")
+LogicManager -> LaiNurseParser : parseCommand("deleteappt S1234567A 1")
 activate LaiNurseParser
 
 create DeleteAppointmentCommandParser
@@ -29,18 +28,11 @@ activate DeleteAppointmentCommandParser
 DeleteAppointmentCommandParser --> LaiNurseParser
 deactivate DeleteAppointmentCommandParser
 
-LaiNurseParser -> DeleteAppointmentCommandParser : parse("S1234567A --appt 2026-10-05 09:30")
+LaiNurseParser -> DeleteAppointmentCommandParser : parse("S1234567A 1")
 activate DeleteAppointmentCommandParser
 
-create Appointment
-DeleteAppointmentCommandParser -> Appointment : Appointment("2026-10-05 09:30")
-activate Appointment
-
-Appointment --> DeleteAppointmentCommandParser
-deactivate Appointment
-
 create DeleteAppointmentCommand
-DeleteAppointmentCommandParser -> DeleteAppointmentCommand : DeleteAppointmentCommand(S1234567A, a)
+DeleteAppointmentCommandParser -> DeleteAppointmentCommand : DeleteAppointmentCommand(S1234567A, 1)
 activate DeleteAppointmentCommand
 
 DeleteAppointmentCommand --> DeleteAppointmentCommandParser
@@ -64,7 +56,7 @@ activate Model
 Model --> DeleteAppointmentCommand : p
 deactivate Model
 
-DeleteAppointmentCommand -> AppointmentLookup : find(S1234567A, p.getSchedule(), a)
+DeleteAppointmentCommand -> AppointmentLookup : find(S1234567A, p.getSchedule(), target, COMMAND_WORD)
 activate AppointmentLookup
 
 AppointmentLookup --> DeleteAppointmentCommand : foundAppointment

@@ -1,7 +1,6 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_APPOINTMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 
 import java.util.Optional;
@@ -30,14 +29,12 @@ public class AddAppointmentCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Adds an appointment to the patient with the "
             + "given ID, at the given date and time.\n"
-            + "Parameters: ID "
-            + PREFIX_APPOINTMENT + "DATE_OR_DATETIME "
+            + "Parameters: ID DATE_OR_DATETIME "
             + "[" + PREFIX_DETAILS + "DETAILS]\n"
-            + "Example: " + COMMAND_WORD + " S1234567A "
-            + PREFIX_APPOINTMENT + "2026-12-01 10:00 "
+            + "Example: " + COMMAND_WORD + " S1234567A 2026-12-01 10:00 "
             + PREFIX_DETAILS + "Bring insulin pen";
 
-    public static final String MESSAGE_ADD_APPOINTMENT_SUCCESS = "Added appointment of %1$s (%2$s): %3$s";
+    public static final String MESSAGE_ADD_APPOINTMENT_SUCCESS = "Added appointment %1$d of %2$s (%3$s): %4$s";
 
     private static final Logger logger = LogsCenter.getLogger(AddAppointmentCommand.class);
 
@@ -67,20 +64,28 @@ public class AddAppointmentCommand extends Command {
                 });
 
         AppointmentSchedule schedule = patient.getSchedule();
-        if (schedule.contains(toAdd)) {
-            logger.fine("Rejected addappt: the patient already has an appointment at the given time.");
-            throw new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_TAKEN, targetId, toAdd));
+        int number;
+        try {
+            number = schedule.getNextNumber();
+        } catch (IllegalArgumentException e) {
+            logger.fine("Rejected addappt: no new appointment number is available.");
+            throw new CommandException(e.getMessage(), e);
         }
 
-        AppointmentSchedule editedSchedule = schedule.add(toAdd);
+        Appointment numbered = new Appointment(number, toAdd.value, toAdd.getDetails());
+        AppointmentSchedule editedSchedule = schedule.add(numbered);
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);
-        logger.fine("Added an appointment of patient " + targetId + ".");
 
-        PatientAppointment created = new PatientAppointment(editedPatient, toAdd);
-        String message = String.format(MESSAGE_ADD_APPOINTMENT_SUCCESS, editedPatient.getName(), targetId,
-                Messages.format(toAdd));
+        assert editedSchedule.findByNumber(numbered.getNumber()).orElseThrow().equals(numbered);
+        PatientAppointment created = new PatientAppointment(editedPatient, numbered);
+        String message = String.format(MESSAGE_ADD_APPOINTMENT_SUCCESS, numbered.getNumber(),
+                editedPatient.getName(), targetId, Messages.format(numbered));
+        String warning = Messages.formatClashWarning(model.getAppointmentList(), created);
+        message += warning;
+        logger.fine("Added appointment #" + number + " of patient " + targetId
+                + (warning.isEmpty() ? "." : " with a clash warning."));
         return new CommandResult(message).withNavigation(Navigation.toAppointment(created));
     }
 

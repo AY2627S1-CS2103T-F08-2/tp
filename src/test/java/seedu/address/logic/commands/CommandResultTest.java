@@ -285,6 +285,7 @@ public class CommandResultTest {
 
     private static PatientAppointment appointmentOf(String appointment) {
         Patient patient = new PatientBuilder(AMY).withAppointments(appointment).build();
-        return new PatientAppointment(patient, new Appointment(appointment));
+        return new PatientAppointment(patient, patient.getSchedule()
+                .findAtDateTime(new Appointment(appointment)).getFirst());
     }
 }

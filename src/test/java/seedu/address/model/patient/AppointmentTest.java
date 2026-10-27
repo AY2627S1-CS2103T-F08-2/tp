@@ -14,6 +14,37 @@ import org.junit.jupiter.api.Test;
 public class AppointmentTest {
 
     @Test
+    public void withDone_preservesValuesAndOriginal() {
+        Appointment original = new Appointment(7, "2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Bring insulin pen")));
+        Appointment done = original.withDone(true);
+        assertFalse(original.isDone());
+        assertTrue(done.isDone());
+        assertEquals(7, done.getNumber());
+        assertEquals(original.getDate(), done.getDate());
+        assertEquals(original.getTime(), done.getTime());
+        assertEquals(original.getDetails(), done.getDetails());
+        assertEquals(original.toString(), done.toString());
+        assertTrue(original.isSameAppointment(done));
+        assertEquals(0, original.compareTo(done));
+        assertFalse(original.equals(done));
+        assertEquals(original, done.withDone(false));
+        assertEquals(done, original.withDone(true));
+        assertEquals(done.hashCode(), original.withDone(true).hashCode());
+    }
+
+    @Test
+    public void withNumber_doneInput_preservesCompletion() {
+        Appointment input = new Appointment("2026-10-05").withDone(true);
+        Appointment numbered = input.withNumber(3);
+        assertTrue(numbered.isDone());
+        assertFalse(input.isNumbered());
+        assertEquals(numbered, numbered.withNumber(3));
+        assertEquals(numbered, numbered.withDone(true));
+        assertEquals(3, numbered.getNumber());
+    }
+
+    @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new Appointment(null));
     }
@@ -129,16 +160,17 @@ public class AppointmentTest {
     }
 
     @Test
-    public void isSameAppointment_sameDateAndTime_ignoresDetails() {
-        Appointment plain = new Appointment("2026-10-05 09:30");
+    public void isSameAppointment_sameNumber_ignoresTimeAndDetails() {
+        Appointment plain = new Appointment("2026-10-05 09:30").withNumber(1);
         Appointment withDetails = new Appointment("2026-10-05 09:30",
-                Optional.of(new AppointmentDetails("Insulin review")));
+                Optional.of(new AppointmentDetails("Insulin review"))).withNumber(1);
         assertTrue(plain.isSameAppointment(withDetails));
         assertTrue(withDetails.isSameAppointment(plain));
         assertEquals(0, plain.compareTo(withDetails));
 
         assertFalse(plain.isSameAppointment(new Appointment("2026-10-05")));
-        assertFalse(plain.isSameAppointment(new Appointment("2026-10-06 09:30")));
+        assertTrue(plain.isSameAppointment(new Appointment("2026-10-06 09:30").withNumber(1)));
+        assertFalse(plain.isSameAppointment(new Appointment("2026-10-05 09:30").withNumber(2)));
         assertFalse(plain.isSameAppointment(null));
     }
 
@@ -156,4 +188,22 @@ public class AppointmentTest {
                 Optional.of(new AppointmentDetails("Blood test")))));
         assertFalse(withDetails.equals(new Appointment("2026-10-05 09:30")));
     }
+    @Test
+    public void number_assignmentValidationAndEquality() {
+        Appointment input = new Appointment("2026-10-05");
+        assertFalse(input.isNumbered());
+        assertThrows(IllegalStateException.class, input::getNumber);
+        assertThrows(IllegalArgumentException.class, () -> input.withNumber(0));
+        assertThrows(IllegalArgumentException.class, () -> input.withNumber(-1));
+        Appointment numbered = input.withNumber(1);
+        assertEquals(1, numbered.getNumber());
+        assertEquals(numbered, numbered.withNumber(1));
+        assertThrows(IllegalArgumentException.class, () -> numbered.withNumber(2));
+        assertFalse(numbered.equals(input));
+        assertFalse(numbered.equals(input.withNumber(2)));
+        assertTrue(numbered.hasSameDateTime(input.withNumber(2)));
+        assertTrue(numbered.compareTo(input.withNumber(2)) < 0);
+        assertFalse(input.hasSameDateTime(new Appointment("2026-10-05 00:00")));
+    }
+
 }
