@@ -169,6 +169,21 @@ public class ViewAppointmentCommandParserTest {
     }
 
     @Test
+    public void parse_twoDatesInOneOption_throwsParseException() {
+        // The second date is read into the option's value, so the error asks for one option per date
+        assertParseFailure(parser, FROM_FLAG + START + " " + END,
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
+        assertParseFailure(parser, TO_FLAG + END + " " + START,
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
+        // The check covers the value whatever other options are present
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + FROM_FLAG + START + " " + END,
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
+        // The last word decides, as it does for the ID value
+        assertParseFailure(parser, FROM_FLAG + START + " " + MONTH_13_DATE, DateUtil.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, FROM_FLAG + START + " " + NOT_A_DATE, DateUtil.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
     public void parse_duplicateOptions_throwsParseException() {
         assertParseFailure(parser, FROM_FLAG + START + " " + FROM_FLAG + END,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_FROM));

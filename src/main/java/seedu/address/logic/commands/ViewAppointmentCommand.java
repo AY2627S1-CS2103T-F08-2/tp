@@ -62,6 +62,9 @@ public class ViewAppointmentCommand extends Command {
             "The --from date must not be after the --to date.";
     public static final String MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS =
             "A DATE must come before other options, for example: viewappt 2026-10-15 --id S1234567A";
+    public static final String MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION =
+            "Each option takes one date: give the start with --from and the end with --to, for example: "
+                    + "viewappt --from 2026-10-01 --to 2026-10-05";
 
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;

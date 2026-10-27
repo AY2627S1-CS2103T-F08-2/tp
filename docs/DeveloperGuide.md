@@ -550,7 +550,8 @@ normalizes option separators in the same way as `add`, so unknown options are re
 that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
 `2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
 `--from` or `--to` does. Any other word, such as `invalid`, could be a mistyped option, so it gets the command format. When both options are given, the parser rejects a `--from` date that is after the
-`--to` date.
+`--to` date. A second date typed into one option's value, such as `--from 2026-10-01 2026-10-05`, gets a
+message that each option takes one date, rather than the date error.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
 when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Today is
@@ -1600,8 +1601,10 @@ testers are expected to do more *exploratory* testing.
        Expected: The list is unchanged. The status message says that the `--from` date must not be after the `--to` date.
 
     1. Other incorrect commands to try: `viewappt 2026-10-15 --to 2026-10-31` (a date and an option),
-       `viewappt --till 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated option)<br>
-       Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
+       `viewappt --till 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated
+       option), `viewappt --from 2026-10-01 2026-10-05` (a second date without `--to`)<br>
+       Expected: The list is unchanged. The status message shows the command format, a duplicate-option error,
+       or a message that each option takes one date.
 
 1. Viewing one patient's appointments with `--id`
 
