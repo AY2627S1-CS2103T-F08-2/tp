@@ -21,9 +21,10 @@ title: Developer Guide
 
 * AI Use Declaration from Yong Kang: "I used Gemini to write and review code, tests and documentation. No automation is done and I go back and forth consistently with AI to ensure I am still largely in charge of the process. AI levels between AI-1 and AI-5."
 
-* AI Use Declaration from Darren: "I used Claude Code to write code, tests and documentation for the `edit` command and
-  the appointment model, and to review my changes. I decide the design and behavior, and I review, test and revise
-  the results before committing them."
+* AI Use Declaration from Darren: "I used Claude Code to write code, tests and documentation for the `edit` command,
+  the appointment model and the data file backup, to review my changes and my teammates' pull requests, and to draft
+  bug reports. I decide the design and behavior, and I review, test and revise the results before committing or
+  posting them."
 
 --------------------------------------------------------------------------------------------------------------------
 
