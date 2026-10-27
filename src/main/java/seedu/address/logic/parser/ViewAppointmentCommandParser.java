@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS;
 import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
@@ -42,6 +43,8 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
         // Duplicate options are reported whatever the rest of the input looks like
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        // A date after --id is read into the ID value, so the order is reported before that value is parsed
+        verifyNoDateAfterId(argMultimap);
         String preamble = argMultimap.getPreamble();
         if (isDateLike(preamble)) {
             // A date that is not real gets the date error, as a date given to --from or --to does
@@ -84,6 +87,26 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
             throw new ParseException(MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO);
         }
         return new ViewAppointmentCommand(startDate, endDate, patientId);
+    }
+
+    /**
+     * Rejects a DATE that comes after {@code PREFIX_ID}: the tokenizer reads it as part of the ID value, so the
+     * ID error would blame an ID that is itself valid. A value that ends in a date-like word is an ID with a
+     * date typed after it, and a date-like word can only be meant as a date, so it is the order that the error
+     * reports. A value that does not end in one fails as an ID, which is what the user gave to {@code PREFIX_ID}.
+     *
+     * @throws ParseException if the ID value ends in a date-like word.
+     */
+    private static void verifyNoDateAfterId(ArgumentMultimap argMultimap) throws ParseException {
+        Optional<String> id = argMultimap.getValue(PREFIX_ID);
+        if (id.isEmpty()) {
+            return;
+        }
+        String[] wordsInId = id.get().split("\\s+");
+        String lastWord = wordsInId[wordsInId.length - 1];
+        if (wordsInId.length > 1 && isDateLike(lastWord)) {
+            throw new ParseException(MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+        }
     }
 
     /**

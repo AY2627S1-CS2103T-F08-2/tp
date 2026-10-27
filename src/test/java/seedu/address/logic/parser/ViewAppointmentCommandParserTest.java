@@ -183,19 +183,37 @@ public class ViewAppointmentCommandParserTest {
     public void parse_duplicateId_throwsParseException() {
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + ID_FLAG + OTHER_VALID_ID,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
+        // A duplicate option is reported even when a date also sits inside the first ID value
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + VALID_DATE_STRING + " " + ID_FLAG + OTHER_VALID_ID,
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
     }
 
     @Test
     public void parse_dateAfterOptions_throwsParseException() {
-        // The date ends up in the ID value, which fails as an invalid ID
+        // The date ends up in the ID value, so the error blames the order, not the ID
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + VALID_DATE_STRING,
-                PatientId.MESSAGE_CONSTRAINTS);
+                Messages.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+        for (String date : List.of(WRONG_FORMAT_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
+            // Even a date that is not real is diagnosed as a date in the wrong place, not as a bad ID
+            assertParseFailure(parser, ID_FLAG + VALID_ID + " " + date,
+                    Messages.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+        }
+    }
+
+    @Test
+    public void parse_wordAfterId_throwsParseException() {
+        // A trailing word that is not date-like is not diagnosed as a date, so the ID value fails as an ID
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + NOT_A_DATE, PatientId.MESSAGE_CONSTRAINTS);
+        // The date is only diagnosed as misplaced when the ID value ends in it
+        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING + " " + VALID_ID, PatientId.MESSAGE_CONSTRAINTS);
     }
 
     @Test
     public void parse_invalidId_throwsParseException() {
         assertParseFailure(parser, ID_FLAG + INVALID_ID, PatientId.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, ID_FLAG, PatientId.MESSAGE_CONSTRAINTS);
+        // A date given to --id fails as an ID, not as a misplaced date
+        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING, PatientId.MESSAGE_CONSTRAINTS);
     }
 
     @Test

@@ -39,6 +39,8 @@ public class Messages {
             "The --to date %1$s is before today (%2$s). To see past appointments, also give --from.";
     public static final String MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO =
             "The --from date must not be after the --to date.";
+    public static final String MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS =
+            "A DATE must come before other options, for example: viewappt 2026-10-15 --id S1234567A";
     public static final String MESSAGE_DUPLICATE_FIELDS =
             "Multiple values specified for the following single-valued field(s): ";
     public static final String MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND = "Patient %1$s has no appointment #%2$d.";

@@ -568,8 +568,9 @@ from now.
 
 With `--id`, the parser also reads a `PatientId`. `--id` alone, with no date, shows every appointment of that patient:
 the range runs from the date of their first appointment to the date of their last, or is today alone if they have
-none. A date typed after the options ends up inside the ID value, which
-`ParserUtil#parseId` fails as an invalid ID. When the command runs, it looks the patient up by ID,
+none. A date typed after the options ends up inside the ID value; because the value then ends in a date-like word,
+which can only be meant as a date, the parser reports that a `DATE` must come before other options, rather than
+failing the ID. When the command runs, it looks the patient up by ID,
 and if none matches, fails with the invalid-patient-ID error and leaves the list and the page as they were. Otherwise
 it narrows the list to that patient with an appointment in the range, and counts that patient's appointments in the
 range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
@@ -1638,8 +1639,12 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
        Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
 
-    1. Other incorrect commands to try: `viewappt --id S1234567A MON` (a date after the option, which makes
-       the ID invalid), `viewappt --id S1234567A --id S2345678B` (repeated option), `viewappt --id` (missing ID)<br>
+    1. Test case: `viewappt --id S1234567A MON`, a date after the option<br>
+       Expected: The list is unchanged. The status message says that a `DATE` must come before other options,
+       rather than blaming the ID, which on its own is valid.
+
+    1. Other incorrect commands to try: `viewappt --id MON S1234567A`, an ID value that ends in an ID rather
+       than a date, `viewappt --id S1234567A --id S2345678B` (repeated option), `viewappt --id` (missing ID)<br>
        Expected: The list is unchanged. The status message shows the patient ID constraints or a duplicate-option
        error.
 
