@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPatients.IDA;
 import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -106,5 +107,87 @@ public class JsonLaiNurseStorageTest {
     @Test
     public void saveLaiNurse_nullFilePath_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> saveLaiNurse(new LaiNurse(), null));
+    }
+
+    @Test
+    public void constructor_dataFile_backupAndCorruptCopyNextToIt() {
+        JsonLaiNurseStorage storage = new JsonLaiNurseStorage(Paths.get("data", "lainurse.json"));
+        assertEquals(Paths.get("data", "lainurse.backup.json"), storage.getLaiNurseBackupFilePath());
+        assertEquals(Paths.get("data", "lainurse.corrupt.json"), storage.getLaiNurseCorruptFilePath());
+    }
+
+    @Test
+    public void withSuffix() {
+        // suffix goes before the last extension
+        assertEquals(Paths.get("a", "b.c.backup.json"), JsonLaiNurseStorage.withSuffix(Paths.get("a", "b.c.json"),
+                "backup"));
+
+        // no extension, or a name that only starts with a dot: suffix goes at the end
+        assertEquals(Paths.get("lainurse.backup"), JsonLaiNurseStorage.withSuffix(Paths.get("lainurse"), "backup"));
+        assertEquals(Paths.get(".lainurse.backup"), JsonLaiNurseStorage.withSuffix(Paths.get(".lainurse"),
+                "backup"));
+    }
+
+    @Test
+    public void saveLaiNurse_dataFileAndBackup_bothHoldSavedData() throws Exception {
+        JsonLaiNurseStorage storage = new JsonLaiNurseStorage(testFolder.resolve("data").resolve("lainurse.json"));
+        LaiNurse original = getTypicalLaiNurse();
+        storage.saveLaiNurse(original);
+        assertEquals(original, new LaiNurse(storage.readLaiNurse().get()));
+        assertEquals(original, new LaiNurse(storage.readLaiNurseBackup().get()));
+
+        // the backup follows every save
+        original.removePatient(ALICE);
+        storage.saveLaiNurse(original);
+        assertEquals(original, new LaiNurse(storage.readLaiNurseBackup().get()));
+        assertEquals(Files.readString(storage.getLaiNurseFilePath()),
+                Files.readString(storage.getLaiNurseBackupFilePath()));
+    }
+
+    @Test
+    public void saveLaiNurse_withFilePath_backupNotWritten() throws Exception {
+        JsonLaiNurseStorage storage = new JsonLaiNurseStorage(testFolder.resolve("lainurse.json"));
+        storage.saveLaiNurse(getTypicalLaiNurse(), storage.getLaiNurseFilePath());
+        assertFalse(Files.exists(storage.getLaiNurseBackupFilePath()));
+    }
+
+    @Test
+    public void saveLaiNurse_backupCannotBeWritten_dataFileSavedAndIoExceptionThrown() throws Exception {
+        JsonLaiNurseStorage storage = new JsonLaiNurseStorage(testFolder.resolve("lainurse.json"));
+        // a folder where the backup should be cannot be written as a file
+        Files.createDirectories(storage.getLaiNurseBackupFilePath());
+
+        LaiNurse original = getTypicalLaiNurse();
+        assertThrows(IOException.class, () -> storage.saveLaiNurse(original));
+        assertEquals(original, new LaiNurse(storage.readLaiNurse().get()));
+    }
+
+    @Test
+    public void readLaiNurseBackup_missingBackup_emptyResult() throws Exception {
+        assertFalse(new JsonLaiNurseStorage(testFolder.resolve("lainurse.json")).readLaiNurseBackup().isPresent());
+    }
+
+    @Test
+    public void readLaiNurseBackup_invalidBackup_throwsDataLoadingException() throws Exception {
+        JsonLaiNurseStorage storage = new JsonLaiNurseStorage(testFolder.resolve("lainurse.json"));
+        Files.copy(TEST_DATA_FOLDER.resolve("invalidPatientLaiNurse.json"), storage.getLaiNurseBackupFilePath());
+        assertThrows(DataLoadingException.class, storage::readLaiNurseBackup);
+    }
+
+    @Test
+    public void keepCorruptLaiNurseFile_earlierCopy_replaced() throws Exception {
+        JsonLaiNurseStorage storage = new JsonLaiNurseStorage(testFolder.resolve("lainurse.json"));
+        Files.writeString(storage.getLaiNurseCorruptFilePath(), "earlier copy");
+        Files.writeString(storage.getLaiNurseFilePath(), "{ not json");
+
+        storage.keepCorruptLaiNurseFile();
+        assertEquals("{ not json", Files.readString(storage.getLaiNurseCorruptFilePath()));
+        assertEquals("{ not json", Files.readString(storage.getLaiNurseFilePath()));
+    }
+
+    @Test
+    public void keepCorruptLaiNurseFile_missingDataFile_throwsIoException() {
+        JsonLaiNurseStorage storage = new JsonLaiNurseStorage(testFolder.resolve("lainurse.json"));
+        assertThrows(IOException.class, storage::keepCorruptLaiNurseFile);
     }
 }

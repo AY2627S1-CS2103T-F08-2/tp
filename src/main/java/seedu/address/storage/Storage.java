@@ -48,10 +48,34 @@ public interface Storage {
     Optional<ReadOnlyLaiNurse> readLaiNurse() throws DataLoadingException;
 
     /**
-     * Saves the given {@link ReadOnlyLaiNurse} to the storage.
+     * Returns the file path of the backup of the LaiNurse data file.
+     */
+    Path getLaiNurseBackupFilePath();
+
+    /**
+     * Returns the file path that a LaiNurse data file that cannot be loaded is copied to.
+     */
+    Path getLaiNurseCorruptFilePath();
+
+    /**
+     * Returns the LaiNurse data in the backup file as a {@link ReadOnlyLaiNurse}.
+     * Returns {@code Optional.empty()} if the backup file is not found.
+     *
+     * @throws DataLoadingException if loading the data from the backup failed.
+     */
+    Optional<ReadOnlyLaiNurse> readLaiNurseBackup() throws DataLoadingException;
+
+    /**
+     * Saves the given {@link ReadOnlyLaiNurse} to the data file, and then to its backup.
      * @param laiNurse cannot be null.
-     * @throws IOException if there was any problem writing to the file.
+     * @throws IOException if there was any problem writing to either file.
      */
     void saveLaiNurse(ReadOnlyLaiNurse laiNurse) throws IOException;
+
+    /**
+     * Copies the LaiNurse data file to {@link #getLaiNurseCorruptFilePath()}, replacing any earlier copy.
+     * @throws IOException if there was any problem copying the file.
+     */
+    void keepCorruptLaiNurseFile() throws IOException;
 
 }

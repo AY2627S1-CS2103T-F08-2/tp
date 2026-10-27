@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,24 @@ public class StorageManagerTest {
     @Test
     public void getLaiNurseFilePath() {
         assertNotNull(storageManager.getLaiNurseFilePath());
+    }
+
+    @Test
+    public void laiNurseBackupReadAndCorruptCopy() throws Exception {
+        /*
+         * Note: This is an integration test that verifies the StorageManager is properly wired to the backup and
+         * corrupt copy of {@link JsonLaiNurseStorage}, which {@link JsonLaiNurseStorageTest} tests more extensively.
+         */
+        assertEquals(getTempFilePath("lainurse.backup"), storageManager.getLaiNurseBackupFilePath());
+        assertEquals(getTempFilePath("lainurse.corrupt"), storageManager.getLaiNurseCorruptFilePath());
+
+        LaiNurse original = getTypicalLaiNurse();
+        storageManager.saveLaiNurse(original);
+        assertEquals(original, new LaiNurse(storageManager.readLaiNurseBackup().get()));
+
+        storageManager.keepCorruptLaiNurseFile();
+        assertEquals(Files.readString(storageManager.getLaiNurseFilePath()),
+                Files.readString(storageManager.getLaiNurseCorruptFilePath()));
     }
 
 }

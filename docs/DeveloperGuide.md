@@ -17,13 +17,11 @@ title: Developer Guide
 * AI Use Declaration from Jaydon: "I used Codex and OpenCode to review and generate code.
   Based on the given levels of AI use in coding tasks, this ranges between AI-2 and AI-6".
 
-* AI Use Declaration from Yuhao: "I used Claude Code to write code, tests and documentation, and I review and test the results."
+* AI Use Declaration from Yuhao: "I used Claude Code to write code, tests and documentation, and I review and test the results. AI levels between AI-5 and AI-6"
 
 * AI Use Declaration from Yong Kang: "I used Gemini to write and review code, tests and documentation. No automation is done and I go back and forth consistently with AI to ensure I am still largely in charge of the process. AI levels between AI-1 and AI-5."
 
-* AI Use Declaration from Darren: "I used Claude Code to write code, tests and documentation for the `edit` command and
-  the appointment model, and to review my changes. I decide the design and behavior, and I review, test and revise
-  the results before committing them."
+* AI Use Declaration from Darren: "I used Claude Code to write code, tests and documentation, and I review and test the results. The level ranges between AI-2 and AI-6" 
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -325,7 +323,7 @@ The `Model` component,
 ### Storage component
 
 **API** : [
-`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+`Storage.java`](https://github.com/AY2627S1-CS2103T-F08-2/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
 <img src="images/StorageClassDiagram.png" width="550" />
 
@@ -335,6 +333,10 @@ The `Storage` component,
   objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonLaiNurseStorage` and
   `JsonUserPrefsStorage` (one class per data file).
+* keeps a backup of the LaiNurse data file: `JsonLaiNurseStorage` writes every save to `data/lainurse.json` and then to
+  `data/lainurse.backup.json`, and can copy a data file that cannot be loaded to `data/lainurse.corrupt.json`.
+* decides, through `LaiNurseLoader`, which data the app starts with: that in the data file, the sample data, or that
+  in the backup (see [Backing up the data file](#backing-up-the-data-file)).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects
   that belong to the `Model`)
 
@@ -731,6 +733,71 @@ Rather than hardcoding command names and usage strings inside `HelpCommand`:
 * **Alternative 2: JavaFX `WebView` component.**
     * *Pros:* Renders full HTML/Markdown with complete CSS out of the box.
     * *Cons:* Requires native WebKit binaries not bundled across all platforms, violates course external dependency rules, and is prone to crashes in headless test runners.
+
+### Backing up the data file
+
+`JsonLaiNurseStorage` keeps three files in the folder of the data file, all named after it by
+`JsonLaiNurseStorage#withSuffix`:
+
+* the data file, `lainurse.json`, which the app loads and saves as before.
+* the backup, `lainurse.backup.json`. `JsonLaiNurseStorage#saveLaiNurse(ReadOnlyLaiNurse)` writes the data file and then
+  the backup from the same data, so after every save that succeeds both hold the data as it was last saved. The
+  overload that takes a path writes only that file, so tests and other callers can still write one file.
+* the corrupt copy, `lainurse.corrupt.json`. `JsonLaiNurseStorage#keepCorruptLaiNurseFile()` copies the data file there,
+  replacing any earlier copy.
+
+`LogicManager` saves after every command that succeeds, as before, so it writes the backup without knowing about it.
+
+At launch, `MainApp#initModelManager` asks `LaiNurseLoader#load(Storage)` for the data to start with.
+`LaiNurseLoader` returns a `LaiNurseLoader.Result`: the data, and a message for the user if the data did not come from
+the data file as usual.
+
+| Data file | Backup | Data | Message |
+|---|---|---|---|
+| Loads | Any | The data file's | None |
+| Missing | Any | The sample data | None |
+| Cannot be loaded | Loads | The backup's | `MESSAGE_BACKUP_LOADED` |
+| Cannot be loaded | Missing | None | `MESSAGE_BACKUP_MISSING` |
+| Cannot be loaded | Cannot be loaded | None | `MESSAGE_BACKUP_NOT_LOADED` |
+
+Whenever the data file cannot be loaded, `LaiNurseLoader` calls `Storage#keepCorruptLaiNurseFile()` before it reads the
+backup, and adds `MESSAGE_CORRUPT_FILE_KEPT`, or `MESSAGE_CORRUPT_FILE_NOT_KEPT` if the copy failed, to the message.
+Without the copy, the next save would overwrite the file, and the user's edits in it would be lost. `MainApp` passes
+the message to `UiManager`, which shows it in the result display through `MainWindow#showFeedback` once the window
+opens. Before this, a data file that could not be loaded was only reported in the log.
+
+The order of the two writes matters. The backup is written only after the data file has been, so if the app stops
+while writing the data file, the backup still holds the data saved before, and the next launch loads it.
+
+**Aspect: When to fall back to the backup**
+
+* **Alternative 1 (Current choice): Only when the data file cannot be loaded.**
+    * *Pros:* A missing data file still loads the sample data, so deleting the file stays the way to start again,
+      as the User Guide says.
+    * *Cons:* If the user deletes the data file by mistake, the next save replaces the backup with the sample data.
+* **Alternative 2: Also when the data file is missing.**
+    * *Pros:* Recovers from a data file deleted by mistake.
+    * *Cons:* Deleting the data file no longer resets the app: the user would have to delete both files.
+
+**Aspect: How to restore the backup**
+
+* **Alternative 1 (Current choice): Automatically at launch, with no command.**
+    * *Pros:* Covers the common case, a data file broken by an edit, with no new command to learn, parse and test.
+    * *Cons:* The user restores the corrupt copy by hand, by copying it over the data file with the app closed.
+* **Alternative 2: A `restore` command.**
+    * *Pros:* The user decides when to restore.
+    * *Cons:* The app would need to stop saving until the user decides, and a new command adds risk this close to the
+      feature freeze.
+
+**Aspect: Protecting the backup from edits**
+
+* **Alternative 1 (Current choice): Do not protect it; the User Guide says not to edit it.**
+    * *Pros:* Works the same on every OS, and does not change OS settings, as the course's constraints require.
+    * *Cons:* A user can still edit the backup. If both files then cannot be loaded, the app starts with no data,
+      and only the corrupt copy of the data file is kept.
+* **Alternative 2: Make the backup hidden or read-only.**
+    * *Pros:* Harder to edit by mistake.
+    * *Cons:* How to do so depends on the OS, and a read-only file must be made writable again before each save.
 
 ### \[Proposed\] Data archiving
 
@@ -2020,8 +2087,57 @@ testers are expected to do more *exploratory* testing.
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+Run these from a terminal in the folder containing the JAR file, with `java -jar lainurse.jar`, and close the app
+before you change any file in its `data` folder.
 
-    1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+1. Saving the data file and its backup
 
-1. _{ more test cases …​ }_
+    1. Launch the app in an empty folder, and run `list`.<br>
+       Expected: `data/lainurse.json` and `data/lainurse.backup.json` are created, and hold the same data.
+
+    1. Test case: `delete` a patient, then close the app.<br>
+       Expected: Both files no longer hold that patient.
+
+1. Dealing with a missing data file
+
+    1. Prerequisites: Both `data/lainurse.json` and `data/lainurse.backup.json` exist.
+
+    1. Test case: Delete `data/lainurse.json`, and launch the app.<br>
+       Expected: The app starts with the sample patients, and the result display is empty. After `list`, both files
+       hold the sample data.
+
+1. Dealing with a corrupted data file
+
+    1. Prerequisites: `data/lainurse.backup.json` holds valid data, such as after `list`.
+
+    1. Test case: Replace the contents of `data/lainurse.json` with `{ not json`, and launch the app.<br>
+       Expected: The app starts with the data in the backup. The result display says that `data/lainurse.json` could
+       not be loaded, that the backup was loaded, and that a copy was kept at `data/lainurse.corrupt.json`, which
+       holds `{ not json`.
+
+    1. Test case: As above, but instead change a patient's `phone` in `data/lainurse.json` to `abc`.<br>
+       Expected: As above. The corrupt copy holds the edited file, with `abc`.
+
+    1. Test case: After either test case above, run `list`, close the app, and launch it again.<br>
+       Expected: `data/lainurse.json` holds the backup's data again, so the app starts with it and with an empty
+       result display. `data/lainurse.corrupt.json` is unchanged.
+
+1. Dealing with a corrupted data file and backup
+
+    1. Test case: Replace the contents of both `data/lainurse.json` and `data/lainurse.backup.json` with
+       `{ not json`, and launch the app.<br>
+       Expected: The app starts with no patients. The result display says that neither file could be loaded, and that
+       a copy of the data file was kept at `data/lainurse.corrupt.json`.
+
+    1. Test case: Replace the contents of `data/lainurse.json` with `{ not json`, delete
+       `data/lainurse.backup.json`, and launch the app.<br>
+       Expected: As above, but the result display says that there is no backup. It also warns that the next command
+       that succeeds, even `exit`, saves the empty data, and that the window's close button does not.
+
+    1. Test case: After either test case above, close the window with its close button, without running any
+       command.<br>
+       Expected: `data/lainurse.json` and `data/lainurse.backup.json` (if there was one) are unchanged.
+
+    1. Test case: After either test case above, run `exit`.<br>
+       Expected: `data/lainurse.json` and `data/lainurse.backup.json` both now hold no patients.
+       `data/lainurse.corrupt.json` still holds `{ not json`.

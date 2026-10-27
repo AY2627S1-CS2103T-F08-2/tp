@@ -448,9 +448,22 @@ Format: `exit`
 
 LaiNurse saves your data automatically after every command that succeeds. You do not need to save manually.
 
+Each save writes your data to two files in the `data` folder: the data file, `lainurse.json`, and then a backup of it, `lainurse.backup.json`. Both hold the same data: the data as LaiNurse last saved it.
+
 ### Editing the data file
 
-LaiNurse saves its data as a JSON file, `data/lainurse.json`, inside the folder you launched it from. If you followed the [Quick start](#quick-start), that is the folder containing the JAR file. Advanced users are welcome to update data directly by editing that data file.
+LaiNurse saves its data as a JSON file, `data/lainurse.json`, inside the folder you launched it from. If you followed the [Quick start](#quick-start), that is the folder containing the JAR file. Advanced users are welcome to update data directly by editing that data file. Close LaiNurse before you edit it, as LaiNurse overwrites the file the next time a command succeeds. Every command that succeeds saves, `exit` included, while closing the window with its close button does not.
+
+When LaiNurse launches, it loads its data as follows:
+
+| `lainurse.json` | `lainurse.backup.json` | LaiNurse starts with |
+|---|---|---|
+| Loads | Any | The data in `lainurse.json`. |
+| Missing | Any | The sample data. Delete `lainurse.json` to start again from the sample data. |
+| Cannot be loaded | Loads | The data in the backup, which is the data as LaiNurse last saved it. |
+| Cannot be loaded | Missing, or cannot be loaded | No data. |
+
+Whenever `lainurse.json` cannot be loaded, LaiNurse first copies it to `data/lainurse.corrupt.json`, replacing any earlier copy, so your edits are not lost when the next save overwrites `lainurse.json`. The result display then tells you which file could not be loaded, what LaiNurse loaded instead, and where the copy is kept. To get your edits back, close the window with its close button, fix the mistake in `lainurse.corrupt.json`, and copy it over `lainurse.json`. Do not close LaiNurse with `exit` first if it started with no data, as `exit` saves that empty data over `lainurse.json` and the backup.
 
 Appointments are saved with their patient-local numbers and completion status, for example
 `{"number": 2, "dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`. Older files with appointment strings
@@ -461,8 +474,11 @@ between 1 and 2147483647. A missing `done` field defaults to false (undone). If 
 boolean `true` or `false`; strings, numbers and null are invalid.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, LaiNurse starts with an empty patient list the next time it launches. The next command that succeeds, even `list` or `help`, then overwrites the invalid file with the empty list, and the data in it is lost. Back up the file before you edit it. Appointment dates and times in the file follow the formats above, and a file saved by an earlier version with a signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load. If LaiNurse starts empty after an edit, close the window without running any command (the `exit` command also saves), and restore your backup.<br>
-Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
+Do not edit `lainurse.backup.json`. LaiNurse cannot stop you from editing it, and it does not check it until it needs it. The backup protects you only in the cases in the table above.<br>
+If the backup is missing or cannot be loaded either, LaiNurse starts with no data, and the next command that succeeds, even `list`, `help` or `exit`, saves that empty data over both files. Your data is then only in `lainurse.corrupt.json`. To leave both files as they are, close the window with its close button instead.<br>
+LaiNurse keeps only one backup, and every save replaces it. If you edit `lainurse.json` and LaiNurse loads it, the next save writes your edits to the backup too, so the backup cannot undo an edit that loads but that you regret.<br>
+If `lainurse.json` is missing, LaiNurse loads the sample data even when there is a backup, and the next save replaces the backup with the sample data. To restore from the backup instead, close the window with its close button and copy `lainurse.backup.json` to `lainurse.json` first.<br>
+Appointment dates and times in the file follow the formats above, and a file saved by an earlier version with a signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load. Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
 --------------------------------------------------------------------------------------------------------------------
