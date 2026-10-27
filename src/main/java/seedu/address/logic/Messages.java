@@ -21,24 +21,6 @@ public class Messages {
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format!\n%1$s";
     public static final String MESSAGE_INVALID_PATIENT_ID = "The patient ID provided is invalid.";
     public static final String MESSAGE_PATIENTS_LISTED_OVERVIEW = "%1$d patient(s) listed!";
-    public static final String MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW = "%1$d patient(s) with appointments on %2$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW =
-            "%1$d patient(s) with appointments from %2$s to %3$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW =
-            "%1$d patient(s) with appointments on or after %2$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW =
-            "%1$d patient(s) with appointments this week, from %2$s to %3$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW = "%1$d appointment(s) of %2$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_LISTED_OVERVIEW =
-            "%1$d appointment(s) of %2$s on %3$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW =
-            "%1$d appointment(s) of %2$s from %3$s to %4$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_FROM_LISTED_OVERVIEW =
-            "%1$d appointment(s) of %2$s on or after %3$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY =
-            "The --to date %1$s is before today (%2$s). To see past appointments, also give --from.";
-    public static final String MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO =
-            "The --from date must not be after the --to date.";
     public static final String MESSAGE_DUPLICATE_FIELDS =
             "Multiple values specified for the following single-valued field(s): ";
     public static final String MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND = "Patient %1$s has no appointment #%2$d.";

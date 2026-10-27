@@ -552,7 +552,8 @@ normalizes option separators in the same way as `add`, so unknown options are re
 that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
 `2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
 `--from` or `--to` does. Any other word, such as `invalid`, could be a mistyped option, so it gets the command format. When both options are given, the parser rejects a `--from` date that is after the
-`--to` date.
+`--to` date. A second date typed into one option's value, such as `--from 2026-10-01 2026-10-05`, gets a
+message that each option takes one date, rather than the date error.
 
 `ViewAppointmentCommand` stores the start and end dates as `Optional<LocalDate>` values. It works out the range only
 when it runs: a missing start date becomes today, and a missing end date becomes `LocalDate.MAX`. Today is
@@ -570,8 +571,10 @@ from now.
 
 With `--id`, the parser also reads a `PatientId`. `--id` alone, with no date, shows every appointment of that patient:
 the range runs from the date of their first appointment to the date of their last, or is today alone if they have
-none. A date typed after the options ends up inside the ID value, which
-`ParserUtil#parseId` fails as an invalid ID. When the command runs, it looks the patient up by ID,
+none. A date typed after the options ends up inside the ID value; when the value then ends in a real date, which
+its punctuation keeps from being a patient ID, the parser reports that a `DATE` must come before other options,
+rather than failing the ID. A value that ends in anything else, such as a digit-only ID typed with a stray space
+(`--id 123 456`), fails as an ID. When the command runs, it looks the patient up by ID,
 and if none matches, fails with the invalid-patient-ID error and leaves the list and the page as they were. Otherwise
 it narrows the list to that patient with an appointment in the range, and counts that patient's appointments in the
 range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
@@ -1665,8 +1668,10 @@ testers are expected to do more *exploratory* testing.
        Expected: The list is unchanged. The status message says that the `--from` date must not be after the `--to` date.
 
     1. Other incorrect commands to try: `viewappt 2026-10-15 --to 2026-10-31` (a date and an option),
-       `viewappt --till 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated option)<br>
-       Expected: The list is unchanged. The status message shows the command format or a duplicate-option error.
+       `viewappt --till 2026-10-31` (unknown option), `viewappt --from 2026-10-01 --from 2026-10-02` (repeated
+       option), `viewappt --from 2026-10-01 2026-10-05` (a second date without `--to`)<br>
+       Expected: The list is unchanged. The status message shows the command format, a duplicate-option error,
+       or a message that each option takes one date.
 
 1. Viewing one patient's appointments with `--id`
 
@@ -1705,8 +1710,13 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
        Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
 
-    1. Other incorrect commands to try: `viewappt --id S1234567A MON` (a date after the option, which makes
-       the ID invalid), `viewappt --id S1234567A --id S2345678B` (repeated option), `viewappt --id` (missing ID)<br>
+    1. Test case: `viewappt --id S1234567A MON`, a date after the option<br>
+       Expected: The list is unchanged. The status message says that a `DATE` must come before other options,
+       rather than blaming the ID, which on its own is valid.
+
+    1. Other incorrect commands to try: `viewappt --id MON S1234567A`, an ID value that ends in an ID rather
+       than a date, `viewappt --id 123 456`, a digit-only ID typed with a stray space, `viewappt --id` (missing
+       ID), `viewappt --id S1234567A --id S2345678B` (repeated option)<br>
        Expected: The list is unchanged. The status message shows the patient ID constraints or a duplicate-option
        error.
 

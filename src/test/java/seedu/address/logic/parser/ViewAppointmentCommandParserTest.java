@@ -1,7 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
+import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
@@ -169,6 +169,21 @@ public class ViewAppointmentCommandParserTest {
     }
 
     @Test
+    public void parse_twoDatesInOneOption_throwsParseException() {
+        // The second date is read into the option's value, so the error asks for one option per date
+        assertParseFailure(parser, FROM_FLAG + START + " " + END,
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
+        assertParseFailure(parser, TO_FLAG + END + " " + START,
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
+        // The check covers the value whatever other options are present
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + FROM_FLAG + START + " " + END,
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
+        // The last word decides, as it does for the ID value
+        assertParseFailure(parser, FROM_FLAG + START + " " + MONTH_13_DATE, DateUtil.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, FROM_FLAG + START + " " + NOT_A_DATE, DateUtil.MESSAGE_CONSTRAINTS);
+    }
+
+    @Test
     public void parse_duplicateOptions_throwsParseException() {
         assertParseFailure(parser, FROM_FLAG + START + " " + FROM_FLAG + END,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_FROM));
@@ -183,19 +198,40 @@ public class ViewAppointmentCommandParserTest {
     public void parse_duplicateId_throwsParseException() {
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + ID_FLAG + OTHER_VALID_ID,
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
+        // A duplicate option is reported even when a date also sits inside the first ID value
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + VALID_DATE_STRING + " " + ID_FLAG + OTHER_VALID_ID,
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID));
     }
 
     @Test
     public void parse_dateAfterOptions_throwsParseException() {
-        // The date ends up in the ID value, which fails as an invalid ID
+        // A real date ends up in the ID value, so the error blames the order, not the ID
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + VALID_DATE_STRING,
-                PatientId.MESSAGE_CONSTRAINTS);
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+    }
+
+    @Test
+    public void parse_wordAfterId_throwsParseException() {
+        // A trailing word that is not a real date fails as an ID, whatever it looks like
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + NOT_A_DATE, PatientId.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING + " " + VALID_ID, PatientId.MESSAGE_CONSTRAINTS);
+        // A digit-only word can be a patient ID, such as one typed with a stray space, so it is not diagnosed
+        // as a date, even one that looks like one
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " 123", PatientId.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, ID_FLAG + "123 456", PatientId.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " 20261028", PatientId.MESSAGE_CONSTRAINTS);
+        for (String date : List.of(WRONG_FORMAT_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
+            // A word that is not a real date, such as an impossible one, is not diagnosed as a date either
+            assertParseFailure(parser, ID_FLAG + VALID_ID + " " + date, PatientId.MESSAGE_CONSTRAINTS);
+        }
     }
 
     @Test
     public void parse_invalidId_throwsParseException() {
         assertParseFailure(parser, ID_FLAG + INVALID_ID, PatientId.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, ID_FLAG, PatientId.MESSAGE_CONSTRAINTS);
+        // A date given to --id fails as an ID, not as a misplaced date
+        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING, PatientId.MESSAGE_CONSTRAINTS);
     }
 
     @Test
