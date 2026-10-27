@@ -57,16 +57,16 @@ public class ViewAppointmentCommand extends Command {
     public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_FROM_LISTED_OVERVIEW =
             "%1$d appointment(s) of %2$s on or after %3$s";
     public static final String MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY =
-            "The " + PREFIX_TO + "date %1$s is before today (%2$s). To see past appointments, give "
-                    + PREFIX_FROM + "as well.";
+            "The " + PREFIX_TO + "date %1$s is before today (%2$s). "
+                    + "To see past appointments, give " + PREFIX_FROM + "as well.";
     public static final String MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO =
             "The " + PREFIX_FROM + "date must not be after the " + PREFIX_TO + "date.";
     public static final String MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS =
-            "A DATE must come before other options, for example: " + COMMAND_WORD + " 2026-10-15 "
-                    + PREFIX_ID + "S1234567A";
+            "A DATE must come before other options.\n"
+                    + "Example: " + COMMAND_WORD + " 2026-10-15 " + PREFIX_ID + "S1234567A";
     public static final String MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION =
-            "Each option takes one date, for example: " + COMMAND_WORD + " " + PREFIX_FROM + "2026-10-01 "
-                    + PREFIX_TO + "2026-10-05";
+            "Each date option takes only one date.\n"
+                    + "Example: " + COMMAND_WORD + " " + PREFIX_FROM + "2026-10-01 " + PREFIX_TO + "2026-10-05";
 
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;
