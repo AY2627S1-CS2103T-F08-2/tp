@@ -8,9 +8,11 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import seedu.address.commons.util.DateUtil;
 import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.PatientId;
@@ -91,11 +93,11 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
 
     /**
      * Rejects a DATE that comes after {@code PREFIX_ID}: the tokenizer reads it as part of the ID value, so the
-     * ID error would blame an ID that is itself valid. A value that ends in a date-like word is an ID with a
-     * date typed after it, and a date-like word can only be meant as a date, so it is the order that the error
-     * reports. A value that does not end in one fails as an ID, which is what the user gave to {@code PREFIX_ID}.
+     * ID error would blame an ID that is itself valid. The order is reported only when the value ends in a real
+     * date that cannot be a patient ID. A value that ends in anything else, such as a digit-only patient ID
+     * typed with a stray space, fails as the ID that the user gave to {@code PREFIX_ID}.
      *
-     * @throws ParseException if the ID value ends in a date-like word.
+     * @throws ParseException if the ID value ends in a real date that cannot be a patient ID.
      */
     private static void verifyNoDateAfterId(ArgumentMultimap argMultimap) throws ParseException {
         Optional<String> id = argMultimap.getValue(PREFIX_ID);
@@ -104,15 +106,34 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         }
         String[] wordsInId = id.get().split("\\s+");
         String lastWord = wordsInId[wordsInId.length - 1];
-        if (wordsInId.length > 1 && isDateLike(lastWord)) {
+        if (wordsInId.length > 1 && isMisplacedDate(lastWord)) {
             throw new ParseException(MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
         }
     }
 
     /**
+     * Returns true if {@code word} can only have been typed as a date after {@code PREFIX_ID}: it is a real
+     * date that cannot be a patient ID. A real date contains punctuation, so it is never a valid ID today;
+     * if a format change ever makes both possible, the ID wins, as the value of the ID option.
+     */
+    private static boolean isMisplacedDate(String word) {
+        return isRealDate(word) && !PatientId.isValidId(word);
+    }
+
+    /** Returns true if {@code word} is a real date in the {@code yyyy-MM-dd} format. */
+    private static boolean isRealDate(String word) {
+        try {
+            DateUtil.parseDate(word);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
+    /**
      * Returns true if {@code word} is one word of digits and punctuation, such as {@code 2026-02-30} or
-     * {@code 2026/10/15}, which can only be meant as a date. Any other word, such as {@code invalid}, could be
-     * a mistyped option, so it gets the command format instead of the date error.
+     * {@code 2026/10/15}, which before the options can only be meant as a date. Any other word, such as
+     * {@code invalid}, could be a mistyped option, so it gets the command format instead of the date error.
      */
     private static boolean isDateLike(String word) {
         return DATE_LIKE_WORD.matcher(word).matches();

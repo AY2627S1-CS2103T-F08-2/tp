@@ -190,22 +190,25 @@ public class ViewAppointmentCommandParserTest {
 
     @Test
     public void parse_dateAfterOptions_throwsParseException() {
-        // The date ends up in the ID value, so the error blames the order, not the ID
+        // A real date ends up in the ID value, so the error blames the order, not the ID
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + VALID_DATE_STRING,
                 ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
-        for (String date : List.of(WRONG_FORMAT_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
-            // Even a date that is not real is diagnosed as a date in the wrong place, not as a bad ID
-            assertParseFailure(parser, ID_FLAG + VALID_ID + " " + date,
-                    ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
-        }
     }
 
     @Test
     public void parse_wordAfterId_throwsParseException() {
-        // A trailing word that is not date-like is not diagnosed as a date, so the ID value fails as an ID
+        // A trailing word that is not a real date fails as an ID, whatever it looks like
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + NOT_A_DATE, PatientId.MESSAGE_CONSTRAINTS);
-        // The date is only diagnosed as misplaced when the ID value ends in it
         assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING + " " + VALID_ID, PatientId.MESSAGE_CONSTRAINTS);
+        // A digit-only word can be a patient ID, such as one typed with a stray space, so it is not diagnosed
+        // as a date, even one that looks like one
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " 123", PatientId.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, ID_FLAG + "123 456", PatientId.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " 20261028", PatientId.MESSAGE_CONSTRAINTS);
+        for (String date : List.of(WRONG_FORMAT_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
+            // A word that is not a real date, such as an impossible one, is not diagnosed as a date either
+            assertParseFailure(parser, ID_FLAG + VALID_ID + " " + date, PatientId.MESSAGE_CONSTRAINTS);
+        }
     }
 
     @Test
