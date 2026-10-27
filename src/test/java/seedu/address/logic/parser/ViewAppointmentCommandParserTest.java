@@ -1,7 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
+import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
@@ -192,11 +192,11 @@ public class ViewAppointmentCommandParserTest {
     public void parse_dateAfterOptions_throwsParseException() {
         // The date ends up in the ID value, so the error blames the order, not the ID
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + VALID_DATE_STRING,
-                Messages.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
         for (String date : List.of(WRONG_FORMAT_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
             // Even a date that is not real is diagnosed as a date in the wrong place, not as a bad ID
             assertParseFailure(parser, ID_FLAG + VALID_ID + " " + date,
-                    Messages.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+                    ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
         }
     }
 

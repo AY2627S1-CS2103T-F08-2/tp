@@ -4,16 +4,6 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_ID;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_PATIENT_FROM_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_PATIENT_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY;
-import static seedu.address.logic.Messages.MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
@@ -51,6 +41,27 @@ public class ViewAppointmentCommand extends Command {
             + "Parameters: [DATE] or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE], with an optional ["
             + PREFIX_ID + "ID] (dates in yyyy-MM-dd)\n"
             + "Example: " + COMMAND_WORD + " 2026-10-15";
+
+    public static final String MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW = "%1$d patient(s) with appointments on %2$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW =
+            "%1$d patient(s) with appointments from %2$s to %3$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW =
+            "%1$d patient(s) with appointments on or after %2$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW =
+            "%1$d patient(s) with appointments this week, from %2$s to %3$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW = "%1$d appointment(s) of %2$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_LISTED_OVERVIEW =
+            "%1$d appointment(s) of %2$s on %3$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW =
+            "%1$d appointment(s) of %2$s from %3$s to %4$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_FROM_LISTED_OVERVIEW =
+            "%1$d appointment(s) of %2$s on or after %3$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY =
+            "The --to date %1$s is before today (%2$s). To see past appointments, also give --from.";
+    public static final String MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO =
+            "The --from date must not be after the --to date.";
+    public static final String MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS =
+            "A DATE must come before other options, for example: viewappt 2026-10-15 --id S1234567A";
 
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;
