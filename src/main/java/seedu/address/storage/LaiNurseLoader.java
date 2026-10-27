@@ -25,17 +25,20 @@ import seedu.address.model.util.SampleDataUtil;
  */
 public class LaiNurseLoader {
 
+    /** Closing the window does not save, but every command that succeeds does, {@code exit} included. */
+    public static final String MESSAGE_EMPTY_DATA_SAVED = "The next command that succeeds, even exit, saves this"
+            + " empty data over both files. To leave them as they are, close the window with its close button.";
     public static final String MESSAGE_BACKUP_LOADED = "%1$s could not be loaded, so LaiNurse loaded its backup, %2$s,"
             + " which holds the data it last saved.";
     public static final String MESSAGE_BACKUP_NOT_LOADED = "%1$s could not be loaded, and neither could its backup,"
-            + " %2$s, so LaiNurse started with no data. The next command that succeeds saves this empty data.";
+            + " %2$s, so LaiNurse started with no data. " + MESSAGE_EMPTY_DATA_SAVED;
     public static final String MESSAGE_BACKUP_MISSING = "%1$s could not be loaded, and there is no backup at %2$s,"
-            + " so LaiNurse started with no data. The next command that succeeds saves this empty data.";
+            + " so LaiNurse started with no data. " + MESSAGE_EMPTY_DATA_SAVED;
     public static final String MESSAGE_CORRUPT_FILE_KEPT = "A copy of the file that could not be loaded is kept at"
-            + " %1$s. To restore it, close LaiNurse, fix the copy, and copy it over %2$s.";
+            + " %1$s. To restore it, close the window with its close button, fix the copy, and copy it over %2$s.";
     public static final String MESSAGE_CORRUPT_FILE_NOT_KEPT = "The file that could not be loaded could not be copied"
-            + " to %1$s. To keep it, close LaiNurse now and copy it somewhere else, as the next command that succeeds"
-            + " overwrites it.";
+            + " to %1$s. To keep it, close the window with its close button now, without running any command, not"
+            + " even exit, and copy the file somewhere else. The next command that succeeds overwrites it.";
 
     private static final Logger logger = LogsCenter.getLogger(LaiNurseLoader.class);
 

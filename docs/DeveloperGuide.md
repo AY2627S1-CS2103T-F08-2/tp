@@ -2133,4 +2133,13 @@ before you change any file in its `data` folder.
 
     1. Test case: Replace the contents of `data/lainurse.json` with `{ not json`, delete
        `data/lainurse.backup.json`, and launch the app.<br>
-       Expected: As above, but the result display says that there is no backup.
+       Expected: As above, but the result display says that there is no backup. It also warns that the next command
+       that succeeds, even `exit`, saves the empty data, and that the window's close button does not.
+
+    1. Test case: After either test case above, close the window with its close button, without running any
+       command.<br>
+       Expected: `data/lainurse.json` and `data/lainurse.backup.json` (if there was one) are unchanged.
+
+    1. Test case: After either test case above, run `exit`.<br>
+       Expected: `data/lainurse.json` and `data/lainurse.backup.json` both now hold no patients.
+       `data/lainurse.corrupt.json` still holds `{ not json`.

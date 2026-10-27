@@ -2,6 +2,7 @@ package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
@@ -11,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -129,6 +131,17 @@ public class LaiNurseLoaderTest {
                 storage.getLaiNurseBackupFilePath()) + "\n" + String.format(
                 LaiNurseLoader.MESSAGE_CORRUPT_FILE_NOT_KEPT, storage.getLaiNurseCorruptFilePath())),
                 result.message());
+    }
+
+    @Test
+    public void messages_dataAtRisk_warnThatExitAlsoSaves() {
+        // exit is a command that succeeds, so it saves too: only the window's close button leaves the files alone
+        for (String message : List.of(LaiNurseLoader.MESSAGE_BACKUP_NOT_LOADED, LaiNurseLoader.MESSAGE_BACKUP_MISSING,
+                LaiNurseLoader.MESSAGE_CORRUPT_FILE_NOT_KEPT)) {
+            assertTrue(message.contains("even exit"), message);
+            assertTrue(message.contains("close button"), message);
+        }
+        assertTrue(LaiNurseLoader.MESSAGE_CORRUPT_FILE_KEPT.contains("close button"));
     }
 
     private String getCorruptFileKeptMessage() {
