@@ -64,10 +64,10 @@ public class EditPatientDescriptorTest {
         EditPatientDescriptor copy = new EditPatientDescriptor(original);
         assertTrue(copy.isAnyFieldEdited());
         assertEquals(original, copy);
-        assertEquals(new Notes("Enjoys gardening"), copy.getNotes().orElseThrow());
+        assertEquals(OptionalFieldEdit.replace(new Notes("Enjoys gardening")), copy.getNotes().orElseThrow());
 
-        original.setNotes(new Notes("Walks every morning"));
-        assertEquals(new Notes("Enjoys gardening"), copy.getNotes().orElseThrow());
+        original.setNotes(OptionalFieldEdit.replace(new Notes("Walks every morning")));
+        assertEquals(OptionalFieldEdit.replace(new Notes("Enjoys gardening")), copy.getNotes().orElseThrow());
         assertFalse(original.equals(copy));
     }
 
@@ -75,7 +75,7 @@ public class EditPatientDescriptorTest {
     public void builderFromPatient_copiesNotes() {
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder(
                 new PatientBuilder().withNotes("Enjoys gardening").build()).build();
-        assertEquals(new Notes("Enjoys gardening"), descriptor.getNotes().orElseThrow());
+        assertEquals(OptionalFieldEdit.replace(new Notes("Enjoys gardening")), descriptor.getNotes().orElseThrow());
     }
 
     @Test

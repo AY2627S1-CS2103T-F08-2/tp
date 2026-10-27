@@ -102,6 +102,31 @@ public class EditCommandFlowTest {
     }
 
     @Test
+    public void execute_clearMedicalHistoryAndNotes_persisted() throws Exception {
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withoutMedicalHistory().withoutNotes().build();
+        assertEditPersisted("edit S1234567A --medical-history --notes", ALEX_ID, expected);
+
+        // clearing a field that is already empty changes nothing, and is allowed
+        assertEditPersisted("edit S1234567A\t--notes\t \t--name Alex Yeoh", ALEX_ID, expected);
+    }
+
+    @Test
+    public void execute_addToMedicalHistoryAndNotes_persisted() throws Exception {
+        Patient alex = patient(ALEX_ID);
+        Patient expected = new PatientBuilder(alex)
+                .withMedicalHistory(alex.getMedicalHistory().orElseThrow().value + "; Asthma")
+                .withNotes(alex.getNotes().orElseThrow().value + "; Prefers   morning visits").build();
+        assertEditPersisted("edit S1234567A --add-medical-history Asthma --add-notes Prefers   morning visits",
+                ALEX_ID, expected);
+    }
+
+    @Test
+    public void execute_addToEmptyMedicalHistory_setsIt() throws Exception {
+        Patient expected = new PatientBuilder(patient(CHARLOTTE_ID)).withMedicalHistory("Asthma").build();
+        assertEditPersisted("edit T0123456C --add-medical-history asthma", CHARLOTTE_ID, expected);
+    }
+
+    @Test
     public void execute_notesAfterReload_foundAndViewed() throws Exception {
         logic.execute("edit T0123456C --notes Enjoys gardening");
         Model reloadedModel = new ModelManager(storage.readLaiNurse().orElseThrow(), new UserPrefs());
@@ -141,12 +166,21 @@ public class EditCommandFlowTest {
     public void execute_invalidValues_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone 12", ParseException.class,
                 Phone.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --medical-history  --name Alex",
+        // text to add cannot be blank
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-medical-history  --name Alex",
                 ParseException.class, MedicalHistory.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes \t ", ParseException.class,
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-notes \t ", ParseException.class,
                 Notes.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes --phone 91234567", ParseException.class,
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-notes --phone 91234567", ParseException.class,
                 Notes.MESSAGE_CONSTRAINTS);
+
+        // a field cannot be both replaced and added to
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --notes Walks --add-notes Swims",
+                ParseException.class, String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--notes",
+                        "--add-notes"));
+        assertRejectedCommandLeavesDataUnchanged("edit S1234567A --add-medical-history Asthma --medical-history",
+                ParseException.class, String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--medical-history",
+                        "--add-medical-history"));
 
         // option with no value at the end of the command
         assertRejectedCommandLeavesDataUnchanged("edit S1234567A --phone", ParseException.class,

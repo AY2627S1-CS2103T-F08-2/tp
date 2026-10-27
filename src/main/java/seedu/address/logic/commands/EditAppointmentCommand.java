@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
@@ -31,25 +32,30 @@ public class EditAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "editappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the appointment of the patient with the "
-            + "given ID, using its number. Keeps its number and completion status.\n"
+            + "given ID, using its number. Keeps its number and completion status. "
+            + PREFIX_DETAILS.toString().trim() + " with no value clears the details, and "
+            + PREFIX_ADD_DETAILS.toString().trim() + " adds text to the end of them, after \""
+            + OptionalFieldEdit.APPEND_SEPARATOR + "\". The two cannot be given together.\n"
             + "Parameters: ID NUMBER "
             + "[" + PREFIX_TO + "NEW_DATE_OR_DATETIME] "
-            + "[" + PREFIX_DETAILS + "DETAILS]\n"
+            + "[" + PREFIX_DETAILS + "[DETAILS]] "
+            + "[" + PREFIX_ADD_DETAILS + "MORE_DETAILS]\n"
             + "Example: " + COMMAND_WORD + " S1234567A 2 "
             + PREFIX_TO + "2026-10-06 10:00 "
             + PREFIX_DETAILS + "Bring insulin pen";
 
     public static final String MESSAGE_EDIT_APPOINTMENT_SUCCESS = "Edited appointment %1$d of %2$s (%3$s): %4$s";
     public static final String MESSAGE_MOVED_FROM = " (moved from %1$s)";
-    public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_TO.toString().trim() + " and "
-            + PREFIX_DETAILS.toString().trim() + " must be provided.";
+    public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_TO.toString().trim() + ", "
+            + PREFIX_DETAILS.toString().trim() + " and " + PREFIX_ADD_DETAILS.toString().trim()
+            + " must be provided.";
 
     private static final Logger logger = LogsCenter.getLogger(EditAppointmentCommand.class);
 
     private final PatientId targetId;
     private final Target targetAppointment;
     private final Optional<Appointment> newDateTime;
-    private final Optional<AppointmentDetails> newDetails;
+    private final Optional<OptionalFieldEdit<AppointmentDetails>> detailsEdit;
 
     /**
      * Creates a command selecting an appointment by its patient-local number.
@@ -57,18 +63,18 @@ public class EditAppointmentCommand extends Command {
      * @param targetId The ID of the patient whose appointment to edit.
      * @param number The patient-local appointment number to edit.
      * @param newDateTime The date and time to move the appointment to, if it moves. Its details are ignored.
-     * @param newDetails The new details of the appointment, if they change.
+     * @param detailsEdit The change to the details of the appointment, if they change.
      */
     public EditAppointmentCommand(PatientId targetId, int number, Optional<Appointment> newDateTime,
-            Optional<AppointmentDetails> newDetails) {
-        CollectionUtil.requireAllNonNull(targetId, newDateTime, newDetails);
-        if (newDateTime.isEmpty() && newDetails.isEmpty()) {
+            Optional<OptionalFieldEdit<AppointmentDetails>> detailsEdit) {
+        CollectionUtil.requireAllNonNull(targetId, newDateTime, detailsEdit);
+        if (newDateTime.isEmpty() && detailsEdit.isEmpty()) {
             throw new IllegalArgumentException(MESSAGE_NOT_EDITED);
         }
         this.targetId = targetId;
         this.targetAppointment = new Target(number);
         this.newDateTime = newDateTime;
-        this.newDetails = newDetails;
+        this.detailsEdit = detailsEdit;
     }
 
     @Override
@@ -108,13 +114,15 @@ public class EditAppointmentCommand extends Command {
     }
 
     /**
-     * Returns {@code oldAppointment} moved to the new date and time, if any, with the new details, if any.
+     * Returns {@code oldAppointment} moved to the new date and time, if any, with its details edited, if they are.
      * What is not changed is kept from {@code oldAppointment}.
      */
     private Appointment createEditedAppointment(Appointment oldAppointment) {
         assert oldAppointment.isNumbered();
         String dateTime = newDateTime.map(Appointment::toString).orElse(oldAppointment.toString());
-        Optional<AppointmentDetails> details = newDetails.or(oldAppointment::getDetails);
+        Optional<AppointmentDetails> details = detailsEdit
+                .map(edit -> edit.applyTo(oldAppointment.getDetails(), AppointmentDetails::new))
+                .orElse(oldAppointment.getDetails());
         return new Appointment(oldAppointment.getNumber(), dateTime, details).withDone(oldAppointment.isDone());
     }
 
@@ -137,7 +145,7 @@ public class EditAppointmentCommand extends Command {
         return targetId.equals(otherCommand.targetId)
                 && targetAppointment.equals(otherCommand.targetAppointment)
                 && newDateTime.equals(otherCommand.newDateTime)
-                && newDetails.equals(otherCommand.newDetails);
+                && detailsEdit.equals(otherCommand.detailsEdit);
     }
 
     @Override
@@ -146,7 +154,7 @@ public class EditAppointmentCommand extends Command {
                 .add("targetId", targetId)
                 .add("targetAppointment", targetAppointment)
                 .add("newDateTime", newDateTime)
-                .add("newDetails", newDetails)
+                .add("detailsEdit", detailsEdit)
                 .toString();
     }
 }

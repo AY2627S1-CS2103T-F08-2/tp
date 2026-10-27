@@ -5,7 +5,6 @@ import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_ADDRESS_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_ID;
-import static seedu.address.logic.commands.CommandTestUtil.INVALID_MEDICAL_HISTORY_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_NAME_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_PHONE_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.MEDICAL_HISTORY_DESC_BOB;
@@ -20,6 +19,8 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
@@ -80,8 +81,8 @@ public class EditCommandParserTest {
         assertParseFailure(parser, VALID_ID_AMY + INVALID_NAME_DESC, Name.MESSAGE_CONSTRAINTS); // invalid name
         assertParseFailure(parser, VALID_ID_AMY + INVALID_PHONE_DESC, Phone.MESSAGE_CONSTRAINTS); // invalid phone
         assertParseFailure(parser, VALID_ID_AMY + INVALID_ADDRESS_DESC, Address.MESSAGE_CONSTRAINTS); // invalid address
-        assertParseFailure(parser, VALID_ID_AMY + INVALID_MEDICAL_HISTORY_DESC + NAME_DESC_AMY,
-                MedicalHistory.MESSAGE_CONSTRAINTS); // blank medical history
+        assertParseFailure(parser, VALID_ID_AMY + " " + PREFIX_ADD_MEDICAL_HISTORY + NAME_DESC_AMY,
+                MedicalHistory.MESSAGE_CONSTRAINTS); // blank medical history to add
 
         // invalid phone followed by valid address
         assertParseFailure(parser, VALID_ID_AMY + INVALID_PHONE_DESC + ADDRESS_DESC_AMY, Phone.MESSAGE_CONSTRAINTS);
@@ -162,12 +163,55 @@ public class EditCommandParserTest {
 
     @Test
     public void parse_blankOrRepeatedNotes_failure() {
-        assertParseFailure(parser, VALID_ID_AMY + " --notes \t " + NAME_DESC_AMY, Notes.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --add-notes \t " + NAME_DESC_AMY, Notes.MESSAGE_CONSTRAINTS);
         for (String repeatedNotes : List.of(" --notes First --notes Second", " --notes First --notes",
                 " --notes --notes Second")) {
             assertParseFailure(parser, VALID_ID_AMY + repeatedNotes,
                     Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NOTES));
         }
+        assertParseFailure(parser, VALID_ID_AMY + " --add-notes First --add-notes Second",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ADD_NOTES));
+    }
+
+    @Test
+    public void parse_emptyValue_clearsField() {
+        PatientId targetId = new PatientId(VALID_ID_AMY);
+
+        // at the end of the command, before another option, or with only whitespace
+        assertParseSuccess(parser, VALID_ID_AMY + " --notes",
+                new EditCommand(targetId, new EditPatientDescriptorBuilder().withoutNotes().build()));
+        assertParseSuccess(parser, VALID_ID_AMY + " --medical-history \t --phone " + VALID_PHONE_BOB,
+                new EditCommand(targetId, new EditPatientDescriptorBuilder().withoutMedicalHistory()
+                        .withPhone(VALID_PHONE_BOB).build()));
+        assertParseSuccess(parser, VALID_ID_AMY + " --notes --medical-history",
+                new EditCommand(targetId, new EditPatientDescriptorBuilder().withoutMedicalHistory().withoutNotes()
+                        .build()));
+    }
+
+    @Test
+    public void parse_addToField_success() {
+        PatientId targetId = new PatientId(VALID_ID_AMY);
+        assertParseSuccess(parser, VALID_ID_AMY + " --add-medical-history Asthma",
+                new EditCommand(targetId, new EditPatientDescriptorBuilder().withMedicalHistoryAdded("Asthma")
+                        .build()));
+
+        // adding to one field combines with replacing or clearing the other
+        assertParseSuccess(parser, VALID_ID_AMY + " --add-notes Prefers  mornings --medical-history Asthma",
+                new EditCommand(targetId, new EditPatientDescriptorBuilder().withNotesAdded("Prefers mornings")
+                        .withMedicalHistory("Asthma").build()));
+        assertParseSuccess(parser, VALID_ID_AMY + "\t--add-medical-history\tAsthma\t--notes",
+                new EditCommand(targetId, new EditPatientDescriptorBuilder().withMedicalHistoryAdded("Asthma")
+                        .withoutNotes().build()));
+    }
+
+    @Test
+    public void parse_replaceAndAddSameField_failure() {
+        String notesConflict = String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--notes", "--add-notes");
+        assertParseFailure(parser, VALID_ID_AMY + " --notes First --add-notes Second", notesConflict);
+        assertParseFailure(parser, VALID_ID_AMY + " --add-notes Second --notes", notesConflict);
+        assertParseFailure(parser, VALID_ID_AMY + " --medical-history Asthma --add-medical-history Eczema",
+                String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--medical-history",
+                        "--add-medical-history"));
     }
 
     @Test
@@ -182,8 +226,8 @@ public class EditCommandParserTest {
     public void parse_finalOptionWithoutValue_failure() {
         // the option is recognized, so the error names the field instead of showing the usage
         assertParseFailure(parser, VALID_ID_AMY + " --phone", Phone.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, VALID_ID_AMY + " --medical-history", MedicalHistory.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, VALID_ID_AMY + " --notes", Notes.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --add-medical-history", MedicalHistory.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --add-notes", Notes.MESSAGE_CONSTRAINTS);
     }
 
     @Test

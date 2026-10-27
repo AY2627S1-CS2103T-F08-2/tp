@@ -1,14 +1,20 @@
 package seedu.address.testutil;
 
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
+import java.util.Optional;
+
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
+import seedu.address.logic.commands.OptionalFieldEdit;
+import seedu.address.logic.parser.Prefix;
 import seedu.address.model.patient.Patient;
 
 /**
@@ -49,9 +55,26 @@ public class PatientUtil {
         descriptor.getName().ifPresent(name -> sb.append(PREFIX_NAME).append(name.fullName).append(" "));
         descriptor.getPhone().ifPresent(phone -> sb.append(PREFIX_PHONE).append(phone.value).append(" "));
         descriptor.getAddress().ifPresent(address -> sb.append(PREFIX_ADDRESS).append(address.value).append(" "));
-        descriptor.getMedicalHistory().ifPresent(medicalHistory ->
-                sb.append(PREFIX_MEDICAL_HISTORY).append(medicalHistory.value).append(" "));
-        descriptor.getNotes().ifPresent(notes -> sb.append(PREFIX_NOTES).append(notes.value).append(" "));
+        descriptor.getMedicalHistory().ifPresent(edit ->
+                sb.append(getFieldEditDetails(edit, PREFIX_MEDICAL_HISTORY, PREFIX_ADD_MEDICAL_HISTORY)));
+        descriptor.getNotes().ifPresent(edit -> sb.append(getFieldEditDetails(edit, PREFIX_NOTES, PREFIX_ADD_NOTES)));
         return sb.toString();
+    }
+
+    /**
+     * Returns the part of command string that gives {@code edit}: {@code replacePrefix} with the new value, or with
+     * no value to clear the field, or {@code appendPrefix} with the text to add.
+     */
+    private static <T> String getFieldEditDetails(OptionalFieldEdit<T> edit, Prefix replacePrefix,
+            Prefix appendPrefix) {
+        // On an empty field, a replacement and an addition both give their value, and clearing gives nothing
+        Optional<T> value = edit.applyTo(Optional.empty(), text -> {
+            throw new AssertionError("An empty field has nothing to add to.");
+        });
+        if (value.isEmpty()) {
+            return replacePrefix.toString();
+        }
+        Prefix prefix = edit.equals(OptionalFieldEdit.replace(value.get())) ? replacePrefix : appendPrefix;
+        return prefix + value.get().toString() + " ";
     }
 }

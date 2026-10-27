@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditAppointmentCommand;
+import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.PatientId;
@@ -24,6 +26,8 @@ public class EditAppointmentCommandParserTest {
     private static final PatientId ID = new PatientId("S1234567A");
     private static final Appointment NEW = new Appointment("2026-10-06 10:00");
     private static final AppointmentDetails DETAILS = new AppointmentDetails("Bring insulin pen");
+    private static final Optional<OptionalFieldEdit<AppointmentDetails>> SET_DETAILS =
+            Optional.of(OptionalFieldEdit.replace(DETAILS));
 
     private final EditAppointmentCommandParser parser = new EditAppointmentCommandParser();
 
@@ -36,12 +40,37 @@ public class EditAppointmentCommandParserTest {
     @Test
     public void parse_detailsOnly_success() {
         assertParseSuccess(parser, "S1234567A 2 --details Bring insulin pen",
-                new EditAppointmentCommand(ID, 2, Optional.empty(), Optional.of(DETAILS)));
+                new EditAppointmentCommand(ID, 2, Optional.empty(), SET_DETAILS));
+    }
+
+    @Test
+    public void parse_emptyDetails_clearsDetails() {
+        Optional<OptionalFieldEdit<AppointmentDetails>> clearDetails = Optional.of(OptionalFieldEdit.clear());
+        assertParseSuccess(parser, "S1234567A 2 --details",
+                new EditAppointmentCommand(ID, 2, Optional.empty(), clearDetails));
+        assertParseSuccess(parser, "S1234567A 2 --details \t --to 2026-10-06 10:00",
+                new EditAppointmentCommand(ID, 2, Optional.of(NEW), clearDetails));
+    }
+
+    @Test
+    public void parse_addDetails_success() {
+        Optional<OptionalFieldEdit<AppointmentDetails>> addDetails = Optional.of(OptionalFieldEdit.append(DETAILS));
+        assertParseSuccess(parser, "S1234567A 2 --add-details Bring   insulin pen",
+                new EditAppointmentCommand(ID, 2, Optional.empty(), addDetails));
+        assertParseSuccess(parser, "S1234567A 2 --add-details Bring insulin pen\t--to 2026-10-06 10:00",
+                new EditAppointmentCommand(ID, 2, Optional.of(NEW), addDetails));
+    }
+
+    @Test
+    public void parse_replaceAndAddDetails_failure() {
+        String conflict = String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--details", "--add-details");
+        assertParseFailure(parser, "S1234567A 2 --details Bring pen --add-details Fasting", conflict);
+        assertParseFailure(parser, "S1234567A 2 --add-details Fasting --details", conflict);
     }
 
     @Test
     public void parse_moveAndDetails_success() {
-        EditAppointmentCommand expected = new EditAppointmentCommand(ID, 2, Optional.of(NEW), Optional.of(DETAILS));
+        EditAppointmentCommand expected = new EditAppointmentCommand(ID, 2, Optional.of(NEW), SET_DETAILS);
 
         // options in any order, after the ID
         assertParseSuccess(parser, "S1234567A 2 --to 2026-10-06 10:00"
@@ -79,12 +108,12 @@ public class EditAppointmentCommandParserTest {
             "+2026-01-01", "-2026-01-01", "2026-1-05", "2026-01-5"}) {
             assertParseFailure(parser, "S1234567A 2 --to " + dateTime, Appointment.MESSAGE_CONSTRAINTS);
         }
-        assertParseFailure(parser, "S1234567A 2 --details \t ",
+        assertParseFailure(parser, "S1234567A 2 --add-details \t ",
                 AppointmentDetails.MESSAGE_CONSTRAINTS);
 
         // an option with no value at the end of the command names its field
         assertParseFailure(parser, "S1234567A 2 --to", Appointment.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, "S1234567A 2 --details", AppointmentDetails.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, "S1234567A 2 --add-details", AppointmentDetails.MESSAGE_CONSTRAINTS);
     }
 
     @Test
@@ -93,6 +122,8 @@ public class EditAppointmentCommandParserTest {
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_TO));
         assertParseFailure(parser, "S1234567A 2 --details A --details B",
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_DETAILS));
+        assertParseFailure(parser, "S1234567A 2 --add-details A --add-details B",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ADD_DETAILS));
     }
 
     @Test
