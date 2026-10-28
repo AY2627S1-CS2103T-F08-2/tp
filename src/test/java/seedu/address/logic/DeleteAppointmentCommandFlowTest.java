@@ -165,7 +165,7 @@ public class DeleteAppointmentCommandFlowTest {
     }
     @Test
     public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndNumbers() throws Exception {
-        logic.execute("addappt S1234567A 2026-10-05 09:30");
+        logic.execute("addappt S1234567A --date 2026-10-05 09:30");
         CommandResult result = logic.execute("deleteappt S1234567A 1");
         assertEquals("Deleted appointment 1 of ALEX YEOH (S1234567A): "
                 + "2026-10-05 09:30; Details: INSULIN REVIEW", result.getFeedbackToUser());

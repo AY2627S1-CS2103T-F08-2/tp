@@ -537,10 +537,13 @@ data file unchanged.
 
 <img src="images/EditAppointmentActivityDiagram.png" width="750" />
 
-`addappt ID DATE_OR_DATETIME [--details DETAILS]` takes the appointment date after the ID and before optional
-details. Its parser reuses `ArgumentTokenizer` and `ParserUtil.parseAppointment`, preserving strict date validation
-and whitespace normalization, and rejecting duplicate details options. It logs parsing success or a missing
-positional argument at `FINE` level without logging appointment details. It finds the patient through
+`addappt ID --date DATE_OR_DATETIME [--details DETAILS]` takes the patient ID first, then the date with `--date`
+and optional details with `--details`, in either order. Its parser reuses `ArgumentTokenizer` and
+`ParserUtil.parseAppointment`, preserving strict date validation and whitespace normalization, and rejects repeated
+options and any other words between the ID and the options. A missing `--date` gets
+`AddAppointmentCommand.MESSAGE_MISSING_DATE`, so the error names what is missing, and a bad `--date` value gets the
+appointment date format, as `--to` does in `editappt`. It logs parsing success or a rejected input at `FINE` level
+without logging appointment details. It finds the patient through
 `Model#findPatientById()`,
 assigns `schedule.getNextNumber()`, adds the numbered appointment, and replaces the patient. The result names its
 number and navigates to that exact stored appointment, followed by any clash warning. The existing patient filter
@@ -1265,7 +1268,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 1a. The ID or appointment date is missing, or in an invalid format.
 
-    * 1a1. LaiNurse shows an error message with the valid format.
+    * 1a1. LaiNurse shows an error message: for a missing date, that the date is missing, and otherwise, the valid
+      format.
 
       Use case resumes at step 1.
 
@@ -1856,7 +1860,7 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data, then add a patient, and give her a timed appointment on the same
        date as Bernice Yu's date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123
-       Clementi Ave 3, #05-12`, then `addappt T0456789D TUE 15:00`.
+       Clementi Ave 3, #05-12`, then `addappt T0456789D --date TUE 15:00`.
 
     1. Test case: `viewappt TUE`<br>
        Expected: Under Tuesday's heading, e.g. `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`,
@@ -1952,8 +1956,8 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Do these test cases before 23:55. Start with the sample data, and replace `TODAY` below with
        today's date, such as `2026-10-17`. Add a patient with no appointments:
        `add --id T0567890E --name Fay Ong --phone 91234567 --address Blk 1 Bedok North Ave 1`, then give her three
-       appointments today: `addappt T0567890E TODAY 00:00`, then `addappt T0567890E TODAY`, and
-       `addappt T0567890E TODAY 23:59`.
+       appointments today: `addappt T0567890E --date TODAY 00:00`, then `addappt T0567890E --date TODAY`, and
+       `addappt T0567890E --date TODAY 23:59`.
 
     1. Test case: the result of the prerequisite<br>
        Expected: On the **Patients** tab, Fay Ong's row shows `Today` in orange as their next appointment: the one with
@@ -1969,7 +1973,7 @@ testers are expected to do more *exploratory* testing.
        with no time is selected, as the first appointment that has not passed, and the panel shows Fay Ong's details
        with it marked.
 
-    1. Test case: `addappt T0567890E TODAY HH:MM`, where `HH:MM` is two minutes from now, then
+    1. Test case: `addappt T0567890E --date TODAY HH:MM`, where `HH:MM` is two minutes from now, then
        `view T0567890E`. Wait until the minute after `HH:MM`, without entering a command.<br>
        Expected: At first, the panel lists the new appointment under **Appointments**, in orange. Within a few seconds
        of the minute after `HH:MM`, when the appointment has passed, it moves under **Past**, dimmed. On the
@@ -2093,23 +2097,31 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data. Bernice Yu (`S2345678B`) has an appointment only on `TUE`.
 
-    1. Test case: `addappt S2345678B SAT --details Check blood pressure`<br>
+    1. Test case: `addappt S2345678B --date SAT --details Check blood pressure`<br>
        Expected: The **Appointments** tab is selected, showing the sample week, with Bernice Yu's appointment
        selected and showing `CHECK BLOOD PRESSURE`. The list shows the appointment with no time.
 
-    1. Test case: `addappt S1234567A AFTER 10:00`<br>
+    1. Test case: `addappt S1234567A --date AFTER 10:00`<br>
        Expected: The week of `AFTER` is shown, with Alex Yeoh's appointment at 10:00 selected.
 
 1. Adding at an occupied time and rejecting an unknown patient
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `addappt S1234567A MON 09:30`<br>
+    1. Test case: `addappt S1234567A --date MON 09:30`<br>
        Expected: Appointment #3 is added at `MON 09:30`. Both visits remain, and the result warns about appointment
        #1 of Alex Yeoh. Their times and that day's heading appear in red.
 
-    1. Test case: `addappt S0000000Z 2026-10-14`<br>
+    1. Test case: `addappt S0000000Z --date 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `No patient has the ID S0000000Z.`
+
+    1. Test case: `addappt S1234567A`<br>
+       Expected: No appointment is added. The status message says that the date of the appointment is missing, and
+       how to give it with `--date`.
+
+    1. Test case: `addappt S1234567A 2026-10-14`, the date without `--date`<br>
+       Expected: No appointment is added. The status message shows the invalid command format error and the usage of
+       `addappt`.
 
 ### Deleting an appointment
 
@@ -2154,10 +2166,10 @@ testers are expected to do more *exploratory* testing.
 
 ### Appointment numbers, migration and clash highlighting
 
-1. Start with sample data. Run `addappt S2345678B MON 09:30`, using the sample week's Monday for `MON`.
+1. Start with sample data. Run `addappt S2345678B --date MON 09:30`, using the sample week's Monday for `MON`.
    Expected: Bernice's new appointment is #2. The warning names Alex Yeoh, ID `S1234567A`, appointment #1.
    Both times and Monday's heading are red. A `viewappt --id S2345678B` filter still shows the warning color.
-1. Run `addappt S1234567A MON 09:30 --details Second visit`.
+1. Run `addappt S1234567A --date MON 09:30 --details Second visit`.
    Expected: Alex's new visit is #3 and the warning names Alex's #1 and Bernice's #2. Both Alex visits survive.
 1. Run `editappt S1234567A --appt MON 09:30 --details Review`, then the equivalent `deleteappt` selector.
    Expected: Each rejects the unsupported option, shows its number-based command format and saves no changes.
@@ -2194,7 +2206,7 @@ testers are expected to do more *exploratory* testing.
 1. Clashes, hidden patients and page preservation
 
     1. Prerequisites: Start with sample data; use its Monday date for `MON`.
-    1. Test case: `addappt S2345678B MON 09:30`, then `viewappt --id S1234567A`<br>
+    1. Test case: `addappt S2345678B --date MON 09:30`, then `viewappt --id S1234567A`<br>
        Expected: Alex's #1 clashes with Bernice's #2, even though Bernice is hidden on this appointment page.
     1. Test case: `markappt S2345678B 2`, then `viewappt --id S1234567A`<br>
        Expected: Alex's #1 and the day heading are no longer red. Bernice's visit remains visible when viewed.

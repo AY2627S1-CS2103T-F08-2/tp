@@ -16,6 +16,7 @@ public class CliSyntax {
     public static final Prefix PREFIX_ADD_NOTES = new Prefix("--add-notes ");
     public static final Prefix PREFIX_FROM = new Prefix("--from ");
     public static final Prefix PREFIX_TO = new Prefix("--to ");
+    public static final Prefix PREFIX_DATE = new Prefix("--date ");
     public static final Prefix PREFIX_DETAILS = new Prefix("--details ");
     public static final Prefix PREFIX_ADD_DETAILS = new Prefix("--add-details ");
 
