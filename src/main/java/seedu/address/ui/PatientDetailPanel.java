@@ -50,10 +50,10 @@ public class PatientDetailPanel extends UiPart<Region> {
     /** The width that a date may shrink to in a narrow panel: just enough for one such as "Mon 28 Dec 2026". */
     private static final double DATE_MIN_WIDTH = 125;
     /**
-     * The width of an appointment's time beside its details, wide enough for "No time specified", so that the
+     * The width of an appointment's time beside its details, wide enough for "Unspecified time", so that the
      * details of all rows line up.
      */
-    private static final double TIME_WIDTH = 125;
+    private static final double TIME_WIDTH = 120;
     /**
      * The width that an appointment's details need beside its time: that of a long word such as "OSTEOARTHRITIS",
      * as for the values above. In a narrower row, the details go under the time.
