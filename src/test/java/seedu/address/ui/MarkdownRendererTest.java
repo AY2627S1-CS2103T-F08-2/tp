@@ -257,6 +257,49 @@ public class MarkdownRendererTest {
         assertEquals(3, table.getColumnConstraints().size());
     }
 
+    @Test
+    public void render_tableEscapedPipe_staysInsideOneCell() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "Action | Format",
+                "-------|-------",
+                "**Range** | write `a \\| b` carefully",
+                "**Exit** | `exit`"));
+
+        GridPane table = tables(rendered).get(0);
+        // The escaped pipe must not add a third column
+        assertEquals(2, table.getColumnConstraints().size());
+        assertEquals(6, table.getChildren().size());
+        assertTrue(visibleText(table).contains("a | b"));
+    }
+
+    @Test
+    public void render_raggedTableRow_missingCellsKeepGridWellFormed() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "Action | Format | Example",
+                "-------|--------|-------",
+                "**List** |",
+                "**Exit** | `exit` | shows all patients"));
+
+        GridPane table = tables(rendered).get(0);
+        // The widest row decides the column count; a short row fills fewer cells, and a
+        // trailing pipe is a closing delimiter rather than an extra empty cell
+        assertEquals(3, table.getColumnConstraints().size());
+        assertEquals(7, table.getChildren().size());
+    }
+
+    @Test
+    public void render_lineWithoutPipe_terminatesTheTable() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "Action | Format",
+                "-------|-------",
+                "A plain line ends the table.",
+                "**Exit** | `exit`"));
+
+        // A pipe-less line flushes the table so far and becomes its own paragraph, as on GitHub
+        assertEquals(2, tables(rendered).size());
+        assertTrue(visibleText(rendered).contains("A plain line ends the table."));
+    }
+
     private static void collectNodes(Node node, List<Node> out) {
         out.add(node);
         if (node instanceof Parent parent) {

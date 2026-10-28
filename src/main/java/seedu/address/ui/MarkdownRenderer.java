@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -303,7 +304,12 @@ public class MarkdownRenderer {
         if (row.endsWith("|")) {
             row = row.substring(0, row.length() - 1);
         }
-        return row.split("\\|", -1);
+        // Split only on unescaped pipes so an escaped \| stays inside its cell, then unescape it.
+        // Not handled: an escaped backslash directly before a pipe ("\\|"), which the guide never
+        // writes; telling those apart would need a full escape scanner for no real-world gain.
+        return Arrays.stream(row.split("(?<!\\\\)\\|", -1))
+                .map(cell -> cell.replace("\\|", "|"))
+                .toArray(String[]::new);
     }
 
     private static String cleanHtmlLineBreaks(String text) {
