@@ -54,7 +54,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
   For example, in `add --name NAME`, replace `NAME` with a value such as `John Doe`.
 
 * Command words and option words are syntax and must be typed in lowercase: `list` runs the list command while `LIST` is rejected as an unknown command, and `--details` is accepted while `--DETAILS` is not.<br>
-  The target of `help` is a command word too, so `help list` works but `help LIST` does not. This does not restrict the data you type: IDs and search matching are case-insensitive.
+  The target of `help` is a command word too, so `help list` works but `help LIST` does not. This does not restrict the data you type: IDs and search matching are case-insensitive.<br>
+  Tab turns command words and options into lowercase as it finishes them. See [Using the keyboard](#using-the-keyboard).
 
 * Items in square brackets are optional.<br>
   For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.<br>
@@ -65,8 +66,6 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 * Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --phone PHONE`, `--phone PHONE --name NAME` is also acceptable.
-
-* Command words and options are in lowercase. For example, `VIEW S1234567A` and `edit S1234567A --PHONE 91234567` are not recognized. Tab turns them into lowercase as it finishes them. See [Using the keyboard](#using-the-keyboard).
 
 * Extraneous parameters for commands that take no parameters, such as `list`, `exit`, and `clear`, are ignored.<br>
   For example, `list 123` is interpreted as `list`.
