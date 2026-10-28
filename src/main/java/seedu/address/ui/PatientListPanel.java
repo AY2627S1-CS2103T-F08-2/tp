@@ -232,9 +232,14 @@ public class PatientListPanel extends UiPart<Region> {
      * Custom {@code ListCell} that displays the graphics of a {@code Patient} using a {@code PatientRow}.
      */
     class PatientListViewCell extends ListCell<Patient> {
+        // One row for the cell's life: building a row loads its FXML, too slow to do for each row scrolled into view
+        private final PatientRow row = new PatientRow();
+
         PatientListViewCell() {
             // Sizes the cell to the list instead of its content, so the list never scrolls sideways.
             setPrefWidth(0);
+            // Fits the row to the cell, so a long name ends in "..." and the ID stays visible.
+            row.getRoot().prefWidthProperty().bind(widthProperty());
         }
 
         @Override
@@ -245,10 +250,8 @@ public class PatientListPanel extends UiPart<Region> {
                 setGraphic(null);
                 setText(null);
             } else {
-                Region row = new PatientRow(patient, getIndex() + 1).getRoot();
-                // Fits the row to the cell, so a long name ends in "..." and the ID stays visible.
-                row.prefWidthProperty().bind(widthProperty());
-                setGraphic(row);
+                row.show(patient, getIndex() + 1);
+                setGraphic(row.getRoot());
             }
         }
     }
