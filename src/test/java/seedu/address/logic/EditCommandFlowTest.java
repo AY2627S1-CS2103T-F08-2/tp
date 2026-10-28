@@ -42,9 +42,7 @@ import seedu.address.testutil.SampleData;
  */
 public class EditCommandFlowTest {
     private static final String ALEX_ID = "S1234567A"; // appointments 2026-10-05 09:30 and 2026-11-02
-    private static final String BERNICE_ID = "S2345678B"; // appointment 2026-10-06
     private static final String CHARLOTTE_ID = "T0123456C"; // no medical history or appointments
-    private static final String IRFAN_ID = "G1234567E"; // appointment 2026-10-07 14:00
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
