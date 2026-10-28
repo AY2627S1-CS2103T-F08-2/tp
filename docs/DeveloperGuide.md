@@ -1996,7 +1996,7 @@ testers are expected to do more *exploratory* testing.
        highlighted, and the panel beside the list shows their details. The status message names the new patient.
 
     1. Test case: the same `add` command again<br>
-       Expected: No patient is added. The status message shows `This patient already exists in LaiNurse.` The
+       Expected: No patient is added. The status message shows `JOHN DOE (T0123456B) already exists in LaiNurse.` The
        selection does not change.
 
 ### Editing a patient
