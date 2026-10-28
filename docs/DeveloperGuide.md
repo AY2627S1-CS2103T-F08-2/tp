@@ -131,7 +131,7 @@ An appointment has passed once its time today has gone by, or once its day is ov
 * A patient's row filters out done visits, then shows their first appointment that has not passed, from
   `AppointmentFormatter#findFirstNotPassed`. Completion does not affect the other date-based rules below.
 * `DetailAppointments` picks the appointments that the details list: every one that has not passed, and the latest ten
-  that have, plus a highlighted older one.
+  that have, plus a marked older one.
 * The appointment list greys out the appointments that have passed.
 
 Each of these decides what has passed, and which day is today, when it is drawn. So that they stay right while the
@@ -155,11 +155,11 @@ view, so that Esc goes back to it. The panel listens to the appointment list and
 keeping the selected appointment if it is still there. Only appointment rows can be selected, so the panel handles Up,
 Down, Home, End, Left and Right itself, with the moves that `AppointmentPage` finds, and headings ignore the mouse. When
 the selection changes, the panel tells `MainWindow`, which shows the appointment's patient in the second
-`PatientDetailPanel` with that appointment highlighted.
+`PatientDetailPanel` with that appointment marked.
 
 `DarkTheme.css` gives each highlight colour one meaning, as two named colours at its top: orange for urgency, which is
 whatever is today, and a blue for selection, which is the keyboard focus and the selected tab, row and
-appointment. So the highlighted appointment in the details is orange only if it is today.
+appointment. So the marked appointment in the details is orange only if it is today.
 
 When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID in the
 command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
@@ -1389,8 +1389,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **List number**: A row's position in the displayed patient list, which changes as the list changes. Commands
   identify patients by patient ID, never by list number.
 * **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time (two date-only visits
-  on one day also clash). Clashing visits are highlighted in red, and a command that creates or restores a clash
-  appends a warning naming the other patients and appointment numbers.
+  on one day also clash). Clashing visits are shown in red, and a command that creates or restores a clash appends a
+  warning naming the other patients and appointment numbers.
 * **Details**: (1) An appointment's free text about the visit, set with `--details` and `--add-details`; (2) the panel
   beside a list that shows one patient's full information ("the details beside the list").
 
@@ -1683,7 +1683,7 @@ testers are expected to do more *exploratory* testing.
        Expected: The **Appointments** tab is selected. Above the list is the heading for Wednesday, e.g. `Wed 7 Oct
        2026`, with no arrow buttons. The
        list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
-       panel beside the list shows their details with that appointment highlighted. The status message shows
+       panel beside the list shows their details with that appointment marked. The status message shows
        `1 patient(s) with appointments on WED`. On the **Patients** tab, only Irfan Ibrahim is listed.
 
     1. Test case: `viewappt BLOOD`, the date of Alex Yeoh's second appointment<br>
@@ -1832,7 +1832,7 @@ testers are expected to do more *exploratory* testing.
        a heading for its day, and no heading for the days without appointments. The next appointment from now is
        selected: Alex Yeoh's, Bernice Yu's or Irfan Ibrahim's, whichever is the first that has not passed, or Alex
        Yeoh's again, as the first on the page, once all three have passed. The panel shows its details with that
-       appointment highlighted under **Past** or **Appointments**.
+       appointment marked under **Past** or **Appointments**.
 
     1. Test case: press Esc, then Ctrl+Up, then Down<br>
        Expected: The list gets a blue border. Ctrl+Up selects Alex Yeoh's appointment, the first on the page, whatever
@@ -1918,7 +1918,7 @@ testers are expected to do more *exploratory* testing.
        Expected: The weekly view shows this week. Under today's heading, in orange, the appointment at 00:00 comes
        first and is greyed out. Then comes the one with no time, showing `‒‒:‒‒`, and then the one at 23:59. The one
        with no time is selected, as the first appointment that has not passed, and the panel shows Fay Ong's details
-       with it highlighted.
+       with it marked.
 
     1. Test case: `addappt T0567890E TODAY HH:MM`, where `HH:MM` is two minutes from now, then
        `view T0567890E`. Wait until the minute after `HH:MM`, without entering a command.<br>
@@ -2118,7 +2118,7 @@ testers are expected to do more *exploratory* testing.
 1. Load a legacy file with two appointment objects for one patient at the same time and different details, plus
    an earlier plain-string appointment. Expected: All three load, numbered chronologically. Equal-time visits
    keep their file order and appear red immediately. After a successful command and restart, all numbers persist.
-1. Check clashing visits from yesterday and today, including selected rows and the highlighted detail appointment.
+1. Check clashing visits from yesterday and today, including selected rows and the marked detail appointment.
    Expected: Date/time text remains red. Other past text stays dimmed, today's non-clashing dates stay orange,
    and selection backgrounds stay blue. Moving/deleting the other visit removes obsolete red highlighting.
 1. Resize to a narrow window. Expected: `#N`, dates, times and long details remain readable with wrapping;
