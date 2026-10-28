@@ -113,14 +113,17 @@ public class TabCompleterTest {
     public void complete_idAfterIdOption_givesExistingIds() {
         assertEquals(List.of("viewappt 2026-10-15 --id S1234567A", "viewappt 2026-10-15 --id S1999999C"),
                 texts("viewappt 2026-10-15 --id s1"));
-        assertEquals(List.of("S1234567A", "T7654321B", "S1999999C"), words("find --name Alex --id "));
-        assertEquals(List.of(), words("find --id X"));
+        assertEquals(List.of("S1234567A", "T7654321B", "S1999999C"), words("viewappt --from 2026-10-01 --id "));
+        assertEquals(List.of(), words("viewappt --id X"));
     }
 
     @Test
-    public void complete_idAfterIdOptionOfAdd_returnsEmptyList() {
+    public void complete_idAfterIdOptionOfAddOrFind_returnsEmptyList() {
         // add takes the ID of a new patient
         assertEquals(List.of(), words("add --id S1"));
+        // find takes any part of an ID
+        assertEquals(List.of(), words("find --id S1"));
+        assertEquals(List.of(), words("find --name Alex --id "));
     }
 
     @Test

@@ -178,7 +178,8 @@ command box, so that it never covers the result of the last command. The team ch
 `TabCompleter` in the `Logic` component holds the rules, so `CommandBox` needs no knowledge of the command formats. It
 completes the first word to the longer command words that start with it, the word after `help` to what `help` can
 explain, a word that starts with `-` to the command's options that are not typed yet, and the word after `--id` in
-`find` and `viewappt` to a patient ID. Every word matches ignoring case, but command words, options and `help`
+`viewappt` to a patient ID. It does not complete the ID after `--id` in `find`, which searches for any part of an ID,
+or in `add`, which takes a new one. Every word matches ignoring case, but command words, options and `help`
 topics are completed in lowercase, the only case that the parsers accept. Its table of each command's options must be updated with the parser when a
 command gets a new option. Otherwise it passes the text to `IdCompleter`, which completes the ID that a command takes
 first. `view` and `delete` take only an ID, so the ID must end the command. `edit`, `addappt`, `editappt`,

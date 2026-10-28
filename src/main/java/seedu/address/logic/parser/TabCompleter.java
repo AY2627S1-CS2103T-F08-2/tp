@@ -56,9 +56,11 @@ public class TabCompleter {
             EditAppointmentCommand.COMMAND_WORD, options(PREFIX_TO, PREFIX_DETAILS, PREFIX_ADD_DETAILS),
             ViewAppointmentCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_FROM, PREFIX_TO));
 
-    /** Commands whose {@code --id} option takes the ID of an existing patient. {@code add} takes a new one. */
-    private static final Set<String> COMMANDS_WITH_ID_OPTION =
-            Set.of(FindCommand.COMMAND_WORD, ViewAppointmentCommand.COMMAND_WORD);
+    /**
+     * Commands whose {@code --id} option takes the whole ID of an existing patient. {@code add} takes a new one, and
+     * {@code find} takes any part of one.
+     */
+    private static final Set<String> COMMANDS_WITH_ID_OPTION = Set.of(ViewAppointmentCommand.COMMAND_WORD);
 
     private static final String OPTION_START = "-";
 
@@ -75,7 +77,7 @@ public class TabCompleter {
      * <li>A word that starts with {@code -} is completed to the options of the command that start with it, other
      * than itself and the options already typed.</li>
      * <li>The word after {@code help} is completed to a command word, or to {@code window}.</li>
-     * <li>The word after {@code --id} in {@code find} and {@code viewappt} is completed to a patient ID.</li>
+     * <li>The word after {@code --id} in {@code viewappt} is completed to a patient ID.</li>
      * <li>Otherwise, {@link IdCompleter} completes the patient ID that the command takes first.</li>
      * </ul>
      * Every word matches ignoring case. Command words, options and what {@code help} explains are completed in
