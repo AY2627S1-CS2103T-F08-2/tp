@@ -53,6 +53,9 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add --name NAME`, replace `NAME` with a value such as `John Doe`.
 
+* Command words and option words are syntax and must be typed in lowercase: `list` runs the list command while `LIST` is rejected as an unknown command, and `--details` is accepted while `--DETAILS` is not.<br>
+  The target of `help` is a command word too, so `help list` works but `help LIST` does not. This does not restrict the data you type: IDs and search matching are case-insensitive.
+
 * Items in square brackets are optional.<br>
   For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.<br>
   An option whose value is in its own square brackets, such as `[--notes [NOTES]]` in `edit`, can also be given with no value.
@@ -178,7 +181,7 @@ Format: `help [COMMAND]`
 * Typing `help` without arguments outputs a summary of all commands in the result display, including help itself.
 * Adding a command name (e.g., `help add`, `help edit`, `help help`) displays the syntax and practical examples for that command.
 * Typing `help window` opens the pop-up Help Window containing the complete User Guide.
-* Typing an unknown command name (e.g., `help 3`) or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
+* Typing an unknown command name (e.g., `help 3`), a wrong-case target (e.g., `help LIST`), or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
 
 Examples:
 * `help` shows a quick summary list of all available commands in the result display.

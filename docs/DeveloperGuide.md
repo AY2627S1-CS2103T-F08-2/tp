@@ -696,11 +696,11 @@ The help system provides a three-tier support model designed to give nurses imme
 
 The help architecture spans argument parsing in `Logic`, command dispatching in `HelpCommand`, and native rendering in `UI`.
 
-##### 1. Command Parsing & Target Normalization (`HelpCommandParser`)
+##### 1. Command Parsing & Target Validation (`HelpCommandParser`)
 
 `HelpCommandParser` processes user input according to the following rules:
 * Strips surrounding whitespace and checks for an empty argument string, returning a targetless `HelpCommand()` (Tier 1: General Help).
-* Normalizes casing using `Locale.ROOT` (`commandTarget.toLowerCase(Locale.ROOT)`) to ensure consistent parsing across system locales (avoiding locale-specific casing anomalies such as Turkish dotted 'i').
+* Matches the target exactly against the registered command words and `window` — the match is case-sensitive by design, since command syntax is lowercase-only (see the command-format notes in the User Guide) while data fields stay case-forgiven.
 * Accepts only a single bare command word: rejects the deprecated `--` flag form (e.g., `help --add`, `help -- add`, `help --`) and multi-token arguments (e.g., `help add patient`) by throwing a `ParseException` with `HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT`.
 * Validates the target against `HelpCommand.COMMAND_USAGE_MAP` and `HelpCommand.TARGET_WINDOW`, rejecting unknown targets (e.g., `help 3`, `help nonexistent`) at parse time with the same `ParseException`.
 
@@ -1174,7 +1174,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * Use case ends.
 
 * 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW`).
-    * 1e1. LaiNurse normalizes the target using `Locale.ROOT` and displays the syntax details for the matching command.
+    * 1e1. LaiNurse rejects the target as unknown, since command syntax is lowercase-only, and displays an invalid
+      command format error that shows `HelpCommand.MESSAGE_USAGE` and lists all valid targets.
     * Use case ends.
 
 **Use case: UC08 - Edit an appointment**
@@ -2183,7 +2184,8 @@ testers are expected to do more *exploratory* testing.
         * Expected: The `viewappt` syntax is displayed: a date, a `--from`/`--to` range, or neither for this week, each
           with an optional `--id ID`. With `--id ID` alone, it shows all of that patient's appointments.
     * Test case: `help DELETE` or `help VIEW`
-        * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
+        * Expected: The invalid command format error is displayed, because targets are matched case-sensitively and
+          uppercase forms are rejected like unknown targets.
 
 3. Rejecting invalid help inputs
     * Test case: `help nonexistent`
