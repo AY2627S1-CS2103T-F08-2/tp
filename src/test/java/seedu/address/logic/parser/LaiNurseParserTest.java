@@ -52,7 +52,7 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_addAppointment() throws Exception {
         AddAppointmentCommand command = (AddAppointmentCommand) parser.parseCommand(
-                AddAppointmentCommand.COMMAND_WORD + " S1234567A 2026-10-05 09:30"
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A --date 2026-10-05 09:30"
                         + " --details Bring insulin pen");
         assertEquals(new AddAppointmentCommand(new PatientId("S1234567A"),
                 new Appointment("2026-10-05 09:30", Optional.of(new AppointmentDetails("Bring insulin pen")))),
@@ -97,7 +97,7 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_appointmentHorizontalSpaces_success() throws Exception {
         assertEquals(new AddAppointmentCommand(new PatientId("S1234567A"), new Appointment("2026-10-05 09:30")),
-                parser.parseCommand("addappt\u00a0s1234567a\u202f2026-10-05\u00a009:30"));
+                parser.parseCommand("addappt\u00a0s1234567a\u202f--date\u00a02026-10-05\u00a009:30"));
         assertEquals(new DeleteAppointmentCommand(new PatientId("S1234567A"), 1),
                 parser.parseCommand("deleteappt\u00a0s1234567a\u202f1"));
         assertEquals(new EditAppointmentCommand(new PatientId("S1234567A"), 1,
@@ -248,5 +248,14 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_unknownCommand_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("unknownCommand"));
+    }
+
+    @Test
+    public void parseCommand_upperCaseCommandWord_throwsParseException() {
+        // Command words are case-sensitive: syntax is typed in lowercase (see the UG command-format notes)
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("LIST"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("Help list"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () ->
+                parser.parseCommand("AddAppt S1234567A 2026-10-05 09:30"));
     }
 }

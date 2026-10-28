@@ -42,7 +42,7 @@ public class DeleteAppointmentCommand extends Command {
      * @param targetId The ID of the patient whose appointment is deleted.
      * @param number The patient-local appointment number to delete.
      */
-    public DeleteAppointmentCommand(PatientId targetId, int number) {
+    public DeleteAppointmentCommand(PatientId targetId, long number) {
         requireNonNull(targetId);
         this.targetId = targetId;
         this.targetAppointment = new Target(number);
@@ -54,14 +54,14 @@ public class DeleteAppointmentCommand extends Command {
         Patient patient = model.findPatientById(targetId)
                 .orElseThrow(() -> {
                     logger.fine("Rejected deleteappt: no patient has the given ID.");
-                    return new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+                    return new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
                 });
 
         Appointment foundAppointment =
                 AppointmentLookup.find(targetId, patient.getSchedule(), targetAppointment, COMMAND_WORD);
 
         AppointmentSchedule editedSchedule = patient.getSchedule().remove(foundAppointment);
-        assert editedSchedule.findByNumber(targetAppointment.number()).isEmpty();
+        assert editedSchedule.findByNumber(foundAppointment.getNumber()).isEmpty();
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);

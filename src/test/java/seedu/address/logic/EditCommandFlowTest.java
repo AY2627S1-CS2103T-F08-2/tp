@@ -42,9 +42,7 @@ import seedu.address.testutil.SampleData;
  */
 public class EditCommandFlowTest {
     private static final String ALEX_ID = "S1234567A"; // appointments 2026-10-05 09:30 and 2026-11-02
-    private static final String BERNICE_ID = "S2345678B"; // appointment 2026-10-06
     private static final String CHARLOTTE_ID = "T0123456C"; // no medical history or appointments
-    private static final String IRFAN_ID = "G1234567E"; // appointment 2026-10-07 14:00
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
@@ -155,11 +153,11 @@ public class EditCommandFlowTest {
     @Test
     public void execute_unknownId_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("edit S0000000Z --phone 91234567", CommandException.class,
-                Messages.MESSAGE_INVALID_PATIENT_ID);
+                String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
 
         // a list number is read as an ID, which no patient has
         assertRejectedCommandLeavesDataUnchanged("edit 1 --name Test", CommandException.class,
-                Messages.MESSAGE_INVALID_PATIENT_ID);
+                String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "1"));
     }
 
     @Test

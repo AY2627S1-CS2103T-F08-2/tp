@@ -53,6 +53,10 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add --name NAME`, replace `NAME` with a value such as `John Doe`.
 
+* Command words and option words are syntax and must be typed in lowercase: `list` runs the list command while `LIST` is rejected as an unknown command, and `--details` is accepted while `--DETAILS` is not.<br>
+  The target of `help` is a command word too, so `help list` works but `help LIST` does not. This does not restrict the data you type: IDs and search matching are case-insensitive.<br>
+  Tab turns command words and options into lowercase as it finishes them. See [Using the keyboard](#using-the-keyboard).
+
 * Items in square brackets are optional.<br>
   For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.<br>
   An option whose value is in its own square brackets, such as `[--notes [NOTES]]` in `edit`, can also be given with no value.
@@ -84,7 +88,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
   * The next appointment of a patient is their first **undone** appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.
-* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` beside the patient ID:
+* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` beside the patient ID:
   this is the appointment's stable number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. The details
   panel shows the same number before its date.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
@@ -125,7 +129,7 @@ You can use LaiNurse without the mouse. The keyboard focus is in the command box
 Key | What it does
 --------|------------------
 Enter | Runs the command.
-Tab | Finishes typing a patient ID after `view`, `delete`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` or `unmarkappt`. See below. With nothing to finish, such as in an empty command box, it does nothing.
+Tab | Finishes the word you are typing: a command word, an option such as `--phone`, or a patient ID. While you type, the status bar at the bottom of the window shows what Tab can fill in. See below. With nothing to finish, such as in an empty command box, it does nothing.
 Up and Down | Go back and forth through the commands you entered since LaiNurse started, including ones that failed. Down after the newest command gives back what you were typing.
 Esc | Moves to the list of the view that is shown, or to the tabs if the patient list is empty. What you typed stays in the command box.
 
@@ -157,9 +161,14 @@ Esc | In the patient view, shows all patients, as `list` does, but keeps the pat
 * When the focus moves to the patient list, the patient whose details are shown stays selected. If no patient in the list is selected, LaiNurse selects the first one and shows their details. So the selected patient is always the one shown.
 * When the focus moves to the appointment list and no appointment is selected, LaiNurse selects the first appointment that has not passed, on a page that includes today, or the first appointment of another page, and shows its patient's details.
 * For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.
-* To finish a patient ID with Tab, type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
-  For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
-  With `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt`, Tab also works after you have typed the remaining arguments, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`, and `markappt s12 2` becomes `markappt S1234567A 2`.
+* While you type, the left end of the status bar shows a **Tab** key followed by each word that Tab can fill in, such as **Tab** `delete · deleteappt` after `dele`. With more than five, it shows the first five and how many others there are, such as `+19 more`. Press Tab to fill in the first one, and Tab again to go through the others. The status bar keeps showing them while you do. When Tab has nothing to fill in, or the focus is not in the command box, the status bar shows only where your data is saved.
+* Tab finishes these words:
+  * **Command words.** For example, `dele` gives `delete`, then `deleteappt`. `view` gives `viewappt`, so type a space after `view` to finish a patient ID instead. When there is only one match, the next Tab goes on to the patient ID if the command takes one, so `addap` gives `addappt`, and the next Tab `addappt S1234567A`.
+  * **Options.** Type `-` or the start of an option. For example, `edit S1234567A --ph` gives `edit S1234567A --phone`. Tab offers only the options of that command, and skips the ones you have already typed.
+  * **Patient IDs** after `view`, `delete`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` or `unmarkappt`, and after `--id` in `viewappt`. Type the first few characters of the ID, or none. Patients in the displayed list come first. For example, `view s12` gives `view S1234567A`.<br>
+    With `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt`, Tab also works after you have typed the remaining arguments, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`, and `markappt s12 2` becomes `markappt S1234567A 2`.
+  * **Help topics** after `help`. For example, `help ad` gives `help add`, then `help addappt`. `help w` gives `help window`.
+* Tab matches what you type in any case, but fills in command words, options and help topics in lowercase, as LaiNurse expects them. For example, `DELE` gives `delete`, then `deleteappt`, and `--PH` gives `--phone`. A whole word in the wrong case, such as `VIEW`, gives the lowercase word first, then the longer ones: `view`, then `viewappt`. The command word and options before the word you complete must already be in lowercase, so `EDIT S1234567A --PH` and `HELP W` give nothing to fill in.
 * The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
 
 ### Viewing help: `help`
@@ -178,7 +187,7 @@ Format: `help [COMMAND]`
 * Typing `help` without arguments outputs a summary of all commands in the result display, including help itself.
 * Adding a command name (e.g., `help add`, `help edit`, `help help`) displays the syntax and practical examples for that command.
 * Typing `help window` opens the pop-up Help Window containing the complete User Guide.
-* Typing an unknown command name (e.g., `help 3`) or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
+* Typing an unknown command name (e.g., `help 3`), a wrong-case target (e.g., `help LIST`), or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
 
 Examples:
 * `help` shows a quick summary list of all available commands in the result display.
@@ -198,7 +207,7 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * Medical history and notes are independently optional. If an option is supplied, its value must not be blank.
 * Notes record other personal information not covered by the other fields, such as the patient's hobbies, pet peeves and daily routines. Use `--medical-history` for health information.
 * Parameters may appear in any order. Each option may appear only once. Separate options and values using spaces or tabs; values may contain spaces.
-* IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
+* IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again. LaiNurse then names the patient who has that ID, such as `ALEX YEOH (S1234567A) already exists in LaiNurse.`
 * Names, addresses, medical history and notes accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * A new patient starts with no appointments. Set their appointments with [`addappt`](#adding-an-appointment-addappt).
@@ -314,12 +323,12 @@ Examples:
 
 Adds an appointment to a patient's schedule.
 
-Format: `addappt ID DATE_OR_DATETIME [--details DETAILS]`
+Format: `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
-* `DATE_OR_DATETIME` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. It must follow the ID, before any details. Past dates are accepted.
+* `--date` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. Past dates are accepted. Without `--date`, LaiNurse says that the date is missing.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
-* The optional `--details` follows the date or date and time, and may be given at most once.
+* `--date` and the optional `--details` can be in either order after the ID, and each may be given only once.
 * The new appointment starts **Undone** and receives the patient's highest remaining appointment number plus one, starting at #1.
   Deleting a visit leaves the other numbers unchanged. If the highest number is deleted, it can be reused.
 * Clashes are allowed, including several undone visits to the same patient at exactly the same time. The result warns
@@ -327,9 +336,9 @@ Format: `addappt ID DATE_OR_DATETIME [--details DETAILS]`
 * LaiNurse switches to the **Appointments** view and selects the new appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
-* `addappt S1234567A 2026-10-12 09:30` gives Alex Yeoh an appointment on 12 October at 09:30.
-* `addappt S2345678B 2026-10-14 --details Check blood pressure` gives Bernice Yu an appointment on 14 October with no time, and details.
-* `addappt S1234567A 2026-12-01 10:00 --details Bring insulin pen` gives Alex Yeoh an appointment on 1 December at 10:00 with details.
+* `addappt S1234567A --date 2026-10-12 09:30` gives Alex Yeoh an appointment on 12 October at 09:30.
+* `addappt S2345678B --date 2026-10-14 --details Check blood pressure` gives Bernice Yu an appointment on 14 October with no time, and details.
+* `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen` gives Alex Yeoh an appointment on 1 December at 10:00 with details.
 
 ### Editing an appointment: `editappt`
 
@@ -513,7 +522,7 @@ Appointment dates and times in the file follow the formats above, and a file sav
 Action | Format, Examples
 --------|-----------------
 **Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
-**AddAppt** | `addappt ID DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A 2026-12-01 10:00 --details Bring insulin pen`
+**AddAppt** | `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **DeleteAppt** | `deleteappt ID NUMBER`<br> e.g., `deleteappt S1234567A 1`

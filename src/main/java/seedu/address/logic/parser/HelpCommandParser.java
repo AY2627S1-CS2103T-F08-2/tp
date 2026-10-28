@@ -1,7 +1,5 @@
 package seedu.address.logic.parser;
 
-import java.util.Locale;
-
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -23,7 +21,9 @@ public class HelpCommandParser implements Parser<HelpCommand> {
             throw new ParseException(HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT);
         }
 
-        String commandTarget = trimmed.toLowerCase(Locale.ROOT);
+        // Targets are matched exactly: command words and 'window' are lowercase-only syntax, so
+        // 'help LIST' is rejected like an unknown target. Data the user types stays case-forgiven.
+        String commandTarget = trimmed;
 
         // Only valid command words (and 'window') are accepted; flags ('help --add') and
         // unknown targets ('help 3') are rejected.

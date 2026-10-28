@@ -97,7 +97,7 @@ public class AddCommandFlowTest {
 
         assertRejectedCommandLeavesDataUnchanged("add --name Different Patient --phone 98765432"
                 + " --address Different Address --id s1111111a", CommandException.class,
-                AddCommand.MESSAGE_DUPLICATE_PATIENT);
+                String.format(AddCommand.MESSAGE_DUPLICATE_PATIENT, AMY.getName(), AMY.getId()));
     }
 
     @Test

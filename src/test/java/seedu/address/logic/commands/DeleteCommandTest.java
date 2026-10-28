@@ -29,7 +29,7 @@ public class DeleteCommandTest {
 
     @Test
     public void execute_validIdUnfilteredList_success() {
-        Patient patientToDelete = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
+        Patient patientToDelete = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT);
         DeleteCommand deleteCommand = new DeleteCommand(patientToDelete.getId());
 
         String expectedMessage = String.format(DeleteCommand.MESSAGE_DELETE_PATIENT_SUCCESS,
@@ -48,7 +48,7 @@ public class DeleteCommandTest {
         PatientId nonExistentId = new PatientId("T9999999Z");
         DeleteCommand deleteCommand = new DeleteCommand(nonExistentId);
 
-        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(deleteCommand, model, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, nonExistentId));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class DeleteCommandTest {
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
 
         Patient hiddenFromListPatient = model.getLaiNurse().getPatientList()
-                .get(INDEX_SECOND_PATIENT.getZeroBased());
+                .get(INDEX_SECOND_PATIENT);
         DeleteCommand deleteCommand = new DeleteCommand(hiddenFromListPatient.getId());
 
         String expectedMessage = String.format(DeleteCommand.MESSAGE_DELETE_PATIENT_SUCCESS,

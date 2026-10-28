@@ -28,6 +28,7 @@ public class UnmarkAppointmentCommandParserTest {
         assertParseSuccess(parser, "S1234567A 2", new UnmarkAppointmentCommand(ID, 2));
         assertParseSuccess(parser, "  s1234567a\t2  ", new UnmarkAppointmentCommand(ID, 2));
         assertParseSuccess(parser, "S1234567A 2147483647", new UnmarkAppointmentCommand(ID, Integer.MAX_VALUE));
+        assertParseSuccess(parser, "S1234567A 999999999999999", new UnmarkAppointmentCommand(ID, 999999999999999L));
         assertParseSuccess(parser, "2 1", new UnmarkAppointmentCommand(new PatientId("2"), 1));
     }
 
@@ -42,7 +43,7 @@ public class UnmarkAppointmentCommandParserTest {
 
     @Test
     public void parse_invalidAppointmentNumber_failure() {
-        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648", "999999999999999", "#2", "two",
+        for (String number : List.of("0", "-1", "+1", "1.5", "#2", "two",
                 "2026-10-05")) {
             assertParseFailure(parser, "S1234567A " + number, Appointment.MESSAGE_NUMBER_CONSTRAINTS);
         }
@@ -54,7 +55,9 @@ public class UnmarkAppointmentCommandParserTest {
                 new LaiNurseParser().parseCommand("unmarkappt\u00a0s1234567a\u202f2"));
         assertEquals(UnmarkAppointmentCommand.MESSAGE_USAGE,
                 HelpCommand.COMMAND_USAGE_MAP.get(UnmarkAppointmentCommand.COMMAND_WORD));
-        assertParseSuccess(new HelpCommandParser(), "UNMARKAPPT",
+        assertParseSuccess(new HelpCommandParser(), "unmarkappt",
                 new HelpCommand(UnmarkAppointmentCommand.COMMAND_WORD));
+        assertParseFailure(new HelpCommandParser(), "UNMARKAPPT",
+                HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT);
     }
 }

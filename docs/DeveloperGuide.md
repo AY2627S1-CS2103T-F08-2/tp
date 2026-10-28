@@ -161,12 +161,32 @@ the selection changes, the panel tells `MainWindow`, which shows the appointment
 whatever is today, and a blue for selection, which is the keyboard focus and the selected tab, row and
 appointment. So the marked appointment in the details is orange only if it is today.
 
-When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID in the
-command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
-does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
-rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt` take the ID first, so
-`IdCompleter` completes the word after the command word and keeps later options or appointment numbers.
+Whenever the text in the command box changes, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish
+the word that the text ends with. Each is a `Completion`: the whole command after the completion, and the word that it
+fills in. `CommandBox` passes the words to `StatusBarFooter#showCompletions`, which shows them after a **Tab** key cap at
+the left end of the status bar, while the command box has the focus and at least one completion would change the text.
+It shows at most the first five words, then the number of the others, such as `+19 more`, so that a long list of
+patient IDs does not fill the status bar.
+Tab replaces the text with the first completion, and each further Tab with the next. While Tab goes through them,
+`CommandBox` keeps the list, so the status bar keeps showing it. After the only completion, `CommandBox` asks for the
+completions of the new text at once, so that `addap` gives `addappt`, and the status bar then shows the patient IDs
+that the next Tab goes through. With nothing to finish, Tab does nothing, so it never moves the focus out of the
+command box. On Tab, and when the command box gets the focus back, `CommandBox` asks again unless Tab is going through a
+list, as the patients may have changed since the user typed. The hint is in the status bar, not in a pop-up under the
+command box, so that it never covers the result of the last command. The team chose this design from three mockups.
+
+`TabCompleter` in the `Logic` component holds the rules, so `CommandBox` needs no knowledge of the command formats. It
+completes the first word to the longer command words that start with it, the word after `help` to what `help` can
+explain, a word that starts with `-` to the command's options that are not typed yet, and the word after `--id` in
+`viewappt` to a patient ID. It does not complete the ID after `--id` in `find`, which searches for any part of an ID,
+or in `add`, which takes a new one. The word being completed matches ignoring case, but command words, options and
+`help` topics are completed in lowercase, the only case that the parsers accept. The words before it are matched
+exactly, as the parsers match them, so `EDIT S1234567A --PH` has nothing to complete. Its table of each command's options must be updated with the parser when a
+command gets a new option. Otherwise it passes the text to `IdCompleter`, which completes the ID that a command takes
+first. `view` and `delete` take only an ID, so the ID must end the command. `edit`, `addappt`, `editappt`,
+`deleteappt`, `markappt` and `unmarkappt` take the ID first, so `IdCompleter` completes the word after the command word
+and keeps later options or appointment numbers. A whole command word that no other command word starts with, such as
+`addappt`, also goes to `IdCompleter`, which adds a space and the ID.
 `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
 started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
@@ -500,8 +520,10 @@ given to `addappt` or `--add-details`, as `parseNotes` does for notes, and logs 
 
 `editappt ID NUMBER` selects a visit by patient-local number. Both the edit and delete parsers require the ID and
 number before any options and retain the existing option normalization and duplicate option checks.
-`ParserUtil.parseAppointmentNumber` rejects signs, fractions and integer overflow. `AppointmentLookup.Target`
-holds a positive number; the shared lookup uses `findByNumber` and reports a missing number before any mutation.
+`ParserUtil.parseAppointmentNumber` rejects zero, signs and fractions. It keeps a number too large for any
+appointment as a `long`, so that the command reports that the patient has no such appointment, as it does for any
+other missing number. `AppointmentLookup.Target` holds the positive number; the shared lookup uses `findByNumber`
+and reports a missing number before any mutation.
 An assertion checks that the resolved appointment has the requested number.
 
 An edit builds the replacement with the old appointment number and completion status, and preserves date/time
@@ -515,10 +537,13 @@ data file unchanged.
 
 <img src="images/EditAppointmentActivityDiagram.png" width="750" />
 
-`addappt ID DATE_OR_DATETIME [--details DETAILS]` takes the appointment date after the ID and before optional
-details. Its parser reuses `ArgumentTokenizer` and `ParserUtil.parseAppointment`, preserving strict date validation
-and whitespace normalization, and rejecting duplicate details options. It logs parsing success or a missing
-positional argument at `FINE` level without logging appointment details. It finds the patient through
+`addappt ID --date DATE_OR_DATETIME [--details DETAILS]` takes the patient ID first, then the date with `--date`
+and optional details with `--details`, in either order. Its parser reuses `ArgumentTokenizer` and
+`ParserUtil.parseAppointment`, preserving strict date validation and whitespace normalization, and rejects repeated
+options and any other words between the ID and the options. A missing `--date` gets
+`AddAppointmentCommand.MESSAGE_MISSING_DATE`, so the error names what is missing, and a bad `--date` value gets the
+appointment date format, as `--to` does in `editappt`. It logs parsing success or a rejected input at `FINE` level
+without logging appointment details. It finds the patient through
 `Model#findPatientById()`,
 assigns `schedule.getNextNumber()`, adds the numbered appointment, and replaces the patient. The result names its
 number and navigates to that exact stored appointment, followed by any clash warning. The existing patient filter
@@ -543,7 +568,7 @@ of the patient list, so a patient hidden by `find` or `viewappt` stays hidden th
 `markappt ID NUMBER` sets an appointment to done; `unmarkappt ID NUMBER` sets it back to undone. Each has its own
 command and parser. The parsers require exactly two positional arguments, reuse `ParserUtil.parseId` and
 `parseAppointmentNumber`, and reject date/time selectors and extra arguments. Both commands are registered in
-`LaiNurseParser`, `HelpCommand` and `IdCompleter`.
+`LaiNurseParser`, `HelpCommand` and `IdCompleter`. `TabCompleter` takes its command words from `HelpCommand`.
 
 The package-private `AppointmentStatusCommand` base shares execution. It finds the patient in the full model and
 resolves the number through `AppointmentLookup.Target`. A missing patient, missing appointment or repeated status
@@ -696,11 +721,11 @@ The help system provides a three-tier support model designed to give nurses imme
 
 The help architecture spans argument parsing in `Logic`, command dispatching in `HelpCommand`, and native rendering in `UI`.
 
-##### 1. Command Parsing & Target Normalization (`HelpCommandParser`)
+##### 1. Command Parsing & Target Validation (`HelpCommandParser`)
 
 `HelpCommandParser` processes user input according to the following rules:
 * Strips surrounding whitespace and checks for an empty argument string, returning a targetless `HelpCommand()` (Tier 1: General Help).
-* Normalizes casing using `Locale.ROOT` (`commandTarget.toLowerCase(Locale.ROOT)`) to ensure consistent parsing across system locales (avoiding locale-specific casing anomalies such as Turkish dotted 'i').
+* Matches the target exactly against the registered command words and `window` — the match is case-sensitive by design, since command syntax is lowercase-only (see the command-format notes in the User Guide) while data fields stay case-forgiven.
 * Accepts only a single bare command word: rejects the deprecated `--` flag form (e.g., `help --add`, `help -- add`, `help --`) and multi-token arguments (e.g., `help add patient`) by throwing a `ParseException` with `HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT`.
 * Validates the target against `HelpCommand.COMMAND_USAGE_MAP` and `HelpCommand.TARGET_WINDOW`, rejecting unknown targets (e.g., `help 3`, `help nonexistent`) at parse time with the same `ParseException`.
 
@@ -875,6 +900,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
 | `* *`    | home-based nurse | add to a patient's medical history, notes or appointment details without retyping them              | I can record a new condition or reminder quickly             |
 | `* *`    | home-based nurse | clear a patient's medical history, notes or appointment details                                      | out-of-date information does not mislead me                  |
+| `* *`    | home-based nurse | press Tab to finish command words, options and patient IDs, and see what Tab can fill in          | I type commands faster and with fewer mistakes                |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
 | `* *`    | home-based nurse | view one patient's appointments on a date or in a range                                              | I can prepare for that patient's visits                      |
 | `*`      | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
@@ -1174,7 +1200,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * Use case ends.
 
 * 1e. Nurse enters the target command with mixed or uppercase letters (e.g., `help VIEW`).
-    * 1e1. LaiNurse normalizes the target using `Locale.ROOT` and displays the syntax details for the matching command.
+    * 1e1. LaiNurse rejects the target as unknown, since command syntax is lowercase-only, and displays an invalid
+      command format error that shows `HelpCommand.MESSAGE_USAGE` and lists all valid targets.
     * Use case ends.
 
 **Use case: UC08 - Edit an appointment**
@@ -1196,15 +1223,27 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1b. The given ID does not match any patient.
+* 1b. A date, time or the details are in an invalid format.
 
-    * 1b1. LaiNurse shows an error message.
+    * 1b1. LaiNurse shows an error message with the valid format.
 
       Use case resumes at step 1.
 
-* 1c. The patient has no appointment with the given number.
+* 1c. Nurse asks to both replace and add to the details.
 
-    * 1c1. LaiNurse shows an error naming the missing appointment number.
+    * 1c1. LaiNurse shows an error message saying that the two options cannot be given together.
+
+      Use case resumes at step 1.
+
+* 1d. The given ID does not match any patient.
+
+    * 1d1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1e. The patient has no appointment with the given number.
+
+    * 1e1. LaiNurse shows an error naming the missing appointment number.
 
       Use case resumes at step 1.
 
@@ -1213,18 +1252,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2a1. LaiNurse keeps the edit and appends a warning naming the other patients and appointment numbers.
 
       Use case resumes at step 3.
-
-* 1e. A date, time or the details are in an invalid format.
-
-    * 1e1. LaiNurse shows an error message with the valid format.
-
-      Use case resumes at step 1.
-
-* 1f. Nurse asks to both replace and add to the details.
-
-    * 1f1. LaiNurse shows an error message saying that the two options cannot be given together.
-
-      Use case resumes at step 1.
 
 **Use case: UC09 - Add an appointment**
 
@@ -1241,13 +1268,20 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 1a. The ID or appointment date is missing, or in an invalid format.
 
-    * 1a1. LaiNurse shows an error message with the valid format.
+    * 1a1. LaiNurse shows an error message: for a missing date, that the date is missing, and otherwise, the valid
+      format.
 
       Use case resumes at step 1.
 
-* 1b. The given ID does not match any patient.
+* 1b. The details are blank.
 
     * 1b1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1c. The given ID does not match any patient.
+
+    * 1c1. LaiNurse shows an error message.
 
       Use case resumes at step 1.
 
@@ -1256,12 +1290,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other patients and visit numbers.
 
       Use case resumes at step 3.
-
-* 1d. The details are blank.
-
-    * 1d1. LaiNurse shows an error message.
-
-      Use case resumes at step 1.
 
 **Use case: UC10 - Delete an appointment**
 
@@ -1337,8 +1365,23 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 ### Glossary
 
 * **LaiNurse**: The desktop application designed for (home) nurses to manage patient contact details, medical histories,
-  and home visit schedules via a Command Line Interface (CLI).
+  and home visit schedules via a CLI.
+* **CLI (Command Line Interface)**: The text-based interface of LaiNurse, where the nurse types commands such as
+  `edit S1234567A --phone 91234567` and reads the feedback in the result display, instead of using the mouse.
+* **GUI (Graphical User Interface)**: The visual part of the app, such as the window, lists, tabs and panels, that the
+  user interacts with by pointing and clicking, showing the effects of the commands typed in the CLI.
+* **JAR (Java Archive)**: The single packaged file (`lainurse.jar`) that contains the app, launched with
+  `java -jar lainurse.jar`.
+* **JSON (JavaScript Object Notation)**: The plain-text, human-editable format in which LaiNurse saves its data, as
+  `data/lainurse.json` and its backup.
+* **API**: The set of public methods through which one component (e.g., Logic) is used by another, given by an
+  interface of the same name.
+* **JavaFX / FXML**: The UI framework that the app's interface is built with, and the markup format of its layout
+  files (`src/main/resources/view`).
+* **Markdown**: The format that the User Guide is written in, which the in-app Help window renders natively.
 * **Mainstream OS**: Windows, Linux, Unix, or macOS.
+* **Sample data**: The six patients LaiNurse starts with when it has no data file; their appointments fall on the
+  Monday to Wednesday of the week the app was first launched, plus Alex Yeoh's blood test four weeks later.
 * **(Home) Nurse**: The primary target user; a healthcare professional who conducts on-site medical checkups and
   caregiving visits at patients' residential addresses.
 * **Patient**: An individual receiving home-based medical care or rehabilitation from a visiting nurse, tracked in the
@@ -1354,9 +1397,30 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Notes**: Optional free-form personal information about a patient that the other fields do not cover, such as their
   hobbies, pet peeves and daily routines (e.g., "walks every morning"). Health information goes in the Medical History
   instead.
+* **Normalization (normalized text)**: How LaiNurse stores text: trimmed, in upper case, with each run of whitespace
+  collapsed into one space, so values differing only in case or spacing are equal.
+* **Patients view (patient view)**: The tab that shows the patient list beside one patient's details; also called the
+  patient view or the **Patients** tab.
+* **Appointments view (appointment view)**: The tab that shows appointments day by day beside the selected
+  appointment's patient; also called the appointment view or the **Appointments** tab.
+* **Weekly view**: The appointment view's page that shows one week, from Monday to Sunday, with a heading for every
+  day; a plain `viewappt` shows it.
+* **Filter**: A criterion that limits what a list shows. The patient list shows only the patients matching it, such as
+  after `find` or `viewappt`; its header then says `Filtered patients`, and the list currently shown is also called
+  the displayed list. A `viewappt` range similarly limits the appointment page to the appointments in it.
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
   24-hour format, in local time with no time zone.
+* **Appointment number**: The stable number (`#N`) that an appointment keeps within its patient's schedule, used by
+  `editappt`, `deleteappt`, `markappt` and `unmarkappt`. It is not the appointment's position down the appointment
+  page.
+* **List number**: A row's position in the displayed patient list, which changes as the list changes. Commands
+  identify patients by patient ID, never by list number.
+* **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time (two date-only visits
+  on one day also clash). Clashing visits are shown in red, and a command that creates or restores a clash appends a
+  warning naming the other patients and appointment numbers.
+* **Details**: (1) An appointment's free text about the visit, set with `--details` and `--add-details`; (2) the panel
+  beside a list that shows one patient's full information ("the details beside the list").
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1411,12 +1475,36 @@ testers are expected to do more *exploratory* testing.
     1. Other incorrect view commands to try: `view`, `view S123-456` (not a valid ID)<br>
        Expected: The panel does not change. The status message shows the correct command format.
 
-1. Completing a patient ID with Tab
+1. Completing with Tab
 
     1. Prerequisites: Start with the sample data, which includes patients with the IDs `S1234567A` and `S2345678B`.
 
     1. Test case: type `view s1`, then press Tab<br>
-       Expected: The command box shows `view S1234567A`. The focus stays in the command box.
+       Expected: While you type, the left end of the status bar shows a **Tab** key and `S1234567A`. After Tab, the
+       command box shows `view S1234567A`, and the status bar shows only the data file path, at its right end. The
+       focus stays in the command box.
+
+    1. Test case: type `dele`, then press Tab three times<br>
+       Expected: The status bar shows `delete · deleteappt`. The command box shows `delete`, then `deleteappt`, then
+       `delete` again. The status bar keeps showing both.
+
+    1. Test case: type `addap`, then press Tab twice<br>
+       Expected: The command box shows `addappt`, and the status bar now shows the first five patient IDs, then
+       `+1 more`. The second Tab gives `addappt S1234567A`.
+
+    1. Test case: type `editappt S1234567A 1 --`, then press Tab<br>
+       Expected: The status bar shows `--to · --details · --add-details`. The command box shows
+       `editappt S1234567A 1 --to`.
+
+    1. Test case: type `edit S1234567A --name Alex --`<br>
+       Expected: The status bar shows every option of `edit` except `--name`.
+
+    1. Test case: type `help w`, then press Tab<br>
+       Expected: The command box shows `help window`.
+
+    1. Test case: type `dele`, then press Esc<br>
+       Expected: The status bar shows only the data file path while the focus is in the list. Type `t` to go back to
+       the command box: the status bar shows `delete · deleteappt` again.
 
     1. Test case: type `delete S`, then press Tab several times<br>
        Expected: Each Tab shows the next ID that starts with `S`, in the order of the list, and then starts again from the first.
@@ -1424,8 +1512,9 @@ testers are expected to do more *exploratory* testing.
     1. Test case: type `edit s23 --phone 91234567`, then press Tab<br>
        Expected: The command box shows `edit S2345678B --phone 91234567`. The options are kept.
 
-    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra` or `edit --phone 91234567`, then press Tab<br>
-       Expected: The command box does not change.
+    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra`, `edit --phone 91234567`, `list` or
+       `view S1234567A`, then press Tab<br>
+       Expected: The status bar shows only the data file path. The command box does not change.
 
 1. Moving between the command box and the patient list
 
@@ -1755,7 +1844,7 @@ testers are expected to do more *exploratory* testing.
        `0 appointment(s) of ALEX YEOH on or after` the date. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
-       Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
+       Expected: The list is unchanged. The status message shows `No patient has the ID S9999999Z.`
 
     1. Test case: `viewappt --id S1234567A MON`, a date after the option<br>
        Expected: The list is unchanged. The status message says that a `DATE` must come before other options,
@@ -1771,7 +1860,7 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data, then add a patient, and give her a timed appointment on the same
        date as Bernice Yu's date-only one: `add --id T0456789D --name Eve Tan --phone 98765432 --address Blk 123
-       Clementi Ave 3, #05-12`, then `addappt T0456789D TUE 15:00`.
+       Clementi Ave 3, #05-12`, then `addappt T0456789D --date TUE 15:00`.
 
     1. Test case: `viewappt TUE`<br>
        Expected: Under Tuesday's heading, e.g. `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`,
@@ -1867,8 +1956,8 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Do these test cases before 23:55. Start with the sample data, and replace `TODAY` below with
        today's date, such as `2026-10-17`. Add a patient with no appointments:
        `add --id T0567890E --name Fay Ong --phone 91234567 --address Blk 1 Bedok North Ave 1`, then give her three
-       appointments today: `addappt T0567890E TODAY 00:00`, then `addappt T0567890E TODAY`, and
-       `addappt T0567890E TODAY 23:59`.
+       appointments today: `addappt T0567890E --date TODAY 00:00`, then `addappt T0567890E --date TODAY`, and
+       `addappt T0567890E --date TODAY 23:59`.
 
     1. Test case: the result of the prerequisite<br>
        Expected: On the **Patients** tab, Fay Ong's row shows `Today` in orange as their next appointment: the one with
@@ -1884,7 +1973,7 @@ testers are expected to do more *exploratory* testing.
        with no time is selected, as the first appointment that has not passed, and the panel shows Fay Ong's details
        with it marked.
 
-    1. Test case: `addappt T0567890E TODAY HH:MM`, where `HH:MM` is two minutes from now, then
+    1. Test case: `addappt T0567890E --date TODAY HH:MM`, where `HH:MM` is two minutes from now, then
        `view T0567890E`. Wait until the minute after `HH:MM`, without entering a command.<br>
        Expected: At first, the panel lists the new appointment under **Appointments**, in orange. Within a few seconds
        of the minute after `HH:MM`, when the appointment has passed, it moves under **Past**, dimmed. On the
@@ -1913,7 +2002,7 @@ testers are expected to do more *exploratory* testing.
        highlighted, and the panel beside the list shows their details. The status message names the new patient.
 
     1. Test case: the same `add` command again<br>
-       Expected: No patient is added. The status message shows `This patient already exists in LaiNurse.` The
+       Expected: No patient is added. The status message shows `JOHN DOE (T0123456B) already exists in LaiNurse.` The
        selection does not change.
 
 ### Editing a patient
@@ -1930,10 +2019,11 @@ testers are expected to do more *exploratory* testing.
        highlighted, and the panel beside the list shows their details.
 
     1. Test case: `edit S0000000Z --phone 91234567`, an ID that no patient has<br>
-       Expected: No patient is changed. The status message shows `The patient ID provided is invalid.`
+       Expected: No patient is changed. The status message shows `No patient has the ID S0000000Z.`
 
     1. Test case: `edit S1234567A`, with nothing to change<br>
-       Expected: No patient is changed. The status message shows `At least one field to edit must be provided.`
+       Expected: No patient is changed. The status message shows `At least one of --name, --phone, --address,
+       --medical-history, --add-medical-history, --notes and --add-notes must be provided.`
 
     1. Test case: `edit --phone 91234567`, with no ID<br>
        Expected: No patient is changed. The status message shows the command format.
@@ -2007,23 +2097,31 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with the sample data. Bernice Yu (`S2345678B`) has an appointment only on `TUE`.
 
-    1. Test case: `addappt S2345678B SAT --details Check blood pressure`<br>
+    1. Test case: `addappt S2345678B --date SAT --details Check blood pressure`<br>
        Expected: The **Appointments** tab is selected, showing the sample week, with Bernice Yu's appointment
        selected and showing `CHECK BLOOD PRESSURE`. The list shows the appointment with no time.
 
-    1. Test case: `addappt S1234567A AFTER 10:00`<br>
+    1. Test case: `addappt S1234567A --date AFTER 10:00`<br>
        Expected: The week of `AFTER` is shown, with Alex Yeoh's appointment at 10:00 selected.
 
 1. Adding at an occupied time and rejecting an unknown patient
 
     1. Prerequisites: Start with the sample data.
 
-    1. Test case: `addappt S1234567A MON 09:30`<br>
+    1. Test case: `addappt S1234567A --date MON 09:30`<br>
        Expected: Appointment #3 is added at `MON 09:30`. Both visits remain, and the result warns about appointment
        #1 of Alex Yeoh. Their times and that day's heading appear in red.
 
-    1. Test case: `addappt S0000000Z 2026-10-14`<br>
-       Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
+    1. Test case: `addappt S0000000Z --date 2026-10-14`<br>
+       Expected: No appointment is added. The status message shows `No patient has the ID S0000000Z.`
+
+    1. Test case: `addappt S1234567A`<br>
+       Expected: No appointment is added. The status message says that the date of the appointment is missing, and
+       how to give it with `--date`.
+
+    1. Test case: `addappt S1234567A 2026-10-14`, the date without `--date`<br>
+       Expected: No appointment is added. The status message shows the invalid command format error and the usage of
+       `addappt`.
 
 ### Deleting an appointment
 
@@ -2047,7 +2145,7 @@ testers are expected to do more *exploratory* testing.
        Expected: No appointment is deleted. The status message says `Patient S1234567A has no appointment #99.`
 
     1. Test case: `deleteappt S0000000Z 1`<br>
-       Expected: No appointment is deleted. The status message shows `The patient ID provided is invalid.`
+       Expected: No appointment is deleted. The status message shows `No patient has the ID S0000000Z.`
 
     1. Other incorrect deleteappt commands to try: `deleteappt` (missing everything), `deleteappt S1234567A`
        (missing number), `deleteappt S1234567A 1 extra` (extra argument)<br>
@@ -2068,10 +2166,10 @@ testers are expected to do more *exploratory* testing.
 
 ### Appointment numbers, migration and clash highlighting
 
-1. Start with sample data. Run `addappt S2345678B MON 09:30`, using the sample week's Monday for `MON`.
+1. Start with sample data. Run `addappt S2345678B --date MON 09:30`, using the sample week's Monday for `MON`.
    Expected: Bernice's new appointment is #2. The warning names Alex Yeoh, ID `S1234567A`, appointment #1.
    Both times and Monday's heading are red. A `viewappt --id S2345678B` filter still shows the warning color.
-1. Run `addappt S1234567A MON 09:30 --details Second visit`.
+1. Run `addappt S1234567A --date MON 09:30 --details Second visit`.
    Expected: Alex's new visit is #3 and the warning names Alex's #1 and Bernice's #2. Both Alex visits survive.
 1. Run `editappt S1234567A --appt MON 09:30 --details Review`, then the equivalent `deleteappt` selector.
    Expected: Each rejects the unsupported option, shows its number-based command format and saves no changes.
@@ -2108,7 +2206,7 @@ testers are expected to do more *exploratory* testing.
 1. Clashes, hidden patients and page preservation
 
     1. Prerequisites: Start with sample data; use its Monday date for `MON`.
-    1. Test case: `addappt S2345678B MON 09:30`, then `viewappt --id S1234567A`<br>
+    1. Test case: `addappt S2345678B --date MON 09:30`, then `viewappt --id S1234567A`<br>
        Expected: Alex's #1 clashes with Bernice's #2, even though Bernice is hidden on this appointment page.
     1. Test case: `markappt S2345678B 2`, then `viewappt --id S1234567A`<br>
        Expected: Alex's #1 and the day heading are no longer red. Bernice's visit remains visible when viewed.
@@ -2147,7 +2245,8 @@ testers are expected to do more *exploratory* testing.
         * Expected: The `viewappt` syntax is displayed: a date, a `--from`/`--to` range, or neither for this week, each
           with an optional `--id ID`. With `--id ID` alone, it shows all of that patient's appointments.
     * Test case: `help DELETE` or `help VIEW`
-        * Expected: Case-insensitive parsing via `Locale.ROOT`; displays usage for `delete` and `view` respectively.
+        * Expected: The invalid command format error is displayed, because targets are matched case-sensitively and
+          uppercase forms are rejected like unknown targets.
 
 3. Rejecting invalid help inputs
     * Test case: `help nonexistent`

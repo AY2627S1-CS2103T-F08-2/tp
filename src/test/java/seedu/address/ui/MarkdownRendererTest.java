@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -211,6 +213,42 @@ public class MarkdownRendererTest {
         assertEquals(1, tables.size());
         // Header plus two data rows, two columns each
         assertEquals(6, tables.get(0).getChildren().size());
+    }
+
+    @Test
+    public void render_threeColumnTable_fitsViewerWithoutBoundingExplosion() throws Exception {
+        VBox[] holder = new VBox[1];
+        CountDownLatch layoutDone = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            VBox rendered = MarkdownRenderer.render(String.join("\n",
+                    "When LaiNurse launches, it loads its data as follows:",
+                    "",
+                    "| `lainurse.json` | `lainurse.backup.json` | LaiNurse starts with |",
+                    "|---|---|---|",
+                    "| Loads | Any | The data in `lainurse.json`. |",
+                    "| Missing | Any | The sample data. Delete `lainurse.json` to start again. |",
+                    "| Cannot be loaded | Loads | The data in the backup, which is the data as last saved. |",
+                    "| Cannot be loaded | Missing, or cannot be loaded | No data. |",
+                    "",
+                    "A paragraph after the table."));
+            holder[0] = rendered;
+            rendered.resize(1040, 700);
+            rendered.applyCss();
+            rendered.layout();
+            layoutDone.countDown();
+        });
+
+        assertTrue(layoutDone.await(5, TimeUnit.SECONDS));
+        GridPane table = tables(holder[0]).get(0);
+
+        // The constraints must cover all three columns of the load matrix
+        assertEquals(3, table.getColumnConstraints().size());
+        // The broken renderer sized this grid to thousands of pixels of empty height
+        assertTrue(table.getHeight() < 400,
+                "table height exploded to " + table.getHeight());
+        // and overflowed horizontally past the viewer's width
+        assertTrue(table.getBoundsInParent().getWidth() <= 1041,
+                "table width overflowed the viewer: " + table.getBoundsInParent().getWidth());
     }
 
     private static void collectNodes(Node node, List<Node> out) {

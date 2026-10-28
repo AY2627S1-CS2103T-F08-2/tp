@@ -212,26 +212,28 @@ public class ViewAppointmentCommandParserTest {
 
     @Test
     public void parse_wordAfterId_throwsParseException() {
-        // A trailing word that is not a real date fails as an ID, whatever it looks like
-        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + NOT_A_DATE, PatientId.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING + " " + VALID_ID, PatientId.MESSAGE_CONSTRAINTS);
+        // A trailing word that is not a real date fails as an ID that no patient has, whatever it looks like
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " " + NOT_A_DATE, notFound(VALID_ID + " " + NOT_A_DATE));
+        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING + " " + VALID_ID,
+                notFound(VALID_DATE_STRING + " " + VALID_ID));
         // A digit-only word can be a patient ID, such as one typed with a stray space, so it is not diagnosed
         // as a date, even one that looks like one
-        assertParseFailure(parser, ID_FLAG + VALID_ID + " 123", PatientId.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, ID_FLAG + "123 456", PatientId.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, ID_FLAG + VALID_ID + " 20261028", PatientId.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " 123", notFound(VALID_ID + " 123"));
+        assertParseFailure(parser, ID_FLAG + "123 456", notFound("123 456"));
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " 20261028", notFound(VALID_ID + " 20261028"));
         for (String date : List.of(WRONG_FORMAT_DATE, MONTH_13_DATE, IMPOSSIBLE_DATE)) {
             // A word that is not a real date, such as an impossible one, is not diagnosed as a date either
-            assertParseFailure(parser, ID_FLAG + VALID_ID + " " + date, PatientId.MESSAGE_CONSTRAINTS);
+            assertParseFailure(parser, ID_FLAG + VALID_ID + " " + date, notFound(VALID_ID + " " + date));
         }
     }
 
     @Test
     public void parse_invalidId_throwsParseException() {
-        assertParseFailure(parser, ID_FLAG + INVALID_ID, PatientId.MESSAGE_CONSTRAINTS);
+        // No patient can have an ID that is not in the ID format, and a blank ID gets the format
+        assertParseFailure(parser, ID_FLAG + INVALID_ID, notFound(INVALID_ID));
         assertParseFailure(parser, ID_FLAG, PatientId.MESSAGE_CONSTRAINTS);
-        // A date given to --id fails as an ID, not as a misplaced date
-        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING, PatientId.MESSAGE_CONSTRAINTS);
+        // A date given to --id fails as an ID that no patient has, not as a misplaced date
+        assertParseFailure(parser, ID_FLAG + VALID_DATE_STRING, notFound(VALID_DATE_STRING));
     }
 
     @Test
@@ -240,5 +242,10 @@ public class ViewAppointmentCommandParserTest {
         assertParseFailure(parser, FROM_FLAG + START + " --till " + END, INVALID_FORMAT_MESSAGE);
         assertParseFailure(parser, "--from=" + START, INVALID_FORMAT_MESSAGE);
         assertParseFailure(parser, "--From " + START, INVALID_FORMAT_MESSAGE);
+    }
+
+    /** Returns the error for {@code id}, which no patient has, as it shows in upper case. */
+    private static String notFound(String id) {
+        return String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, id.toUpperCase());
     }
 }

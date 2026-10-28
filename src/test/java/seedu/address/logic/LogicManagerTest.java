@@ -2,7 +2,7 @@ package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_ID;
+import static seedu.address.logic.Messages.MESSAGE_PATIENT_NOT_FOUND;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ID_DESC_AMY;
@@ -31,6 +31,7 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -72,7 +73,7 @@ public class LogicManagerTest {
     @Test
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete T9999999Z";
-        assertCommandException(deleteCommand, MESSAGE_INVALID_PATIENT_ID);
+        assertCommandException(deleteCommand, String.format(MESSAGE_PATIENT_NOT_FOUND, "T9999999Z"));
     }
 
     @Test
@@ -223,7 +224,9 @@ public class LogicManagerTest {
         model.updateFilteredPatientList(patient -> patient.getId().value.equals("S1000003C"));
 
         assertEquals(List.of("view S1000003C", "view S1000001A", "view S1000002B"),
-                logic.getCompletions("view S1"));
+                logic.getCompletions("view S1").stream().map(Completion::text).toList());
+        assertEquals(List.of("S1000003C", "S1000001A", "S1000002B"),
+                logic.getCompletions("viewappt --id s").stream().map(Completion::word).toList());
         assertEquals(List.of(), logic.getCompletions("list"));
     }
 

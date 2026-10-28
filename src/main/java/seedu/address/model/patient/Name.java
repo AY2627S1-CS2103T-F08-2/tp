@@ -13,7 +13,7 @@ import seedu.address.commons.util.TextNormalizer;
  */
 public class Name {
 
-    public static final String MESSAGE_CONSTRAINTS = "Names can contain any characters, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Names can take any values, and must not be blank.";
 
     /*
      * Checked against the normalized name, so a blank string becomes "" and is rejected.

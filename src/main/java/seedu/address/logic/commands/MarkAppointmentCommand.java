@@ -21,7 +21,7 @@ public class MarkAppointmentCommand extends AppointmentStatusCommand {
     /**
      * Creates a command to mark the appointment with {@code number} of the patient with {@code targetId}.
      */
-    public MarkAppointmentCommand(PatientId targetId, int number) {
+    public MarkAppointmentCommand(PatientId targetId, long number) {
         super(targetId, number, true, COMMAND_WORD, MESSAGE_MARK_APPOINTMENT_SUCCESS, MESSAGE_ALREADY_DONE);
     }
 }

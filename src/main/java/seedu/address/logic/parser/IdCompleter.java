@@ -49,7 +49,7 @@ public class IdCompleter {
      * Returns an empty list if {@code commandText} has no patient ID where its command expects one,
      * or if no ID starts with what was typed. Matching ignores case.
      */
-    public static List<String> complete(String commandText, List<PatientId> ids) {
+    public static List<Completion> complete(String commandText, List<PatientId> ids) {
         requireAllNonNull(commandText, ids);
         Matcher matcher = COMMAND_FORMAT.matcher(commandText.stripLeading());
         if (!matcher.matches()) {
@@ -71,7 +71,7 @@ public class IdCompleter {
         return ids.stream()
                 .map(id -> id.value)
                 .filter(id -> id.startsWith(partialId))
-                .map(id -> commandStart + id + rest)
+                .map(id -> new Completion(commandStart + id + rest, id))
                 .toList();
     }
 }

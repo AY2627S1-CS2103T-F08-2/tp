@@ -4,9 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
-import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
-import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,23 +45,20 @@ public class ParserUtilTest {
     private static final LocalDate VALID_DATE_OBJECT = LocalDate.of(2026, 6, 7);
 
     @Test
-    public void parseIndex_invalidInput_throwsParseException() {
-        assertThrows(ParseException.class, () -> ParserUtil.parseIndex("10 a"));
+    public void parseAppointmentNumber_notPositiveWholeNumber_throwsParseException() {
+        for (String number : List.of("", "0", "00", "-1", "+1", "1.5", "1 2", "two", "#2")) {
+            assertThrows(ParseException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS, ()
+                    -> ParserUtil.parseAppointmentNumber(number));
+        }
     }
 
     @Test
-    public void parseIndex_outOfRangeInput_throwsParseException() {
-        assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, ()
-            -> ParserUtil.parseIndex(Long.toString(Integer.MAX_VALUE + 1)));
-    }
-
-    @Test
-    public void parseIndex_validInput_success() throws Exception {
-        // No whitespaces
-        assertEquals(INDEX_FIRST_PATIENT, ParserUtil.parseIndex("1"));
-
-        // Leading and trailing whitespaces
-        assertEquals(INDEX_FIRST_PATIENT, ParserUtil.parseIndex("  1  "));
+    public void parseAppointmentNumber_positiveWholeNumber_returnsNumber() throws Exception {
+        assertEquals(1, ParserUtil.parseAppointmentNumber("1"));
+        assertEquals(2, ParserUtil.parseAppointmentNumber("002"));
+        // numbers larger than any appointment number are kept
+        assertEquals(99999999999L, ParserUtil.parseAppointmentNumber("99999999999"));
+        assertEquals(Long.MAX_VALUE, ParserUtil.parseAppointmentNumber("99999999999999999999"));
     }
 
     @Test

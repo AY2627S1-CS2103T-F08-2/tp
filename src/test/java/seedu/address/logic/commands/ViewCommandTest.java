@@ -64,7 +64,7 @@ public class ViewCommandTest {
     public void execute_nonExistentId_throwsCommandException() {
         ViewCommand viewCommand = new ViewCommand(new PatientId("T9999999Z"));
 
-        assertCommandFailure(viewCommand, model, Messages.MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(viewCommand, model, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "T9999999Z"));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class ViewCommandTest {
         Model emptyModel = new ModelManager(new LaiNurse(), new UserPrefs());
         ViewCommand viewCommand = new ViewCommand(new PatientId("S2345678B"));
 
-        assertCommandFailure(viewCommand, emptyModel, Messages.MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(viewCommand, emptyModel, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S2345678B"));
     }
 
     @Test

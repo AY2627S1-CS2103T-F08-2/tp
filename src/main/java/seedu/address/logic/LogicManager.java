@@ -14,8 +14,9 @@ import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.exceptions.CommandException;
-import seedu.address.logic.parser.IdCompleter;
+import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.LaiNurseParser;
+import seedu.address.logic.parser.TabCompleter;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Patient;
@@ -118,12 +119,12 @@ public class LogicManager implements Logic {
     }
 
     @Override
-    public List<String> getCompletions(String commandText) {
+    public List<Completion> getCompletions(String commandText) {
         List<PatientId> ids = Stream.concat(getFilteredPatientList().stream(), getPatientList().stream())
                 .map(Patient::getId)
                 .distinct()
                 .toList();
-        return IdCompleter.complete(commandText, ids);
+        return TabCompleter.complete(commandText, ids);
     }
 
     @Override

@@ -8,9 +8,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
-import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.DateUtil;
-import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -27,8 +25,6 @@ import seedu.address.model.patient.Phone;
  * Contains utility methods used for parsing strings in the various *Parser classes.
  */
 public class ParserUtil {
-
-    public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     private static final Logger logger = LogsCenter.getLogger(ParserUtil.class);
 
@@ -69,20 +65,6 @@ public class ParserUtil {
             return Optional.of(OptionalFieldEdit.append(parseValue.parse(appendValue.get())));
         }
         return Optional.empty();
-    }
-
-    /**
-     * Parses {@code oneBasedIndex} into an {@code Index} and returns it.
-     * Leading and trailing whitespaces will be trimmed.
-     *
-     * @throws ParseException if the specified index is invalid (not a non-zero unsigned integer).
-     */
-    public static Index parseIndex(String oneBasedIndex) throws ParseException {
-        String trimmedIndex = oneBasedIndex.trim();
-        if (!StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
-            throw new ParseException(MESSAGE_INVALID_INDEX);
-        }
-        return Index.fromOneBased(Integer.parseInt(trimmedIndex));
     }
 
     /**
@@ -194,22 +176,22 @@ public class ParserUtil {
     }
 
     /**
-     * Parses a patient-local appointment number without accepting signs, fractions or integer overflow.
+     * Parses a patient-local appointment number, which is a positive whole number with no sign or fraction.
+     * A number too large for any appointment is kept, so that the command reports that the patient has no such
+     * appointment. One too large for a {@code long} is read as {@code Long.MAX_VALUE}.
+     *
+     * @throws ParseException if {@code number} is not a positive whole number.
      */
-    public static int parseAppointmentNumber(String number) throws ParseException {
+    public static long parseAppointmentNumber(String number) throws ParseException {
         requireNonNull(number);
-        try {
-            if (!number.matches("[0-9]+")) {
-                throw new NumberFormatException();
-            }
-            int parsed = Integer.parseInt(number);
-            if (parsed <= 0) {
-                throw new NumberFormatException();
-            }
-            return parsed;
-        } catch (NumberFormatException e) {
+        if (!number.matches("[0-9]+") || number.matches("0+")) {
             logger.fine("Rejected invalid appointment number.");
-            throw new ParseException(Appointment.MESSAGE_NUMBER_CONSTRAINTS, e);
+            throw new ParseException(Appointment.MESSAGE_NUMBER_CONSTRAINTS);
+        }
+        try {
+            return Long.parseLong(number);
+        } catch (NumberFormatException e) {
+            return Long.MAX_VALUE;
         }
     }
 

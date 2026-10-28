@@ -12,7 +12,6 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.util.ArrayList;
 import java.util.List;
 
-import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
@@ -109,13 +108,13 @@ public class CommandTestUtil {
         assertEquals(expectedFilteredList, actualModel.getFilteredPatientList());
     }
     /**
-     * Updates {@code model}'s filtered list to show only the patient at the given {@code targetIndex} in the
-     * {@code model}'s {@code LaiNurse}.
+     * Updates {@code model}'s filtered list to show only the patient at the zero-based {@code targetIndex} in the
+     * {@code model}'s filtered list.
      */
-    public static void showPatientAtIndex(Model model, Index targetIndex) {
-        assertTrue(targetIndex.getZeroBased() < model.getFilteredPatientList().size());
+    public static void showPatientAtIndex(Model model, int targetIndex) {
+        assertTrue(targetIndex < model.getFilteredPatientList().size());
 
-        Patient patient = model.getFilteredPatientList().get(targetIndex.getZeroBased());
+        Patient patient = model.getFilteredPatientList().get(targetIndex);
         final String[] splitName = patient.getName().fullName.split("\\s+");
         model.updateFilteredPatientList(new NameContainsKeywordsPredicate(List.of(splitName[0])));
 
