@@ -24,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Shape;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.ModelManager;
@@ -82,6 +83,7 @@ public class AppointmentClashUiTest {
                 assertTrue(label(root, ".detail-appointment-date").getText().startsWith("#1 · "));
                 assertEquals(CLASH_COLOR, label(root, ".detail-appointment-date").getTextFill());
                 assertEquals(CLASH_COLOR, label(root, ".detail-appointment-time").getTextFill());
+                assertEquals(CLASH_COLOR, ((Shape) root.lookup(".clash-mark-part")).getFill());
                 assertFalse(root.lookupAll(".detail-appointment-marked").isEmpty());
                 assertTrue(label(root, ".detail-appointment-date").isWrapText());
                 Patient movedBen = new PatientBuilder(ben).withAppointments(LocalDate.now().plusDays(2).toString())
@@ -107,8 +109,10 @@ public class AppointmentClashUiTest {
             panel.showRange(new AppointmentRange(today, today, alex.getId()));
             StackPane root = new StackPane(panel.getRoot());
             styleAndLayout(root, 800);
-            assertEquals(CLASH_COLOR, label(root, ".appointment-day-clash").getTextFill());
+            // the time is red with a red boxed "!" before it, and the day heading keeps its colour
             assertEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
+            assertEquals(CLASH_COLOR, ((Shape) root.lookup(".clash-mark-part")).getFill());
+            assertTrue(root.lookupAll(".appointment-day-clash").isEmpty());
             assertEquals("S1234567A #1", label(root, ".appointment-entry-id").getText());
             Patient moved = new PatientBuilder(alex).withSchedule(new AppointmentSchedule(List.of(
                     new Appointment(today + " 10:00").withNumber(1)))).build();
@@ -120,7 +124,7 @@ public class AppointmentClashUiTest {
             assertEquals("10:00", label(root, ".appointment-entry-time").getText());
             assertTrue(selected.get().orElseThrow().isSameEntry(entry(alex)));
             assertEquals("10:00", selected.get().orElseThrow().getAppointment().getTime().orElseThrow().toString());
-            assertTrue(root.lookupAll(".appointment-day-clash").isEmpty());
+            assertTrue(root.lookupAll(".clash-mark").isEmpty());
             assertNotEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
         });
     }
@@ -181,9 +185,10 @@ public class AppointmentClashUiTest {
             model.setPatient(ben, doneBen);
             styleAndLayout(listRoot, 800);
             styleAndLayout(detailRoot, 320);
-            assertTrue(listRoot.lookupAll(".appointment-day-clash").isEmpty());
+            assertTrue(listRoot.lookupAll(".clash-mark").isEmpty());
             assertNotEquals(CLASH_COLOR, label(listRoot, ".appointment-entry-time").getTextFill());
             assertTrue(detailRoot.lookupAll(".detail-appointment-clash").isEmpty());
+            assertTrue(detailRoot.lookupAll(".clash-mark").isEmpty());
 
             model.setPatient(doneBen, ben);
             styleAndLayout(listRoot, 800);

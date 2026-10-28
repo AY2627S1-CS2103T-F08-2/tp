@@ -36,6 +36,8 @@ public class AppointmentRow extends UiPart<Region> {
     @FXML
     private Label details;
 
+    private final Region clashMark = ClashMark.create();
+
     /**
      * Creates an {@code AppointmentRow} that shows no appointment until {@link #show} is called.
      */
@@ -51,7 +53,7 @@ public class AppointmentRow extends UiPart<Region> {
     }
 
     /**
-     * Creates a row whose time is marked red when it clashes with another visit.
+     * Creates a row whose time is marked red, with a clash mark before it, when it clashes with another visit.
      */
     public AppointmentRow(AppointmentPage.Entry entry, LocalDateTime now, boolean isClashing) {
         this();
@@ -60,7 +62,7 @@ public class AppointmentRow extends UiPart<Region> {
 
     /**
      * Shows {@code entry} in place of what the row showed before, greyed out if it has passed at {@code now}, and
-     * with its time marked red if {@code isClashing}.
+     * with its time marked red, with a clash mark before it, if {@code isClashing}.
      */
     public void show(AppointmentPage.Entry entry, LocalDateTime now, boolean isClashing) {
         Appointment appointment = entry.appointment().getAppointment();
@@ -69,6 +71,7 @@ public class AppointmentRow extends UiPart<Region> {
         time.setText(AppointmentFormatter.formatTime(appointment));
         time.getStyleClass().removeAll(TIME_STYLE_CLASS, NO_TIME_STYLE_CLASS);
         time.getStyleClass().add(appointment.getTime().isPresent() ? TIME_STYLE_CLASS : NO_TIME_STYLE_CLASS);
+        ClashMark.show(time, clashMark, isClashing);
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value + " #" + appointment.getNumber());
         status.setText(AppointmentFormatter.formatStatus(appointment));

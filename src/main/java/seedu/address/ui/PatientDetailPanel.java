@@ -266,6 +266,9 @@ public class PatientDetailPanel extends UiPart<Region> {
         time.setWrapText(true);
         time.setMinWidth(0);
         time.setMinHeight(Region.USE_PREF_SIZE);
+        boolean isClashing = !AppointmentClashes.find(allAppointments,
+                new PatientAppointment(patient, appointment)).isEmpty();
+        ClashMark.show(time, ClashMark.create(), isClashing);
         Label details = new Label(appointment.getDetails().map(Object::toString).orElse(""));
         details.getStyleClass().add("detail-appointment-details");
         details.setWrapText(true);
@@ -287,7 +290,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         if (appointment.isSameAppointment(markedAppointment)) {
             row.getStyleClass().add(MARKED_STYLE_CLASS);
         }
-        if (!AppointmentClashes.find(allAppointments, new PatientAppointment(patient, appointment)).isEmpty()) {
+        if (isClashing) {
             row.getStyleClass().add("detail-appointment-clash");
         }
         return row;

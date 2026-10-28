@@ -459,15 +459,6 @@ public class AppointmentListPanel extends UiPart<Region> {
             day.setText(AppointmentFormatter.formatDayHeading(heading.date(), today));
             day.getStyleClass().setAll("label",
                     heading.date().equals(today) ? "appointment-day-today" : "appointment-day");
-            boolean hasClash = page.getRows().stream()
-                    .filter(AppointmentPage.Entry.class::isInstance)
-                    .map(AppointmentPage.Entry.class::cast)
-                    .map(AppointmentPage.Entry::appointment)
-                    .filter(entry -> entry.getAppointment().getDate().equals(heading.date()))
-                    .anyMatch(entry -> !AppointmentClashes.find(allAppointments, entry).isEmpty());
-            if (hasClash) {
-                day.getStyleClass().add("appointment-day-clash");
-            }
             count.setText(heading.appointmentCount() == 0 ? "None" : String.valueOf(heading.appointmentCount()));
             return headingBox;
         }

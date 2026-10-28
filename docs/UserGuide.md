@@ -103,8 +103,8 @@ In both views, the list and the details share the width of the window, and grow 
 An appointment has passed once its time today has gone by, or once its day is over if it has no time. So one at 10:00 has passed from 10:01. LaiNurse keeps up with the clock while it is left open: within a few seconds of an appointment passing, it is greyed out and moves under **Past**, and after midnight, the new day is marked as today. Orange marks what is today, such as today's heading and today's appointments. Blue marks what is selected, and what has the keyboard focus. Red marks clashes: two or more appointments at
 exactly the same date and time, including visits to the same patient, when both are undone. Done visits do not
 cause clash warnings or red highlighting. Only visits with a time can clash: two date-only visits on the same day do
-not, and neither do a date-only visit and a timed one. Clashing times and detail dates remain red even when past or
-selected. A day heading turns red if an appointment shown beneath it clashes, including with a hidden patient.
+not, and neither do a date-only visit and a timed one. A clashing appointment has a red boxed `!` before its time, and its time, and its date in
+the details, are red, even when it has passed or is selected. This includes a clash with a patient hidden by a filter.
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 

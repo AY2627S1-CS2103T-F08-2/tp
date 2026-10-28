@@ -487,7 +487,9 @@ signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to loa
 the target's patient ID and number and every done visit. A done target has no clashes, and neither does a date-only
 one, since its time is not known: two date-only visits on one day do not clash, and neither do a date-only visit and a
 timed one. Both commands and UI use this query. Clashes never reject commands or data files, and are not
-stored as flags. Add/edit/unmark success messages include every conflicting patient and appointment number.
+stored as flags. Add/edit/unmark success messages include every conflicting patient and appointment number. In the
+appointment list and the details, `ClashMark` puts a red boxed `!` before the time of each clashing appointment, so
+that a clash does not show by color alone. Day headings do not mark clashes, so that today's heading stays orange.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
@@ -1413,7 +1415,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **List number**: A row's position in the displayed patient list, which changes as the list changes. Commands
   identify patients by patient ID, never by list number.
 * **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time. Appointments with no
-  time never clash. Clashing visits are shown in red, and a command that creates or restores a clash appends a
+  time never clash. Clashing visits are shown in red, with a boxed `!` before the time, and a command that creates or restores a clash appends a
   warning naming the other patients and appointment numbers.
 * **Details**: (1) An appointment's free text about the visit, set with `--details` and `--add-details`; (2) the panel
   beside a list that shows one patient's full information ("the details beside the list").
@@ -2105,7 +2107,7 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `addappt S1234567A MON 09:30`<br>
        Expected: Appointment #3 is added at `MON 09:30`. Both visits remain, and the result warns about appointment
-       #1 of Alex Yeoh. Their times and that day's heading appear in red.
+       #1 of Alex Yeoh. Their times appear in red, each with a boxed `!` before it.
 
     1. Test case: `addappt S0000000Z 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
@@ -2155,7 +2157,7 @@ testers are expected to do more *exploratory* testing.
 
 1. Start with sample data. Run `addappt S2345678B MON 09:30`, using the sample week's Monday for `MON`.
    Expected: Bernice's new appointment is #2. The warning names Alex Yeoh, ID `S1234567A`, appointment #1.
-   Both times and Monday's heading are red. A `viewappt --id S2345678B` filter still shows the warning color.
+   Both times are red, each with a boxed `!`. A `viewappt --id S2345678B` filter still shows the warning color.
 1. Run `addappt S1234567A MON 09:30 --details Second visit`.
    Expected: Alex's new visit is #3 and the warning names Alex's #1 and Bernice's #2. Both Alex visits survive.
 1. Run `editappt S1234567A --appt MON 09:30 --details Review`, then the equivalent `deleteappt` selector.
@@ -2196,7 +2198,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `addappt S2345678B MON 09:30`, then `viewappt --id S1234567A`<br>
        Expected: Alex's #1 clashes with Bernice's #2, even though Bernice is hidden on this appointment page.
     1. Test case: `markappt S2345678B 2`, then `viewappt --id S1234567A`<br>
-       Expected: Alex's #1 and the day heading are no longer red. Bernice's visit remains visible when viewed.
+       Expected: Alex's #1 is no longer red, and has no `!`. Bernice's visit remains visible when viewed.
     1. Test case: `unmarkappt S2345678B 2`<br>
        Expected: The warning names Alex and #1. Both undone visits clash again; the updated visit is selected.
     1. Test case: `viewappt --id S2345678B`, then `markappt S2345678B 2`<br>
