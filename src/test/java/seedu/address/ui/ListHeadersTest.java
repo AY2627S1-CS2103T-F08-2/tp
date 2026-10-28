@@ -28,6 +28,9 @@ public class ListHeadersTest {
 
     private static final double WIDTH = 480;
 
+    /** Where the header counts end in this test, the same in both lists, with and without a scroll bar. */
+    private final List<Double> countEnds = new ArrayList<>();
+
     @BeforeAll
     static void initJavaFxToolkit() {
         try {
@@ -47,6 +50,7 @@ public class ListHeadersTest {
                 StackPane root = new StackPane(panel.getRoot());
                 styleAndLayout(root);
                 assertEquals(endX(root, ".patient-row-appointment"), endX(root, ".list-header-count"), 0.5);
+                countEnds.add(endX(root, ".list-header-count"));
             });
         }
     }
@@ -63,7 +67,18 @@ public class ListHeadersTest {
                 StackPane root = new StackPane(panel.getRoot());
                 styleAndLayout(root);
                 assertEquals(endX(root, ".appointment-day-count"), endX(root, ".list-header-count"), 0.5);
+                countEnds.add(endX(root, ".list-header-count"));
             });
+        }
+    }
+
+    @Test
+    public void bothLists_countsEndInTheSamePlace_withAndWithoutScrollBar() throws Exception {
+        patientList_countEndsWithNextAppointments_withAndWithoutScrollBar();
+        appointmentList_countEndsWithDayCounts_withAndWithoutScrollBar();
+        assertEquals(4, countEnds.size());
+        for (double end : countEnds) {
+            assertEquals(countEnds.get(0), end, 0.5);
         }
     }
 

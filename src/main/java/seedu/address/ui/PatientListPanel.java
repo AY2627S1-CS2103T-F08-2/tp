@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -41,6 +42,8 @@ public class PatientListPanel extends UiPart<Region> {
     private final ObservableList<Patient> shownPatients;
     private final ObservableList<Patient> allPatients;
     private final Label placeholder = new Label();
+    /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
+    private ReadOnlyDoubleProperty rowGutter;
 
     @FXML
     private HBox header;
@@ -67,10 +70,10 @@ public class PatientListPanel extends UiPart<Region> {
         this.shownPatients = shownPatients;
         this.allPatients = allPatients;
         patientListView.setItems(shownPatients);
+        rowGutter = ListHeaders.alignEndWithRows(header, patientListView, PatientRow.END_PADDING);
         patientListView.setCellFactory(listView -> new PatientListViewCell());
         placeholder.getStyleClass().add("list-placeholder");
         patientListView.setPlaceholder(placeholder);
-        ListHeaders.alignEndWithRows(header, patientListView, PatientRow.END_PADDING);
         ListChangeListener<Patient> headerUpdater = change -> updateHeader();
         shownPatients.addListener(headerUpdater);
         allPatients.addListener(headerUpdater);
@@ -243,7 +246,8 @@ public class PatientListPanel extends UiPart<Region> {
             // Sizes the cell to the list instead of its content, so the list never scrolls sideways.
             setPrefWidth(0);
             // Fits the row to the cell, so a long name ends in "..." and the ID stays visible.
-            row.getRoot().prefWidthProperty().bind(widthProperty());
+            row.getRoot().prefWidthProperty().bind(widthProperty().subtract(rowGutter));
+            paddingProperty().bind(ListHeaders.cellPadding(rowGutter));
         }
 
         @Override

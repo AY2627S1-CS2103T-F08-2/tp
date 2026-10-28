@@ -11,6 +11,7 @@ import java.util.OptionalInt;
 import java.util.function.Consumer;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -59,6 +60,8 @@ public class AppointmentListPanel extends UiPart<Region> {
     /** The range shown on one page, or null in the weekly view. */
     private AppointmentRange range;
     private AppointmentPage page;
+    /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
+    private ReadOnlyDoubleProperty rowGutter;
     /** When the page was built, which decides the appointments that have passed. */
     private LocalDateTime pageTime = LocalDateTime.now();
 
@@ -91,11 +94,11 @@ public class AppointmentListPanel extends UiPart<Region> {
         this.onAppointmentChosen = onAppointmentChosen;
         this.onUpAtTop = onUpAtTop;
         appointmentListView.setItems(rows);
+        rowGutter = ListHeaders.alignEndWithRows(header, appointmentListView, ROW_END_PADDING);
         appointmentListView.setCellFactory(listView -> new RowCell());
         Label placeholder = new Label("No appointments in this range.");
         placeholder.getStyleClass().add("list-placeholder");
         appointmentListView.setPlaceholder(placeholder);
-        ListHeaders.alignEndWithRows(header, appointmentListView, ROW_END_PADDING);
         appointmentListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
         appointmentListView.setOnMouseClicked(event -> chooseSelected());
         allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> refresh());
@@ -435,6 +438,7 @@ public class AppointmentListPanel extends UiPart<Region> {
         RowCell() {
             // Sizes the cell to the list instead of its content, so the list never scrolls sideways.
             setPrefWidth(0);
+            paddingProperty().bind(ListHeaders.cellPadding(rowGutter));
             count.getStyleClass().add("appointment-day-count");
             count.setMinWidth(Region.USE_PREF_SIZE);
             Region filler = new Region();
