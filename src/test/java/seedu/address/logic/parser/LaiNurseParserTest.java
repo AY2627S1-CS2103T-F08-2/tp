@@ -138,6 +138,16 @@ public class LaiNurseParserTest {
     }
 
     @Test
+    public void parseCommand_commandWordForgivesCase() throws Exception {
+        assertTrue(parser.parseCommand("lIsT") instanceof ListCommand);
+        assertTrue(parser.parseCommand("CLEAR") instanceof ClearCommand);
+        assertTrue(parser.parseCommand("View S1234567A") instanceof ViewCommand);
+        assertTrue(parser.parseCommand("AddAppt S1234567A 2026-10-05 09:30") instanceof AddAppointmentCommand);
+        assertTrue(parser.parseCommand("DeleteAppt S1234567A 1") instanceof DeleteAppointmentCommand);
+        assertEquals(new HelpCommand("delete"), parser.parseCommand("HELP delete"));
+    }
+
+    @Test
     public void parseCommand_helpInvalidFormat_throwsParseException() {
         assertThrows(ParseException.class, () ->
                 parser.parseCommand(HelpCommand.COMMAND_WORD + " -- add"));
