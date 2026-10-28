@@ -1196,15 +1196,27 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1b. The given ID does not match any patient.
+* 1b. A date, time or the details are in an invalid format.
 
-    * 1b1. LaiNurse shows an error message.
+    * 1b1. LaiNurse shows an error message with the valid format.
 
       Use case resumes at step 1.
 
-* 1c. The patient has no appointment with the given number.
+* 1c. Nurse asks to both replace and add to the details.
 
-    * 1c1. LaiNurse shows an error naming the missing appointment number.
+    * 1c1. LaiNurse shows an error message saying that the two options cannot be given together.
+
+      Use case resumes at step 1.
+
+* 1d. The given ID does not match any patient.
+
+    * 1d1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1e. The patient has no appointment with the given number.
+
+    * 1e1. LaiNurse shows an error naming the missing appointment number.
 
       Use case resumes at step 1.
 
@@ -1213,18 +1225,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2a1. LaiNurse keeps the edit and appends a warning naming the other patients and appointment numbers.
 
       Use case resumes at step 3.
-
-* 1e. A date, time or the details are in an invalid format.
-
-    * 1e1. LaiNurse shows an error message with the valid format.
-
-      Use case resumes at step 1.
-
-* 1f. Nurse asks to both replace and add to the details.
-
-    * 1f1. LaiNurse shows an error message saying that the two options cannot be given together.
-
-      Use case resumes at step 1.
 
 **Use case: UC09 - Add an appointment**
 
@@ -1245,9 +1245,15 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1b. The given ID does not match any patient.
+* 1b. The details are blank.
 
     * 1b1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1c. The given ID does not match any patient.
+
+    * 1c1. LaiNurse shows an error message.
 
       Use case resumes at step 1.
 
@@ -1256,12 +1262,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other patients and visit numbers.
 
       Use case resumes at step 3.
-
-* 1d. The details are blank.
-
-    * 1d1. LaiNurse shows an error message.
-
-      Use case resumes at step 1.
 
 **Use case: UC10 - Delete an appointment**
 
