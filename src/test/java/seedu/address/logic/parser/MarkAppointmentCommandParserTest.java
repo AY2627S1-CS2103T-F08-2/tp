@@ -54,7 +54,9 @@ public class MarkAppointmentCommandParserTest {
                 new LaiNurseParser().parseCommand("markappt\u00a0s1234567a\u202f2"));
         assertEquals(MarkAppointmentCommand.MESSAGE_USAGE,
                 HelpCommand.COMMAND_USAGE_MAP.get(MarkAppointmentCommand.COMMAND_WORD));
-        assertParseSuccess(new HelpCommandParser(), "MARKAPPT",
+        assertParseSuccess(new HelpCommandParser(), "markappt",
                 new HelpCommand(MarkAppointmentCommand.COMMAND_WORD));
+        assertParseFailure(new HelpCommandParser(), "MARKAPPT",
+                HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT);
     }
 }

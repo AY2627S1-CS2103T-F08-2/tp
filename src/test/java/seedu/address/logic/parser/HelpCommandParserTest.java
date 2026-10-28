@@ -31,11 +31,12 @@ public class HelpCommandParserTest {
     }
 
     @Test
-    public void parse_caseInsensitive_returnsLowercaseHelpCommand() {
-        assertParseSuccess(parser, "DELETE", new HelpCommand("delete"));
-        assertParseSuccess(parser, "ADD", new HelpCommand("add"));
-        assertParseSuccess(parser, "ViewAppt", new HelpCommand("viewappt"));
-        assertParseSuccess(parser, "WINDOW", new HelpCommand("window"));
+    public void parse_caseSensitive_rejectsUpperCaseTargets() {
+        // Targets are lowercase-only syntax: uppercase forms are rejected like unknown targets
+        assertParseFailure(parser, "DELETE", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, "ADD", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, "ViewAppt", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, "WINDOW", INVALID_FORMAT_MESSAGE);
     }
 
     @Test
