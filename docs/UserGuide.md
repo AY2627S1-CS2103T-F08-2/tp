@@ -53,6 +53,9 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add --name NAME`, replace `NAME` with a value such as `John Doe`.
 
+* The command word can be typed in any casing: `add`, `Add` and `ADD` are the same command.<br>
+  Everything after the command word keeps the case as you typed it.
+
 * Items in square brackets are optional.<br>
   For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.<br>
   An option whose value is in its own square brackets, such as `[--notes [NOTES]]` in `edit`, can also be given with no value.

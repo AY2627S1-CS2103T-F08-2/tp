@@ -288,6 +288,9 @@ How the parsing works:
   object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface
   so they can be treated similarly where appropriate, for example during testing.
+* The command word is lower-cased with `Locale.ROOT` before dispatch, mirroring how `HelpCommandParser` treats its
+  target and how every stored value standardizes its case in its own constructor, so commands can be typed in any
+  casing. The arguments after the command word keep their case.
 
 ### Model component
 
