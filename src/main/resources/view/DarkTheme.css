@@ -698,6 +698,21 @@
     -fx-text-fill: #b5bcc0;
 }
 
+/* The appointment's number within its patient, in a small box after the patient ID (A2 in #163). */
+.list-cell .appointment-entry-number-chip {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 11px;
+    -fx-text-fill: #d5dadc;
+    -fx-padding: 0 4 0 4;
+    -fx-border-color: #848d92;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+}
+
+.list-cell .appointment-entry-passed .appointment-entry-number-chip {
+    -fx-border-color: #6c7377;
+}
+
 /* Appointments in the patient details: every upcoming one, then the latest past ones, dimmed. */
 .patient-detail .detail-section-header,
 .patient-detail .detail-past-header {
@@ -741,6 +756,14 @@
 .patient-detail .detail-appointment-today .label {
     -fx-font-family: "Segoe UI Semibold";
     -fx-text-fill: -lainurse-urgent;
+}
+
+/* The appointment's number before its date (P1 in #163), muted like the row numbers in the patient list. */
+.patient-detail .detail-appointment-number,
+.patient-detail .detail-appointment-today .detail-appointment-number {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-text-fill: #a3adb2;
 }
 
 /* Today's appointment details keep the plain text of a row: only the date and time are orange. */

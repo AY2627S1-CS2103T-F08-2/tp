@@ -2169,7 +2169,7 @@ testers are expected to do more *exploratory* testing.
    Expected: Each rejects the unsupported option, shows its number-based command format and saves no changes.
 1. Run `editappt S1234567A 2 --to TUE 10:00`, then `view S1234567A`.
    Expected: Only the second visit moves, with its details, and stays selected. It is still #2, between the visit
-   on Monday and the blood test. The detail date starts with `#2`.
+   on Monday and the blood test. The details show `#2` before its date.
 1. Run `deleteappt S1234567A 1`, then restart.
    Expected: The visit on Tuesday becomes #1 and the blood test #2, also after the restart.
 1. Load a file with two appointment objects for one patient at the same date and time and different details, plus
@@ -2179,7 +2179,8 @@ testers are expected to do more *exploratory* testing.
 1. Check clashing visits from yesterday and today, including selected rows and the marked detail appointment.
    Expected: Date/time text remains red. Other past text stays dimmed, today's non-clashing dates stay orange,
    and selection backgrounds stay blue. Moving/deleting the other visit removes obsolete red highlighting.
-1. Resize to a narrow window. Expected: `#N`, dates, times and long details remain readable with wrapping;
+1. Resize to a narrow window. Expected: `#N`, dates, times and long details remain readable with wrapping, and a
+   time never breaks inside a word;
    page positions remain distinct from patient-local appointment numbers.
 
 ### Marking and unmarking appointments

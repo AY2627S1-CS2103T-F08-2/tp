@@ -32,6 +32,8 @@ public class AppointmentRow extends UiPart<Region> {
     @FXML
     private Label patientId;
     @FXML
+    private Label appointmentNumber;
+    @FXML
     private Label status;
     @FXML
     private Label details;
@@ -73,7 +75,8 @@ public class AppointmentRow extends UiPart<Region> {
         time.getStyleClass().add(appointment.getTime().isPresent() ? TIME_STYLE_CLASS : NO_TIME_STYLE_CLASS);
         ClashMark.show(time, clashMark, isClashing);
         name.setText(patient.getName().fullName);
-        patientId.setText(patient.getId().value + " #" + appointment.getNumber());
+        patientId.setText(patient.getId().value);
+        appointmentNumber.setText("#" + appointment.getNumber());
         status.setText(AppointmentFormatter.formatStatus(appointment));
         details.setText(appointment.getDetails().map(Object::toString).orElse(""));
         // Hide absent details without leaving an empty line below the status

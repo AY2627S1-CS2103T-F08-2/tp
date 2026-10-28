@@ -62,7 +62,8 @@ public class AppointmentClashUiTest {
             StackPane root = new StackPane(cell);
             styleAndLayout(root, 800);
             assertEquals("7.", label(root, ".appointment-entry-number").getText());
-            assertEquals("S1234567A #1", label(root, ".appointment-entry-id").getText());
+            assertEquals("S1234567A", label(root, ".appointment-entry-id").getText());
+            assertEquals("#1", label(root, ".appointment-entry-number-chip").getText());
             assertEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
             assertNotEquals(CLASH_COLOR, label(root, ".appointment-entry-name").getTextFill());
         });
@@ -80,7 +81,8 @@ public class AppointmentClashUiTest {
                 panel.show(alex.getId(), Optional.of(entry(alex).getAppointment()));
                 StackPane root = new StackPane(panel.getRoot());
                 styleAndLayout(root, 320);
-                assertTrue(label(root, ".detail-appointment-date").getText().startsWith("#1 · "));
+                assertEquals("#1", label(root, ".detail-appointment-number").getText());
+                assertFalse(label(root, ".detail-appointment-date").getText().contains("#"));
                 assertEquals(CLASH_COLOR, label(root, ".detail-appointment-date").getTextFill());
                 assertEquals(CLASH_COLOR, label(root, ".detail-appointment-time").getTextFill());
                 assertEquals(CLASH_COLOR, ((Shape) root.lookup(".clash-mark-part")).getFill());
@@ -113,7 +115,8 @@ public class AppointmentClashUiTest {
             assertEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
             assertEquals(CLASH_COLOR, ((Shape) root.lookup(".clash-mark-part")).getFill());
             assertTrue(root.lookupAll(".appointment-day-clash").isEmpty());
-            assertEquals("S1234567A #1", label(root, ".appointment-entry-id").getText());
+            assertEquals("S1234567A", label(root, ".appointment-entry-id").getText());
+            assertEquals("#1", label(root, ".appointment-entry-number-chip").getText());
             Patient moved = new PatientBuilder(alex).withSchedule(new AppointmentSchedule(List.of(
                     new Appointment(today + " 10:00").withNumber(1)))).build();
             model.setPatient(alex, moved);

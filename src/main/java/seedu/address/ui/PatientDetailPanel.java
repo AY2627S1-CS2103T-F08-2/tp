@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -47,8 +48,13 @@ public class PatientDetailPanel extends UiPart<Region> {
     private static final String MARKED_STYLE_CLASS = "detail-appointment-marked";
     /** The width of an appointment's date, the same as the keys above it. */
     private static final double DATE_WIDTH = 150;
-    /** The width that a date may shrink to in a narrow panel: just enough for one such as "Mon 28 Dec 2026". */
+    /** The width that a date may shrink to beside the details: just enough for one such as "Mon 28 Dec 2026". */
     private static final double DATE_MIN_WIDTH = 125;
+    /**
+     * The width that a date may shrink to with the details under the time, in a narrow panel: enough for one such as
+     * "Wed 28 Dec", with a year wrapping under it, so that the time keeps whole words.
+     */
+    private static final double DATE_NARROW_MIN_WIDTH = 90;
     /**
      * The width of an appointment's time beside its details, wide enough for "Unspecified time", so that the
      * details of all rows line up.
@@ -61,6 +67,10 @@ public class PatientDetailPanel extends UiPart<Region> {
     private static final double DETAILS_MIN_WIDTH = 120;
     /** The space between the parts of an appointment row. */
     private static final double ROW_SPACING = 20;
+    /** The width of an appointment's number before its date, enough for one such as "#99". */
+    private static final double NUMBER_WIDTH = 26;
+    /** The space between an appointment's number and its date. */
+    private static final double NUMBER_SPACING = 8;
     /** How far one Shift+Up or Shift+Down scrolls the details, in pixels: about as far as a mouse wheel step. */
     private static final double SCROLL_STEP = 40;
 
@@ -248,8 +258,11 @@ public class PatientDetailPanel extends UiPart<Region> {
      */
     private Node createRow(Patient patient, Appointment appointment, LocalDateTime now) {
         LocalDate today = now.toLocalDate();
-        Label date = new Label("#" + appointment.getNumber() + " · "
-                + AppointmentFormatter.formatDetailDate(appointment.getDate(), today));
+        // The number has its own column before the date, as voted in #163 (P1)
+        Label number = new Label("#" + appointment.getNumber());
+        number.getStyleClass().add("detail-appointment-number");
+        number.setMinWidth(NUMBER_WIDTH);
+        Label date = new Label(AppointmentFormatter.formatDetailDate(appointment.getDate(), today));
         date.getStyleClass().add("detail-appointment-date");
         date.setWrapText(true);
         date.setMinHeight(Region.USE_PREF_SIZE);
@@ -280,7 +293,9 @@ public class PatientDetailPanel extends UiPart<Region> {
         rowParts.add(timeAndDetails);
         HBox.setHgrow(timeAndDetails.grid(), Priority.ALWAYS);
 
-        HBox row = new HBox(ROW_SPACING, new VBox(2, date, status), timeAndDetails.grid());
+        HBox numberAndDate = new HBox(NUMBER_SPACING, number, new VBox(2, date, status));
+        numberAndDate.setAlignment(Pos.BASELINE_LEFT);
+        HBox row = new HBox(ROW_SPACING, numberAndDate, timeAndDetails.grid());
         row.getStyleClass().add(ROW_STYLE_CLASS);
         if (AppointmentFormatter.hasPassed(appointment, now)) {
             row.getStyleClass().add(PAST_STYLE_CLASS);
@@ -300,14 +315,15 @@ public class PatientDetailPanel extends UiPart<Region> {
      * Arranges the appointment rows for the width of the panel. With room, each row shows its date, time and
      * details side by side, and all rows give them the same widths, so that they line up. In a narrower panel, or
      * if no row has details, the details go under the time. The dates of all rows then shrink together, down to the
-     * width of a long date, so that a time that wraps keeps whole words.
+     * width of a date without its year, so that a time that wraps keeps whole words.
      */
     private void updateRowLayout() {
         if (rowParts.isEmpty()) {
             return;
         }
         Region row = (Region) rowParts.get(0).grid().getParent();
-        double rowWidth = upcomingRows.getWidth() - row.snappedLeftInset() - row.snappedRightInset();
+        double rowWidth = upcomingRows.getWidth() - row.snappedLeftInset() - row.snappedRightInset()
+                - NUMBER_WIDTH - NUMBER_SPACING;
         double roomBesideDetails = rowWidth - 2 * ROW_SPACING - TIME_WIDTH - DETAILS_MIN_WIDTH;
         boolean isBeside = rowParts.stream().anyMatch(TimeAndDetails::hasDetails)
                 && roomBesideDetails >= DATE_MIN_WIDTH;
@@ -315,7 +331,7 @@ public class PatientDetailPanel extends UiPart<Region> {
             dateWidth.set(Math.min(roomBesideDetails, DATE_WIDTH));
         } else {
             double widestTime = rowParts.stream().mapToDouble(parts -> parts.time().prefWidth(-1)).max().orElse(0);
-            dateWidth.set(Math.clamp(rowWidth - ROW_SPACING - widestTime, DATE_MIN_WIDTH, DATE_WIDTH));
+            dateWidth.set(Math.clamp(rowWidth - ROW_SPACING - widestTime, DATE_NARROW_MIN_WIDTH, DATE_WIDTH));
         }
         if (isBeside != isDetailsBeside) {
             isDetailsBeside = isBeside;
