@@ -207,4 +207,13 @@ public class LaiNurseParserTest {
     public void parseCommand_unknownCommand_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("unknownCommand"));
     }
+
+    @Test
+    public void parseCommand_upperCaseCommandWord_throwsParseException() {
+        // Command words are case-sensitive: syntax is typed in lowercase (see the UG command-format notes)
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("LIST"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("Help list"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () ->
+                parser.parseCommand("AddAppt S1234567A 2026-10-05 09:30"));
+    }
 }
