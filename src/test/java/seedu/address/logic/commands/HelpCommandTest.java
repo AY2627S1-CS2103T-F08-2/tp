@@ -56,10 +56,38 @@ public class HelpCommandTest {
 
     @Test
     public void execute_everyRegisteredTarget_returnsItsOwnUsage() throws Exception {
-        for (String commandWord : HelpCommand.COMMAND_USAGE_MAP.keySet()) {
-            assertEquals(HelpCommand.COMMAND_USAGE_MAP.get(commandWord),
-                    new HelpCommand(commandWord).execute(model).getFeedbackToUser());
-        }
+        // Expected usages come from each command's own constants, not from the map under test,
+        // so a miswired entry in HelpCommand.COMMAND_USAGE_MAP still fails this test.
+        assertEquals(AddCommand.MESSAGE_USAGE,
+                new HelpCommand(AddCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(AddAppointmentCommand.MESSAGE_USAGE,
+                new HelpCommand(AddAppointmentCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(ClearCommand.MESSAGE_USAGE,
+                new HelpCommand(ClearCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(DeleteCommand.MESSAGE_USAGE,
+                new HelpCommand(DeleteCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(DeleteAppointmentCommand.MESSAGE_USAGE,
+                new HelpCommand(DeleteAppointmentCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(EditCommand.MESSAGE_USAGE,
+                new HelpCommand(EditCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(EditAppointmentCommand.MESSAGE_USAGE,
+                new HelpCommand(EditAppointmentCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(ExitCommand.MESSAGE_USAGE,
+                new HelpCommand(ExitCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(FindCommand.MESSAGE_USAGE,
+                new HelpCommand(FindCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(HelpCommand.MESSAGE_USAGE,
+                new HelpCommand(HelpCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(ListCommand.MESSAGE_USAGE,
+                new HelpCommand(ListCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(MarkAppointmentCommand.MESSAGE_USAGE,
+                new HelpCommand(MarkAppointmentCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(UnmarkAppointmentCommand.MESSAGE_USAGE,
+                new HelpCommand(UnmarkAppointmentCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(ViewCommand.MESSAGE_USAGE,
+                new HelpCommand(ViewCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
+        assertEquals(ViewAppointmentCommand.MESSAGE_USAGE,
+                new HelpCommand(ViewAppointmentCommand.COMMAND_WORD).execute(model).getFeedbackToUser());
     }
 
     @Test
