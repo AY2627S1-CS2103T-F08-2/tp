@@ -14,8 +14,9 @@ import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.TextNormalizer;
 
 /**
- * Represents a patient's appointment, identified within that patient by its number.
- * Date/time constructors create unnumbered inputs; a schedule assigns numbers before exposing appointments.
+ * Represents a patient's appointment, identified within that patient by its number, which is its place in date order.
+ * Date/time constructors create unnumbered inputs; a schedule numbers its appointments before exposing them, and
+ * numbers them again whenever one is added, moved or removed.
  * Ordered by date, optional time, then number. Full equality also compares the date/time, details and completion.
  * Guarantees: immutable; is valid as declared in {@link #isValidAppointment(String)}
  */
@@ -104,6 +105,13 @@ public class Appointment implements Comparable<Appointment> {
     public Appointment withNumber(int number) {
         checkArgument(!isNumbered() || this.number == number, "An appointment's number cannot change.");
         return isNumbered() ? this : new Appointment(Integer.valueOf(number), value, getDetails(), done);
+    }
+
+    /**
+     * Returns this appointment without its number, as an input that a schedule numbers.
+     */
+    public Appointment withoutNumber() {
+        return isNumbered() ? new Appointment(null, value, getDetails(), done) : this;
     }
 
     /**

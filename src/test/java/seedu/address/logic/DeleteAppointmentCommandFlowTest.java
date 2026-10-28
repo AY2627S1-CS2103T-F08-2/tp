@@ -160,12 +160,15 @@ public class DeleteAppointmentCommandFlowTest {
                 .filter(patient -> patient.getId().equals(patientId)).findFirst().orElseThrow();
     }
     @Test
-    public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndNumbers() throws Exception {
+    public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndRenumbers() throws Exception {
         logic.execute("addappt S1234567A 2026-10-05 09:30");
         CommandResult result = logic.execute("deleteappt S1234567A 1");
         assertEquals("Deleted appointment 1 of ALEX YEOH (S1234567A): "
                 + "2026-10-05 09:30; Details: INSULIN REVIEW", result.getFeedbackToUser());
-        assertEquals(List.of(3, 2), patient(ALEX_ID).getSchedule().asList().stream()
+        // the other visit at 09:30 and the blood test move up one number
+        assertEquals(List.of("2026-10-05 09:30", "2026-11-02"), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(appointment -> appointment.value).toList());
+        assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule().asList().stream()
                 .map(Appointment::getNumber).toList());
         assertTrue(result.isSelectionCleared());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());

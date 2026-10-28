@@ -89,8 +89,8 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * The next appointment of a patient is their first **undone** appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` beside the patient ID:
-  this is the appointment's stable number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. The details
-  panel shows the same number before its date.
+  this is the appointment's number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. A patient's
+  appointments are numbered from 1 in date order. The details panel shows the same number before its date.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `Unspecified time` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
   * Each appointment shows **Done** or **Undone** in the list and patient details. Completion is set manually with
@@ -329,8 +329,8 @@ Format: `addappt ID DATE_OR_DATETIME [--details DETAILS]`
 * `DATE_OR_DATETIME` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. It must follow the ID, before any details. Past dates are accepted.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * The optional `--details` follows the date or date and time, and may be given at most once.
-* The new appointment starts **Undone** and receives the patient's highest remaining appointment number plus one, starting at #1.
-  Deleting a visit leaves the other numbers unchanged. If the highest number is deleted, it can be reused.
+* The new appointment starts **Undone**.
+* A patient's appointments are numbered from 1 in date order: by date, then by time, with an appointment that has no time first on its date. A new appointment at the same date and time as another comes after it. Adding, moving or deleting an appointment renumbers the patient's appointments after it, so check the number shown before you use it in a command.
 * Clashes are allowed, including several undone visits to the same patient at exactly the same time. The result warns
   about the other patients and their appointment numbers. Visits are never rejected just because they clash.
 * LaiNurse switches to the **Appointments** view and selects the new appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
@@ -347,15 +347,16 @@ Moves one of a patient's appointments to another date or time, or changes its de
 Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
-* `NUMBER` is the appointment's positive number shown as `#N`, without the `#`. Numbers belong to a patient;
-  they are different from the positions down the appointment page. If the patient has no such number, nothing is changed.
+* `NUMBER` is the appointment's number shown as `#N`, without the `#`: its place among the patient's appointments in
+  date order. Numbers belong to a patient; they are different from the positions down the appointment page. If the patient has no such number, nothing is changed.
 * `--to` moves the appointment to a new date, or date and time, in the same format as in [`addappt`](#adding-an-appointment-addappt). Giving a date alone turns it into an appointment with no time.
 * `--details` sets the appointment's details, such as what to do or bring, replacing any it had. Like notes, details are stored in upper case. With no value, `--details` clears the details.
 * `--add-details` adds text to the end of the details, after `; `, or sets the details if the appointment has none. The text to add cannot be blank. `--details` and `--add-details` cannot be given together.
 * Give at least one of `--to`, `--details` and `--add-details`. The options may appear in any order after the ID and number, each at most once.
 * Moving an appointment keeps its details, unless `--details` is also given to replace or clear them, or `--add-details` to add to them.
-* Moving an appointment or changing its details keeps its number and Done/Undone status. Use `unmarkappt` to
-  reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
+* Changing only an appointment's details keeps its number. Moving it gives it the number of its new place in date
+  order, after any appointment already at that date and time, and renumbers the others. Either way, it keeps its
+  Done/Undone status. Use `unmarkappt` to reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
   warning if both visits are undone. An edit that changes only details also warns if the visit clashes.
 * LaiNurse switches to the **Appointments** view and selects the edited appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
@@ -390,7 +391,7 @@ Format: `markappt ID NUMBER`
 
 * `ID` is the patient's ID, ignoring case, and must come first. The patient need not be in the displayed list;
   the existing patient filter stays in place.
-* `NUMBER` is the appointment's positive stable number shown as `#N`, without the `#`. It belongs to that
+* `NUMBER` is the appointment's number shown as `#N`, without the `#`. It belongs to that
   patient and differs from the appointment's position down the page. Date/time selectors and extra arguments
   are not accepted.
 * Marking is allowed for past, current and future appointments. It changes only completion: the appointment
@@ -483,12 +484,11 @@ When LaiNurse launches, it loads its data as follows:
 
 Whenever `lainurse.json` cannot be loaded, LaiNurse first copies it to `data/lainurse.corrupt.json`, replacing any earlier copy, so your edits are not lost when the next save overwrites `lainurse.json`. The result display then tells you which file could not be loaded, what LaiNurse loaded instead, and where the copy is kept. To get your edits back, close the window with its close button, fix the mistake in `lainurse.corrupt.json`, and copy it over `lainurse.json`. Do not close LaiNurse with `exit` first if it started with no data, as `exit` saves that empty data over `lainurse.json` and the backup.
 
-Appointments are saved with their patient-local numbers and completion status, for example
-`{"number": 2, "dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`. Older files with appointment strings
-or objects without numbers still load: missing numbers are assigned in chronological order, preserving file order
-for equal times. Existing numbers are kept; missing ones fill the lowest unused positive numbers. Same-time visits
-are all preserved; undone visits at the same time appear in red. Numbers must be unique within each patient and
-between 1 and 2147483647. A missing `done` field defaults to false (undone). If supplied, `done` must be the JSON
+Appointments are saved with their completion status, for example
+`{"dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`. Their numbers are not saved:
+LaiNurse numbers each patient's appointments in date order when it loads them, and appointments at the same date and
+time keep their order in the file. A `number` saved by an earlier version is ignored, and older files with appointment
+strings still load. Same-time visits are all preserved. A missing `done` field defaults to false (undone). If supplied, `done` must be the JSON
 boolean `true` or `false`; strings, numbers and null are invalid.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**

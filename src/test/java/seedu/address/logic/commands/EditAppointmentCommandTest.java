@@ -173,25 +173,28 @@ public class EditAppointmentCommandTest {
     }
 
     @Test
-    public void execute_deletedNumber_failureEvenWithOtherVisitsOnSameDay() {
+    public void execute_numberAfterDelete_failureForTheLastNumber() {
         Patient bensonWithTwo = new PatientBuilder(BENSON).withAppointments("2026-10-05 09:30", "2026-10-05 14:00")
                 .build();
         Patient remaining = new PatientBuilder(bensonWithTwo).withSchedule(bensonWithTwo.getSchedule()
                 .remove(bensonWithTwo.getSchedule().findByNumber(1).orElseThrow())).build();
         model.setPatient(BENSON, remaining);
 
-        EditAppointmentCommand command = new EditAppointmentCommand(BENSON.getId(), 1,
+        // the visit at 14:00 moves up to #1, so there is no #2
+        assertEquals("2026-10-05 14:00", remaining.getSchedule().findByNumber(1).orElseThrow().value);
+        EditAppointmentCommand command = new EditAppointmentCommand(BENSON.getId(), 2,
                 Optional.of(NEW_TIME), Optional.empty());
         assertCommandFailure(command, model,
-                String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, BENSON.getId(), 1));
+                String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, BENSON.getId(), 2));
     }
 
     @Test
-    public void execute_moveOntoOtherAppointment_warnsAndKeepsNumbers() {
+    public void execute_moveOntoOtherAppointment_warnsAndComesAfterIt() {
         Patient original = new PatientBuilder(BENSON).withAppointments("2026-10-05 09:30", "2026-10-05 14:00")
                 .build();
         model.setPatient(BENSON, original);
-        Appointment moved = new Appointment("2026-10-05 14:00").withNumber(1);
+        // the moved visit comes after the one already at 14:00, as #2
+        Appointment moved = new Appointment("2026-10-05 14:00");
         Patient expected = new PatientBuilder(original).withSchedule(original.getSchedule()
                 .remove(original.getSchedule().findByNumber(1).orElseThrow()).add(moved)).build();
         assertEditSuccess(original, new EditAppointmentCommand(BENSON.getId(), 1,

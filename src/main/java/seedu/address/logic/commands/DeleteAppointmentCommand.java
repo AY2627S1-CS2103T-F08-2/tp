@@ -61,7 +61,7 @@ public class DeleteAppointmentCommand extends Command {
                 AppointmentLookup.find(targetId, patient.getSchedule(), targetAppointment, COMMAND_WORD);
 
         AppointmentSchedule editedSchedule = patient.getSchedule().remove(foundAppointment);
-        assert editedSchedule.findByNumber(targetAppointment.number()).isEmpty();
+        assert editedSchedule.asList().size() == patient.getSchedule().asList().size() - 1;
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);

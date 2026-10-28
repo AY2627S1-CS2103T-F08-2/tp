@@ -64,27 +64,19 @@ public class AddAppointmentCommand extends Command {
                 });
 
         AppointmentSchedule schedule = patient.getSchedule();
-        int number;
-        try {
-            number = schedule.getNextNumber();
-        } catch (IllegalArgumentException e) {
-            logger.fine("Rejected addappt: no new appointment number is available.");
-            throw new CommandException(e.getMessage(), e);
-        }
-
-        Appointment numbered = new Appointment(number, toAdd.value, toAdd.getDetails());
-        AppointmentSchedule editedSchedule = schedule.add(numbered);
+        AppointmentSchedule editedSchedule = schedule.add(toAdd);
+        Appointment numbered = editedSchedule.getLastAt(toAdd);
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);
 
-        assert editedSchedule.findByNumber(numbered.getNumber()).orElseThrow().equals(numbered);
+        assert numbered.hasSameDateTime(toAdd) && numbered.getDetails().equals(toAdd.getDetails());
         PatientAppointment created = new PatientAppointment(editedPatient, numbered);
         String message = String.format(MESSAGE_ADD_APPOINTMENT_SUCCESS, numbered.getNumber(),
                 editedPatient.getName(), targetId, Messages.format(numbered));
         String warning = Messages.formatClashWarning(model.getAppointmentList(), created);
         message += warning;
-        logger.fine("Added appointment #" + number + " of patient " + targetId
+        logger.fine("Added appointment #" + numbered.getNumber() + " of patient " + targetId
                 + (warning.isEmpty() ? "." : " with a clash warning."));
         return new CommandResult(message).withNavigation(Navigation.toAppointment(created));
     }

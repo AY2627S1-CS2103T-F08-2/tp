@@ -64,7 +64,7 @@ abstract class AppointmentStatusCommand extends Command {
         assert updatedAppointment.hasSameDateTime(appointment)
                 && updatedAppointment.getDetails().equals(appointment.getDetails());
 
-        AppointmentSchedule updatedSchedule = schedule.remove(appointment).add(updatedAppointment);
+        AppointmentSchedule updatedSchedule = schedule.replace(appointment, updatedAppointment);
         Patient updatedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), updatedSchedule);
         model.setPatient(patient, updatedPatient);

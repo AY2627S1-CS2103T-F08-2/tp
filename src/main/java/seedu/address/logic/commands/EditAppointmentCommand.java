@@ -92,10 +92,12 @@ public class EditAppointmentCommand extends Command {
         Appointment editedAppointment = createEditedAppointment(oldAppointment);
 
         boolean isMoved = !editedAppointment.hasSameDateTime(oldAppointment);
-        assert editedAppointment.getNumber() == oldAppointment.getNumber();
 
-        AppointmentSchedule editedSchedule = schedule.remove(oldAppointment).add(editedAppointment);
-        assert editedSchedule.findByNumber(targetAppointment.number()).orElseThrow().equals(editedAppointment);
+        // A moved appointment comes after the others at its new date and time, and the numbers change with it
+        AppointmentSchedule editedSchedule = schedule.replace(oldAppointment, editedAppointment);
+        editedAppointment = isMoved
+                ? editedSchedule.getLastAt(editedAppointment)
+                : editedSchedule.findByNumber(oldAppointment.getNumber()).orElseThrow();
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);

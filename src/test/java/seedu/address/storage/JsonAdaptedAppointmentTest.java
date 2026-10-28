@@ -12,30 +12,31 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.patient.Appointment;
-import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.Patient;
 
 public class JsonAdaptedAppointmentTest {
 
     @Test
-    public void toModelType_completion_roundTripsBothStatusesWithDetailsAndNumber() throws Exception {
+    public void toModelType_completion_roundTripsBothStatusesWithDetails() throws Exception {
         for (boolean done : List.of(false, true)) {
-            Patient patient = readPatient("[{\"number\":7,\"dateTime\":\"2026-10-05 09:30\","
+            Patient patient = readPatient("[{\"dateTime\":\"2026-10-05 09:30\","
                     + "\"details\":\"Insulin review\",\"done\":" + done + "}]");
-            Appointment appointment = patient.getSchedule().findByNumber(7).orElseThrow();
+            Appointment appointment = patient.getSchedule().findByNumber(1).orElseThrow();
             assertEquals(done, appointment.isDone());
             assertEquals("INSULIN REVIEW", appointment.getDetails().orElseThrow().value);
             String json = JsonUtil.toJsonString(new JsonAdaptedPatient(patient));
             assertTrue(json.contains("\"done\" : " + done));
+            // the number is the appointment's place in date order, so it is not saved
+            assertFalse(json.contains("\"number\""));
             assertEquals(patient, JsonUtil.fromJsonString(json, JsonAdaptedPatient.class).toModelType());
         }
     }
 
     @Test
-    public void toModelType_missingCompletion_defaultsToUndoneAndPreservesNumbering() throws Exception {
+    public void toModelType_missingCompletion_defaultsToUndone() throws Exception {
         Patient patient = readPatient("[\"2026-10-05\",{\"dateTime\":\"2026-10-06\"},"
-                + "{\"number\":7,\"dateTime\":\"2026-10-07\"}]");
-        assertEquals(List.of(1, 2, 7), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
+                + "{\"dateTime\":\"2026-10-07\"}]");
+        assertEquals(List.of(1, 2, 3), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
         patient.getSchedule().asList().forEach(appointment -> assertFalse(appointment.isDone()));
         Patient doneLegacy = readPatient("[{\"dateTime\":\"2026-10-05\",\"done\":true}]");
         assertTrue(doneLegacy.getSchedule().findByNumber(1).orElseThrow().isDone());
@@ -52,48 +53,31 @@ public class JsonAdaptedAppointmentTest {
     }
 
     @Test
-    public void toModelType_invalidNumber_rejectsWithoutCoercion() throws Exception {
-        for (String number : List.of("0", "-1", "1.5", "\"2\"", "2147483648", "true", "null", "{}", "[]")) {
-            String json = "{\"number\":" + number + ",\"dateTime\":\"2026-10-05\"}";
-            JsonAdaptedAppointment adapted = JsonUtil.fromJsonString(json, JsonAdaptedAppointment.class);
-            assertThrows(IllegalValueException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS, adapted::toModelType);
+    public void toModelType_savedNumber_ignored() throws Exception {
+        // v1.5 and earlier saved a number, which is ignored whatever its value
+        for (String number : List.of("7", "0", "-1", "1.5", "\"2\"", "2147483648", "true", "null", "{}", "[]")) {
+            Patient patient = readPatient("[{\"number\":" + number + ",\"dateTime\":\"2026-10-05\"}]");
+            assertEquals("2026-10-05", patient.getSchedule().findByNumber(1).orElseThrow().value);
         }
+        // numbers out of date order, and the same number twice, are numbered again in date order
+        Patient patient = readPatient("[{\"number\":2,\"dateTime\":\"2026-11-02\"},"
+                + "{\"number\":2,\"dateTime\":\"2026-10-06\"},{\"number\":1,\"dateTime\":\"2026-10-07\"}]");
+        assertEquals(List.of("2026-10-06", "2026-10-07", "2026-11-02"), patient.getSchedule().asList().stream()
+                .map(appointment -> appointment.value).toList());
+        assertEquals(List.of(1, 2, 3), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
     }
 
     @Test
-    public void toModelType_legacyDuplicates_assignsChronologicallyAndPreservesDetails() throws Exception {
-        Patient patient = readPatient("[\"2026-11-02\",{\"dateTime\":\"2026-10-05 09:30\","
-                + "\"details\":\"First visit\"},{\"dateTime\":\"2026-10-05 09:30\",\"details\":\"Second visit\"}]");
+    public void toModelType_sameDateAndTime_keepsSavedOrderAcrossRoundTrip() throws Exception {
+        // the saved numbers would put the second visit first, but the order in the file decides
+        Patient patient = readPatient("[\"2026-11-02\",{\"number\":9,\"dateTime\":\"2026-10-05 09:30\","
+                + "\"details\":\"First visit\"},{\"number\":2,\"dateTime\":\"2026-10-05 09:30\","
+                + "\"details\":\"Second visit\"}]");
         assertEquals(List.of(1, 2, 3), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
         assertEquals("FIRST VISIT", patient.getSchedule().findByNumber(1).orElseThrow()
                 .getDetails().orElseThrow().value);
         assertEquals("SECOND VISIT", patient.getSchedule().findByNumber(2).orElseThrow()
                 .getDetails().orElseThrow().value);
-        String json = JsonUtil.toJsonString(new JsonAdaptedPatient(patient));
-        assertTrue(json.contains("\"number\" : 1"));
-        assertEquals(patient, JsonUtil.fromJsonString(json, JsonAdaptedPatient.class).toModelType());
-    }
-
-    @Test
-    public void toModelType_mixedNumbers_keepsExplicitAndFillsGaps() throws Exception {
-        Patient patient = readPatient("[{\"number\":2,\"dateTime\":\"2026-10-05\"},"
-                + "\"2026-11-02\",\"2026-10-06\"]");
-        assertEquals(List.of(2, 1, 3), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
-    }
-
-    @Test
-    public void toModelType_duplicateExplicitNumbers_rejectsEvenAtDifferentTimes() {
-        String appointments = "[{\"number\":2,\"dateTime\":\"2026-10-05\"},"
-                + "{\"number\":2,\"dateTime\":\"2026-11-02\"}]";
-        String message = "Patient S1234567A: " + AppointmentSchedule.MESSAGE_DUPLICATE_NUMBER;
-        assertThrows(IllegalValueException.class, message, () -> readPatient(appointments));
-    }
-
-    @Test
-    public void toModelType_numberedSameTime_keepsNumbersAcrossRoundTrip() throws Exception {
-        Patient patient = readPatient("[{\"number\":9,\"dateTime\":\"2026-10-05\"},"
-                + "{\"number\":2,\"dateTime\":\"2026-10-05\"}]");
-        assertEquals(List.of(2, 9), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
         String json = JsonUtil.toJsonString(new JsonAdaptedPatient(patient));
         assertEquals(patient, JsonUtil.fromJsonString(json, JsonAdaptedPatient.class).toModelType());
     }

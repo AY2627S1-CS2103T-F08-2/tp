@@ -6,16 +6,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
-import com.fasterxml.jackson.databind.node.IntNode;
 
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 
 /**
- * Jackson-friendly version of {@link Appointment}, saved with {@code number}, {@code dateTime}, {@code done}
- * and optional {@code details}, such as "INSULIN REVIEW". It also reads an appointment saved as
- * a plain string, such as {@code "2026-10-05 09:30"}, as earlier versions of LaiNurse save appointments.
+ * Jackson-friendly version of {@link Appointment}, saved with {@code dateTime}, {@code done} and optional
+ * {@code details}, such as "INSULIN REVIEW". It also reads an appointment saved as a plain string, such as
+ * {@code "2026-10-05 09:30"}, as earlier versions of LaiNurse save appointments.
+ * An appointment's number is its position in date order, so it is not saved. A {@code number} that v1.5 and earlier
+ * saved is ignored. Appointments at the same date and time keep the order in which they are saved.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class JsonAdaptedAppointment {
@@ -25,7 +26,6 @@ class JsonAdaptedAppointment {
 
     private final String dateTime;
     private final String details; // null if none
-    private final JsonNode number; // null for a legacy appointment
     private final JsonNode done; // null for a legacy appointment, which is undone
 
     /**
@@ -35,17 +35,9 @@ class JsonAdaptedAppointment {
         this(dateTime, details, null);
     }
 
-    /**
-     * Reads the number as a JSON value to reject coercions such as 1.5 or "2" locally.
-     */
-    public JsonAdaptedAppointment(String dateTime, String details, JsonNode number) {
-        this(dateTime, details, number, null);
-    }
-
-    private JsonAdaptedAppointment(String dateTime, String details, JsonNode number, JsonNode done) {
+    private JsonAdaptedAppointment(String dateTime, String details, JsonNode done) {
         this.dateTime = dateTime;
         this.details = details;
-        this.number = number;
         this.done = done;
     }
 
@@ -55,7 +47,6 @@ class JsonAdaptedAppointment {
     public JsonAdaptedAppointment(Appointment source) {
         dateTime = source.value;
         details = source.getDetails().map(appointmentDetails -> appointmentDetails.value).orElse(null);
-        number = source.isNumbered() ? IntNode.valueOf(source.getNumber()) : null;
         done = BooleanNode.valueOf(source.isDone());
     }
 
@@ -84,7 +75,7 @@ class JsonAdaptedAppointment {
             throw new IllegalArgumentException(Appointment.MESSAGE_CONSTRAINTS);
         }
         return new JsonAdaptedAppointment(dateTime == null ? null : dateTime.textValue(),
-                details == null ? null : details.textValue(), json.get("number"), json.get("done"));
+                details == null ? null : details.textValue(), json.get("done"));
     }
 
     /**
@@ -105,15 +96,8 @@ class JsonAdaptedAppointment {
         if (done != null && !done.isBoolean()) {
             throw new IllegalValueException(MESSAGE_DONE_CONSTRAINTS);
         }
-        Appointment appointment = new Appointment(dateTime, Optional.ofNullable(details).map(AppointmentDetails::new))
+        return new Appointment(dateTime, Optional.ofNullable(details).map(AppointmentDetails::new))
                 .withDone(done != null && done.booleanValue());
-        if (number == null || number.isMissingNode()) {
-            return appointment;
-        }
-        if (!number.isIntegralNumber() || !number.canConvertToInt() || number.intValue() <= 0) {
-            throw new IllegalValueException(Appointment.MESSAGE_NUMBER_CONSTRAINTS);
-        }
-        return appointment.withNumber(number.intValue());
     }
 
 }
