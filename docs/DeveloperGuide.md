@@ -150,7 +150,7 @@ in the command's range, on one page, and hides the week's arrow buttons; if the 
 patient's appointments. `AppointmentPage#ofWeek` and
 `AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
 of the week, or for each day in the range that has an appointment, followed by that day's appointments, numbered down
-the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. An appointment with no time comes first in its day, except today, where it comes after the appointments that
+the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. As in the patient list, each list cell builds one heading and one row, and shows each of its rows in them. An appointment with no time comes first in its day, except today, where it comes after the appointments that
 have passed, right above the next one. A page is built as at the time given to it, so the page and the appointment that
 it selects first agree, and unit tests can fix the time. While a range is shown, the panel keeps the week of the weekly
 view, so that Esc goes back to it. The panel listens to the appointment list and rebuilds the page after a change,
