@@ -55,7 +55,10 @@ public class EditCommand extends Command {
             + COMMAND_WORD + " T0123456B " + PREFIX_ADD_MEDICAL_HISTORY + "Asthma " + PREFIX_NOTES.toString().trim();
 
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
-    public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
+    public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_NAME.toString().trim() + ", "
+            + PREFIX_PHONE.toString().trim() + ", " + PREFIX_ADDRESS.toString().trim() + ", "
+            + PREFIX_MEDICAL_HISTORY.toString().trim() + ", " + PREFIX_ADD_MEDICAL_HISTORY.toString().trim() + ", "
+            + PREFIX_NOTES.toString().trim() + " and " + PREFIX_ADD_NOTES.toString().trim() + " must be provided.";
 
     private static final Logger logger = LogsCenter.getLogger(EditCommand.class);
 
@@ -83,7 +86,7 @@ public class EditCommand extends Command {
                 .filter(patient -> patient.getId().equals(targetId)).findFirst();
         if (foundPatient.isEmpty()) {
             logger.fine("Rejected edit: no patient has the given ID.");
-            throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+            throw new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
         }
         Patient patientToEdit = foundPatient.get();
         Patient editedPatient = createEditedPatient(patientToEdit, editPatientDescriptor);

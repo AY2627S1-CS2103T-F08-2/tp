@@ -52,7 +52,7 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_addAppointment() throws Exception {
         AddAppointmentCommand command = (AddAppointmentCommand) parser.parseCommand(
-                AddAppointmentCommand.COMMAND_WORD + " S1234567A 2026-10-05 09:30"
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A --date 2026-10-05 09:30"
                         + " --details Bring insulin pen");
         assertEquals(new AddAppointmentCommand(new PatientId("S1234567A"),
                 new Appointment("2026-10-05 09:30", Optional.of(new AppointmentDetails("Bring insulin pen")))),
@@ -97,7 +97,7 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_appointmentHorizontalSpaces_success() throws Exception {
         assertEquals(new AddAppointmentCommand(new PatientId("S1234567A"), new Appointment("2026-10-05 09:30")),
-                parser.parseCommand("addappt\u00a0s1234567a\u202f2026-10-05\u00a009:30"));
+                parser.parseCommand("addappt\u00a0s1234567a\u202f--date\u00a02026-10-05\u00a009:30"));
         assertEquals(new DeleteAppointmentCommand(new PatientId("S1234567A"), 1),
                 parser.parseCommand("deleteappt\u00a0s1234567a\u202f1"));
         assertEquals(new EditAppointmentCommand(new PatientId("S1234567A"), 1,
@@ -195,6 +195,48 @@ public class LaiNurseParserTest {
                 + " --name\u00A0Bob --phone 91234567 --address Blk 4";
         assertThrows(ParseException.class, Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME), ()
                 -> parser.parseCommand(duplicateNameArgs));
+    }
+
+    @Test
+    public void parseCommand_zeroWidthSpaceInCommandWord_throwsParseException() {
+        // Zero-width characters are neither \h nor \s, so they stay glued to the command word,
+        // which then matches no registered command.
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("list\u200B"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("\u200Blist"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand(
+                "add\u200B --id T0123456B --name Alex Yu --phone 91234567 --address Blk 1"));
+    }
+
+    @Test
+    public void parseCommand_zeroWidthSpaceInId_throwsParseException() {
+        // The zero-width family survives normalization, so an ID carrying one fails the
+        // letter-and-digit check instead of silently matching another patient.
+        // addappt maps any bad ID to its format error; add surfaces the constraint directly.
+        assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT,
+                AddAppointmentCommand.MESSAGE_USAGE), () -> parser.parseCommand(
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A\u200B --date 2026-10-05"));
+        assertThrows(ParseException.class, PatientId.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(
+                AddCommand.COMMAND_WORD + " --id T0123456\u00ADB --name Alex Yu --phone 91234567 --address Blk 2"));
+    }
+
+    @Test
+    public void parseCommand_zeroWidthSpaceGluesTokens_throwsParseException() {
+        // A zero-width space between a value and the next option hides that option, so the glued
+        // text is parsed as one invalid ID instead of two arguments.
+        assertThrows(ParseException.class, PatientId.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(
+                AddCommand.COMMAND_WORD + " --id T0123456B\u200B--notes gardening"
+                        + " --name Alex Yu --phone 91234567 --address Blk 3"));
+        // A zero-width space inside an option word makes the whole token an unregistered option.
+        assertThrows(ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE), () ->
+                parser.parseCommand(AddCommand.COMMAND_WORD + " --id\u200BT0123456B --name Alex"
+                        + " --phone 91234567 --address Blk 4"));
+    }
+
+    @Test
+    public void parseCommand_zeroWidthSpaceInDate_throwsParseException() {
+        assertThrows(ParseException.class, () -> parser.parseCommand(
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A --date 2026-10-0\u200B5"));
     }
 
     @Test

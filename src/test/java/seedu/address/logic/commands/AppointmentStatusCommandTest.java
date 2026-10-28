@@ -94,7 +94,7 @@ public class AppointmentStatusCommandTest {
     public void execute_missingPatientOrAppointment_failureWithoutChanges() {
         for (boolean done : List.of(false, true)) {
             assertCommandFailure(command(new PatientId("S0000000Z"), 1, done), model,
-                    Messages.MESSAGE_INVALID_PATIENT_ID);
+                    String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
             assertCommandFailure(command(patient.getId(), 3, done), model,
                     String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, patient.getId(), 3));
         }

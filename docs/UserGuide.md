@@ -208,7 +208,7 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * Medical history and notes are independently optional. If an option is supplied, its value must not be blank.
 * Notes record other personal information not covered by the other fields, such as the patient's hobbies, pet peeves and daily routines. Use `--medical-history` for health information.
 * Parameters may appear in any order. Each option may appear only once. Separate options and values using spaces or tabs; values may contain spaces.
-* IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again.
+* IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again. LaiNurse then names the patient who has that ID, such as `ALEX YEOH (S1234567A) already exists in LaiNurse.`
 * Names, addresses, medical history and notes accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * A new patient starts with no appointments. Set their appointments with [`addappt`](#adding-an-appointment-addappt).
@@ -324,12 +324,12 @@ Examples:
 
 Adds an appointment to a patient's schedule.
 
-Format: `addappt ID DATE_OR_DATETIME [--details DETAILS]`
+Format: `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
-* `DATE_OR_DATETIME` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. It must follow the ID, before any details. Past dates are accepted.
+* `--date` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. Past dates are accepted. Without `--date`, LaiNurse says that the date is missing.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
-* The optional `--details` follows the date or date and time, and may be given at most once.
+* `--date` and the optional `--details` can be in either order after the ID, and each may be given only once.
 * The new appointment starts **Undone**.
 * A patient's appointments are numbered from 1 in date order: by date, then by time, with an appointment that has no time first on its date. A new appointment at the same date and time as another comes after it. Adding, moving or deleting an appointment renumbers the patient's appointments after it, so check the number shown before you use it in a command.
 * Clashes are allowed, including several undone visits to the same patient at exactly the same time. The result warns
@@ -337,9 +337,9 @@ Format: `addappt ID DATE_OR_DATETIME [--details DETAILS]`
 * LaiNurse switches to the **Appointments** view and selects the new appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
-* `addappt S1234567A 2026-10-12 09:30` gives Alex Yeoh an appointment on 12 October at 09:30.
-* `addappt S2345678B 2026-10-14 --details Check blood pressure` gives Bernice Yu an appointment on 14 October with no time, and details.
-* `addappt S1234567A 2026-12-01 10:00 --details Bring insulin pen` gives Alex Yeoh an appointment on 1 December at 10:00 with details.
+* `addappt S1234567A --date 2026-10-12 09:30` gives Alex Yeoh an appointment on 12 October at 09:30.
+* `addappt S2345678B --date 2026-10-14 --details Check blood pressure` gives Bernice Yu an appointment on 14 October with no time, and details.
+* `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen` gives Alex Yeoh an appointment on 1 December at 10:00 with details.
 
 ### Editing an appointment: `editappt`
 
@@ -523,7 +523,7 @@ Appointment dates and times in the file follow the formats above, and a file sav
 Action | Format, Examples
 --------|-----------------
 **Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
-**AddAppt** | `addappt ID DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A 2026-12-01 10:00 --details Bring insulin pen`
+**AddAppt** | `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **DeleteAppt** | `deleteappt ID NUMBER`<br> e.g., `deleteappt S1234567A 1`

@@ -55,7 +55,8 @@ public class TabCompleterTest {
         assertEquals(List.of("--medical-history"), words("edit S1234567A --m"));
         assertEquals(List.of("--add-medical-history", "--add-notes"), words("edit S1234567A --add-"));
         assertEquals(List.of("--id", "--from", "--to"), words("viewappt -"));
-        assertEquals(List.of("--details"), words("addappt S1234567A 2026-12-01 --d"));
+        assertEquals(List.of("--date", "--details"), words("addappt S1234567A --d"));
+        assertEquals(List.of("--details"), words("addappt S1234567A --date 2026-12-01 --d"));
     }
 
     @Test

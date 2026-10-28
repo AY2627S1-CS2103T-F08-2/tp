@@ -55,7 +55,8 @@ public class AddCommandTest {
         AddCommand addCommand = new AddCommand(validPatient);
         ModelStub modelStub = new ModelStubWithPatient(validPatient);
 
-        assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PATIENT, () -> addCommand.execute(modelStub));
+        assertThrows(CommandException.class, String.format(AddCommand.MESSAGE_DUPLICATE_PATIENT,
+                validPatient.getName(), validPatient.getId()), () -> addCommand.execute(modelStub));
     }
 
     @Test
@@ -180,6 +181,12 @@ public class AddCommandTest {
             requireNonNull(patient);
             return this.patient.isSamePatient(patient);
         }
+
+        @Override
+        public Optional<Patient> findPatientById(PatientId id) {
+            requireNonNull(id);
+            return patient.getId().equals(id) ? Optional.of(patient) : Optional.empty();
+        }
     }
 
     /**
@@ -192,6 +199,12 @@ public class AddCommandTest {
         public boolean hasPatient(Patient patient) {
             requireNonNull(patient);
             return patientsAdded.stream().anyMatch(patient::isSamePatient);
+        }
+
+        @Override
+        public Optional<Patient> findPatientById(PatientId id) {
+            requireNonNull(id);
+            return patientsAdded.stream().filter(patient -> patient.getId().equals(id)).findFirst();
         }
 
         @Override

@@ -12,7 +12,7 @@ import seedu.address.commons.util.TextNormalizer;
  */
 public class Address {
 
-    public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Addresses can take any values, and must not be blank.";
 
     /*
      * Checked against the normalized address, so a blank string becomes "" and is rejected.

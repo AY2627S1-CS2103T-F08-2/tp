@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -22,9 +23,10 @@ public final class AppointmentLookup {
     private AppointmentLookup() {}
 
     /**
-     * A positive patient-local appointment number.
+     * A positive patient-local appointment number, as typed. It can be larger than any appointment number, which
+     * no patient has.
      */
-    public record Target(int number) {
+    public record Target(long number) {
         /**
          * Validates that the appointment number is positive.
          */
@@ -46,7 +48,10 @@ public final class AppointmentLookup {
     public static Appointment find(PatientId patientId, AppointmentSchedule schedule, Target target,
             String commandWord) throws CommandException {
         requireAllNonNull(patientId, schedule, target, commandWord);
-        Appointment found = schedule.findByNumber(target.number()).orElseThrow(() -> {
+        Optional<Appointment> match = target.number() <= Integer.MAX_VALUE
+                ? schedule.findByNumber((int) target.number())
+                : Optional.empty();
+        Appointment found = match.orElseThrow(() -> {
             logger.fine("Rejected " + commandWord + ": no appointment has the given number.");
             return new CommandException(String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND,
                     patientId, target.number()));

@@ -3,7 +3,7 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_ID;
+import static seedu.address.logic.Messages.MESSAGE_PATIENT_NOT_FOUND;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW;
@@ -321,7 +321,7 @@ public class ViewAppointmentCommandTest {
     public void execute_idUnknownPatient_throwsCommandException() {
         ViewAppointmentCommand command = new ViewAppointmentCommand(
                 Optional.empty(), Optional.empty(), Optional.of(new PatientId("S9999999Z")), FIXED_CLOCK);
-        assertCommandFailure(command, model, MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(command, model, String.format(MESSAGE_PATIENT_NOT_FOUND, "S9999999Z"));
     }
 
     @Test

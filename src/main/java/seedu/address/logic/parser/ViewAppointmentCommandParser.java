@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_PATIENT_NOT_FOUND;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import seedu.address.commons.util.DateUtil;
+import seedu.address.commons.util.TextNormalizer;
 import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.PatientId;
@@ -45,7 +47,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         }
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
         // Duplicate options are reported whatever the rest of the input looks like
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TO, PREFIX_ID);
         // A date after --id is read into the ID value, so the order is reported before that value is parsed
         verifyNoDateAfterId(argMultimap);
         // A second date is read into --from or --to, so the missing option is reported before the value is parsed
@@ -170,9 +172,19 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         return date.isPresent() ? Optional.of(ParserUtil.parseDate(date.get())) : Optional.empty();
     }
 
-    /** Returns the patient ID given to {@code PREFIX_ID}, or {@code Optional#empty()} if the prefix is absent. */
+    /**
+     * Returns the patient ID given to {@code PREFIX_ID}, or {@code Optional#empty()} if the prefix is absent.
+     * No patient can have an ID that is not in the ID format, so such an ID is reported as one that no patient
+     * has, as a well-formed ID is when the command runs. A blank ID gets the ID format.
+     */
     private static Optional<PatientId> parseOptionalPatientId(ArgumentMultimap argMultimap) throws ParseException {
         Optional<String> id = argMultimap.getValue(PREFIX_ID);
-        return id.isPresent() ? Optional.of(ParserUtil.parseId(id.get())) : Optional.empty();
+        if (id.isEmpty()) {
+            return Optional.empty();
+        }
+        if (!id.get().isBlank() && !PatientId.isValidId(id.get().trim())) {
+            throw new ParseException(String.format(MESSAGE_PATIENT_NOT_FOUND, TextNormalizer.normalize(id.get())));
+        }
+        return Optional.of(ParserUtil.parseId(id.get()));
     }
 }

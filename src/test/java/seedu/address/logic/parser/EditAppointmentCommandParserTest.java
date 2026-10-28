@@ -139,11 +139,13 @@ public class EditAppointmentCommandParserTest {
     public void parse_largestNumber_success() {
         assertParseSuccess(parser, "s1234567a\t2147483647 --to 2026-10-06 10:00",
                 new EditAppointmentCommand(ID, Integer.MAX_VALUE, Optional.of(NEW), Optional.empty()));
+        assertParseSuccess(parser, "S1234567A 2147483648 --to 2026-10-06 10:00",
+                new EditAppointmentCommand(ID, 2147483648L, Optional.of(NEW), Optional.empty()));
     }
 
     @Test
     public void parse_invalidNumber_failure() {
-        for (String number : new String[] {"0", "-1", "+1", "1.5", "two", "2147483648"}) {
+        for (String number : new String[] {"0", "-1", "+1", "1.5", "two"}) {
             assertParseFailure(parser, "S1234567A " + number + " --to 2026-10-06 10:00",
                     Appointment.MESSAGE_NUMBER_CONSTRAINTS);
         }
