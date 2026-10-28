@@ -2,6 +2,9 @@ package seedu.address.logic.parser;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_DETAILS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
@@ -46,11 +49,11 @@ public class TabCompleter {
             AddCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
                     PREFIX_MEDICAL_HISTORY, PREFIX_NOTES),
             EditCommand.COMMAND_WORD, options(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
-                    PREFIX_NOTES),
+                    PREFIX_ADD_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ADD_NOTES),
             FindCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
                     PREFIX_MEDICAL_HISTORY, PREFIX_NOTES),
             AddAppointmentCommand.COMMAND_WORD, options(PREFIX_DETAILS),
-            EditAppointmentCommand.COMMAND_WORD, options(PREFIX_TO, PREFIX_DETAILS),
+            EditAppointmentCommand.COMMAND_WORD, options(PREFIX_TO, PREFIX_DETAILS, PREFIX_ADD_DETAILS),
             ViewAppointmentCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_FROM, PREFIX_TO));
 
     /** Commands whose {@code --id} option takes the ID of an existing patient. {@code add} takes a new one. */

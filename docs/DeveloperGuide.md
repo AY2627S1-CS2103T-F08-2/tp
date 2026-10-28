@@ -1448,7 +1448,8 @@ testers are expected to do more *exploratory* testing.
        `+1 more`. The second Tab gives `addappt S1234567A`.
 
     1. Test case: type `editappt S1234567A 1 --`, then press Tab<br>
-       Expected: The status bar shows `--to · --details`. The command box shows `editappt S1234567A 1 --to`.
+       Expected: The status bar shows `--to · --details · --add-details`. The command box shows
+       `editappt S1234567A 1 --to`.
 
     1. Test case: type `edit S1234567A --name Alex --`<br>
        Expected: The status bar shows every option of `edit` except `--name`.

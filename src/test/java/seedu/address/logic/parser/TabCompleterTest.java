@@ -49,10 +49,11 @@ public class TabCompleterTest {
 
     @Test
     public void complete_option_givesOptionsOfTheCommandInUsageOrder() {
-        assertEquals(List.of("--to", "--details"), words("editappt S1234567A 2 --"));
-        assertEquals(List.of("editappt S1234567A 2 --to", "editappt S1234567A 2 --details"),
-                texts("editappt S1234567A 2 --"));
+        assertEquals(List.of("--to", "--details", "--add-details"), words("editappt S1234567A 2 --"));
+        assertEquals(List.of("editappt S1234567A 2 --to", "editappt S1234567A 2 --details",
+                "editappt S1234567A 2 --add-details"), texts("editappt S1234567A 2 --"));
         assertEquals(List.of("--medical-history"), words("edit S1234567A --m"));
+        assertEquals(List.of("--add-medical-history", "--add-notes"), words("edit S1234567A --add-"));
         assertEquals(List.of("--id", "--from", "--to"), words("viewappt -"));
         assertEquals(List.of("--details"), words("addappt S1234567A 2026-12-01 --d"));
     }
@@ -69,8 +70,8 @@ public class TabCompleterTest {
 
     @Test
     public void complete_option_skipsOptionsAlreadyTyped() {
-        assertEquals(List.of("--phone", "--address", "--medical-history", "--notes"),
-                words("edit S1234567A --name Alex Tan --"));
+        assertEquals(List.of("--phone", "--address", "--medical-history", "--add-medical-history", "--notes",
+                "--add-notes"), words("edit S1234567A --name Alex Tan --"));
         assertEquals(List.of("--name", "--phone", "--address", "--medical-history", "--notes"),
                 words("add --id S1234567A --"));
     }

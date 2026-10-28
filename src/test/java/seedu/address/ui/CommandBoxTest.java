@@ -141,7 +141,7 @@ public class CommandBoxTest {
             textField.setText("dele");
             assertEquals("delete · deleteappt", statusBar.getCompletionHint());
             textField.setText("editappt S1234567A 2 --");
-            assertEquals("--to · --details", statusBar.getCompletionHint());
+            assertEquals("--to · --details · --add-details", statusBar.getCompletionHint());
             textField.setText("view ");
             assertEquals("S1234567A · T7654321B", statusBar.getCompletionHint());
         });
