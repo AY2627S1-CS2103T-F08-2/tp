@@ -104,6 +104,41 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_clearMedicalHistoryAndNotes_success() {
+        Patient bensonWithNotes = new PatientBuilder(BENSON).withNotes("Enjoys gardening").build();
+        model.setPatient(BENSON, bensonWithNotes);
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withoutMedicalHistory().withoutNotes()
+                .build();
+        Patient editedPatient = new PatientBuilder(BENSON).withoutMedicalHistory().withoutNotes().build();
+        assertEditSuccess(bensonWithNotes, descriptor, editedPatient);
+    }
+
+    @Test
+    public void execute_clearEmptyNotes_success() {
+        // BENSON has no notes, so clearing them changes nothing
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withoutNotes().build();
+        assertEditSuccess(BENSON, descriptor, BENSON);
+    }
+
+    @Test
+    public void execute_addToMedicalHistory_addedAfterSeparator() {
+        // BENSON's medical history is HYPERTENSION, ALLERGIC TO PENICILLIN
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withMedicalHistoryAdded("Asthma")
+                .build();
+        Patient editedPatient = new PatientBuilder(BENSON)
+                .withMedicalHistory("Hypertension, allergic to penicillin; Asthma").build();
+        assertEditSuccess(BENSON, descriptor, editedPatient);
+    }
+
+    @Test
+    public void execute_addToEmptyNotes_setsNotes() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withNotesAdded("Enjoys gardening")
+                .build();
+        Patient editedPatient = new PatientBuilder(BENSON).withNotes("Enjoys gardening").build();
+        assertEditSuccess(BENSON, descriptor, editedPatient);
+    }
+
+    @Test
     public void execute_noFieldSpecified_success() {
         Patient firstPatient = model.getFilteredPatientList().get(INDEX_FIRST_PATIENT.getZeroBased());
         EditCommand editCommand = new EditCommand(firstPatient.getId(), new EditPatientDescriptor());

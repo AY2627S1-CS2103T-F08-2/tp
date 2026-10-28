@@ -36,6 +36,8 @@ public class EditAppointmentCommandTest {
     private static final Appointment BENSON_APPOINTMENT = new Appointment("2026-10-05 09:30");
     private static final Appointment NEW_TIME = new Appointment("2026-10-06 10:00");
     private static final AppointmentDetails DETAILS = new AppointmentDetails("Bring insulin pen");
+    private static final Optional<OptionalFieldEdit<AppointmentDetails>> SET_DETAILS =
+            Optional.of(OptionalFieldEdit.replace(DETAILS));
 
     private final Model model = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
 
@@ -67,7 +69,41 @@ public class EditAppointmentCommandTest {
                 .withAppointment("2026-10-05 09:30", "Bring insulin pen").build();
         Appointment edited = new Appointment("2026-10-05 09:30", Optional.of(DETAILS));
         assertEditSuccess(BENSON, new EditAppointmentCommand(BENSON.getId(), 1,
-                Optional.empty(), Optional.of(DETAILS)), editedBenson, edited,
+                Optional.empty(), SET_DETAILS), editedBenson, edited,
+                "2026-10-05 09:30; Details: BRING INSULIN PEN", null);
+    }
+
+    @Test
+    public void execute_clearDetails_success() {
+        Patient bensonWithDetails = new PatientBuilder(BENSON).withAppointments()
+                .withAppointment("2026-10-05 09:30", "Wound dressing").build();
+        model.setPatient(BENSON, bensonWithDetails);
+        assertEditSuccess(bensonWithDetails, new EditAppointmentCommand(BENSON.getId(), 1,
+                Optional.empty(), Optional.of(OptionalFieldEdit.clear())), BENSON, BENSON_APPOINTMENT,
+                "2026-10-05 09:30", null);
+    }
+
+    @Test
+    public void execute_addToDetails_addedAfterSeparator() {
+        Patient bensonWithDetails = new PatientBuilder(BENSON).withAppointments()
+                .withAppointment("2026-10-05 09:30", "Wound dressing").build();
+        model.setPatient(BENSON, bensonWithDetails);
+        Patient editedBenson = new PatientBuilder(BENSON).withAppointments()
+                .withAppointment("2026-10-05 09:30", "Wound dressing; Bring insulin pen").build();
+        Appointment edited = new Appointment("2026-10-05 09:30",
+                Optional.of(new AppointmentDetails("Wound dressing; Bring insulin pen")));
+        assertEditSuccess(bensonWithDetails, new EditAppointmentCommand(BENSON.getId(), 1,
+                Optional.empty(), Optional.of(OptionalFieldEdit.append(DETAILS))), editedBenson, edited,
+                "2026-10-05 09:30; Details: WOUND DRESSING; BRING INSULIN PEN", null);
+    }
+
+    @Test
+    public void execute_addToEmptyDetails_setsDetails() {
+        Patient editedBenson = new PatientBuilder(BENSON).withAppointments()
+                .withAppointment("2026-10-05 09:30", "Bring insulin pen").build();
+        Appointment edited = new Appointment("2026-10-05 09:30", Optional.of(DETAILS));
+        assertEditSuccess(BENSON, new EditAppointmentCommand(BENSON.getId(), 1,
+                Optional.empty(), Optional.of(OptionalFieldEdit.append(DETAILS))), editedBenson, edited,
                 "2026-10-05 09:30; Details: BRING INSULIN PEN", null);
     }
 
@@ -95,7 +131,7 @@ public class EditAppointmentCommandTest {
         Appointment edited = new Appointment("2026-10-06 10:00", Optional.of(DETAILS));
 
         assertEditSuccess(bensonWithDetails, new EditAppointmentCommand(BENSON.getId(), 1,
-                Optional.of(NEW_TIME), Optional.of(DETAILS)), editedBenson, edited,
+                Optional.of(NEW_TIME), SET_DETAILS), editedBenson, edited,
                 "2026-10-06 10:00; Details: BRING INSULIN PEN", "2026-10-05 09:30");
     }
 
@@ -105,7 +141,7 @@ public class EditAppointmentCommandTest {
                 .withAppointment("2026-10-05 09:30", "Bring insulin pen").build();
         Appointment edited = new Appointment("2026-10-05 09:30", Optional.of(DETAILS));
         assertEditSuccess(BENSON, new EditAppointmentCommand(BENSON.getId(), 1,
-                Optional.of(BENSON_APPOINTMENT), Optional.of(DETAILS)), editedBenson, edited,
+                Optional.of(BENSON_APPOINTMENT), SET_DETAILS), editedBenson, edited,
                 "2026-10-05 09:30; Details: BRING INSULIN PEN", null);
     }
 
@@ -173,11 +209,11 @@ public class EditAppointmentCommandTest {
     @Test
     public void equals() {
         EditAppointmentCommand command = new EditAppointmentCommand(BENSON.getId(), 1,
-                Optional.of(NEW_TIME), Optional.of(DETAILS));
+                Optional.of(NEW_TIME), SET_DETAILS);
 
         // same values -> returns true
         assertTrue(command.equals(new EditAppointmentCommand(BENSON.getId(), 1,
-                Optional.of(NEW_TIME), Optional.of(DETAILS))));
+                Optional.of(NEW_TIME), SET_DETAILS)));
 
         // same object -> returns true
         assertTrue(command.equals(command));
@@ -188,11 +224,11 @@ public class EditAppointmentCommandTest {
 
         // any field different -> returns false
         assertFalse(command.equals(new EditAppointmentCommand(new PatientId("S0000000Z"), 1,
-                Optional.of(NEW_TIME), Optional.of(DETAILS))));
+                Optional.of(NEW_TIME), SET_DETAILS)));
         assertFalse(command.equals(new EditAppointmentCommand(BENSON.getId(), 2,
-                Optional.of(NEW_TIME), Optional.of(DETAILS))));
+                Optional.of(NEW_TIME), SET_DETAILS)));
         assertFalse(command.equals(new EditAppointmentCommand(BENSON.getId(), 1,
-                Optional.empty(), Optional.of(DETAILS))));
+                Optional.empty(), SET_DETAILS)));
         assertFalse(command.equals(new EditAppointmentCommand(BENSON.getId(), 1,
                 Optional.of(NEW_TIME), Optional.empty())));
     }
@@ -203,7 +239,7 @@ public class EditAppointmentCommandTest {
                 Optional.of(NEW_TIME), Optional.empty());
         String expected = EditAppointmentCommand.class.getCanonicalName() + "{targetId=" + BENSON.getId()
                 + ", targetAppointment=#1, newDateTime=" + Optional.of(NEW_TIME)
-                + ", newDetails=" + Optional.empty() + "}";
+                + ", detailsEdit=" + Optional.empty() + "}";
         assertEquals(expected, command.toString());
     }
 

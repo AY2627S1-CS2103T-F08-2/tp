@@ -2,6 +2,8 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
@@ -36,15 +38,21 @@ public class EditCommand extends Command {
     public static final String COMMAND_WORD = "edit";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the patient with the given ID. "
-            + "Existing values will be overwritten by the input values. The ID itself cannot be edited.\n"
+            + "Existing values will be overwritten by the input values. The ID itself cannot be edited. "
+            + PREFIX_MEDICAL_HISTORY.toString().trim() + " or " + PREFIX_NOTES.toString().trim()
+            + " with no value clears that field, and " + PREFIX_ADD_MEDICAL_HISTORY.toString().trim() + " or "
+            + PREFIX_ADD_NOTES.toString().trim() + " adds text to the end of it, after \""
+            + OptionalFieldEdit.APPEND_SEPARATOR + "\". A field cannot be both replaced and added to.\n"
             + "Parameters: ID "
             + "[" + PREFIX_NAME + "NAME] "
             + "[" + PREFIX_PHONE + "PHONE] "
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
-            + "[" + PREFIX_MEDICAL_HISTORY + "MEDICAL_HISTORY] "
-            + "[" + PREFIX_NOTES + "NOTES]\n"
-            + "Example: " + COMMAND_WORD + " T0123456B "
-            + PREFIX_PHONE + "91234567";
+            + "[" + PREFIX_MEDICAL_HISTORY + "[MEDICAL_HISTORY]] "
+            + "[" + PREFIX_ADD_MEDICAL_HISTORY + "MORE_HISTORY] "
+            + "[" + PREFIX_NOTES + "[NOTES]] "
+            + "[" + PREFIX_ADD_NOTES + "MORE_NOTES]\n"
+            + "Examples: " + COMMAND_WORD + " T0123456B " + PREFIX_PHONE + "91234567, "
+            + COMMAND_WORD + " T0123456B " + PREFIX_ADD_MEDICAL_HISTORY + "Asthma " + PREFIX_NOTES.toString().trim();
 
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
@@ -100,8 +108,11 @@ public class EditCommand extends Command {
         Phone updatedPhone = editPatientDescriptor.getPhone().orElse(patientToEdit.getPhone());
         Address updatedAddress = editPatientDescriptor.getAddress().orElse(patientToEdit.getAddress());
         Optional<MedicalHistory> updatedMedicalHistory = editPatientDescriptor.getMedicalHistory()
-                .or(patientToEdit::getMedicalHistory);
-        Optional<Notes> updatedNotes = editPatientDescriptor.getNotes().or(patientToEdit::getNotes);
+                .map(edit -> edit.applyTo(patientToEdit.getMedicalHistory(), MedicalHistory::new))
+                .orElse(patientToEdit.getMedicalHistory());
+        Optional<Notes> updatedNotes = editPatientDescriptor.getNotes()
+                .map(edit -> edit.applyTo(patientToEdit.getNotes(), Notes::new))
+                .orElse(patientToEdit.getNotes());
 
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
                 updatedMedicalHistory, updatedNotes, patientToEdit.getSchedule());
@@ -137,14 +148,15 @@ public class EditCommand extends Command {
 
     /**
      * Stores the details to edit the patient with. Each non-empty field value will replace the
-     * corresponding field value of the patient.
+     * corresponding field value of the patient. The medical history and notes are stored as edits, which can also
+     * clear the field or add text to the end of it.
      */
     public static class EditPatientDescriptor {
         private Name name;
         private Phone phone;
         private Address address;
-        private MedicalHistory medicalHistory;
-        private Notes notes;
+        private OptionalFieldEdit<MedicalHistory> medicalHistory;
+        private OptionalFieldEdit<Notes> notes;
 
         public EditPatientDescriptor() {}
 
@@ -190,19 +202,19 @@ public class EditCommand extends Command {
             return Optional.ofNullable(address);
         }
 
-        public void setMedicalHistory(MedicalHistory medicalHistory) {
+        public void setMedicalHistory(OptionalFieldEdit<MedicalHistory> medicalHistory) {
             this.medicalHistory = medicalHistory;
         }
 
-        public Optional<MedicalHistory> getMedicalHistory() {
+        public Optional<OptionalFieldEdit<MedicalHistory>> getMedicalHistory() {
             return Optional.ofNullable(medicalHistory);
         }
 
-        public void setNotes(Notes notes) {
+        public void setNotes(OptionalFieldEdit<Notes> notes) {
             this.notes = notes;
         }
 
-        public Optional<Notes> getNotes() {
+        public Optional<OptionalFieldEdit<Notes>> getNotes() {
             return Optional.ofNullable(notes);
         }
 

@@ -1,6 +1,7 @@
 package seedu.address.testutil;
 
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
+import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
@@ -31,8 +32,8 @@ public class EditPatientDescriptorBuilder {
         descriptor.setName(patient.getName());
         descriptor.setPhone(patient.getPhone());
         descriptor.setAddress(patient.getAddress());
-        patient.getMedicalHistory().ifPresent(descriptor::setMedicalHistory);
-        patient.getNotes().ifPresent(descriptor::setNotes);
+        patient.getMedicalHistory().map(OptionalFieldEdit::replace).ifPresent(descriptor::setMedicalHistory);
+        patient.getNotes().map(OptionalFieldEdit::replace).ifPresent(descriptor::setNotes);
     }
 
     /**
@@ -60,18 +61,52 @@ public class EditPatientDescriptorBuilder {
     }
 
     /**
-     * Sets the {@code MedicalHistory} of the {@code EditPatientDescriptor} that we are building.
+     * Sets the {@code EditPatientDescriptor} that we are building to replace the medical history with
+     * {@code medicalHistory}.
      */
     public EditPatientDescriptorBuilder withMedicalHistory(String medicalHistory) {
-        descriptor.setMedicalHistory(new MedicalHistory(medicalHistory));
+        descriptor.setMedicalHistory(OptionalFieldEdit.replace(new MedicalHistory(medicalHistory)));
         return this;
     }
 
     /**
-     * Sets the {@code Notes} of the {@code EditPatientDescriptor} that we are building.
+     * Sets the {@code EditPatientDescriptor} that we are building to clear the medical history.
+     */
+    public EditPatientDescriptorBuilder withoutMedicalHistory() {
+        descriptor.setMedicalHistory(OptionalFieldEdit.clear());
+        return this;
+    }
+
+    /**
+     * Sets the {@code EditPatientDescriptor} that we are building to add {@code medicalHistory} to the end of the
+     * medical history.
+     */
+    public EditPatientDescriptorBuilder withMedicalHistoryAdded(String medicalHistory) {
+        descriptor.setMedicalHistory(OptionalFieldEdit.append(new MedicalHistory(medicalHistory)));
+        return this;
+    }
+
+    /**
+     * Sets the {@code EditPatientDescriptor} that we are building to replace the notes with {@code notes}.
      */
     public EditPatientDescriptorBuilder withNotes(String notes) {
-        descriptor.setNotes(new Notes(notes));
+        descriptor.setNotes(OptionalFieldEdit.replace(new Notes(notes)));
+        return this;
+    }
+
+    /**
+     * Sets the {@code EditPatientDescriptor} that we are building to clear the notes.
+     */
+    public EditPatientDescriptorBuilder withoutNotes() {
+        descriptor.setNotes(OptionalFieldEdit.clear());
+        return this;
+    }
+
+    /**
+     * Sets the {@code EditPatientDescriptor} that we are building to add {@code notes} to the end of the notes.
+     */
+    public EditPatientDescriptorBuilder withNotesAdded(String notes) {
+        descriptor.setNotes(OptionalFieldEdit.append(new Notes(notes)));
         return this;
     }
 

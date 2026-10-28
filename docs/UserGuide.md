@@ -54,7 +54,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
   For example, in `add --name NAME`, replace `NAME` with a value such as `John Doe`.
 
 * Items in square brackets are optional.<br>
-  For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.
+  For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.<br>
+  An option whose value is in its own square brackets, such as `[--notes [NOTES]]` in `edit`, can also be given with no value.
 
 * Items followed by `…`​ can appear zero or more times.<br>
   For example, `[KEYWORD]…​` may be omitted, or written as `John` or `John Jane`.
@@ -233,15 +234,18 @@ Format: `list`
 
 Edits the details of an existing patient.
 
-Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES]`
+Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`
 
 * Edits the patient with the given `ID`, which is the patient ID shown in their row, not their position in the list. The patient does not have to be in the list currently shown.
 * `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs.
 * As in `add`, whitespace-delimited words beginning with `--` are reserved for options. Unknown options, misspellings, and `--id` are rejected with the command usage instructions.
 * The ID itself cannot be edited. To correct a wrong ID, delete the patient and add them again.
 * At least one of the optional parameters must be provided.
-* `--name`, `--phone`, `--address`, `--medical-history` and `--notes` replace the existing value. Each may appear only once, and follows the same rules as in [`add`](#adding-a-patient-add).
-* `--notes` can also set notes for a patient who has none. Omitting it keeps the existing notes. A blank value is rejected; notes cannot be cleared through `edit`.
+* `--name`, `--phone`, `--address`, `--medical-history` and `--notes` replace the existing value, and follow the same rules as in [`add`](#adding-a-patient-add). `--medical-history` and `--notes` can also set a value for a patient who has none.
+* `--medical-history` or `--notes` with no value clears that field. For example, `edit S1234567A --notes` removes the patient's notes. In `add`, a blank value is still rejected.
+* `--add-medical-history` and `--add-notes` add text to the end of the field, after `; `. If the field is empty, the text becomes its value. The text to add cannot be blank.
+* A field can be replaced or added to, not both: `--notes` and `--add-notes` together are rejected, and so are `--medical-history` and `--add-medical-history`. Each option may appear only once.
+* Omitting all the options for a field keeps its existing value.
 * The patient's appointments are not changed here. Change them with [`addappt`](#adding-an-appointment-addappt), [`editappt`](#editing-an-appointment-editappt) or [`deleteappt`](#deleting-an-appointment-deleteappt); they keep their details and order otherwise.
 * After a patient is edited, the list shows all patients again. The edited patient is selected in the list, and their details are shown, as `view` does. Renaming a patient moves their row, to keep the list sorted by name.
 
@@ -249,6 +253,8 @@ Examples:
 *  `edit S1234567A --phone 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.
 *  `edit S1234567A --medical-history Type 2 diabetes, hypertension` replaces the medical history of patient `S1234567A`.
 *  `edit S1234567A --notes Enjoys gardening; dislikes loud noises` replaces the notes of patient `S1234567A`.
+*  `edit S1234567A --add-medical-history Asthma` changes Alex Yeoh's medical history in the sample data from `TYPE 2 DIABETES` to `TYPE 2 DIABETES; ASTHMA`.
+*  `edit S1234567A --notes --add-medical-history Asthma` clears the notes of patient `S1234567A`, and adds `ASTHMA` to the end of their medical history.
 
 ### Locating patients by substrings: `find`
 
@@ -334,17 +340,18 @@ Examples:
 
 ### Editing an appointment: `editappt`
 
-Moves one of a patient's appointments to another date or time, or sets its details, or both.
+Moves one of a patient's appointments to another date or time, or changes its details, or both.
 
-Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`
+Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
 * `NUMBER` is the appointment's positive number shown as `#N`, without the `#`. Numbers belong to a patient;
   they are different from the positions down the appointment page. If the patient has no such number, nothing is changed.
 * `--to` moves the appointment to a new date, or date and time, in the same format as in [`addappt`](#adding-an-appointment-addappt). Giving a date alone turns it into an appointment with no time.
-* `--details` sets the appointment's details, such as what to do or bring, replacing any it had. Like notes, details are stored in upper case, and cannot be blank.
-* Give at least one of `--to` and `--details`. The options may appear in any order after the ID and number, each at most once.
-* Moving an appointment keeps its details, unless `--details` is also given.
+* `--details` sets the appointment's details, such as what to do or bring, replacing any it had. Like notes, details are stored in upper case. With no value, `--details` clears the details.
+* `--add-details` adds text to the end of the details, after `; `, or sets the details if the appointment has none. The text to add cannot be blank. `--details` and `--add-details` cannot be given together.
+* Give at least one of `--to`, `--details` and `--add-details`. The options may appear in any order after the ID and number, each at most once.
+* Moving an appointment keeps its details, unless `--details` is also given to replace or clear them, or `--add-details` to add to them.
 * Moving an appointment or changing its details keeps its number and Done/Undone status. Use `unmarkappt` to
   reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
   warning if both visits are undone. An edit that changes only details also warns if the visit clashes.
@@ -354,6 +361,8 @@ Examples:
 * `editappt S1234567A 1 --to 2026-10-06 10:00` moves Alex Yeoh's insulin review (#1) from its Monday 09:30 slot to the next day, 10:00, keeping its number and details. The sample appointments fall in the week you first launched the app in; the dates here are for the week of Monday 5 October 2026.
 * `editappt S2345678B 1 --details Check blood pressure` sets the details of Bernice Yu's appointment (#1) on the Tuesday of the sample week.
 * `editappt S1234567A 2 --to 2026-11-03 08:00 --details Fasting blood test` moves Alex Yeoh's monthly blood test (#2), on the Monday four weeks later, to the following day, 08:00, and replaces its details.
+* `editappt S1234567A 1 --add-details Bring glucometer` changes the details of Alex Yeoh's insulin review (#1) to `INSULIN REVIEW; BRING GLUCOMETER`.
+* `editappt S1234567A 2 --details` clears the details of Alex Yeoh's monthly blood test (#2).
 
 ### Deleting an appointment: `deleteappt`
 
@@ -515,8 +524,8 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **DeleteAppt** | `deleteappt ID NUMBER`<br> e.g., `deleteappt S1234567A 1`
-**Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history MEDICAL_HISTORY] [--notes NOTES]`<br> e.g., `edit S1234567A --notes Walks every morning`
-**EditAppt** | `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details DETAILS]`<br> e.g., `editappt S1234567A 1 --to 2026-10-06 10:00`
+**Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`<br> e.g., `edit S1234567A --notes Walks every morning`, `edit S1234567A --add-medical-history Asthma`
+**EditAppt** | `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`<br> e.g., `editappt S1234567A 1 --to 2026-10-06 10:00`, `editappt S1234567A 1 --add-details Bring glucometer`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one option required)
 **List** | `list`
 **MarkAppt** | `markappt ID NUMBER`<br> e.g., `markappt S1234567A 2`
