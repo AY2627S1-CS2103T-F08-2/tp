@@ -214,7 +214,7 @@ public class LaiNurseParserTest {
         // addappt maps any bad ID to its format error; add surfaces the constraint directly.
         assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT,
                 AddAppointmentCommand.MESSAGE_USAGE), () -> parser.parseCommand(
-                AddAppointmentCommand.COMMAND_WORD + " S1234567A\u200B 2026-10-05"));
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A\u200B --date 2026-10-05"));
         assertThrows(ParseException.class, PatientId.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(
                 AddCommand.COMMAND_WORD + " --id T0123456\u00ADB --name Alex Yu --phone 91234567 --address Blk 2"));
     }
@@ -236,7 +236,7 @@ public class LaiNurseParserTest {
     @Test
     public void parseCommand_zeroWidthSpaceInDate_throwsParseException() {
         assertThrows(ParseException.class, () -> parser.parseCommand(
-                AddAppointmentCommand.COMMAND_WORD + " S1234567A 2026-10-0\u200B5"));
+                AddAppointmentCommand.COMMAND_WORD + " S1234567A --date 2026-10-0\u200B5"));
     }
 
     @Test
