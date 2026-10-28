@@ -3,6 +3,8 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
@@ -26,7 +28,8 @@ public class EditCommandParser implements Parser<EditCommand> {
     public EditCommand parse(String args) throws ParseException {
         requireNonNull(args);
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
-        Prefix[] prefixes = {PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES};
+        Prefix[] prefixes = {PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
+            PREFIX_ADD_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ADD_NOTES};
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage, prefixes);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, prefixes);
 
@@ -38,8 +41,7 @@ public class EditCommandParser implements Parser<EditCommand> {
             throw new ParseException(invalidFormatMessage, pe);
         }
 
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
-                PREFIX_NOTES);
+        argMultimap.verifyNoDuplicatePrefixesFor(prefixes);
 
         EditPatientDescriptor editPatientDescriptor = new EditPatientDescriptor();
 
@@ -52,13 +54,10 @@ public class EditCommandParser implements Parser<EditCommand> {
         if (argMultimap.getValue(PREFIX_ADDRESS).isPresent()) {
             editPatientDescriptor.setAddress(ParserUtil.parseAddress(argMultimap.getValue(PREFIX_ADDRESS).get()));
         }
-        if (argMultimap.getValue(PREFIX_MEDICAL_HISTORY).isPresent()) {
-            editPatientDescriptor.setMedicalHistory(
-                    ParserUtil.parseMedicalHistory(argMultimap.getValue(PREFIX_MEDICAL_HISTORY).get()));
-        }
-        if (argMultimap.getValue(PREFIX_NOTES).isPresent()) {
-            editPatientDescriptor.setNotes(ParserUtil.parseNotes(argMultimap.getValue(PREFIX_NOTES).get()));
-        }
+        ParserUtil.parseOptionalFieldEdit(argMultimap, PREFIX_MEDICAL_HISTORY, PREFIX_ADD_MEDICAL_HISTORY,
+                ParserUtil::parseMedicalHistory).ifPresent(editPatientDescriptor::setMedicalHistory);
+        ParserUtil.parseOptionalFieldEdit(argMultimap, PREFIX_NOTES, PREFIX_ADD_NOTES, ParserUtil::parseNotes)
+                .ifPresent(editPatientDescriptor::setNotes);
 
         if (!editPatientDescriptor.isAnyFieldEdited()) {
             throw new ParseException(EditCommand.MESSAGE_NOT_EDITED);

@@ -24,6 +24,8 @@ public class Messages {
     public static final String MESSAGE_DUPLICATE_FIELDS =
             "Multiple values specified for the following single-valued field(s): ";
     public static final String MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND = "Patient %1$s has no appointment #%2$d.";
+    public static final String MESSAGE_CONFLICTING_FIELD_EDITS = "%1$s and %2$s cannot be given together. "
+            + "%1$s replaces the value, or clears it if given no value, and %2$s adds to the end of it.";
 
     /**
      * Returns an error message indicating the duplicate prefixes.

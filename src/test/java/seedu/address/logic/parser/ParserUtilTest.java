@@ -1,15 +1,21 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
+import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
@@ -263,5 +269,47 @@ public class ParserUtilTest {
     public void parseDate_validValueWithWhitespace_returnsTrimmedDate() throws Exception {
         String dateWithWhitespace = WHITESPACE + VALID_DATE_WITHOUT_TIME + WHITESPACE;
         assertEquals(VALID_DATE_OBJECT, ParserUtil.parseDate(dateWithWhitespace));
+    }
+
+    @Test
+    public void parseOptionalFieldEdit_neitherPrefix_returnsEmpty() throws Exception {
+        assertEquals(Optional.empty(), parseNotesEdit(" --phone 91234567"));
+    }
+
+    @Test
+    public void parseOptionalFieldEdit_replacePrefix_replacesOrClears() throws Exception {
+        assertEquals(Optional.of(OptionalFieldEdit.replace(new Notes("Enjoys gardening"))),
+                parseNotesEdit(" --notes Enjoys gardening"));
+        assertEquals(Optional.of(OptionalFieldEdit.clear()), parseNotesEdit(" --notes "));
+        assertEquals(Optional.of(OptionalFieldEdit.clear()), parseNotesEdit(" --notes " + WHITESPACE));
+    }
+
+    @Test
+    public void parseOptionalFieldEdit_appendPrefix_appends() throws Exception {
+        assertEquals(Optional.of(OptionalFieldEdit.append(new Notes("Enjoys gardening"))),
+                parseNotesEdit(" --add-notes Enjoys gardening"));
+    }
+
+    @Test
+    public void parseOptionalFieldEdit_blankAppend_throwsParseException() {
+        assertThrows(ParseException.class, Notes.MESSAGE_CONSTRAINTS, () -> parseNotesEdit(" --add-notes "));
+        assertThrows(ParseException.class, Notes.MESSAGE_CONSTRAINTS, () -> parseNotesEdit(" --add-notes "
+                + WHITESPACE));
+    }
+
+    @Test
+    public void parseOptionalFieldEdit_bothPrefixes_throwsParseException() {
+        String expectedMessage = String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--notes", "--add-notes");
+        assertThrows(ParseException.class, expectedMessage, () -> parseNotesEdit(" --notes A --add-notes B"));
+        assertThrows(ParseException.class, expectedMessage, () -> parseNotesEdit(" --add-notes B --notes "));
+    }
+
+    /**
+     * Returns the edit of the notes that {@code args} gives with {@code --notes} or {@code --add-notes}.
+     */
+    private static Optional<OptionalFieldEdit<Notes>> parseNotesEdit(String args) throws ParseException {
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NOTES, PREFIX_ADD_NOTES,
+                PREFIX_PHONE);
+        return ParserUtil.parseOptionalFieldEdit(argMultimap, PREFIX_NOTES, PREFIX_ADD_NOTES, ParserUtil::parseNotes);
     }
 }

@@ -4,12 +4,15 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.StringUtil;
+import seedu.address.logic.Messages;
+import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
@@ -28,6 +31,45 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     private static final Logger logger = LogsCenter.getLogger(ParserUtil.class);
+
+    /**
+     * Parses the value of an option into a field, such as {@link #parseNotes(String)}.
+     *
+     * @param <T> The type of the field.
+     */
+    @FunctionalInterface
+    public interface FieldParser<T> {
+        T parse(String value) throws ParseException;
+    }
+
+    /**
+     * Returns the edit of an optional field that {@code argMultimap} gives with {@code replacePrefix} or
+     * {@code appendPrefix}, or {@code Optional.empty()} if it gives neither.
+     * {@code replacePrefix} with a value replaces the field, and with no value clears it.
+     * {@code appendPrefix} adds its value, which must not be blank, to the end of the field.
+     *
+     * @param parseValue Parses a value given to either prefix, and rejects a blank one.
+     * @throws ParseException if both prefixes are given, or a value is invalid.
+     */
+    public static <T> Optional<OptionalFieldEdit<T>> parseOptionalFieldEdit(ArgumentMultimap argMultimap,
+            Prefix replacePrefix, Prefix appendPrefix, FieldParser<T> parseValue) throws ParseException {
+        requireNonNull(argMultimap);
+        Optional<String> replaceValue = argMultimap.getValue(replacePrefix);
+        Optional<String> appendValue = argMultimap.getValue(appendPrefix);
+        if (replaceValue.isPresent() && appendValue.isPresent()) {
+            throw new ParseException(String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS,
+                    replacePrefix.toString().trim(), appendPrefix.toString().trim()));
+        }
+        if (replaceValue.isPresent()) {
+            return Optional.of(replaceValue.get().isBlank()
+                    ? OptionalFieldEdit.clear()
+                    : OptionalFieldEdit.replace(parseValue.parse(replaceValue.get())));
+        }
+        if (appendValue.isPresent()) {
+            return Optional.of(OptionalFieldEdit.append(parseValue.parse(appendValue.get())));
+        }
+        return Optional.empty();
+    }
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it.

@@ -99,10 +99,26 @@ public class PatientBuilder {
     }
 
     /**
+     * Removes the {@code MedicalHistory} of the {@code Patient} that we are building.
+     */
+    public PatientBuilder withoutMedicalHistory() {
+        this.medicalHistory = Optional.empty();
+        return this;
+    }
+
+    /**
      * Sets the {@code Notes} of the {@code Patient} that we are building.
      */
     public PatientBuilder withNotes(String notes) {
         this.notes = Optional.of(new Notes(notes));
+        return this;
+    }
+
+    /**
+     * Removes the {@code Notes} of the {@code Patient} that we are building.
+     */
+    public PatientBuilder withoutNotes() {
+        this.notes = Optional.empty();
         return this;
     }
 

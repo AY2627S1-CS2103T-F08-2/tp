@@ -32,7 +32,7 @@ public class HelpCommandTest {
     @Test
     public void execute_notesCommandsHelp_includesNotesOption() {
         for (String commandWord : List.of("add", "edit", "find")) {
-            assertTrue(new HelpCommand(commandWord).execute(model).getFeedbackToUser().contains("--notes NOTES"));
+            assertTrue(new HelpCommand(commandWord).execute(model).getFeedbackToUser().contains("--notes "));
         }
     }
 

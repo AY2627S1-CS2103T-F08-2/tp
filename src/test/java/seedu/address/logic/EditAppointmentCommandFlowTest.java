@@ -82,6 +82,32 @@ public class EditAppointmentCommandFlowTest {
     }
 
     @Test
+    public void execute_clearDetails_persists() throws Exception {
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments("2026-10-05 09:30")
+                .withAppointment("2026-11-02", "Monthly blood test").build();
+        assertEditPersisted("editappt S1234567A 1 --details", expected, new Appointment("2026-10-05 09:30"),
+                "2026-10-05 09:30");
+    }
+
+    @Test
+    public void execute_addToDetails_persists() throws Exception {
+        Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
+                .withAppointment("2026-10-05 09:30", "Insulin review")
+                .withAppointment("2026-11-03", "Monthly blood test; Fasting").build();
+        assertEditPersisted("editappt S1234567A 2 --to 2026-11-03 --add-details fasting", expected,
+                appointment("2026-11-03", "Monthly blood test; Fasting"),
+                "2026-11-03; Details: MONTHLY BLOOD TEST; FASTING (moved from 2026-11-02)");
+    }
+
+    @Test
+    public void execute_addToEmptyDetails_setsThem() throws Exception {
+        Patient expected = new PatientBuilder(patient(BERNICE_ID)).withAppointments()
+                .withAppointment("2026-10-06", "Check blood pressure").build();
+        assertEditPersisted("editappt S2345678B 1 --add-details Check blood pressure", expected,
+                appointment("2026-10-06", "Check blood pressure"), "2026-10-06; Details: CHECK BLOOD PRESSURE");
+    }
+
+    @Test
     public void execute_moveAndReplaceDetails_persists() throws Exception {
         Patient expected = new PatientBuilder(patient(ALEX_ID)).withAppointments()
                 .withAppointment("2026-10-05 09:30", "Insulin review")
@@ -132,8 +158,11 @@ public class EditAppointmentCommandFlowTest {
                 INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --to 2026-02-30",
                 ParseException.class, Appointment.MESSAGE_CONSTRAINTS);
-        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --details",
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --add-details",
                 ParseException.class, AppointmentDetails.MESSAGE_CONSTRAINTS);
+        assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --details --add-details Fasting",
+                ParseException.class, String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--details",
+                        "--add-details"));
         for (String number : List.of("0", "-1", "+1", "1.5", "2147483648")) {
             assertRejectedCommandLeavesDataUnchanged("editappt S1234567A " + number + " --details Review",
                     ParseException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS);

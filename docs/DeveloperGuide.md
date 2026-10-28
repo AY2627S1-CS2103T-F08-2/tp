@@ -391,19 +391,35 @@ therefore restore name order. The appointment list is independent of this sortin
 
 `EditCommandParser` reads the ID from the preamble and stores each change in an `EditPatientDescriptor`. A field that
 is not given stays `null` in the descriptor, so `EditCommand#createEditedPatient()` keeps the patient's value for it.
-Each value is checked by the same `ParserUtil` method as in `add`, so a blank value is rejected for every field,
-including the optional medical history and notes. `EditCommand` finds the patient among all patients, not only those
-in the displayed list, then replaces them through `Model#setPatient()`. A new `Patient` is built because `Patient` is
-immutable, so a command that fails leaves the original patient unchanged.
+Each value is checked by the same `ParserUtil` method as in `add`, so a blank name, phone or address is rejected.
+`EditCommand` finds the patient among all patients, not only those in the displayed list, then replaces them through
+`Model#setPatient()`. A new `Patient` is built because `Patient` is immutable, so a command that fails leaves the
+original patient unchanged.
+
+The optional medical history and notes, and an appointment's details in `editappt`, are stored as an
+`OptionalFieldEdit`, which replaces the value, clears it, or adds text to the end of it. Each field has two options,
+such as `--notes` and `--add-notes`. `ParserUtil#parseOptionalFieldEdit` turns them into an edit:
+
+* the replace option with a value replaces the field, and with no value clears it.
+* the add option appends its value, which must not be blank, after `OptionalFieldEdit.APPEND_SEPARATOR` (`; `).
+* both options together are rejected with `Messages.MESSAGE_CONFLICTING_FIELD_EDITS`.
+
+`OptionalFieldEdit#applyTo` takes the field's current value and the field's constructor, such as `Notes::new`, so the
+joined text is checked and normalized like any other value. Adding to an empty field sets it.
 
 **Design considerations**
 
 * **Identifying the patient: by ID (chosen) or by list number.** An ID stays the same when the list is filtered or
   sorted, so the nurse cannot edit the wrong patient by using a stale list number, and can edit a patient who is not
   shown. The cost is typing a longer value, which the command box's ID completion reduces.
-* **A blank optional value: rejected (chosen) or read as clearing the field.** Rejecting it keeps `edit` consistent
-  with `add`, and a stray option cannot remove a medical history or notes by accident. The cost is that `edit` cannot
-  clear these fields.
+* **Clearing an optional field: an empty value (chosen) or a `--clear-…` option.** An empty `--notes` clears the notes,
+  as an empty `t/` clears the tags in AB3, so there is no new option to learn. The cost is that a stray `--notes`
+  clears the notes, but the result shows the patient without them, and `add` still rejects a blank value.
+* **Adding to an optional field: `--add-…` options (chosen) or a marker in the value, such as `--notes +TEXT`.** A
+  separate option leaves every value valid, including one that starts with `+`, and Tab completion can offer it. The
+  cost is one more option for each field.
+* **Joining added text: `; ` (chosen), a space or `, `.** Values are one line, so a line break is not possible. `; `
+  reads as a list of separate entries, which suits a medical history, and commas often appear inside one entry.
 
 ### Storing multiple appointments
 
@@ -470,13 +486,16 @@ only when it has some. The detail panel shows the same status under the appointm
 `add` and `edit` accept the optional, single-valued `--notes` option defined by `CliSyntax.PREFIX_NOTES`.
 `ParserUtil.parseNotes` validates it using `Notes.isValidNotes` and throws a `ParseException` with
 `Notes.MESSAGE_CONSTRAINTS` for blank text. It logs parsing success or rejection at `FINE` level without logging the text.
-`add` starts a patient without notes when the option is omitted. `EditPatientDescriptor` stores a supplied notes value;
-`edit` replaces the patient's notes when supplied and preserves them otherwise. An empty option is rejected, so it does
-not clear notes. Notes are included in patient feedback through `Messages.format`. `find --notes` uses the substring
+`add` starts a patient without notes when the option is omitted, and rejects an empty option. `EditPatientDescriptor`
+stores an `OptionalFieldEdit` of the notes: `edit` replaces the patient's notes, clears them for an empty `--notes`,
+or adds to them for `--add-notes`, and preserves them otherwise. Notes are included in patient feedback through
+`Messages.format`. `find --notes` uses the substring
 search described above, and `view ID` shows the notes using the existing detail panel and its live updates.
 
-`editappt` sets an appointment's details with the `--details` option defined by `CliSyntax.PREFIX_DETAILS`.
-`ParserUtil.parseAppointmentDetails` rejects blank details, as `parseNotes` does for notes, and logs without the text.
+`editappt` changes an appointment's details with the `--details` and `--add-details` options defined by
+`CliSyntax.PREFIX_DETAILS` and `CliSyntax.PREFIX_ADD_DETAILS`, through `ParserUtil#parseOptionalFieldEdit`, as `edit`
+does for notes. An empty `--details` clears the details. `ParserUtil.parseAppointmentDetails` rejects blank details
+given to `addappt` or `--add-details`, as `parseNotes` does for notes, and logs without the text.
 `editappt` and `deleteappt` touch only the appointment they target; every other appointment keeps its details.
 
 `editappt ID NUMBER` selects a visit by patient-local number. Both the edit and delete parsers require the ID and
@@ -854,6 +873,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | record and view a patient's medical profile (conditions, allergies, medications, next-of-kin)        | I know their health details and whom to call in an emergency |
 | `* * *`  | home-based nurse | quickly check the syntax and usage examples of a specific command via the CLI                       | I can recall command arguments without breaking my typing workflow |
 | `* *`    | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
+| `* *`    | home-based nurse | add to a patient's medical history, notes or appointment details without retyping them              | I can record a new condition or reminder quickly             |
+| `* *`    | home-based nurse | clear a patient's medical history, notes or appointment details                                      | out-of-date information does not mislead me                  |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
 | `* *`    | home-based nurse | view one patient's appointments on a date or in a range                                              | I can prepare for that patient's visits                      |
 | `*`      | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
@@ -1015,6 +1036,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
+* 2h. Nurse asks to both replace and add to the medical history, or the notes.
+
+    * 2h1. LaiNurse shows an error message saying that the two options cannot be given together.
+
+      Use case resumes at step 2.
+
 **Use case: UC05 - View appointments**
 
 **MSS**
@@ -1155,7 +1182,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1.  Nurse requests to edit a patient's appointment by the patient's ID and the appointment's number, with a
-    new date and time, new details, or both
+    new date and time, a change to the details (replace, clear or add to them), or both
 2.  LaiNurse updates the appointment
 3.  LaiNurse shows the edited appointment
 
@@ -1190,6 +1217,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * 1e. A date, time or the details are in an invalid format.
 
     * 1e1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
+* 1f. Nurse asks to both replace and add to the details.
+
+    * 1f1. LaiNurse shows an error message saying that the two options cannot be given together.
 
       Use case resumes at step 1.
 
@@ -1482,11 +1515,25 @@ testers are expected to do more *exploratory* testing.
     1. Test case: Close and restart LaiNurse, then enter `view NOTES1` and `find --notes "walks every morning"`.<br>
        Expected: The notes remain saved, and the search finds Mary Tan.
 
+1. Adding to and clearing notes
+
+    1. Test case: `edit NOTES1 --add-notes Prefers morning visits`<br>
+       Expected: The notes become `DISLIKES LOUD NOISES; WALKS EVERY MORNING; PREFERS MORNING VISITS`.
+
+    1. Test case: `edit NOTES1 --notes --phone 11112222`<br>
+       Expected: The phone changes, and the notes are cleared. The panel shows that the patient has no notes.
+
+    1. Test case: `edit NOTES1 --add-notes Enjoys gardening`<br>
+       Expected: The patient had no notes, so the notes become `ENJOYS GARDENING`.
+
 1. Rejecting invalid notes
 
-    1. Test cases: `edit NOTES1 --notes`, `edit NOTES1 --notes --phone 11112222`, and
+    1. Test cases: `edit NOTES1 --add-notes`, `edit NOTES1 --add-notes --phone 11112222`, and
        `add --id NOTES2 --name Jane Tan --phone 91234567 --address Clementi --notes`<br>
        Expected: A blank-notes error is shown. No patient, displayed list or saved record changes.
+
+    1. Test case: `edit NOTES1 --notes Walks daily --add-notes Swims`<br>
+       Expected: An error says that `--notes` and `--add-notes` cannot be given together, and nothing changes.
 
     1. Test cases: `edit NOTES1 --notes First --notes Second`, and
        `add --id NOTES2 --name Jane Tan --phone 91234567 --address Clementi --notes First --notes Second`<br>
@@ -1891,6 +1938,20 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `edit --phone 91234567`, with no ID<br>
        Expected: No patient is changed. The status message shows the command format.
 
+1. Adding to and clearing the medical history
+
+    1. Prerequisites: Start with the sample data. Alex Yeoh's medical history is `TYPE 2 DIABETES`.
+
+    1. Test case: `edit S1234567A --add-medical-history Asthma`<br>
+       Expected: The medical history becomes `TYPE 2 DIABETES; ASTHMA`. The other details are unchanged.
+
+    1. Test case: `edit S1234567A --medical-history`<br>
+       Expected: The medical history is cleared. The panel shows that the patient has no medical history.
+
+    1. Test case: `edit S1234567A --medical-history Asthma --add-medical-history Eczema`<br>
+       Expected: No patient is changed. The status message says that `--medical-history` and
+       `--add-medical-history` cannot be given together.
+
 1. Appointments alongside edits
 
     1. Prerequisites: Start with the sample data. Alex Yeoh has the appointments `MON 09:30`, with the details
@@ -1915,6 +1976,16 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `editappt S1234567A 2 --details Fasting blood test`<br>
        Expected: The blood-test appointment keeps its date, and its details become `FASTING BLOOD TEST`.
 
+    1. Test case: `editappt S1234567A 2 --add-details Bring glucometer`<br>
+       Expected: The details of the blood-test appointment become `FASTING BLOOD TEST; BRING GLUCOMETER`.
+
+    1. Test case: `editappt S1234567A 2 --details`<br>
+       Expected: The blood-test appointment keeps its date, and has no details.
+
+    1. Test case: `editappt S1234567A 2 --details Fasting --add-details Bring glucometer`<br>
+       Expected: No appointment is changed. The status message says that `--details` and `--add-details` cannot
+       be given together.
+
 1. Resolving lookup errors and moving onto an occupied time
 
     1. Prerequisites: Start with the sample data.
@@ -1927,7 +1998,8 @@ testers are expected to do more *exploratory* testing.
        The result warns about the other appointment number; both dates/times appear in red.
 
     1. Test case: `editappt S1234567A 1`, with nothing to change<br>
-       Expected: No appointment is changed. The status message says that `--to` or `--details` must be given.
+       Expected: No appointment is changed. The status message says that at least one of `--to`, `--details` and
+       `--add-details` must be given.
 
 ### Adding an appointment
 
