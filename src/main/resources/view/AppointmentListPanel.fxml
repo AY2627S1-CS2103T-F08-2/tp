@@ -10,7 +10,7 @@
 <?import javafx.scene.shape.SVGPath?>
 
 <VBox styleClass="list-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <HBox styleClass="list-header" alignment="CENTER_LEFT" spacing="6">
+  <HBox fx:id="header" styleClass="list-header" alignment="CENTER_LEFT" spacing="6">
     <padding>
       <Insets top="6" right="12" bottom="6" left="8" />
     </padding>
@@ -38,7 +38,7 @@
     <!-- In a narrow list, this note and the count give up their room first, so that the dates stay whole. -->
     <Label fx:id="weekRelative" styleClass="list-header-note" minWidth="0" />
     <Region HBox.hgrow="ALWAYS" />
-    <!-- The count has a fixed width in the style sheet, so that it stays in one place from week to week. -->
+    <!-- The count ends where the day headings' counts end, which AppointmentListPanel keeps up to date. -->
     <Label fx:id="weekCount" styleClass="list-header-count" />
   </HBox>
   <ListView fx:id="appointmentListView" VBox.vgrow="ALWAYS" />

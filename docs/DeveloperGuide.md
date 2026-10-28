@@ -120,7 +120,11 @@ row is wider than the panel.
 patients in it, since loading the row's FXML for every patient that scrolls into view makes scrolling stutter.
 Above the rows, a header says whether the list is filtered,
 and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
-as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. When a
+as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. Both
+lists end their header where their rows' last column ends, with `ListHeaders#alignEndWithRows`: the header's end
+padding is the list's inset, plus the width of its vertical scroll bar while it shows, plus a row's end padding, which
+is 12 pixels in both lists. So the count at the end of the header lines up with the rows' next appointments, or the
+day headings' counts, and keeps its end in place as its text changes. When a
 `CommandResult` names a patient to view, as the result of `view` does, `MainWindow` tells that `PatientDetailPanel` to
 show the patient. After every command, `MainWindow` highlights the shown patient's row in `PatientListPanel`, or no row if
 that patient is not in the displayed list. `PatientDetailPanel` finds the patient by ID in the list of all patients from

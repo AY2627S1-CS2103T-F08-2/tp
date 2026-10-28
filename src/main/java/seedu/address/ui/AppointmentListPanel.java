@@ -41,6 +41,11 @@ public class AppointmentListPanel extends UiPart<Region> {
 
     private static final String FXML = "AppointmentListPanel.fxml";
     private static final String THIS_WEEK_STYLE_CLASS = "list-header-note-this";
+    /**
+     * The space after the last column of a day heading and an appointment row, as set in the style sheet. The list
+     * header lines up with it.
+     */
+    private static final double ROW_END_PADDING = 12;
     private static final String DAY_CELL_STYLE_CLASS = "appointment-day-cell";
     private static final String ENTRY_CELL_STYLE_CLASS = "appointment-entry-cell";
 
@@ -57,6 +62,8 @@ public class AppointmentListPanel extends UiPart<Region> {
     /** When the page was built, which decides the appointments that have passed. */
     private LocalDateTime pageTime = LocalDateTime.now();
 
+    @FXML
+    private HBox header;
     @FXML
     private Button previousWeekButton;
     @FXML
@@ -88,6 +95,7 @@ public class AppointmentListPanel extends UiPart<Region> {
         Label placeholder = new Label("No appointments in this range.");
         placeholder.getStyleClass().add("list-placeholder");
         appointmentListView.setPlaceholder(placeholder);
+        ListHeaders.alignEndWithRows(header, appointmentListView, ROW_END_PADDING);
         appointmentListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
         appointmentListView.setOnMouseClicked(event -> chooseSelected());
         allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> refresh());

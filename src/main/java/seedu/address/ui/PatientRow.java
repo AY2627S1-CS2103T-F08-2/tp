@@ -19,6 +19,9 @@ import seedu.address.model.patient.Patient;
  */
 public class PatientRow extends UiPart<Region> {
 
+    /** The space after the last column of the row, as set in its FXML. The list header lines up with it. */
+    static final double END_PADDING = 12;
+
     private static final String FXML = "PatientRow.fxml";
     private static final String TODAY_STYLE_CLASS = "patient-row-appointment-today";
 

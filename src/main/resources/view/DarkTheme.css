@@ -611,13 +611,16 @@
  * starts in the same place whatever its length, so it does not move as the week or the filter changes. In a list
  * too narrow for the whole header, the slot may shrink, so that the header still fits.
  */
+/*
+ * The count at the end of a list header. ListHeaders ends the header where the rows' last column ends, so the count
+ * lines up with the rows' counts and dates, and keeps its end in place as its text changes.
+ */
 .list-header .list-header-count {
     -fx-font-family: "Segoe UI";
     -fx-font-size: 12px;
     -fx-text-fill: #a3adb2;
     -fx-min-width: 0;
-    -fx-pref-width: 100px;
-    -fx-alignment: center-left;
+    -fx-alignment: center-right;
 }
 
 /* A day's heading is darker than the appointments under it, and is never selected. */
@@ -627,12 +630,13 @@
     -fx-background-insets: 0, 0 0 1 0;
 }
 
+/* The rows end 12 pixels before the end of the list, as the patient list's do, so the headers line up the same. */
 .appointment-day-box {
-    -fx-padding: 10 22 7 14;
+    -fx-padding: 10 12 7 14;
 }
 
 .appointment-entry-box {
-    -fx-padding: 9 22 9 14;
+    -fx-padding: 9 12 9 14;
 }
 
 .list-cell .appointment-day {

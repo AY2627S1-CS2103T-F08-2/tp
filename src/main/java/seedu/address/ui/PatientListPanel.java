@@ -17,6 +17,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
@@ -41,6 +42,8 @@ public class PatientListPanel extends UiPart<Region> {
     private final ObservableList<Patient> allPatients;
     private final Label placeholder = new Label();
 
+    @FXML
+    private HBox header;
     @FXML
     private Label listTitle;
     @FXML
@@ -67,6 +70,7 @@ public class PatientListPanel extends UiPart<Region> {
         patientListView.setCellFactory(listView -> new PatientListViewCell());
         placeholder.getStyleClass().add("list-placeholder");
         patientListView.setPlaceholder(placeholder);
+        ListHeaders.alignEndWithRows(header, patientListView, PatientRow.END_PADDING);
         ListChangeListener<Patient> headerUpdater = change -> updateHeader();
         shownPatients.addListener(headerUpdater);
         allPatients.addListener(headerUpdater);

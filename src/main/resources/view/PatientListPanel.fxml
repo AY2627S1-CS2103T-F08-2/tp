@@ -9,7 +9,7 @@
 
 <VBox styleClass="list-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
   <!-- The same header as the appointment list's: what the list shows, and a count. -->
-  <HBox styleClass="list-header" alignment="CENTER_LEFT" spacing="6">
+  <HBox fx:id="header" styleClass="list-header" alignment="CENTER_LEFT" spacing="6">
     <padding>
       <Insets top="6" right="12" bottom="6" left="8" />
     </padding>
@@ -22,7 +22,7 @@
       </minWidth>
     </Label>
     <Region HBox.hgrow="ALWAYS" />
-    <!-- The count has a fixed width in the style sheet, so that it stays in one place as the list changes. -->
+    <!-- The count ends where the rows' next appointments end, which PatientListPanel keeps up to date. -->
     <Label fx:id="listCount" styleClass="list-header-count" />
   </HBox>
   <ListView fx:id="patientListView" VBox.vgrow="ALWAYS" />
