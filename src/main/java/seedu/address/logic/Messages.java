@@ -71,7 +71,9 @@ public class Messages {
     }
 
     /**
-     * Describes clashes after a successful appointment change, including other visits of the same patient.
+     * Describes clashes after a successful appointment change. Another patient's appointment is named with the
+     * patient, and another visit of the same patient as "this patient's appointment", since the result already names
+     * the patient.
      */
     public static String formatClashWarning(Collection<PatientAppointment> appointments, PatientAppointment target) {
         List<PatientAppointment> clashes = AppointmentClashes.find(appointments, target);
@@ -79,8 +81,10 @@ public class Messages {
             return "";
         }
         return "\nWarning: it clashes with " + clashes.stream()
-                .map(entry -> entry.getPatient().getName() + " (" + entry.getPatient().getId()
-                        + "), appointment #" + entry.getAppointment().getNumber())
+                .map(entry -> entry.getPatient().getId().equals(target.getPatient().getId())
+                        ? "this patient's appointment #" + entry.getAppointment().getNumber()
+                        : entry.getPatient().getName() + " (" + entry.getPatient().getId()
+                                + "), appointment #" + entry.getAppointment().getNumber())
                 .collect(Collectors.joining("; ")) + ".";
     }
 

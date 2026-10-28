@@ -1264,7 +1264,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. The edited appointment clashes with another visit, including to the same patient.
 
-    * 2a1. LaiNurse keeps the edit and appends a warning naming the other patients and appointment numbers.
+    * 2a1. LaiNurse keeps the edit and appends a warning naming the other appointments: another patient's with
+      the patient, and the same patient's as "this patient's appointment".
 
       Use case resumes at step 3.
 
@@ -1302,7 +1303,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. Another undone appointment has the given date and time, including one of this patient's visits.
 
-    * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other patients and visit numbers.
+    * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other appointments: another
+      patient's with the patient, and the same patient's as "this patient's appointment".
 
       Use case resumes at step 3.
 
@@ -2124,8 +2126,9 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data.
 
     1. Test case: `addappt S1234567A --date MON 09:30`<br>
-       Expected: Appointment #3 is added at `MON 09:30`. Both visits remain, and the result warns about appointment
-       #1 of Alex Yeoh. Their times appear in red, each with a boxed `!` before it.
+       Expected: Appointment #2 is added at `MON 09:30`, after Alex Yeoh's visit at that time, and the blood test
+       becomes #3. Both visits remain, and the result warns about `this patient's appointment #1`. Their times appear
+       in red, each with a boxed `!` before it.
 
     1. Test case: `addappt S0000000Z --date 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `No patient has the ID S0000000Z.`
@@ -2188,7 +2191,7 @@ testers are expected to do more *exploratory* testing.
    Both times are red, each with a boxed `!`. A `viewappt --id S2345678B` filter still shows the warning color.
 1. Run `addappt S1234567A --date MON 09:30 --details Second visit`.
    Expected: Alex's new visit is #2, after his visit at the same time, and his blood test becomes #3. The warning
-   names Alex's #1 and Bernice's #1. Both Alex visits survive.
+   names `this patient's appointment #1` and Bernice's #1. Both Alex visits survive.
 1. Run `editappt S1234567A --appt MON 09:30 --details Review`, then the equivalent `deleteappt` selector.
    Expected: Each rejects the unsupported option, shows its number-based command format and saves no changes.
 1. Run `editappt S1234567A 2 --to TUE 10:00`, then `view S1234567A`.

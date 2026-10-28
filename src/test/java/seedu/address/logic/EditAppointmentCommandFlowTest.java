@@ -142,7 +142,7 @@ public class EditAppointmentCommandFlowTest {
         CommandResult result = logic.execute("editappt S1234567A 2 --to 2026-10-05 09:30");
         assertEquals("Edited appointment 2 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: MONTHLY BLOOD TEST"
                 + " (moved from 2026-11-02)\n"
-                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #1.", result.getFeedbackToUser());
+                + "Warning: it clashes with this patient's appointment #1.", result.getFeedbackToUser());
         assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule().asList().stream()
                 .map(Appointment::getNumber).toList());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
@@ -265,7 +265,7 @@ public class EditAppointmentCommandFlowTest {
         logic.execute("addappt S2345678B --date 2026-10-05 09:30");
         CommandResult result = logic.execute("editappt S1234567A 1 --details Review");
         assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: REVIEW\n"
-                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #2; "
+                + "Warning: it clashes with this patient's appointment #2; "
                 + "BERNICE YU (S2345678B), appointment #1.", result.getFeedbackToUser());
     }
 

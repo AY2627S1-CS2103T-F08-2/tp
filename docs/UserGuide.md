@@ -333,7 +333,9 @@ Format: `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`
 * The new appointment starts **Undone**.
 * A patient's appointments are numbered from 1 in date order: by date, then by time, with an appointment that has no time first on its date. A new appointment at the same date and time as another comes after it. Adding, moving or deleting an appointment renumbers the patient's appointments after it, so check the number shown before you use it in a command.
 * Clashes are allowed, including several undone visits to the same patient at exactly the same time. The result warns
-  about the other patients and their appointment numbers. Visits are never rejected just because they clash.
+  about each appointment that it clashes with: another patient's by their name, ID and appointment number, such as
+  `BERNICE YU (S2345678B), appointment #1`, and the same patient's other visit as `this patient's appointment #1`.
+  Visits are never rejected just because they clash.
 * LaiNurse switches to the **Appointments** view and selects the new appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
@@ -398,7 +400,8 @@ Format: `markappt ID NUMBER`
 * Marking is allowed for past, current and future appointments. It changes only completion: the appointment
   keeps its number, date, time and details, and every other appointment stays as it was.
 * Done appointments remain visible, with a pin before their time, but are skipped in the patient's next-appointment
-  summary and do not cause clashes. Date-based ordering, counts and automatic list selection stay the same.
+  summary and do not cause clashes. Marking one of two clashing visits removes the clash from both: the other visit's
+  time is no longer red, and loses its `!`. Date-based ordering, counts and automatic list selection stay the same.
 * A missing patient, missing appointment or already done appointment produces an error and changes nothing.
 * LaiNurse shows **Appointments** and selects the marked visit. If the current page contains it, that page
   stays; otherwise, the appointment's week is shown. The status is saved automatically.

@@ -102,7 +102,7 @@ public class AddAppointmentCommandFlowTest {
         CommandResult result = logic.execute("addappt S1234567A --date 2026-10-05 09:30");
         // the new visit comes after the one already at that time, and the blood test moves to #3
         assertEquals("Added appointment 2 of ALEX YEOH (S1234567A): 2026-10-05 09:30\n"
-                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #1.", result.getFeedbackToUser());
+                + "Warning: it clashes with this patient's appointment #1.", result.getFeedbackToUser());
         assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule()
                 .findAtDateTime(new Appointment("2026-10-05 09:30")).stream().map(Appointment::getNumber).toList());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());

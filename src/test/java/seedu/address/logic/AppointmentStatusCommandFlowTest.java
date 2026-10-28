@@ -108,7 +108,9 @@ public class AppointmentStatusCommandFlowTest {
         assertFalse(marked.getFeedbackToUser().contains("Warning:"));
 
         CommandResult unmarked = logic.execute("unmarkappt S1234567A 2");
-        assertTrue(unmarked.getFeedbackToUser().contains("ALEX YEOH (S1234567A), appointment #1"));
+        // Alex's own other visit is not named again, and Bernice's is
+        assertTrue(unmarked.getFeedbackToUser().contains("this patient's appointment #1"));
+        assertFalse(unmarked.getFeedbackToUser().contains("ALEX YEOH (S1234567A), appointment"));
         assertTrue(unmarked.getFeedbackToUser().contains("BERNICE YU (S2345678B), appointment #1"));
         assertEquals(List.of(1, 2, 3), alex().getSchedule().asList().stream().map(Appointment::getNumber).toList());
         assertEquals("SECOND VISIT", appointment(2).getDetails().orElseThrow().value);
