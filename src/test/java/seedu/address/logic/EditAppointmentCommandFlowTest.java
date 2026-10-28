@@ -139,13 +139,21 @@ public class EditAppointmentCommandFlowTest {
 
     @Test
     public void execute_moveOntoOtherAppointment_warnsAndPersistsBoth() throws Exception {
-        CommandResult result = logic.execute("editappt S1234567A 1 --to 2026-11-02");
-        assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-11-02; Details: INSULIN REVIEW"
-                + " (moved from 2026-10-05 09:30)\n"
-                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #2.", result.getFeedbackToUser());
+        CommandResult result = logic.execute("editappt S1234567A 2 --to 2026-10-05 09:30");
+        assertEquals("Edited appointment 2 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: MONTHLY BLOOD TEST"
+                + " (moved from 2026-11-02)\n"
+                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #1.", result.getFeedbackToUser());
         assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule().asList().stream()
                 .map(Appointment::getNumber).toList());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
+    @Test
+    public void execute_moveOntoDateOnlyAppointment_noWarning() throws Exception {
+        // appointments with no time never clash
+        CommandResult result = logic.execute("editappt S1234567A 1 --to 2026-11-02");
+        assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-11-02; Details: INSULIN REVIEW"
+                + " (moved from 2026-10-05 09:30)", result.getFeedbackToUser());
     }
 
     @Test

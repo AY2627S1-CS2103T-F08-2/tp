@@ -483,10 +483,10 @@ four digits and no sign. A data file without the `patients` key, such as one fro
 `persons`, fails to load, and LaiNurse starts with an empty list. A data file from an earlier version with a
 signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load.
 
-**Clashes.** `AppointmentClashes.find` compares exact date and optional time over the unfiltered appointment list,
-excluding the target's patient ID and number and every done visit. A done target has no clashes. Two date-only
-undone visits on one day clash; a date-only visit and a
-timed visit do not. Both commands and UI use this query. Clashes never reject commands or data files, and are not
+**Clashes.** `AppointmentClashes.find` compares exact date and time over the unfiltered appointment list, excluding
+the target's patient ID and number and every done visit. A done target has no clashes, and neither does a date-only
+one, since its time is not known: two date-only visits on one day do not clash, and neither do a date-only visit and a
+timed one. Both commands and UI use this query. Clashes never reject commands or data files, and are not
 stored as flags. Add/edit/unmark success messages include every conflicting patient and appointment number.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
@@ -1412,8 +1412,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   page.
 * **List number**: A row's position in the displayed patient list, which changes as the list changes. Commands
   identify patients by patient ID, never by list number.
-* **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time (two date-only visits
-  on one day also clash). Clashing visits are shown in red, and a command that creates or restores a clash appends a
+* **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time. Appointments with no
+  time never clash. Clashing visits are shown in red, and a command that creates or restores a clash appends a
   warning naming the other patients and appointment numbers.
 * **Details**: (1) An appointment's free text about the visit, set with `--details` and `--add-details`; (2) the panel
   beside a list that shows one patient's full information ("the details beside the list").
