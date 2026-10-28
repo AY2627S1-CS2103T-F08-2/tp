@@ -12,7 +12,7 @@ import seedu.address.commons.util.TextNormalizer;
  */
 public class MedicalHistory {
 
-    public static final String MESSAGE_CONSTRAINTS = "Medical history can take any values, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Medical history can take any values, and must not be blank.";
 
     /*
      * Checked against the normalized notes, so a blank string becomes "" and is rejected.

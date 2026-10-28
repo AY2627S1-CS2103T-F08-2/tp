@@ -29,6 +29,8 @@ public class DeleteAppointmentCommandParserTest {
     @Test
     public void parse_largestNumber_success() {
         assertParseSuccess(parser, "S1234567A 2147483647", new DeleteAppointmentCommand(ID, Integer.MAX_VALUE));
+        // larger numbers are kept, so that the command reports that the patient has no such appointment
+        assertParseSuccess(parser, "S1234567A 2147483648", new DeleteAppointmentCommand(ID, 2147483648L));
     }
 
     @Test
@@ -64,7 +66,7 @@ public class DeleteAppointmentCommandParserTest {
 
     @Test
     public void parse_invalidNumber_failure() {
-        for (String number : new String[] {"0", "-1", "+1", "1.5", "two", "2147483648"}) {
+        for (String number : new String[] {"0", "-1", "+1", "1.5", "two"}) {
             assertParseFailure(parser, "S1234567A " + number + "",
                     Appointment.MESSAGE_NUMBER_CONSTRAINTS);
         }

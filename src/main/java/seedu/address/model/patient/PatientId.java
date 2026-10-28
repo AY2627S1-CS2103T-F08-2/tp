@@ -13,7 +13,7 @@ import seedu.address.commons.util.TextNormalizer;
 public class PatientId {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Patient IDs should only contain letters and digits, and should be 1 to 10 characters long";
+            "Patient IDs must contain only letters and digits, and must be 1 to 10 characters long.";
 
     /*
      * Checked against the normalized (trimmed, upper case) ID.

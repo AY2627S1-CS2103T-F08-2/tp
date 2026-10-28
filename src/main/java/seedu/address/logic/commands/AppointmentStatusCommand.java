@@ -34,7 +34,7 @@ abstract class AppointmentStatusCommand extends Command {
     private final String successMessage;
     private final String alreadyInStatusMessage;
 
-    AppointmentStatusCommand(PatientId targetId, int number, boolean done, String commandWord,
+    AppointmentStatusCommand(PatientId targetId, long number, boolean done, String commandWord,
             String successMessage, String alreadyInStatusMessage) {
         requireAllNonNull(targetId, commandWord, successMessage, alreadyInStatusMessage);
         this.targetId = targetId;

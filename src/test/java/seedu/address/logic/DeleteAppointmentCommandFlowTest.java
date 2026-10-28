@@ -95,6 +95,10 @@ public class DeleteAppointmentCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A 99",
                 CommandException.class,
                 String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, ALEX_ID, 99));
+        // a number too large for any appointment is one that the patient does not have
+        assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A 99999999999",
+                CommandException.class,
+                String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, ALEX_ID, 99999999999L));
     }
 
     @Test
@@ -102,7 +106,7 @@ public class DeleteAppointmentCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("deleteappt S0000000Z 1",
                 CommandException.class, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A", ParseException.class, INVALID_FORMAT_MESSAGE);
-        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648", "2026-10-05")) {
+        for (String number : List.of("0", "-1", "+1", "1.5", "2026-10-05")) {
             assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A " + number, ParseException.class,
                     Appointment.MESSAGE_NUMBER_CONSTRAINTS);
         }

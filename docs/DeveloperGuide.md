@@ -520,8 +520,10 @@ given to `addappt` or `--add-details`, as `parseNotes` does for notes, and logs 
 
 `editappt ID NUMBER` selects a visit by patient-local number. Both the edit and delete parsers require the ID and
 number before any options and retain the existing option normalization and duplicate option checks.
-`ParserUtil.parseAppointmentNumber` rejects signs, fractions and integer overflow. `AppointmentLookup.Target`
-holds a positive number; the shared lookup uses `findByNumber` and reports a missing number before any mutation.
+`ParserUtil.parseAppointmentNumber` rejects zero, signs and fractions. It keeps a number too large for any
+appointment as a `long`, so that the command reports that the patient has no such appointment, as it does for any
+other missing number. `AppointmentLookup.Target` holds the positive number; the shared lookup uses `findByNumber`
+and reports a missing number before any mutation.
 An assertion checks that the resolved appointment has the requested number.
 
 An edit builds the replacement with the old appointment number and completion status, and preserves date/time

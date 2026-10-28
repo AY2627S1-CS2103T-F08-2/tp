@@ -67,6 +67,23 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseAppointmentNumber_notPositiveWholeNumber_throwsParseException() {
+        for (String number : List.of("", "0", "00", "-1", "+1", "1.5", "1 2", "two", "#2")) {
+            assertThrows(ParseException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS, ()
+                    -> ParserUtil.parseAppointmentNumber(number));
+        }
+    }
+
+    @Test
+    public void parseAppointmentNumber_positiveWholeNumber_returnsNumber() throws Exception {
+        assertEquals(1, ParserUtil.parseAppointmentNumber("1"));
+        assertEquals(2, ParserUtil.parseAppointmentNumber("002"));
+        // numbers larger than any appointment number are kept
+        assertEquals(99999999999L, ParserUtil.parseAppointmentNumber("99999999999"));
+        assertEquals(Long.MAX_VALUE, ParserUtil.parseAppointmentNumber("99999999999999999999"));
+    }
+
+    @Test
     public void parseId_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseId((String) null));
     }

@@ -21,11 +21,11 @@ import seedu.address.commons.util.TextNormalizer;
  */
 public class Appointment implements Comparable<Appointment> {
 
-    public static final String MESSAGE_CONSTRAINTS = "Appointments should be a real date in the format "
+    public static final String MESSAGE_CONSTRAINTS = "Appointments must be a real date in the format "
             + DateUtil.DATE_FORMAT + ", optionally followed by a 24-hour time in the format " + DateUtil.TIME_FORMAT
-            + ", e.g. 2026-09-20 or 2026-09-20 14:00";
+            + ", such as 2026-09-20 or 2026-09-20 14:00.";
     public static final String MESSAGE_NUMBER_CONSTRAINTS =
-            "Appointment numbers must be positive integers from 1 to " + Integer.MAX_VALUE + ".";
+            "Appointment numbers must be positive whole numbers, such as 1 or 2.";
 
     /** The date, and the time if there is one, as in "2026-09-20" or "2026-09-20 14:00". */
     public final String value;

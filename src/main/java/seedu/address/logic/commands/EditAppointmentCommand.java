@@ -65,7 +65,7 @@ public class EditAppointmentCommand extends Command {
      * @param newDateTime The date and time to move the appointment to, if it moves. Its details are ignored.
      * @param detailsEdit The change to the details of the appointment, if they change.
      */
-    public EditAppointmentCommand(PatientId targetId, int number, Optional<Appointment> newDateTime,
+    public EditAppointmentCommand(PatientId targetId, long number, Optional<Appointment> newDateTime,
             Optional<OptionalFieldEdit<AppointmentDetails>> detailsEdit) {
         CollectionUtil.requireAllNonNull(targetId, newDateTime, detailsEdit);
         if (newDateTime.isEmpty() && detailsEdit.isEmpty()) {
@@ -95,7 +95,7 @@ public class EditAppointmentCommand extends Command {
         assert editedAppointment.getNumber() == oldAppointment.getNumber();
 
         AppointmentSchedule editedSchedule = schedule.remove(oldAppointment).add(editedAppointment);
-        assert editedSchedule.findByNumber(targetAppointment.number()).orElseThrow().equals(editedAppointment);
+        assert editedSchedule.findByNumber(oldAppointment.getNumber()).orElseThrow().equals(editedAppointment);
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);

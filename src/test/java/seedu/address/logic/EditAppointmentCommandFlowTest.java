@@ -163,7 +163,7 @@ public class EditAppointmentCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --details --add-details Fasting",
                 ParseException.class, String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--details",
                         "--add-details"));
-        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648")) {
+        for (String number : List.of("0", "-1", "+1", "1.5")) {
             assertRejectedCommandLeavesDataUnchanged("editappt S1234567A " + number + " --details Review",
                     ParseException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS);
         }

@@ -28,6 +28,7 @@ public class MarkAppointmentCommandParserTest {
         assertParseSuccess(parser, "S1234567A 2", new MarkAppointmentCommand(ID, 2));
         assertParseSuccess(parser, "  s1234567a\t2  ", new MarkAppointmentCommand(ID, 2));
         assertParseSuccess(parser, "S1234567A 2147483647", new MarkAppointmentCommand(ID, Integer.MAX_VALUE));
+        assertParseSuccess(parser, "S1234567A 999999999999999", new MarkAppointmentCommand(ID, 999999999999999L));
         assertParseSuccess(parser, "2 1", new MarkAppointmentCommand(new PatientId("2"), 1));
     }
 
@@ -42,7 +43,7 @@ public class MarkAppointmentCommandParserTest {
 
     @Test
     public void parse_invalidAppointmentNumber_failure() {
-        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648", "999999999999999", "#2", "two",
+        for (String number : List.of("0", "-1", "+1", "1.5", "#2", "two",
                 "2026-10-05")) {
             assertParseFailure(parser, "S1234567A " + number, Appointment.MESSAGE_NUMBER_CONSTRAINTS);
         }
