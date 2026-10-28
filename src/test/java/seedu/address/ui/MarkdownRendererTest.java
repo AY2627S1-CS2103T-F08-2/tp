@@ -273,6 +273,36 @@ public class MarkdownRendererTest {
     }
 
     @Test
+    public void render_tableEscapedPipeAtRowEnd_staysInLastCell() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "Action | Format",
+                "-------|-------",
+                "**Add** | literal \\|",
+                "**Exit** | `exit`"));
+
+        GridPane table = tables(rendered).get(0);
+        // A row-final escaped pipe is cell content, not the closing delimiter
+        assertEquals(2, table.getColumnConstraints().size());
+        assertEquals(6, table.getChildren().size());
+        assertTrue(visibleText(table).contains("literal |"));
+    }
+
+    @Test
+    public void render_tableBackslashRunParity_decidesSplitting() {
+        VBox rendered = MarkdownRenderer.render(String.join("\n",
+                "Action | Format",
+                "-------|-------",
+                "**A** | one \\\\| two",
+                "**B** | three \\| four"));
+
+        GridPane table = tables(rendered).get(0);
+        // Two backslashes are an escaped backslash, so that pipe splits; one backslash escapes it
+        assertEquals(3, table.getColumnConstraints().size());
+        assertEquals(7, table.getChildren().size());
+        assertTrue(visibleText(table).contains("three | four"));
+    }
+
+    @Test
     public void render_raggedTableRow_missingCellsKeepGridWellFormed() {
         VBox rendered = MarkdownRenderer.render(String.join("\n",
                 "Action | Format | Example",

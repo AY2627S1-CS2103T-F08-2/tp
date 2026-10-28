@@ -1,7 +1,6 @@
 package seedu.address.ui;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -296,19 +295,39 @@ public class MarkdownRenderer {
         return maxCells;
     }
 
+    /**
+     * Splits a table row into cells on unescaped pipes. A pipe is escaped when the run of backslashes
+     * directly before it has odd length, and then stays inside its cell together with the backslash.
+     * Leading and trailing delimiter pipes do not become empty cells.
+     */
     private static String[] splitRow(String rawRow) {
         String row = rawRow.trim();
-        if (row.startsWith("|")) {
-            row = row.substring(1);
+        List<String> cells = new ArrayList<>();
+        StringBuilder cell = new StringBuilder();
+        int backslashRun = 0;
+        boolean leadingDelimiter = row.startsWith("|");
+        boolean trailingDelimiter = false;
+        for (int i = leadingDelimiter ? 1 : 0; i < row.length(); i++) {
+            char c = row.charAt(i);
+            if (c == '\\') {
+                backslashRun++;
+                cell.append(c);
+            } else if (c == '|' && backslashRun % 2 == 0) {
+                cells.add(cell.toString());
+                cell.setLength(0);
+                trailingDelimiter = true;
+            } else {
+                cell.append(c);
+                backslashRun = 0;
+                trailingDelimiter = false;
+            }
         }
-        if (row.endsWith("|")) {
-            row = row.substring(0, row.length() - 1);
+        cells.add(cell.toString());
+        if (trailingDelimiter && cells.size() > 1) {
+            cells.remove(cells.size() - 1);
         }
-        // Split only on unescaped pipes so an escaped \| stays inside its cell, then unescape it.
-        // Not handled: an escaped backslash directly before a pipe ("\\|"), which the guide never
-        // writes; telling those apart would need a full escape scanner for no real-world gain.
-        return Arrays.stream(row.split("(?<!\\\\)\\|", -1))
-                .map(cell -> cell.replace("\\|", "|"))
+        return cells.stream()
+                .map(content -> content.replace("\\|", "|"))
                 .toArray(String[]::new);
     }
 
