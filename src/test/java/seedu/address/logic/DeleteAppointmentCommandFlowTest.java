@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.CommandResult;
-import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -85,7 +84,7 @@ public class DeleteAppointmentCommandFlowTest {
         CommandResult result = logic.execute("deleteappt S1234567A 1");
 
         assertEquals(expected, patient(ALEX_ID));
-        assertEquals(Optional.of(View.APPOINTMENTS), result.getView());
+        assertEquals(Optional.empty(), result.getView());
         // the find filter stays, so the patient remains hidden in the patient list
         assertEquals(expectedFilteredList, model.getFilteredPatientList());
     }

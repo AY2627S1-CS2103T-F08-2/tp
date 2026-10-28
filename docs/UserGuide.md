@@ -109,7 +109,7 @@ the details, are red, even when it has passed or is selected. This includes a cl
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
-Commands switch the view. `viewappt`, `editappt`, `addappt`, `deleteappt`, `markappt` and `unmarkappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
+Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
 
 * `add`, `edit` and `view` select the patient that they add, edit or show. `list` and `find` select the first patient in the list.
 * `viewappt` selects the next appointment from now: the first appointment on the page that has not passed, or the first on the page if all have passed. This automatic selection remains date-based and can select a done appointment.
@@ -375,10 +375,10 @@ Deletes one appointment of a patient, identified by its number.
 Format: `deleteappt ID NUMBER`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
-* `NUMBER` is the positive appointment number shown as `#N`, without the `#`. Only that visit is removed;
-  surviving appointments keep their numbers, even when they share the same date and time.
+* `NUMBER` is the positive appointment number shown as `#N`, without the `#`. Only that visit is removed, even when
+  others share its date and time. The patient's appointments after it move up one number.
 * If the patient has no appointment with that number, nothing is changed, and the error names the missing number.
-* LaiNurse switches to the **Appointments** view and keeps the page that is shown; the deleted appointment disappears from it. No other appointment, page or filter is changed.
+* LaiNurse keeps the view that is shown, as `delete` does. In the **Appointments** view, it keeps the page that is shown, and the deleted appointment disappears from it. No other appointment, page or filter is changed.
 
 Examples:
 * `deleteappt S1234567A 1` deletes Alex Yeoh's insulin review (#1), on the Monday of the sample week at 09:30, with its details.

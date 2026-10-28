@@ -14,7 +14,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
-import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -107,10 +106,11 @@ public class DeleteAppointmentCommandTest {
     }
 
     @Test
-    public void getView_returnsAppointments() {
+    public void getView_keepsTheViewShown() {
+        // as delete does, deleteappt keeps the view that is shown
         DeleteAppointmentCommand command =
                 new DeleteAppointmentCommand(BENSON.getId(), 1);
-        assertEquals(Optional.of(View.APPOINTMENTS), command.getView());
+        assertEquals(Optional.empty(), command.getView());
     }
 
     @Test

@@ -556,9 +556,10 @@ is retained, including when the patient or a clashing visit is hidden.
 ### Deleting an appointment
 
 `deleteappt ID NUMBER` removes exactly one numbered visit. `AppointmentLookup` reports a missing number before
-any change. The command replaces the patient with the selected identity removed; every other number and every
-other visit's details remain intact, even when visits share a timestamp. An assertion checks that the removed
-number is absent from the resulting schedule.
+any change. The command replaces the patient with the selected appointment removed. Every other visit's details
+remain intact, even when visits share a timestamp, and the appointments after it move up one number. An assertion
+checks that the resulting schedule has one appointment fewer. Like `delete`, it has no view of its own, so it keeps
+the view that is shown.
 
 Unlike `addappt` and `editappt`, the command clears the selection with `CommandResult#withSelectionCleared`: after
 it succeeds, no appointment exists to select, and the deleted one cannot be highlighted again. The returned result
@@ -2126,10 +2127,11 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `deleteappt S1234567A 1`<br>
        Expected: The appointment is deleted. The status message names the patient's ID and the deleted appointment with
-       its details. The **Appointments** tab is selected, on the page that was shown, and the appointment is gone from it.
+       its details. The tab that was selected stays selected. On the **Appointments** tab, the page that was shown
+       stays, and the appointment is gone from it. Appointment #2 becomes #1.
 
-    1. Test case: `deleteappt S1234567A 2`<br>
-       Expected: The date-only blood-test appointment is deleted, as above.
+    1. Test case: on the **Patients** tab, `deleteappt S1234567A 2`<br>
+       Expected: The date-only blood-test appointment is deleted, and the **Patients** tab stays selected.
 
 1. Deleting an appointment that cannot be deleted
 
