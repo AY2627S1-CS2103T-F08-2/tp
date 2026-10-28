@@ -39,7 +39,6 @@ import seedu.address.testutil.SampleData;
 public class DeleteAppointmentCommandFlowTest {
     // appointments 2026-10-05 09:30 (INSULIN REVIEW) and 2026-11-02 (MONTHLY BLOOD TEST)
     private static final String ALEX_ID = "S1234567A";
-    private static final String BERNICE_ID = "S2345678B"; // appointment 2026-10-06, with no details
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteAppointmentCommand.MESSAGE_USAGE);
