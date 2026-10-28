@@ -31,6 +31,7 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
@@ -223,7 +224,9 @@ public class LogicManagerTest {
         model.updateFilteredPatientList(patient -> patient.getId().value.equals("S1000003C"));
 
         assertEquals(List.of("view S1000003C", "view S1000001A", "view S1000002B"),
-                logic.getCompletions("view S1"));
+                logic.getCompletions("view S1").stream().map(Completion::text).toList());
+        assertEquals(List.of("S1000003C", "S1000001A", "S1000002B"),
+                logic.getCompletions("viewappt --id s").stream().map(Completion::word).toList());
         assertEquals(List.of(), logic.getCompletions("list"));
     }
 

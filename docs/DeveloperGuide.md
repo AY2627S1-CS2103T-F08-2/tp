@@ -161,12 +161,30 @@ the selection changes, the panel tells `MainWindow`, which shows the appointment
 whatever is today, and a blue for selection, which is the keyboard focus and the selected tab, row and
 appointment. So the marked appointment in the details is orange only if it is today.
 
-When the user presses Tab, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish the patient ID in the
-command, and replaces the text with the first one. Each further Tab gives the next one. With nothing to finish, Tab
-does nothing, so it never moves the focus out of the command box. `IdCompleter` in the `Logic` component holds the
-rules, so `CommandBox` needs no knowledge of the command formats. `view` and `delete` take only an ID, so the ID must
-end the command. `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt` take the ID first, so
-`IdCompleter` completes the word after the command word and keeps later options or appointment numbers.
+Whenever the text in the command box changes, `CommandBox` asks `Logic#getCompletions(String)` for the ways to finish
+the word that the text ends with. Each is a `Completion`: the whole command after the completion, and the word that it
+fills in. `CommandBox` passes the words to `StatusBarFooter#showCompletions`, which shows them after a **Tab** key cap at
+the left end of the status bar, while the command box has the focus and at least one completion would change the text.
+It shows at most the first five words, then the number of the others, such as `+19 more`, so that a long list of
+patient IDs does not fill the status bar.
+Tab replaces the text with the first completion, and each further Tab with the next. While Tab goes through them,
+`CommandBox` keeps the list, so the status bar keeps showing it. After the only completion, `CommandBox` asks for the
+completions of the new text at once, so that `addap` gives `addappt`, and the status bar then shows the patient IDs
+that the next Tab goes through. With nothing to finish, Tab does nothing, so it never moves the focus out of the
+command box. On Tab, and when the command box gets the focus back, `CommandBox` asks again unless Tab is going through a
+list, as the patients may have changed since the user typed. The hint is in the status bar, not in a pop-up under the
+command box, so that it never covers the result of the last command. The team chose this design from three mockups.
+
+`TabCompleter` in the `Logic` component holds the rules, so `CommandBox` needs no knowledge of the command formats. It
+completes the first word to the longer command words that start with it, the word after `help` to what `help` can
+explain, a word that starts with `-` to the command's options that are not typed yet, and the word after `--id` in
+`find` and `viewappt` to a patient ID. Every word matches ignoring case, but command words, options and `help`
+topics are completed in lowercase, the only case that the parsers accept. Its table of each command's options must be updated with the parser when a
+command gets a new option. Otherwise it passes the text to `IdCompleter`, which completes the ID that a command takes
+first. `view` and `delete` take only an ID, so the ID must end the command. `edit`, `addappt`, `editappt`,
+`deleteappt`, `markappt` and `unmarkappt` take the ID first, so `IdCompleter` completes the word after the command word
+and keeps later options or appointment numbers. A whole command word that no other command word starts with, such as
+`addappt`, also goes to `IdCompleter`, which adds a space and the ID.
 `CommandBox` also keeps a `CommandHistory` of the commands entered since the app
 started, which the Up and Down keys go through. The history is kept only in the UI, because no command needs it.
 
@@ -524,7 +542,7 @@ of the patient list, so a patient hidden by `find` or `viewappt` stays hidden th
 `markappt ID NUMBER` sets an appointment to done; `unmarkappt ID NUMBER` sets it back to undone. Each has its own
 command and parser. The parsers require exactly two positional arguments, reuse `ParserUtil.parseId` and
 `parseAppointmentNumber`, and reject date/time selectors and extra arguments. Both commands are registered in
-`LaiNurseParser`, `HelpCommand` and `IdCompleter`.
+`LaiNurseParser`, `HelpCommand` and `IdCompleter`. `TabCompleter` takes its command words from `HelpCommand`.
 
 The package-private `AppointmentStatusCommand` base shares execution. It finds the patient in the full model and
 resolves the number through `AppointmentLookup.Target`. A missing patient, missing appointment or repeated status
@@ -854,6 +872,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | record and view a patient's medical profile (conditions, allergies, medications, next-of-kin)        | I know their health details and whom to call in an emergency |
 | `* * *`  | home-based nurse | quickly check the syntax and usage examples of a specific command via the CLI                       | I can recall command arguments without breaking my typing workflow |
 | `* *`    | home-based nurse | record personal notes about a patient (routine, hobbies, pet peeves, past conversations)             | I can build rapport and recall what we've talked about       |
+| `* *`    | home-based nurse | press Tab to finish command words, options and patient IDs, and see what Tab can fill in          | I type commands faster and with fewer mistakes                |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
 | `* *`    | home-based nurse | view one patient's appointments on a date or in a range                                              | I can prepare for that patient's visits                      |
 | `*`      | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
@@ -1378,12 +1397,35 @@ testers are expected to do more *exploratory* testing.
     1. Other incorrect view commands to try: `view`, `view S123-456` (not a valid ID)<br>
        Expected: The panel does not change. The status message shows the correct command format.
 
-1. Completing a patient ID with Tab
+1. Completing with Tab
 
     1. Prerequisites: Start with the sample data, which includes patients with the IDs `S1234567A` and `S2345678B`.
 
     1. Test case: type `view s1`, then press Tab<br>
-       Expected: The command box shows `view S1234567A`. The focus stays in the command box.
+       Expected: While you type, the left end of the status bar shows a **Tab** key and `S1234567A`. After Tab, the
+       command box shows `view S1234567A`, and the status bar shows only the data file path, at its right end. The
+       focus stays in the command box.
+
+    1. Test case: type `dele`, then press Tab three times<br>
+       Expected: The status bar shows `delete · deleteappt`. The command box shows `delete`, then `deleteappt`, then
+       `delete` again. The status bar keeps showing both.
+
+    1. Test case: type `addap`, then press Tab twice<br>
+       Expected: The command box shows `addappt`, and the status bar now shows the first five patient IDs, then
+       `+1 more`. The second Tab gives `addappt S1234567A`.
+
+    1. Test case: type `editappt S1234567A 1 --`, then press Tab<br>
+       Expected: The status bar shows `--to · --details`. The command box shows `editappt S1234567A 1 --to`.
+
+    1. Test case: type `edit S1234567A --name Alex --`<br>
+       Expected: The status bar shows every option of `edit` except `--name`.
+
+    1. Test case: type `help w`, then press Tab<br>
+       Expected: The command box shows `help window`.
+
+    1. Test case: type `dele`, then press Esc<br>
+       Expected: The status bar shows only the data file path while the focus is in the list. Type `t` to go back to
+       the command box: the status bar shows `delete · deleteappt` again.
 
     1. Test case: type `delete S`, then press Tab several times<br>
        Expected: Each Tab shows the next ID that starts with `S`, in the order of the list, and then starts again from the first.
@@ -1391,8 +1433,9 @@ testers are expected to do more *exploratory* testing.
     1. Test case: type `edit s23 --phone 91234567`, then press Tab<br>
        Expected: The command box shows `edit S2345678B --phone 91234567`. The options are kept.
 
-    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra` or `edit --phone 91234567`, then press Tab<br>
-       Expected: The command box does not change.
+    1. Test case: type `add --id S1`, `view XYZ`, `view S1 extra`, `edit --phone 91234567`, `list` or
+       `view S1234567A`, then press Tab<br>
+       Expected: The status bar shows only the data file path. The command box does not change.
 
 1. Moving between the command box and the patient list
 

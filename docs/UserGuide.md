@@ -62,6 +62,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --phone PHONE`, `--phone PHONE --name NAME` is also acceptable.
 
+* Command words and options are in lowercase. For example, `VIEW S1234567A` and `edit S1234567A --PHONE 91234567` are not recognized. Tab turns them into lowercase as it finishes them. See [Using the keyboard](#using-the-keyboard).
+
 * Extraneous parameters for commands that take no parameters, such as `list`, `exit`, and `clear`, are ignored.<br>
   For example, `list 123` is interpreted as `list`.
 
@@ -124,7 +126,7 @@ You can use LaiNurse without the mouse. The keyboard focus is in the command box
 Key | What it does
 --------|------------------
 Enter | Runs the command.
-Tab | Finishes typing a patient ID after `view`, `delete`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` or `unmarkappt`. See below. With nothing to finish, such as in an empty command box, it does nothing.
+Tab | Finishes the word you are typing: a command word, an option such as `--phone`, or a patient ID. While you type, the status bar at the bottom of the window shows what Tab can fill in. See below. With nothing to finish, such as in an empty command box, it does nothing.
 Up and Down | Go back and forth through the commands you entered since LaiNurse started, including ones that failed. Down after the newest command gives back what you were typing.
 Esc | Moves to the list of the view that is shown, or to the tabs if the patient list is empty. What you typed stays in the command box.
 
@@ -156,9 +158,14 @@ Esc | In the patient view, shows all patients, as `list` does, but keeps the pat
 * When the focus moves to the patient list, the patient whose details are shown stays selected. If no patient in the list is selected, LaiNurse selects the first one and shows their details. So the selected patient is always the one shown.
 * When the focus moves to the appointment list and no appointment is selected, LaiNurse selects the first appointment that has not passed, on a page that includes today, or the first appointment of another page, and shows its patient's details.
 * For example, after `find --address serangoon`, press Esc to move to the results, then Down to look through them one by one. Press Esc again to see all patients, and start typing to enter the next command.
-* To finish a patient ID with Tab, type the first few characters of the ID, or none, and press Tab to fill in the first ID that matches. Press Tab again to go through the other matches. Patients in the displayed list come first.<br>
-  For example, if you type `view s12` and press Tab, LaiNurse fills in `view S1234567A`.<br>
-  With `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt`, Tab also works after you have typed the remaining arguments, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`, and `markappt s12 2` becomes `markappt S1234567A 2`.
+* While you type, the left end of the status bar shows a **Tab** key followed by each word that Tab can fill in, such as **Tab** `delete · deleteappt` after `dele`. With more than five, it shows the first five and how many others there are, such as `+19 more`. Press Tab to fill in the first one, and Tab again to go through the others. The status bar keeps showing them while you do. When Tab has nothing to fill in, or the focus is not in the command box, the status bar shows only where your data is saved.
+* Tab finishes these words:
+  * **Command words.** For example, `dele` gives `delete`, then `deleteappt`. `view` gives `viewappt`, so type a space after `view` to finish a patient ID instead. When there is only one match, the next Tab goes on to the patient ID if the command takes one, so `addap` gives `addappt`, and the next Tab `addappt S1234567A`.
+  * **Options.** Type `-` or the start of an option. For example, `edit S1234567A --ph` gives `edit S1234567A --phone`. Tab offers only the options of that command, and skips the ones you have already typed.
+  * **Patient IDs** after `view`, `delete`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` or `unmarkappt`, and after `--id` in `find` and `viewappt`. Type the first few characters of the ID, or none. Patients in the displayed list come first. For example, `view s12` gives `view S1234567A`.<br>
+    With `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt`, Tab also works after you have typed the remaining arguments, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`, and `markappt s12 2` becomes `markappt S1234567A 2`.
+  * **Help topics** after `help`. For example, `help ad` gives `help add`, then `help addappt`. `help w` gives `help window`.
+* Tab matches what you type in any case, but fills in command words, options and help topics in lowercase, as LaiNurse expects them. For example, `DELE` gives `delete`, then `deleteappt`, and `--PH` gives `--phone`. A whole word in the wrong case, such as `VIEW`, gives the lowercase word first, then the longer ones: `view`, then `viewappt`.
 * The command box supports the usual editing keys. For example, Shift+Left and Shift+Right select text, and Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+A copy, cut, paste and select all (Cmd instead of Ctrl on macOS).
 
 ### Viewing help: `help`

@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -9,6 +10,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
@@ -22,10 +24,11 @@ public class CommandBox extends UiPart<Region> {
     private final CommandExecutor commandExecutor;
     private final CommandCompleter commandCompleter;
     private final Runnable escapeHandler;
+    private final Consumer<List<String>> completionHintHandler;
 
     /** The completions that pressing Tab goes through, for the text that the user last typed. */
-    private List<String> completions = List.of();
-    private int completionIndex;
+    private List<Completion> completions = List.of();
+    private int completionIndex = -1;
     /** The text that the last Tab put in the command box, or null if the user has typed since. */
     private String lastCompletion;
 
@@ -37,14 +40,31 @@ public class CommandBox extends UiPart<Region> {
     /**
      * Creates a {@code CommandBox} with the given {@code CommandExecutor} and {@code CommandCompleter}.
      * {@code escapeHandler} runs when the user presses Esc, which leaves the text in the command box unchanged.
+     * {@code completionHintHandler} is given the words that Tab can fill in whenever they change, and an empty list
+     * when Tab has nothing to complete or the command box does not have the focus.
      */
-    public CommandBox(CommandExecutor commandExecutor, CommandCompleter commandCompleter, Runnable escapeHandler) {
+    public CommandBox(CommandExecutor commandExecutor, CommandCompleter commandCompleter, Runnable escapeHandler,
+            Consumer<List<String>> completionHintHandler) {
         super(FXML);
         this.commandExecutor = commandExecutor;
         this.commandCompleter = commandCompleter;
         this.escapeHandler = escapeHandler;
-        // calls #setStyleToDefault() whenever there is a change to the text of the command box.
-        commandTextField.textProperty().addListener((unused1, unused2, unused3) -> setStyleToDefault());
+        this.completionHintHandler = completionHintHandler;
+        commandTextField.textProperty().addListener((unused1, unused2, text) -> {
+            setStyleToDefault();
+            // A Tab puts in the text that it completed to, and keeps the matches for the next Tab to go through.
+            if (!text.equals(lastCompletion)) {
+                lastCompletion = null;
+                updateCompletions(text);
+            }
+            showCompletionHint();
+        });
+        commandTextField.focusedProperty().addListener((unused1, unused2, isFocused) -> {
+            if (isFocused && lastCompletion == null) {
+                updateCompletions(commandTextField.getText());
+            }
+            showCompletionHint();
+        });
         // A filter sees these keys before the text field uses them, for example to move the focus away.
         commandTextField.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.isShiftDown() || event.isControlDown() || event.isAltDown() || event.isMetaDown()) {
@@ -53,8 +73,8 @@ public class CommandBox extends UiPart<Region> {
             switch (event.getCode()) {
                 case TAB -> handleTabPressed();
                 case ESCAPE -> escapeHandler.run();
-                case UP -> history.previous(commandTextField.getText()).ifPresent(this::replaceText);
-                case DOWN -> history.next().ifPresent(this::replaceText);
+                case UP -> history.previous(commandTextField.getText()).ifPresent(this::replaceTypedText);
+                case DOWN -> history.next().ifPresent(this::replaceTypedText);
                 default -> {
                     return;
                 }
@@ -85,24 +105,47 @@ public class CommandBox extends UiPart<Region> {
     /**
      * Replaces the text with its next completion. The first Tab after typing gives the first completion,
      * and each further Tab gives the next one, going back to the first after the last.
+     * After the only completion, the next Tab completes the new text, so {@code addap} gives {@code addappt},
+     * and then the first patient ID.
      * Tab never moves the focus, so with nothing to complete, such as in an empty command box, it does nothing.
      */
     private void handleTabPressed() {
-        String commandText = commandTextField.getText();
-        if (commandText.isBlank()) {
-            return;
-        }
-        if (!commandText.equals(lastCompletion)) {
-            completions = commandCompleter.complete(commandText);
-            completionIndex = -1;
+        if (lastCompletion == null) {
+            // The patients may have changed since the user typed, for example with Esc in the list.
+            updateCompletions(commandTextField.getText());
         }
         if (completions.isEmpty()) {
             return;
         }
 
         completionIndex = (completionIndex + 1) % completions.size();
-        lastCompletion = completions.get(completionIndex);
+        lastCompletion = completions.get(completionIndex).text();
+        if (completions.size() == 1) {
+            updateCompletions(lastCompletion);
+        }
         replaceText(lastCompletion);
+        showCompletionHint();
+    }
+
+    /**
+     * Finds the completions of {@code commandText}, for the next Tab to start from the first.
+     */
+    private void updateCompletions(String commandText) {
+        completions = commandText.isBlank() ? List.of() : commandCompleter.complete(commandText);
+        completionIndex = -1;
+    }
+
+    /**
+     * Shows the words of the completions that Tab goes through, while the command box has the focus and Tab can
+     * change its text. A command that is already complete, such as {@code view S1234567A}, shows none.
+     */
+    private void showCompletionHint() {
+        String commandText = commandTextField.getText();
+        boolean canComplete = commandTextField.isFocused()
+                && completions.stream().anyMatch(completion -> !completion.text().equals(commandText));
+        completionHintHandler.accept(canComplete
+                ? completions.stream().map(Completion::word).toList()
+                : List.of());
     }
 
     /**
@@ -135,6 +178,15 @@ public class CommandBox extends UiPart<Region> {
      */
     public boolean isFocused() {
         return commandTextField.isFocused();
+    }
+
+    /**
+     * Replaces the text in the command box with {@code text}, as if the user had typed it, and puts the caret at the
+     * end.
+     */
+    private void replaceTypedText(String text) {
+        lastCompletion = null;
+        replaceText(text);
     }
 
     /**
@@ -188,7 +240,7 @@ public class CommandBox extends UiPart<Region> {
          *
          * @see seedu.address.logic.Logic#getCompletions(String)
          */
-        List<String> complete(String commandText);
+        List<Completion> complete(String commandText);
     }
 
 }
