@@ -217,6 +217,9 @@ public class MarkdownRendererTest {
 
     @Test
     public void render_threeColumnTable_fitsViewerWithoutBoundingExplosion() throws Exception {
+        // A copy of the three-column load-matrix table from the UG's "Editing the data file"
+        // section, not the bundled resource itself: the layout behavior under test is generic,
+        // and a copy keeps this test independent of guide rewording.
         VBox[] holder = new VBox[1];
         CountDownLatch layoutDone = new CountDownLatch(1);
         Platform.runLater(() -> {
@@ -241,14 +244,17 @@ public class MarkdownRendererTest {
         assertTrue(layoutDone.await(5, TimeUnit.SECONDS));
         GridPane table = tables(holder[0]).get(0);
 
-        // The constraints must cover all three columns of the load matrix
-        assertEquals(3, table.getColumnConstraints().size());
+        // Symptom guards run first: against the pre-fix renderer the height assertion fails
+        // here on its own, directly catching the oversized box, instead of being short-circuited
+        // by an earlier column-count failure.
         // The broken renderer sized this grid to thousands of pixels of empty height
         assertTrue(table.getHeight() < 400,
                 "table height exploded to " + table.getHeight());
         // and overflowed horizontally past the viewer's width
         assertTrue(table.getBoundsInParent().getWidth() <= 1041,
                 "table width overflowed the viewer: " + table.getBoundsInParent().getWidth());
+        // The constraints must cover all three columns of the load matrix
+        assertEquals(3, table.getColumnConstraints().size());
     }
 
     private static void collectNodes(Node node, List<Node> out) {
