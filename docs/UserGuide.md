@@ -93,7 +93,8 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   appointments are numbered from 1 in date order. The details panel shows the same number, dimmed, before each date.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `Unspecified time` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
-  * Each appointment shows **Done** or **Undone** in the list and patient details. Completion is set manually with
+  * A done appointment shows a pin before its time in the list and patient details, and an undone one shows nothing.
+    You mark and unmark appointments yourself with
     `markappt` and `unmarkappt`. Done visits remain listed, and past/upcoming grouping and counts still depend on
     dates and times. A visit can be done before its scheduled time or remain undone after it has passed.
   * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. A plain [`viewappt`](#viewing-appointments-viewappt) shows the weekly view of this week. After `viewappt` with a date, a range or `--id`, the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
@@ -396,7 +397,7 @@ Format: `markappt ID NUMBER`
   are not accepted.
 * Marking is allowed for past, current and future appointments. It changes only completion: the appointment
   keeps its number, date, time and details, and every other appointment stays as it was.
-* Done appointments remain visible with a **Done** label, but are skipped in the patient's next-appointment
+* Done appointments remain visible, with a pin before their time, but are skipped in the patient's next-appointment
   summary and do not cause clashes. Date-based ordering, counts and automatic list selection stay the same.
 * A missing patient, missing appointment or already done appointment produces an error and changes nothing.
 * LaiNurse shows **Appointments** and selects the marked visit. If the current page contains it, that page
@@ -411,7 +412,7 @@ Sets a done appointment back to **Undone**, for example to correct a mistaken co
 Format: `unmarkappt ID NUMBER`
 
 * Uses the same patient ID, appointment number, date permissions and navigation as `markappt`.
-* Changes only completion, keeping the appointment and its other values intact. The **Undone** label appears
+* Changes only completion, keeping the appointment and its other values intact. The pin goes away
   immediately, and the visit can again be the patient's next appointment if it has not passed.
 * Restores applicable clash highlighting and appends a warning naming any other undone visits at the same
   date and optional time, including visits of hidden patients.

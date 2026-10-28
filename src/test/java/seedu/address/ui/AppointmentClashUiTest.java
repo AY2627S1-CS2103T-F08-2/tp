@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -137,7 +138,7 @@ public class AppointmentClashUiTest {
     }
 
     @Test
-    public void completion_bothStatuses_visibleInRowsAndNarrowDetails() throws Exception {
+    public void completion_pinOnlyWhenMarked_inRowsAndNarrowDetails() throws Exception {
         onFxThread(() -> {
             for (boolean done : List.of(false, true)) {
                 Appointment appointment = new Appointment(LocalDate.now().minusDays(1).toString())
@@ -148,7 +149,8 @@ public class AppointmentClashUiTest {
                         LocalDateTime.now());
                 StackPane rowRoot = new StackPane(row.getRoot());
                 styleAndLayout(rowRoot, 500);
-                assertEquals(done ? "Done" : "Undone", label(rowRoot, ".appointment-entry-status").getText());
+                // a marked appointment has a pin before its time, and an unmarked one has nothing
+                assertEquals(done, !rowRoot.lookupAll(".pin-mark").isEmpty());
                 assertEquals(AppointmentFormatter.NO_TIME, label(rowRoot, ".appointment-entry-no-time").getText());
 
                 ModelManager model = model(patient);
@@ -157,11 +159,10 @@ public class AppointmentClashUiTest {
                 details.show(patient.getId(), Optional.of(appointment));
                 StackPane detailRoot = new StackPane(details.getRoot());
                 styleAndLayout(detailRoot, 320);
-                Label status = label(detailRoot, ".detail-appointment-status");
-                assertEquals(done ? "Done" : "Undone", status.getText());
-                assertTrue(status.isVisible());
-                assertTrue(status.isWrapText());
-                assertTrue(status.getBoundsInLocal().getWidth() >= status.prefWidth(-1));
+                assertEquals(done, !detailRoot.lookupAll(".pin-mark").isEmpty());
+                Label time = label(detailRoot, ".detail-appointment-no-time");
+                assertEquals(done ? "Marked" : null,
+                        Optional.ofNullable(time.getGraphic()).map(Node::getAccessibleText).orElse(null));
             }
         });
     }
@@ -202,8 +203,9 @@ public class AppointmentClashUiTest {
             model.setPatient(alex, withDone(alex, 1, true));
             styleAndLayout(listRoot, 800);
             styleAndLayout(detailRoot, 320);
-            assertEquals("Done", label(listRoot, ".appointment-entry-status").getText());
-            assertEquals("Done", label(detailRoot, ".detail-appointment-status").getText());
+            assertFalse(listRoot.lookupAll(".pin-mark").isEmpty());
+            assertFalse(detailRoot.lookupAll(".pin-mark").isEmpty());
+            assertTrue(listRoot.lookupAll(".clash-mark").isEmpty());
             assertTrue(listRoot.lookupAll(".appointment-entry-clash").isEmpty());
             assertTrue(detailRoot.lookupAll(".detail-appointment-clash").isEmpty());
         });

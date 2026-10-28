@@ -807,3 +807,13 @@
 .clash-mark .clash-mark-part {
     -fx-fill: -lainurse-clash;
 }
+
+/* The pin before the time of a marked appointment, in the color of the row's text, dimmed when it has passed. */
+.pin-mark .pin-mark-shape {
+    -fx-fill: #d5dadc;
+}
+
+.list-cell .appointment-entry-passed .pin-mark .pin-mark-shape,
+.patient-detail .detail-appointment-past .pin-mark .pin-mark-shape {
+    -fx-fill: #a3adb2;
+}

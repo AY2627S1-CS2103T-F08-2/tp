@@ -1,7 +1,5 @@
 package seedu.address.ui;
 
-import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Circle;
@@ -13,9 +11,6 @@ import javafx.scene.shape.Rectangle;
  * so that the "!" stays in the middle of the box whatever the font and the display scaling.
  */
 final class ClashMark {
-
-    /** The space between the mark and the time after it, in pixels. */
-    static final double GAP = 4;
 
     private static final double SIZE = 16;
     private static final double BORDER_WIDTH = 1.5;
@@ -48,13 +43,5 @@ final class ClashMark {
         mark.setMaxSize(SIZE, SIZE);
         mark.setAccessibleText("Clash");
         return mark;
-    }
-
-    /**
-     * Shows {@code mark} before the text of {@code time} if {@code isClashing}, or no mark otherwise.
-     */
-    static void show(Label time, Node mark, boolean isClashing) {
-        time.setGraphic(isClashing ? mark : null);
-        time.setGraphicTextGap(GAP);
     }
 }

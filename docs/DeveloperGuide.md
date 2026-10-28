@@ -506,8 +506,10 @@ bring. Both follow `MedicalHistory`: `TextNormalizer` trims the text, collapses 
 blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
 
 The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
-in a narrow panel. `AppointmentRow` shows its Done/Undone status under its patient and its details below that,
-only when it has some. The detail panel shows the same status under the appointment's date.
+in a narrow panel. `AppointmentRow` shows its details under its patient, only when it has some. Before the time,
+`TimeMark` shows the boxed `!` of `ClashMark` for a clash, or else the pin of `PinMark` for a done appointment, in
+both the row and the detail panel. A done appointment never clashes, so it never needs both. Both marks are drawn as
+shapes on a 16-pixel square, so they look the same whatever the font and the display scaling.
 
 `add` and `edit` accept the optional, single-valued `--notes` option defined by `CliSyntax.PREFIX_NOTES`.
 `ParserUtil.parseNotes` validates it using `Notes.isValidNotes` and throws a `ParseException` with
@@ -1328,7 +1330,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 1. Nurse requests to mark or unmark an appointment using its patient ID and appointment number.
 2. LaiNurse changes only the appointment's completion status and saves the data.
-3. LaiNurse shows and selects the updated appointment, with its Done/Undone label.
+3. LaiNurse shows and selects the updated appointment, with a pin before its time if it is done.
 
    Use case ends.
 
@@ -2189,16 +2191,17 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with sample data. Alex Yeoh (`S1234567A`) has appointments #1 and #2.
     1. Test case: `markappt S1234567A 2`<br>
-       Expected: Appointment #2 shows **Done** in the list and details and is selected in **Appointments**.
+       Expected: Appointment #2 shows a pin before its time in the list and details, and is selected in
+       **Appointments**.
        Its number, date, time and details stay unchanged. Appointment #1 stays undone. If #2 is in the future,
        it is no longer eligible for Alex's next-appointment summary, but stays in its date-based group.
     1. Test case: `markappt S1234567A 2` again<br>
        Expected: An already-done error; model, page, selection and saved file stay unchanged.
     1. Test case: `editappt S1234567A 2 --to 2099-12-31 --details Follow up`, then restart<br>
-       Expected: #2 keeps **Done** and the new details after rescheduling and restart. It is still #2, as it is still
+       Expected: #2 keeps its pin and the new details after rescheduling and restart. It is still #2, as it is still
        after #1.
     1. Test case: `unmarkappt S1234567A 2`, then the same command again<br>
-       Expected: The first command changes only the status to **Undone** and selects #2. The second reports
+       Expected: The first command only removes the pin, and selects #2. The second reports
        already undone and changes nothing. Restarting preserves the undone status.
 
 1. Clashes, hidden patients and page preservation
@@ -2211,7 +2214,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `unmarkappt S2345678B 1`<br>
        Expected: The warning names Alex and #1. Both undone visits clash again; the updated visit is selected.
     1. Test case: `viewappt --id S2345678B`, then `markappt S2345678B 1`<br>
-       Expected: The page stays, #1 remains selected and shows **Done**. The list and details update immediately,
+       Expected: The page stays, and #1 remains selected and shows a pin. The list and details update immediately,
        including in a narrow window. Done status does not itself grey out a future visit.
 
 1. Invalid commands and completion

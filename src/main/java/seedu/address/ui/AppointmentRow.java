@@ -10,7 +10,8 @@ import seedu.address.model.patient.Patient;
 
 /**
  * A UI component that displays one appointment as a row of the appointment list: its number on the page, its time,
- * its patient's name and ID, and under them its completion status and optional details. An appointment that has
+ * its patient's name, ID and number, and under them its optional details. A pin before the time shows that it is
+ * marked. An appointment that has
  * passed is greyed out. {@link AppointmentListPanel} draws the day headings between the rows.
  * A list cell keeps one row and shows each of its appointments in it, since loading a row's FXML for every
  * appointment that scrolls into view makes scrolling stutter.
@@ -34,11 +35,10 @@ public class AppointmentRow extends UiPart<Region> {
     @FXML
     private Label appointmentNumber;
     @FXML
-    private Label status;
-    @FXML
     private Label details;
 
     private final Region clashMark = ClashMark.create();
+    private final Region pinMark = PinMark.create();
 
     /**
      * Creates an {@code AppointmentRow} that shows no appointment until {@link #show} is called.
@@ -73,13 +73,12 @@ public class AppointmentRow extends UiPart<Region> {
         time.setText(AppointmentFormatter.formatTime(appointment));
         time.getStyleClass().removeAll(TIME_STYLE_CLASS, NO_TIME_STYLE_CLASS);
         time.getStyleClass().add(appointment.getTime().isPresent() ? TIME_STYLE_CLASS : NO_TIME_STYLE_CLASS);
-        ClashMark.show(time, clashMark, isClashing);
+        TimeMark.show(time, clashMark, pinMark, isClashing, appointment.isDone());
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);
         appointmentNumber.setText("#" + appointment.getNumber());
-        status.setText(AppointmentFormatter.formatStatus(appointment));
         details.setText(appointment.getDetails().map(Object::toString).orElse(""));
-        // Hide absent details without leaving an empty line below the status
+        // Hide absent details without leaving an empty line below the name
         details.setVisible(appointment.getDetails().isPresent());
         details.setManaged(appointment.getDetails().isPresent());
         getRoot().getStyleClass().removeAll(PASSED_STYLE_CLASS, CLASH_STYLE_CLASS);

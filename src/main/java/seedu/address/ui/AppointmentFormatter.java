@@ -42,13 +42,6 @@ public final class AppointmentFormatter {
 
     private AppointmentFormatter() {}
 
-    /**
-     * Returns the manually set completion status, independently of whether the appointment has passed.
-     */
-    public static String formatStatus(Appointment appointment) {
-        requireNonNull(appointment);
-        return appointment.isDone() ? "Done" : "Undone";
-    }
 
     /**
      * Returns a short description of {@code appointment} for the patient list, such as "Today 09:30",
