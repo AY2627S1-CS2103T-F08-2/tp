@@ -6,6 +6,7 @@ import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
@@ -39,10 +40,13 @@ public interface Logic {
     ObservableList<PatientAppointment> getAppointmentList();
 
     /**
-     * Returns each way to complete the patient ID at the end of {@code commandText}, such as {@code view S12},
-     * with the patients in the filtered list first. Returns an empty list if there is nothing to complete.
+     * Returns each way to complete the word that {@code commandText} ends with, such as the command word in
+     * {@code dele}, the option in {@code edit S1234567A --ph} or the patient ID in {@code view S12}, with the patients
+     * in the filtered list first. Returns an empty list if there is nothing to complete.
+     *
+     * @see seedu.address.logic.parser.TabCompleter#complete(String, List)
      */
-    List<String> getCompletions(String commandText);
+    List<Completion> getCompletions(String commandText);
 
     /**
      * Returns the user prefs' GUI settings.

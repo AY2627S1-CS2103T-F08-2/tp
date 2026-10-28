@@ -230,7 +230,8 @@ public class MainWindow extends UiPart<Stage> {
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        commandBox = new CommandBox(this::executeCommand, logic::getCompletions, this::focusViewList);
+        commandBox = new CommandBox(this::executeCommand, logic::getCompletions, this::focusViewList,
+                statusBarFooter::showCompletions);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
 
         // The window sees these keys before the focused part does, so it can move the focus away from it.

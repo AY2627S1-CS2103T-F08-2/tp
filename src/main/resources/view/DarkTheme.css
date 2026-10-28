@@ -182,6 +182,25 @@
     -fx-pref-height: 30px;
 }
 
+/* While the user types, the status bar shows what Tab can complete: a key cap, then the words. */
+.status-bar .completion-hint {
+    -fx-spacing: 2px;
+    -fx-padding: 0 0 0 4px;
+}
+
+.status-bar .label.tab-key {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 11px;
+    -fx-text-fill: #d5dadc;
+    -fx-background-color: #2f2f2f;
+    -fx-background-radius: 4px;
+    -fx-border-color: #6d6d6d;
+    -fx-border-width: 1px 1px 2px 1px;
+    -fx-border-radius: 4px;
+    -fx-padding: 0 5px 0 5px;
+    -fx-pref-height: -1;
+}
+
 .status-bar-with-border {
     -fx-background-color: derive(#1d1d1d, 30%);
     -fx-border-color: derive(#1d1d1d, 25%);
