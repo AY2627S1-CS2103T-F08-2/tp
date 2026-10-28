@@ -46,8 +46,11 @@ public class PatientDetailPanel extends UiPart<Region> {
     private static final String TODAY_STYLE_CLASS = "detail-appointment-today";
     private static final String PAST_STYLE_CLASS = "detail-appointment-past";
     private static final String MARKED_STYLE_CLASS = "detail-appointment-marked";
-    /** The width of an appointment's date, the same as the keys above it. */
-    private static final double DATE_WIDTH = 150;
+    /**
+     * The width of an appointment's date: enough for one with a year, such as "Mon 28 Dec 2026", and a little more,
+     * so that the time stays close to a short date.
+     */
+    private static final double DATE_WIDTH = 130;
     /** The width that a date may shrink to beside the details: just enough for one such as "Mon 28 Dec 2026". */
     private static final double DATE_MIN_WIDTH = 125;
     /**
@@ -56,10 +59,10 @@ public class PatientDetailPanel extends UiPart<Region> {
      */
     private static final double DATE_NARROW_MIN_WIDTH = 90;
     /**
-     * The width of an appointment's time beside its details, wide enough for "Unspecified time", so that the
-     * details of all rows line up.
+     * The width of an appointment's time beside its details, wide enough for "Unspecified time" with room after it,
+     * so that the details of all rows line up where they would after a wider date.
      */
-    private static final double TIME_WIDTH = 120;
+    private static final double TIME_WIDTH = 140;
     /**
      * The width that an appointment's details need beside its time: that of a long word such as "OSTEOARTHRITIS",
      * as for the values above. In a narrower row, the details go under the time.
