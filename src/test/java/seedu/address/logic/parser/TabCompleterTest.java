@@ -69,6 +69,17 @@ public class TabCompleterTest {
     }
 
     @Test
+    public void complete_earlierWordNotInLowercase_returnsEmptyList() {
+        // the parser accepts only lowercase command words and options, so they are not completed after
+        assertEquals(List.of(), words("EDIT S1234567A --PH"));
+        assertEquals(List.of(), words("HELP W"));
+        assertEquals(List.of(), words("VIEWAPPT --id S1"));
+        assertEquals(List.of(), words("viewappt --ID S1"));
+        assertEquals(List.of(), words("View s1"));
+        assertEquals(List.of(), words("EDIT s1 --phone 91234567"));
+    }
+
+    @Test
     public void complete_option_skipsOptionsAlreadyTyped() {
         assertEquals(List.of("--phone", "--address", "--medical-history", "--add-medical-history", "--notes",
                 "--add-notes"), words("edit S1234567A --name Alex Tan --"));

@@ -80,9 +80,10 @@ public class TabCompleter {
      * <li>The word after {@code --id} in {@code viewappt} is completed to a patient ID.</li>
      * <li>Otherwise, {@link IdCompleter} completes the patient ID that the command takes first.</li>
      * </ul>
-     * Every word matches ignoring case. Command words, options and what {@code help} explains are completed in
-     * lowercase, the only case that {@link LaiNurseParser} accepts, so {@code DELE} gives {@code delete}.
-     * IDs are given in the order of {@code ids}.
+     * The word being completed matches ignoring case. Command words, options and what {@code help} explains are
+     * completed in lowercase, the only case that {@link LaiNurseParser} accepts, so {@code DELE} gives
+     * {@code delete}. The command word and options before it must be in lowercase already, as the parser expects
+     * them, so {@code EDIT S1234567A --PH} has nothing to complete. IDs are given in the order of {@code ids}.
      */
     public static List<Completion> complete(String commandText, List<PatientId> ids) {
         requireAllNonNull(commandText, ids);
