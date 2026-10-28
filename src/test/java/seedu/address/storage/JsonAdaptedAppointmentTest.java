@@ -17,15 +17,16 @@ import seedu.address.model.patient.Patient;
 public class JsonAdaptedAppointmentTest {
 
     @Test
-    public void toModelType_completion_roundTripsBothStatusesWithDetails() throws Exception {
-        for (boolean done : List.of(false, true)) {
+    public void toModelType_mark_roundTripsBothStatusesWithDetails() throws Exception {
+        for (boolean marked : List.of(false, true)) {
             Patient patient = readPatient("[{\"dateTime\":\"2026-10-05 09:30\","
-                    + "\"details\":\"Insulin review\",\"done\":" + done + "}]");
+                    + "\"details\":\"Insulin review\",\"marked\":" + marked + "}]");
             Appointment appointment = patient.getSchedule().findByNumber(1).orElseThrow();
-            assertEquals(done, appointment.isDone());
+            assertEquals(marked, appointment.isDone());
             assertEquals("INSULIN REVIEW", appointment.getDetails().orElseThrow().value);
             String json = JsonUtil.toJsonString(new JsonAdaptedPatient(patient));
-            assertTrue(json.contains("\"done\" : " + done));
+            assertTrue(json.contains("\"marked\" : " + marked));
+            assertFalse(json.contains("\"done\""));
             // the number is the appointment's place in date order, so it is not saved
             assertFalse(json.contains("\"number\""));
             assertEquals(patient, JsonUtil.fromJsonString(json, JsonAdaptedPatient.class).toModelType());
@@ -33,22 +34,28 @@ public class JsonAdaptedAppointmentTest {
     }
 
     @Test
-    public void toModelType_missingCompletion_defaultsToUndone() throws Exception {
+    public void toModelType_missingMark_defaultsToUnmarked() throws Exception {
         Patient patient = readPatient("[\"2026-10-05\",{\"dateTime\":\"2026-10-06\"},"
                 + "{\"dateTime\":\"2026-10-07\"}]");
         assertEquals(List.of(1, 2, 3), patient.getSchedule().asList().stream().map(Appointment::getNumber).toList());
         patient.getSchedule().asList().forEach(appointment -> assertFalse(appointment.isDone()));
+        // v1.5 and earlier saved the mark as "done"
         Patient doneLegacy = readPatient("[{\"dateTime\":\"2026-10-05\",\"done\":true}]");
         assertTrue(doneLegacy.getSchedule().findByNumber(1).orElseThrow().isDone());
+        // "marked" wins over "done" if a file has both
+        Patient both = readPatient("[{\"dateTime\":\"2026-10-05\",\"done\":true,\"marked\":false}]");
+        assertFalse(both.getSchedule().findByNumber(1).orElseThrow().isDone());
     }
 
     @Test
-    public void toModelType_invalidCompletion_rejectsWithoutCoercion() throws Exception {
-        for (String done : List.of("null", "0", "1", "\"true\"", "\"false\"", "{}", "[]")) {
-            String json = "{\"dateTime\":\"2026-10-05\",\"done\":" + done + "}";
-            JsonAdaptedAppointment adapted = JsonUtil.fromJsonString(json, JsonAdaptedAppointment.class);
-            assertThrows(IllegalValueException.class, JsonAdaptedAppointment.MESSAGE_DONE_CONSTRAINTS,
-                    adapted::toModelType);
+    public void toModelType_invalidMark_rejectsWithoutCoercion() throws Exception {
+        for (String key : List.of("marked", "done")) {
+            for (String value : List.of("null", "0", "1", "\"true\"", "\"false\"", "{}", "[]")) {
+                String json = "{\"dateTime\":\"2026-10-05\",\"" + key + "\":" + value + "}";
+                JsonAdaptedAppointment adapted = JsonUtil.fromJsonString(json, JsonAdaptedAppointment.class);
+                assertThrows(IllegalValueException.class, JsonAdaptedAppointment.MESSAGE_MARKED_CONSTRAINTS,
+                        adapted::toModelType);
+            }
         }
     }
 

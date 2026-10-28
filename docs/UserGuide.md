@@ -485,12 +485,13 @@ When LaiNurse launches, it loads its data as follows:
 
 Whenever `lainurse.json` cannot be loaded, LaiNurse first copies it to `data/lainurse.corrupt.json`, replacing any earlier copy, so your edits are not lost when the next save overwrites `lainurse.json`. The result display then tells you which file could not be loaded, what LaiNurse loaded instead, and where the copy is kept. To get your edits back, close the window with its close button, fix the mistake in `lainurse.corrupt.json`, and copy it over `lainurse.json`. Do not close LaiNurse with `exit` first if it started with no data, as `exit` saves that empty data over `lainurse.json` and the backup.
 
-Appointments are saved with their completion status, for example
-`{"dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`. Their numbers are not saved:
+Appointments are saved with their mark, for example
+`{"dateTime": "2026-10-05 09:30", "marked": false, "details": "INSULIN REVIEW"}`. Their numbers are not saved:
 LaiNurse numbers each patient's appointments in date order when it loads them, and appointments at the same date and
 time keep their order in the file. A `number` saved by an earlier version is ignored, and older files with appointment
-strings still load. Same-time visits are all preserved. A missing `done` field defaults to false (undone). If supplied, `done` must be the JSON
-boolean `true` or `false`; strings, numbers and null are invalid.
+strings still load. Same-time visits are all preserved. A missing `marked` field defaults to false (unmarked). If supplied, `marked` must be the
+JSON boolean `true` or `false`; strings, numbers and null are invalid. A file from an earlier version, which saved the
+mark as `done`, still loads.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 Do not edit `lainurse.backup.json`. LaiNurse cannot stop you from editing it, and it does not check it until it needs it. The backup protects you only in the cases in the table above.<br>

@@ -475,13 +475,14 @@ appointment's place in date order, which the v1.5 GUI vote chose (#163). Explici
 timestamp duplicates are preserved. The global appointment list retains date/time, patient name and ID ordering,
 then uses number to distinguish a patient's simultaneous visits.
 
-**Storage and compatibility.** `JsonAdaptedAppointment` saves `dateTime`, boolean `done` and optional
-`details`, such as `{"dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`. It does not save
+**Storage and compatibility.** `JsonAdaptedAppointment` saves `dateTime`, boolean `marked` and optional
+`details`, such as `{"dateTime": "2026-10-05 09:30", "marked": false, "details": "INSULIN REVIEW"}`. It does not save
 the number, which is the appointment's place in date order: `JsonAdaptedPatient` saves each schedule in that order,
 and loading numbers the appointments again, with equal timestamps in their file order. Its JSON-node creator reads
 only the fields it knows, so a `number` that v1.5 and earlier saved is ignored. It also accepts legacy strings.
-Missing `done` fields default to false. An explicit `done` must be a JSON boolean: null, strings, numbers and
-other JSON types produce an `IllegalValueException`, without coercion. Both statuses persist across restarts.
+It reads the mark from `marked`, or from `done`, which v1.5 and earlier saved, if there is no `marked`. A missing
+mark defaults to false. An explicit mark must be a JSON boolean: null, strings, numbers and other JSON types produce
+an `IllegalValueException`, without coercion. Both statuses persist across restarts.
 `JsonSerializableLaiNurse` continues to require the `patients` key.
 
 An appointment date is written `yyyy-MM-dd`, optionally followed by a time in `HH:mm`, with the year exactly

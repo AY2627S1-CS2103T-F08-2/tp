@@ -12,9 +12,10 @@ import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 
 /**
- * Jackson-friendly version of {@link Appointment}, saved with {@code dateTime}, {@code done} and optional
- * {@code details}, such as "INSULIN REVIEW". It also reads an appointment saved as a plain string, such as
- * {@code "2026-10-05 09:30"}, as earlier versions of LaiNurse save appointments.
+ * Jackson-friendly version of {@link Appointment}, saved with {@code dateTime}, {@code marked} and optional
+ * {@code details}, such as "INSULIN REVIEW". It also reads the mark that v1.5 and earlier saved as {@code done},
+ * and an appointment saved as a plain string, such as {@code "2026-10-05 09:30"}, as earlier versions of LaiNurse
+ * save appointments.
  * An appointment's number is its position in date order, so it is not saved. A {@code number} that v1.5 and earlier
  * saved is ignored. Appointments at the same date and time keep the order in which they are saved.
  */
@@ -22,11 +23,11 @@ import seedu.address.model.patient.AppointmentDetails;
 class JsonAdaptedAppointment {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Appointment's %s field is missing!";
-    public static final String MESSAGE_DONE_CONSTRAINTS = "Appointment's done field must be a boolean.";
+    public static final String MESSAGE_MARKED_CONSTRAINTS = "Appointment's marked field must be a boolean.";
 
     private final String dateTime;
     private final String details; // null if none
-    private final JsonNode done; // null for a legacy appointment, which is undone
+    private final JsonNode marked; // null for a legacy appointment, which is unmarked
 
     /**
      * Constructs a {@code JsonAdaptedAppointment} with the given date and time, and details if not null.
@@ -35,10 +36,10 @@ class JsonAdaptedAppointment {
         this(dateTime, details, null);
     }
 
-    private JsonAdaptedAppointment(String dateTime, String details, JsonNode done) {
+    private JsonAdaptedAppointment(String dateTime, String details, JsonNode marked) {
         this.dateTime = dateTime;
         this.details = details;
-        this.done = done;
+        this.marked = marked;
     }
 
     /**
@@ -47,7 +48,7 @@ class JsonAdaptedAppointment {
     public JsonAdaptedAppointment(Appointment source) {
         dateTime = source.value;
         details = source.getDetails().map(appointmentDetails -> appointmentDetails.value).orElse(null);
-        done = BooleanNode.valueOf(source.isDone());
+        marked = BooleanNode.valueOf(source.isDone());
     }
 
     /**
@@ -74,8 +75,10 @@ class JsonAdaptedAppointment {
                 || details != null && !details.isNull() && !details.isTextual()) {
             throw new IllegalArgumentException(Appointment.MESSAGE_CONSTRAINTS);
         }
+        // v1.5 and earlier saved the mark as "done"
+        JsonNode marked = json.has("marked") ? json.get("marked") : json.get("done");
         return new JsonAdaptedAppointment(dateTime == null ? null : dateTime.textValue(),
-                details == null ? null : details.textValue(), json.get("done"));
+                details == null ? null : details.textValue(), marked);
     }
 
     /**
@@ -93,11 +96,11 @@ class JsonAdaptedAppointment {
         if (details != null && !AppointmentDetails.isValidAppointmentDetails(details)) {
             throw new IllegalValueException(AppointmentDetails.MESSAGE_CONSTRAINTS);
         }
-        if (done != null && !done.isBoolean()) {
-            throw new IllegalValueException(MESSAGE_DONE_CONSTRAINTS);
+        if (marked != null && !marked.isBoolean()) {
+            throw new IllegalValueException(MESSAGE_MARKED_CONSTRAINTS);
         }
         return new Appointment(dateTime, Optional.ofNullable(details).map(AppointmentDetails::new))
-                .withDone(done != null && done.booleanValue());
+                .withDone(marked != null && marked.booleanValue());
     }
 
 }
