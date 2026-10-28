@@ -50,7 +50,7 @@ abstract class AppointmentStatusCommand extends Command {
         requireNonNull(model);
         Patient patient = model.findPatientById(targetId).orElseThrow(() -> {
             logger.fine("Rejected " + commandWord + ": no patient has the given ID.");
-            return new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+            return new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
         });
         AppointmentSchedule schedule = patient.getSchedule();
         Appointment appointment = AppointmentLookup.find(targetId, schedule, targetAppointment, commandWord);

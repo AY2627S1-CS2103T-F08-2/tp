@@ -100,7 +100,7 @@ public class DeleteAppointmentCommandFlowTest {
     @Test
     public void execute_invalidInput_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("deleteappt S0000000Z 1",
-                CommandException.class, Messages.MESSAGE_INVALID_PATIENT_ID);
+                CommandException.class, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A", ParseException.class, INVALID_FORMAT_MESSAGE);
         for (String number : List.of("0", "-1", "+1", "1.5", "2147483648", "2026-10-05")) {
             assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A " + number, ParseException.class,

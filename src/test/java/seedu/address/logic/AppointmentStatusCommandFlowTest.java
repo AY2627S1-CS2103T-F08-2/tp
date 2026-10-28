@@ -139,7 +139,8 @@ public class AppointmentStatusCommandFlowTest {
         assertRejected("markappt S1234567A 1", CommandException.class,
                 String.format(MarkAppointmentCommand.MESSAGE_ALREADY_DONE, 1, ALEX_ID));
         for (String command : List.of("markappt", "unmarkappt")) {
-            assertRejected(command + " S0000000Z 1", CommandException.class, Messages.MESSAGE_INVALID_PATIENT_ID);
+            assertRejected(command + " S0000000Z 1", CommandException.class,
+                    String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
             assertRejected(command + " S1234567A 99", CommandException.class,
                     String.format(Messages.MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND, ALEX_ID, 99));
             assertRejected(command + " S1234567A 0", ParseException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS);

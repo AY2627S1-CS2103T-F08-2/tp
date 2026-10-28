@@ -60,7 +60,7 @@ public class AddAppointmentCommand extends Command {
         Patient patient = model.findPatientById(targetId)
                 .orElseThrow(() -> {
                     logger.fine("Rejected addappt: no patient has the given ID.");
-                    return new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+                    return new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
                 });
 
         AppointmentSchedule schedule = patient.getSchedule();

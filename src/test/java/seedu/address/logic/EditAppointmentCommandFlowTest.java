@@ -151,7 +151,7 @@ public class EditAppointmentCommandFlowTest {
     @Test
     public void execute_invalidInput_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("editappt S0000000Z 1 --to 2026-10-06",
-                CommandException.class, Messages.MESSAGE_INVALID_PATIENT_ID);
+                CommandException.class, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1",
                 ParseException.class, EditAppointmentCommand.MESSAGE_NOT_EDITED);
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --to 2026-10-06", ParseException.class,

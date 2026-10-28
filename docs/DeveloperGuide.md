@@ -1838,7 +1838,7 @@ testers are expected to do more *exploratory* testing.
        `0 appointment(s) of ALEX YEOH on or after` the date. The patient list on the **Patients** tab is empty.
 
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
-       Expected: The list is unchanged. The status message shows `The patient ID provided is invalid.`
+       Expected: The list is unchanged. The status message shows `No patient has the ID S9999999Z.`
 
     1. Test case: `viewappt --id S1234567A MON`, a date after the option<br>
        Expected: The list is unchanged. The status message says that a `DATE` must come before other options,
@@ -2013,7 +2013,7 @@ testers are expected to do more *exploratory* testing.
        highlighted, and the panel beside the list shows their details.
 
     1. Test case: `edit S0000000Z --phone 91234567`, an ID that no patient has<br>
-       Expected: No patient is changed. The status message shows `The patient ID provided is invalid.`
+       Expected: No patient is changed. The status message shows `No patient has the ID S0000000Z.`
 
     1. Test case: `edit S1234567A`, with nothing to change<br>
        Expected: No patient is changed. The status message shows `At least one field to edit must be provided.`
@@ -2106,7 +2106,7 @@ testers are expected to do more *exploratory* testing.
        #1 of Alex Yeoh. Their times and that day's heading appear in red.
 
     1. Test case: `addappt S0000000Z 2026-10-14`<br>
-       Expected: No appointment is added. The status message shows `The patient ID provided is invalid.`
+       Expected: No appointment is added. The status message shows `No patient has the ID S0000000Z.`
 
 ### Deleting an appointment
 
@@ -2130,7 +2130,7 @@ testers are expected to do more *exploratory* testing.
        Expected: No appointment is deleted. The status message says `Patient S1234567A has no appointment #99.`
 
     1. Test case: `deleteappt S0000000Z 1`<br>
-       Expected: No appointment is deleted. The status message shows `The patient ID provided is invalid.`
+       Expected: No appointment is deleted. The status message shows `No patient has the ID S0000000Z.`
 
     1. Other incorrect deleteappt commands to try: `deleteappt` (missing everything), `deleteappt S1234567A`
        (missing number), `deleteappt S1234567A 1 extra` (extra argument)<br>

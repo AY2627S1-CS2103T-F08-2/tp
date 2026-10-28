@@ -48,7 +48,7 @@ public class DeleteCommandTest {
         PatientId nonExistentId = new PatientId("T9999999Z");
         DeleteCommand deleteCommand = new DeleteCommand(nonExistentId);
 
-        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(deleteCommand, model, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, nonExistentId));
     }
 
     @Test

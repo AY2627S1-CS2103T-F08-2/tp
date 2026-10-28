@@ -3,7 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_PATIENT_ID;
+import static seedu.address.logic.Messages.MESSAGE_PATIENT_NOT_FOUND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
@@ -147,7 +147,7 @@ public class ViewAppointmentCommand extends Command {
 
         PatientId id = patientId.get();
         Patient patient = model.findPatientById(id)
-                .orElseThrow(() -> new CommandException(MESSAGE_INVALID_PATIENT_ID));
+                .orElseThrow(() -> new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id)));
         // The patient list mirrors the appointment view: only this patient, and only with an appointment in range
         model.updateFilteredPatientList(candidate -> candidate.getId().equals(id) && inRange.test(candidate));
         long count = patient.getSchedule().asList().stream()
@@ -178,7 +178,7 @@ public class ViewAppointmentCommand extends Command {
      */
     private CommandResult showAllOfPatient(Model model, PatientId id, LocalDate today) throws CommandException {
         Patient patient = model.findPatientById(id)
-                .orElseThrow(() -> new CommandException(MESSAGE_INVALID_PATIENT_ID));
+                .orElseThrow(() -> new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id)));
         List<Appointment> appointments = patient.getSchedule().asList(); // in time order
         LocalDate first = appointments.isEmpty() ? today : appointments.get(0).getDate();
         LocalDate last = appointments.isEmpty() ? today : appointments.get(appointments.size() - 1).getDate();

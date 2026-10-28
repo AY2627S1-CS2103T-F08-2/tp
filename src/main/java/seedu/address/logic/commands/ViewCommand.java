@@ -44,7 +44,8 @@ public class ViewCommand extends Command {
         List<Patient> listAllPatients = model.getLaiNurse().getPatientList();
 
         Patient patientToView = listAllPatients.stream().filter(patient -> patient.getId().equals(targetId))
-                .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
+                .findFirst().orElseThrow(() -> new CommandException(
+                        String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId)));
         // All patients, so that the patient's row is in the list to select
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
         return new CommandResult(String.format(MESSAGE_VIEW_PATIENT_SUCCESS, patientToView.getName(),

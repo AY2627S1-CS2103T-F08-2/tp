@@ -83,7 +83,7 @@ public class EditCommand extends Command {
                 .filter(patient -> patient.getId().equals(targetId)).findFirst();
         if (foundPatient.isEmpty()) {
             logger.fine("Rejected edit: no patient has the given ID.");
-            throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+            throw new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
         }
         Patient patientToEdit = foundPatient.get();
         Patient editedPatient = createEditedPatient(patientToEdit, editPatientDescriptor);

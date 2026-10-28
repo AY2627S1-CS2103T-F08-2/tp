@@ -199,7 +199,7 @@ public class EditCommandTest {
         EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withName(VALID_NAME_BOB).build();
         EditCommand editCommand = new EditCommand(new PatientId(VALID_ID_AMY), descriptor);
 
-        assertCommandFailure(editCommand, model, Messages.MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(editCommand, model, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, VALID_ID_AMY));
     }
 
     /**

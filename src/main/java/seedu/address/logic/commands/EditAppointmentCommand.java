@@ -83,7 +83,7 @@ public class EditAppointmentCommand extends Command {
         Optional<Patient> foundPatient = model.findPatientById(targetId);
         if (foundPatient.isEmpty()) {
             logger.fine("Rejected editappt: no patient has the given ID.");
-            throw new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+            throw new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
         }
         Patient patient = foundPatient.get();
         AppointmentSchedule schedule = patient.getSchedule();

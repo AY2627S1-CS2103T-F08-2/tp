@@ -54,7 +54,7 @@ public class DeleteAppointmentCommand extends Command {
         Patient patient = model.findPatientById(targetId)
                 .orElseThrow(() -> {
                     logger.fine("Rejected deleteappt: no patient has the given ID.");
-                    return new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID);
+                    return new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
                 });
 
         Appointment foundAppointment =
