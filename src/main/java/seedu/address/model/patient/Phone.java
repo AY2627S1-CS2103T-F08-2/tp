@@ -14,7 +14,7 @@ public class Phone {
 
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Phone numbers should only contain digits, spaces, '+' and '-', and should have at least 3 digits";
+            "Phone numbers must contain only digits, spaces, '+' and '-', and must have at least 3 digits.";
 
     /*
      * Checked against the normalized number. The lookahead requires at least 3 digits anywhere in it.

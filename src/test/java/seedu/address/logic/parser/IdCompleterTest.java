@@ -81,8 +81,8 @@ public class IdCompleterTest {
 
     @Test
     public void complete_addApptWithOptionsAfterId_completesIdAndKeepsOptions() {
-        assertEquals(List.of("addappt T7654321B 2026-10-05 09:30 --details Bring pen"),
-                completeTexts("addappt t7 2026-10-05 09:30 --details Bring pen", IDS));
+        assertEquals(List.of("addappt T7654321B --date 2026-10-05 09:30 --details Bring pen"),
+                completeTexts("addappt t7 --date 2026-10-05 09:30 --details Bring pen", IDS));
         assertEquals(List.of("addappt S1234567A", "addappt S1999999C"), completeTexts("addappt s1", IDS));
     }
 

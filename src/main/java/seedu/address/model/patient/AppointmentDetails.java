@@ -13,7 +13,7 @@ import seedu.address.commons.util.TextNormalizer;
  */
 public class AppointmentDetails {
 
-    public static final String MESSAGE_CONSTRAINTS = "Appointment details can take any values, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Appointment details can take any values, and must not be blank.";
 
     /*
      * Checked against the normalized details, so a blank string becomes "" and is rejected.

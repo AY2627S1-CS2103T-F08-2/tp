@@ -21,7 +21,7 @@ public class UnmarkAppointmentCommand extends AppointmentStatusCommand {
     /**
      * Creates a command to unmark the appointment with {@code number} of the patient with {@code targetId}.
      */
-    public UnmarkAppointmentCommand(PatientId targetId, int number) {
+    public UnmarkAppointmentCommand(PatientId targetId, long number) {
         super(targetId, number, false, COMMAND_WORD, MESSAGE_UNMARK_APPOINTMENT_SUCCESS, MESSAGE_ALREADY_UNDONE);
     }
 }

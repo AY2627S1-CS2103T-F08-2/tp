@@ -41,7 +41,8 @@ public class DeleteCommand extends Command {
         List<Patient> listAllPatients = model.getLaiNurse().getPatientList();
 
         Patient patientToDelete = listAllPatients.stream().filter(patient -> patient.getId().equals(targetId))
-                        .findFirst().orElseThrow(() -> new CommandException(Messages.MESSAGE_INVALID_PATIENT_ID));
+                        .findFirst().orElseThrow(() -> new CommandException(
+                                String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId)));
         model.deletePatient(patientToDelete);
         return new CommandResult(String.format(MESSAGE_DELETE_PATIENT_SUCCESS, Messages.format(patientToDelete)))
                 .withSelectionCleared();

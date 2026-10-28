@@ -92,7 +92,7 @@ public class AddAppointmentCommandTest {
     @Test
     public void execute_unknownId_failure() {
         AddAppointmentCommand command = new AddAppointmentCommand(new PatientId("S0000000Z"), NEW_APPOINTMENT);
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(command, model, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
     }
 
     @Test

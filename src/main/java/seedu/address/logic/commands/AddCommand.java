@@ -41,7 +41,7 @@ public class AddCommand extends Command {
             + PREFIX_NOTES + "Enjoys gardening";
 
     public static final String MESSAGE_SUCCESS = "New patient added: %1$s";
-    public static final String MESSAGE_DUPLICATE_PATIENT = "This patient already exists in LaiNurse.";
+    public static final String MESSAGE_DUPLICATE_PATIENT = "%1$s (%2$s) already exists in LaiNurse.";
 
     private final Patient toAdd;
 
@@ -57,8 +57,10 @@ public class AddCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
 
-        if (model.hasPatient(toAdd)) {
-            throw new CommandException(MESSAGE_DUPLICATE_PATIENT);
+        Optional<Patient> existingPatient = model.findPatientById(toAdd.getId());
+        if (existingPatient.isPresent()) {
+            throw new CommandException(String.format(MESSAGE_DUPLICATE_PATIENT,
+                    existingPatient.get().getName(), existingPatient.get().getId()));
         }
 
         model.addPatient(toAdd);

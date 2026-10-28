@@ -153,11 +153,11 @@ public class EditCommandFlowTest {
     @Test
     public void execute_unknownId_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("edit S0000000Z --phone 91234567", CommandException.class,
-                Messages.MESSAGE_INVALID_PATIENT_ID);
+                String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
 
         // a list number is read as an ID, which no patient has
         assertRejectedCommandLeavesDataUnchanged("edit 1 --name Test", CommandException.class,
-                Messages.MESSAGE_INVALID_PATIENT_ID);
+                String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "1"));
     }
 
     @Test

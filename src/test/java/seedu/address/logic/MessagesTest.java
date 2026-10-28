@@ -1,6 +1,9 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
 import org.junit.jupiter.api.Test;
 
@@ -22,5 +25,18 @@ public class MessagesTest {
     public void format_patientWithoutNotes_omitsNotes() {
         assertEquals("AMY BEE; ID: S9876543Z; Phone: 85355255; Address: 123, JURONG WEST AVE 6, #08-111",
                 Messages.format(new PatientBuilder().build()));
+    }
+
+    @Test
+    public void getErrorMessageForDuplicatePrefixes_oneOption_namesIt() {
+        assertEquals("--phone can be given only once.", Messages.getErrorMessageForDuplicatePrefixes(PREFIX_PHONE));
+    }
+
+    @Test
+    public void getErrorMessageForDuplicatePrefixes_severalOptions_namesThemInOrder() {
+        assertEquals("Each of these options can be given only once: --from, --to.",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_FROM, PREFIX_TO));
+        assertEquals("Each of these options can be given only once: --to, --from.",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_TO, PREFIX_FROM));
     }
 }

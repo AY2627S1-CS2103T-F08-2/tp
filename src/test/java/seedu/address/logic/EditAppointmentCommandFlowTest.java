@@ -151,7 +151,7 @@ public class EditAppointmentCommandFlowTest {
     @Test
     public void execute_invalidInput_rejectedWithoutChanges() throws Exception {
         assertRejectedCommandLeavesDataUnchanged("editappt S0000000Z 1 --to 2026-10-06",
-                CommandException.class, Messages.MESSAGE_INVALID_PATIENT_ID);
+                CommandException.class, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1",
                 ParseException.class, EditAppointmentCommand.MESSAGE_NOT_EDITED);
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --to 2026-10-06", ParseException.class,
@@ -163,7 +163,7 @@ public class EditAppointmentCommandFlowTest {
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A 1 --details --add-details Fasting",
                 ParseException.class, String.format(Messages.MESSAGE_CONFLICTING_FIELD_EDITS, "--details",
                         "--add-details"));
-        for (String number : List.of("0", "-1", "+1", "1.5", "2147483648")) {
+        for (String number : List.of("0", "-1", "+1", "1.5")) {
             assertRejectedCommandLeavesDataUnchanged("editappt S1234567A " + number + " --details Review",
                     ParseException.class, Appointment.MESSAGE_NUMBER_CONSTRAINTS);
         }
@@ -221,7 +221,7 @@ public class EditAppointmentCommandFlowTest {
     }
     @Test
     public void execute_legacySelector_rejectedWithoutChanges() throws Exception {
-        logic.execute("addappt S1234567A 2026-10-05 09:30 --details Second visit");
+        logic.execute("addappt S1234567A --date 2026-10-05 09:30 --details Second visit");
         assertRejectedCommandLeavesDataUnchanged("editappt S1234567A --appt 2026-10-05 09:30 --to 2026-10-06",
                 ParseException.class, INVALID_FORMAT_MESSAGE);
         assertRejectedCommandLeavesDataUnchanged("deleteappt S1234567A --appt 2026-10-05 09:30",
@@ -231,7 +231,7 @@ public class EditAppointmentCommandFlowTest {
 
     @Test
     public void execute_numberSelectsDuplicate_keepsIdentityAfterMove() throws Exception {
-        logic.execute("addappt S1234567A 2026-10-05 09:30 --details Second visit");
+        logic.execute("addappt S1234567A --date 2026-10-05 09:30 --details Second visit");
         CommandResult result = logic.execute("editappt S1234567A 3 --to 2026-09-01");
         Appointment moved = patient(ALEX_ID).getSchedule().findByNumber(3).orElseThrow();
         assertEquals("2026-09-01", moved.value);
@@ -252,8 +252,8 @@ public class EditAppointmentCommandFlowTest {
 
     @Test
     public void execute_detailsOnlyClash_warnsAboutEveryOtherVisit() throws Exception {
-        logic.execute("addappt S1234567A 2026-10-05 09:30");
-        logic.execute("addappt S2345678B 2026-10-05 09:30");
+        logic.execute("addappt S1234567A --date 2026-10-05 09:30");
+        logic.execute("addappt S2345678B --date 2026-10-05 09:30");
         CommandResult result = logic.execute("editappt S1234567A 1 --details Review");
         assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: REVIEW\n"
                 + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #3; "

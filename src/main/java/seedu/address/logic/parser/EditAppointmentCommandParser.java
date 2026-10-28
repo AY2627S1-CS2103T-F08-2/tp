@@ -45,7 +45,7 @@ public class EditAppointmentCommandParser implements Parser<EditAppointmentComma
         }
         argMultimap.verifyNoDuplicatePrefixesFor(prefixes);
 
-        int number = ParserUtil.parseAppointmentNumber(preamble[1]);
+        long number = ParserUtil.parseAppointmentNumber(preamble[1]);
         Optional<Appointment> newDateTime = argMultimap.getValue(PREFIX_TO).isPresent()
                 ? Optional.of(ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_TO).get()))
                 : Optional.empty();

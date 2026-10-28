@@ -103,7 +103,7 @@ public class DeleteAppointmentCommandTest {
     public void execute_unknownId_failure() {
         DeleteAppointmentCommand command =
                 new DeleteAppointmentCommand(new PatientId("S0000000Z"), 1);
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PATIENT_ID);
+        assertCommandFailure(command, model, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));
     }
 
     @Test
