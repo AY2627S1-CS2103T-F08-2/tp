@@ -2,7 +2,6 @@ package seedu.address.logic;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,22 +20,27 @@ public class Messages {
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format!\n%1$s";
     public static final String MESSAGE_PATIENT_NOT_FOUND = "No patient has the ID %1$s.";
     public static final String MESSAGE_PATIENTS_LISTED_OVERVIEW = "%1$d patient(s) listed!";
-    public static final String MESSAGE_DUPLICATE_FIELDS =
-            "Multiple values specified for the following single-valued field(s): ";
+    public static final String MESSAGE_DUPLICATE_OPTION = "%1$s can be given only once.";
+    public static final String MESSAGE_DUPLICATE_OPTIONS = "Each of these options can be given only once: %1$s.";
     public static final String MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND = "Patient %1$s has no appointment #%2$d.";
     public static final String MESSAGE_CONFLICTING_FIELD_EDITS = "%1$s and %2$s cannot be given together. "
             + "%1$s replaces the value, or clears it if given no value, and %2$s adds to the end of it.";
 
     /**
-     * Returns an error message indicating the duplicate prefixes.
+     * Returns an error message naming the options of {@code duplicatePrefixes}, which were each given more than once,
+     * in the given order. Parsers give them in the order of the command's usage.
      */
     public static String getErrorMessageForDuplicatePrefixes(Prefix... duplicatePrefixes) {
         assert duplicatePrefixes.length > 0;
 
-        Set<String> duplicateFields =
-                Stream.of(duplicatePrefixes).map(Prefix::toString).collect(Collectors.toSet());
+        List<String> duplicateOptions = Stream.of(duplicatePrefixes)
+                .map(prefix -> prefix.toString().trim())
+                .distinct()
+                .toList();
 
-        return MESSAGE_DUPLICATE_FIELDS + String.join(" ", duplicateFields);
+        return duplicateOptions.size() == 1
+                ? String.format(MESSAGE_DUPLICATE_OPTION, duplicateOptions.get(0))
+                : String.format(MESSAGE_DUPLICATE_OPTIONS, String.join(", ", duplicateOptions));
     }
 
     /**

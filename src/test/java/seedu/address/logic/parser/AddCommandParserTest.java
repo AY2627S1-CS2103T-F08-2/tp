@@ -102,12 +102,12 @@ public class AddCommandParserTest {
         assertParseFailure(parser,
                 validExpectedPatientString + ID_DESC_AMY + PHONE_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY
                         + MEDICAL_HISTORY_DESC_BOB,
-                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE,
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
                         PREFIX_MEDICAL_HISTORY));
 
         assertParseFailure(parser,
                 validExpectedPatientString + ID_DESC_AMY + PHONE_DESC_AMY + NAME_DESC_AMY + ADDRESS_DESC_AMY,
-                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID, PREFIX_NAME, PREFIX_ADDRESS, PREFIX_PHONE));
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS));
 
         assertParseFailure(parser,
                 validExpectedPatientString + MEDICAL_HISTORY_DESC_BOB,

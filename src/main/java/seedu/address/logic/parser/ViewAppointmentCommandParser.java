@@ -47,7 +47,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         }
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
         // Duplicate options are reported whatever the rest of the input looks like
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TO, PREFIX_ID);
         // A date after --id is read into the ID value, so the order is reported before that value is parsed
         verifyNoDateAfterId(argMultimap);
         // A second date is read into --from or --to, so the missing option is reported before the value is parsed
