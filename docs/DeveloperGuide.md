@@ -1197,27 +1197,27 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1b. The given ID does not match any patient.
+* 1b. A date, time or the details are in an invalid format.
 
-    * 1b1. LaiNurse shows an error message.
-
-      Use case resumes at step 1.
-
-* 1c. The patient has no appointment with the given number.
-
-    * 1c1. LaiNurse shows an error naming the missing appointment number.
+    * 1b1. LaiNurse shows an error message with the valid format.
 
       Use case resumes at step 1.
 
-* 1d. A date, time or the details are in an invalid format.
+* 1c. Nurse asks to both replace and add to the details.
 
-    * 1d1. LaiNurse shows an error message with the valid format.
+    * 1c1. LaiNurse shows an error message saying that the two options cannot be given together.
 
       Use case resumes at step 1.
 
-* 1e. Nurse asks to both replace and add to the details.
+* 1d. The given ID does not match any patient.
 
-    * 1e1. LaiNurse shows an error message saying that the two options cannot be given together.
+    * 1d1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
+* 1e. The patient has no appointment with the given number.
+
+    * 1e1. LaiNurse shows an error naming the missing appointment number.
 
       Use case resumes at step 1.
 
@@ -1246,13 +1246,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
-* 1b. The given ID does not match any patient.
+* 1b. The details are blank.
 
     * 1b1. LaiNurse shows an error message.
 
       Use case resumes at step 1.
 
-* 1c. The details are blank.
+* 1c. The given ID does not match any patient.
 
     * 1c1. LaiNurse shows an error message.
 
