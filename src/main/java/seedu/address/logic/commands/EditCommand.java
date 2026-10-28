@@ -55,7 +55,10 @@ public class EditCommand extends Command {
             + COMMAND_WORD + " T0123456B " + PREFIX_ADD_MEDICAL_HISTORY + "Asthma " + PREFIX_NOTES.toString().trim();
 
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
-    public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
+    public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_NAME.toString().trim() + ", "
+            + PREFIX_PHONE.toString().trim() + ", " + PREFIX_ADDRESS.toString().trim() + ", "
+            + PREFIX_MEDICAL_HISTORY.toString().trim() + ", " + PREFIX_ADD_MEDICAL_HISTORY.toString().trim() + ", "
+            + PREFIX_NOTES.toString().trim() + " and " + PREFIX_ADD_NOTES.toString().trim() + " must be provided.";
 
     private static final Logger logger = LogsCenter.getLogger(EditCommand.class);
 

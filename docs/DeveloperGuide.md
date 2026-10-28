@@ -2018,7 +2018,8 @@ testers are expected to do more *exploratory* testing.
        Expected: No patient is changed. The status message shows `No patient has the ID S0000000Z.`
 
     1. Test case: `edit S1234567A`, with nothing to change<br>
-       Expected: No patient is changed. The status message shows `At least one field to edit must be provided.`
+       Expected: No patient is changed. The status message shows `At least one of --name, --phone, --address,
+       --medical-history, --add-medical-history, --notes and --add-notes must be provided.`
 
     1. Test case: `edit --phone 91234567`, with no ID<br>
        Expected: No patient is changed. The status message shows the command format.
