@@ -77,6 +77,11 @@ public class PatientDetailPanel extends UiPart<Region> {
     private PatientId shownId;
     /** The appointment of the shown patient to mark, or null to mark none. */
     private Appointment markedAppointment;
+    /**
+     * The ID of the patient whose details fill the panel, or null after the panel showed no patient, so that a
+     * patient shown again after that starts at the top of their details.
+     */
+    private PatientId filledId;
 
     @FXML
     private Label placeholder;
@@ -190,6 +195,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         } else {
             shownId = null;
             markedAppointment = null;
+            filledId = null;
             setShown(placeholder, true);
             setShown(details, false);
         }
@@ -197,8 +203,9 @@ public class PatientDetailPanel extends UiPart<Region> {
 
     private void fill(Patient patient) {
         // A newly shown patient starts at the top of their details, but an edit keeps the scroll position.
-        if (!patient.getId().value.equals(patientId.getText())) {
+        if (!patient.getId().equals(filledId)) {
             details.setVvalue(0);
+            filledId = patient.getId();
         }
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);
