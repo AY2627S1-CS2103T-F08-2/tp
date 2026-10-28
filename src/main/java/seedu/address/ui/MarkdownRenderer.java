@@ -247,24 +247,30 @@ public class MarkdownRenderer {
         grid.setStyle("-fx-background-color: " + NUS_BLUE + "; -fx-border-color: "
                 + NUS_BLUE_BORDER + "; -fx-background-radius: 4; -fx-border-radius: 4;");
 
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(28);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(72);
-        col2.setHgrow(Priority.ALWAYS);
-        grid.getColumnConstraints().addAll(col1, col2);
+        // The constraints must cover every column the table actually has: a table wider
+        // than the two hard-coded slots previously left its last columns without sizing
+        // rules, and JavaFX then sized the grid to a pathological preferred height.
+        int columnCount = countColumns(tableLines);
+        for (int i = 0; i < columnCount; i++) {
+            ColumnConstraints column = new ColumnConstraints();
+            if (i == 0 && columnCount > 1) {
+                // The first column keeps the original 28% so existing two-column
+                // tables preserve their previous geometry exactly.
+                column.setPercentWidth(28);
+            } else if (columnCount > 1) {
+                column.setPercentWidth((100 - 28.0) / (columnCount - 1));
+            } else {
+                column.setPercentWidth(100);
+            }
+            if (i == columnCount - 1) {
+                column.setHgrow(Priority.ALWAYS);
+            }
+            grid.getColumnConstraints().add(column);
+        }
 
         int rowIndex = 0;
         for (String rawRow : tableLines) {
-            String row = rawRow.trim();
-            if (row.startsWith("|")) {
-                row = row.substring(1);
-            }
-            if (row.endsWith("|")) {
-                row = row.substring(0, row.length() - 1);
-            }
-
-            String[] cells = row.split("\\|", -1);
+            String[] cells = splitRow(rawRow);
             for (int colIndex = 0; colIndex < cells.length; colIndex++) {
                 String cellContent = cleanHtmlLineBreaks(cells[colIndex].trim());
                 TextFlow cellFlow = buildInlineTextFlow(cellContent);
@@ -275,6 +281,29 @@ public class MarkdownRenderer {
         }
 
         return grid;
+    }
+
+    /**
+     * Returns the widest row's cell count. A markdown table may write rows with ragged
+     * cell counts, so the column constraints must cover every column that appears.
+     */
+    private static int countColumns(List<String> tableLines) {
+        int maxCells = 0;
+        for (String rawRow : tableLines) {
+            maxCells = Math.max(maxCells, splitRow(rawRow).length);
+        }
+        return maxCells;
+    }
+
+    private static String[] splitRow(String rawRow) {
+        String row = rawRow.trim();
+        if (row.startsWith("|")) {
+            row = row.substring(1);
+        }
+        if (row.endsWith("|")) {
+            row = row.substring(0, row.length() - 1);
+        }
+        return row.split("\\|", -1);
     }
 
     private static String cleanHtmlLineBreaks(String text) {

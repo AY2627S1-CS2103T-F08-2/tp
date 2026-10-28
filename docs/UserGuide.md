@@ -53,6 +53,9 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add --name NAME`, replace `NAME` with a value such as `John Doe`.
 
+* Command words and option words are syntax and must be typed in lowercase: `list` runs the list command while `LIST` is rejected as an unknown command, and `--details` is accepted while `--DETAILS` is not.<br>
+  The target of `help` is a command word too, so `help list` works but `help LIST` does not. This does not restrict the data you type: IDs and search matching are case-insensitive.
+
 * Items in square brackets are optional.<br>
   For example, `--name NAME [--medical-history MEDICAL_HISTORY]` can be used as `--name John Doe --medical-history Asthma` or as `--name John Doe`.<br>
   An option whose value is in its own square brackets, such as `[--notes [NOTES]]` in `edit`, can also be given with no value.
@@ -84,7 +87,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
   * The next appointment of a patient is their first **undone** appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.
-* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment marked. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` beside the patient ID:
+* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` beside the patient ID:
   this is the appointment's stable number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. The details
   panel shows the same number before its date.
   * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
@@ -178,7 +181,7 @@ Format: `help [COMMAND]`
 * Typing `help` without arguments outputs a summary of all commands in the result display, including help itself.
 * Adding a command name (e.g., `help add`, `help edit`, `help help`) displays the syntax and practical examples for that command.
 * Typing `help window` opens the pop-up Help Window containing the complete User Guide.
-* Typing an unknown command name (e.g., `help 3`) or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
+* Typing an unknown command name (e.g., `help 3`), a wrong-case target (e.g., `help LIST`), or the unsupported `help --COMMAND` flag form results in an invalid command format error that lists the valid targets.
 
 Examples:
 * `help` shows a quick summary list of all available commands in the result display.

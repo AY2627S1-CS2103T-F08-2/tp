@@ -54,7 +54,9 @@ public class UnmarkAppointmentCommandParserTest {
                 new LaiNurseParser().parseCommand("unmarkappt\u00a0s1234567a\u202f2"));
         assertEquals(UnmarkAppointmentCommand.MESSAGE_USAGE,
                 HelpCommand.COMMAND_USAGE_MAP.get(UnmarkAppointmentCommand.COMMAND_WORD));
-        assertParseSuccess(new HelpCommandParser(), "UNMARKAPPT",
+        assertParseSuccess(new HelpCommandParser(), "unmarkappt",
                 new HelpCommand(UnmarkAppointmentCommand.COMMAND_WORD));
+        assertParseFailure(new HelpCommandParser(), "UNMARKAPPT",
+                HelpCommand.MESSAGE_INVALID_HELP_ARGUMENT);
     }
 }
