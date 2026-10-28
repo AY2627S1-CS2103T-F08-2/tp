@@ -1208,23 +1208,23 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
+* 1d. A date, time or the details are in an invalid format.
+
+    * 1d1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
+* 1e. Nurse asks to both replace and add to the details.
+
+    * 1e1. LaiNurse shows an error message saying that the two options cannot be given together.
+
+      Use case resumes at step 1.
+
 * 2a. The edited appointment clashes with another visit, including to the same patient.
 
     * 2a1. LaiNurse keeps the edit and appends a warning naming the other patients and appointment numbers.
 
       Use case resumes at step 3.
-
-* 1e. A date, time or the details are in an invalid format.
-
-    * 1e1. LaiNurse shows an error message with the valid format.
-
-      Use case resumes at step 1.
-
-* 1f. Nurse asks to both replace and add to the details.
-
-    * 1f1. LaiNurse shows an error message saying that the two options cannot be given together.
-
-      Use case resumes at step 1.
 
 **Use case: UC09 - Add an appointment**
 
@@ -1251,17 +1251,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 1.
 
+* 1c. The details are blank.
+
+    * 1c1. LaiNurse shows an error message.
+
+      Use case resumes at step 1.
+
 * 2a. Another undone appointment has the given date and time, including one of this patient's visits.
 
     * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other patients and visit numbers.
 
       Use case resumes at step 3.
-
-* 1d. The details are blank.
-
-    * 1d1. LaiNurse shows an error message.
-
-      Use case resumes at step 1.
 
 **Use case: UC10 - Delete an appointment**
 
@@ -1337,8 +1337,23 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 ### Glossary
 
 * **LaiNurse**: The desktop application designed for (home) nurses to manage patient contact details, medical histories,
-  and home visit schedules via a Command Line Interface (CLI).
+  and home visit schedules via a CLI.
+* **CLI (Command Line Interface)**: The text-based interface of LaiNurse, where the nurse types commands such as
+  `edit S1234567A --phone 91234567` and reads the feedback in the result display, instead of using the mouse.
+* **GUI (Graphical User Interface)**: The visual part of the app, such as the window, lists, tabs and panels, that the
+  user interacts with by pointing and clicking, showing the effects of the commands typed in the CLI.
+* **JAR (Java Archive)**: The single packaged file (`lainurse.jar`) that contains the app, launched with
+  `java -jar lainurse.jar`.
+* **JSON (JavaScript Object Notation)**: The plain-text, human-editable format in which LaiNurse saves its data, as
+  `data/lainurse.json` and its backup.
+* **API**: The set of public methods through which one component (e.g., Logic) is used by another, given by an
+  interface of the same name.
+* **JavaFX / FXML**: The UI framework that the app's interface is built with, and the markup format of its layout
+  files (`src/main/resources/view`).
+* **Markdown**: The format that the User Guide is written in, which the in-app Help window renders natively.
 * **Mainstream OS**: Windows, Linux, Unix, or macOS.
+* **Sample data**: The six patients LaiNurse starts with when it has no data file; their appointments fall on the
+  Monday to Wednesday of the week the app was first launched, plus Alex Yeoh's blood test four weeks later.
 * **(Home) Nurse**: The primary target user; a healthcare professional who conducts on-site medical checkups and
   caregiving visits at patients' residential addresses.
 * **Patient**: An individual receiving home-based medical care or rehabilitation from a visiting nurse, tracked in the
@@ -1354,9 +1369,30 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Notes**: Optional free-form personal information about a patient that the other fields do not cover, such as their
   hobbies, pet peeves and daily routines (e.g., "walks every morning"). Health information goes in the Medical History
   instead.
+* **Normalization (normalized text)**: How LaiNurse stores text: trimmed, in upper case, with each run of whitespace
+  collapsed into one space, so values differing only in case or spacing are equal.
+* **Patients view (patient view)**: The tab that shows the patient list beside one patient's details; also called the
+  patient view or the **Patients** tab.
+* **Appointments view (appointment view)**: The tab that shows appointments day by day beside the selected
+  appointment's patient; also called the appointment view or the **Appointments** tab.
+* **Weekly view**: The appointment view's page that shows one week, from Monday to Sunday, with a heading for every
+  day; a plain `viewappt` shows it.
+* **Filter**: A criterion that limits what a list shows. The patient list shows only the patients matching it, such as
+  after `find` or `viewappt`; its header then says `Filtered patients`, and the list currently shown is also called
+  the displayed list. A `viewappt` range similarly limits the appointment page to the appointments in it.
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
   24-hour format, in local time with no time zone.
+* **Appointment number**: The stable number (`#N`) that an appointment keeps within its patient's schedule, used by
+  `editappt`, `deleteappt`, `markappt` and `unmarkappt`. It is not the appointment's position down the appointment
+  page.
+* **List number**: A row's position in the displayed patient list, which changes as the list changes. Commands
+  identify patients by patient ID, never by list number.
+* **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time (two date-only visits
+  on one day also clash). Clashing visits are shown in red, and a command that creates or restores a clash appends a
+  warning naming the other patients and appointment numbers.
+* **Details**: (1) An appointment's free text about the visit, set with `--details` and `--add-details`; (2) the panel
+  beside a list that shows one patient's full information ("the details beside the list").
 
 --------------------------------------------------------------------------------------------------------------------
 

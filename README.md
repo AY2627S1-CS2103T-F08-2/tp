@@ -10,7 +10,7 @@ With LaiNurse, you can:
 
 * keep each patient's ID, contact details and medical history in one place
 * give each patient any number of appointments, and see whom you visit on a date or in a date range
-* find patients by part of their name, ID, phone number, address or medical history
+* find patients by part of their name, ID, phone number, address, medical history or notes
 * check the format of any command without leaving the keyboard
 
 To try LaiNurse, download the latest `lainurse.jar` from [Releases](https://github.com/AY2627S1-CS2103T-F08-2/tp/releases), and follow the [Quick start](https://ay2627s1-cs2103t-f08-2.github.io/tp/UserGuide.html#quick-start) in the User Guide.
