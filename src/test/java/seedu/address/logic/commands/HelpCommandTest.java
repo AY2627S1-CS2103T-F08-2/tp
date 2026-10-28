@@ -55,6 +55,14 @@ public class HelpCommandTest {
     }
 
     @Test
+    public void execute_everyRegisteredTarget_returnsItsOwnUsage() throws Exception {
+        for (String commandWord : HelpCommand.COMMAND_USAGE_MAP.keySet()) {
+            assertEquals(HelpCommand.COMMAND_USAGE_MAP.get(commandWord),
+                    new HelpCommand(commandWord).execute(model).getFeedbackToUser());
+        }
+    }
+
+    @Test
     public void execute_helpWindowFlag_opensHelpWindow() throws Exception {
         CommandResult result = new HelpCommand("window").execute(model);
         assertTrue(result.isShowHelp());
