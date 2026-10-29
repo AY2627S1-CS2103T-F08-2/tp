@@ -824,3 +824,8 @@
 .patient-detail .detail-appointment-past .pin-mark .pin-mark-shape {
     -fx-fill: #a3adb2;
 }
+
+/* On today's appointment in the patient details, the pin is orange, as the date and time beside it are. */
+.patient-detail .detail-appointment-today .pin-mark .pin-mark-shape {
+    -fx-fill: -lainurse-urgent;
+}
