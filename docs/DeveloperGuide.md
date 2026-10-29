@@ -942,7 +942,8 @@ with `Model#setPatient`, and fails if the patient already has the requested stat
 * The appointment view has no scope of its own. Whether it shows archived patients' appointments is part of the
   filter that `viewappt` sets, as its dates and `--id` are. So every `viewappt` result carries a `PatientScope`,
   added with `CommandResult#withAppointmentScope`: the one that `--all` or `--archived` gives, the default
-  otherwise, or `ALL` with `--id`, which shows that patient whether archived or not. `AppointmentListPanel` keeps it
+  otherwise, or with `--id`, the scope that has that patient, `ARCHIVED` or `UNARCHIVED`, so that the patient's
+  appointments show whether archived or not, and the header counts them as `3` or `(3)`, not `3 (0)`. `AppointmentListPanel` keeps it
   with its range and week, and shows only the appointments of the patients in it. `view` and `find` never change it,
   and `viewappt` never changes the patient list.
 * A command that goes to a patient, such as `view ID`, `edit` or `add`, calls `Model#showInPatientList(patient)`,
