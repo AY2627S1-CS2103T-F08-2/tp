@@ -24,8 +24,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.ClearAppointmentCommand;
+import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.FindCommand;
@@ -117,7 +120,7 @@ public class TabCompleter {
         String commandWord = earlierWords.get(0);
         String previousWord = earlierWords.get(earlierWords.size() - 1);
         if (word.startsWith(OPTION_START)) {
-            List<String> unusedOptions = OPTIONS.getOrDefault(commandWord, List.of()).stream()
+            List<String> unusedOptions = optionsOf(commandWord).stream()
                     .filter(option -> !earlierWords.contains(option))
                     .filter(option -> !isExcluded(option, earlierWords))
                     .toList();
@@ -126,7 +129,9 @@ public class TabCompleter {
         if (commandWord.equals(HelpCommand.COMMAND_WORD) && earlierWords.size() == 1) {
             return completeWord(before, word, HELP_TARGETS);
         }
-        if (COMMANDS_WITH_ID_OPTION.contains(commandWord) && previousWord.equals(PREFIX_ID.getPrefix().strip())) {
+        boolean isIdOption = COMMANDS_WITH_ID_OPTION.contains(commandWord) || FeatureFlags.isSelectiveClearEnabled()
+                && commandWord.equals(ClearAppointmentCommand.COMMAND_WORD);
+        if (isIdOption && previousWord.equals(PREFIX_ID.getPrefix().strip())) {
             String partialId = word.toUpperCase(Locale.ROOT);
             return ids.stream()
                     .map(id -> id.value)
@@ -169,6 +174,22 @@ public class TabCompleter {
         }
         return commandWord.equals(ViewAppointmentCommand.COMMAND_WORD)
                 && option.equals(PREFIX_ID.getPrefix().strip()) && hasScope;
+    }
+
+    /**
+     * Returns the options of {@code commandWord}, in the order of its usage message, with those of the commands that
+     * are released only once their feature is (#217).
+     */
+    private static List<String> optionsOf(String commandWord) {
+        if (FeatureFlags.isSelectiveClearEnabled()) {
+            if (commandWord.equals(ClearAppointmentCommand.COMMAND_WORD)) {
+                return options(PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+            }
+            if (commandWord.equals(ClearCommand.COMMAND_WORD)) {
+                return options(PREFIX_ARCHIVED);
+            }
+        }
+        return OPTIONS.getOrDefault(commandWord, List.of());
     }
 
     private static List<String> options(Prefix... prefixes) {

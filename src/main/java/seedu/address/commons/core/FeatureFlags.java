@@ -10,6 +10,9 @@ public final class FeatureFlags {
     /** The settings of #216, changed with the {@code set} command. */
     private static boolean isSettingsEnabled = false;
 
+    /** The selective clearing of #217: {@code clear --archived} and {@code clearappt}, with a confirmation. */
+    private static boolean isSelectiveClearEnabled = false;
+
     private FeatureFlags() {} // prevents instantiation
 
     /**
@@ -25,5 +28,20 @@ public final class FeatureFlags {
      */
     public static void setSettingsEnabled(boolean isEnabled) {
         isSettingsEnabled = isEnabled;
+    }
+
+    /**
+     * Returns true if users can clear patients and appointments selectively, and must confirm a clear (#217).
+     */
+    public static boolean isSelectiveClearEnabled() {
+        return isSelectiveClearEnabled;
+    }
+
+    /**
+     * Turns the selective clearing of #217 on or off. Only tests call this, to test the feature before its release;
+     * the app uses the initial value.
+     */
+    public static void setSelectiveClearEnabled(boolean isEnabled) {
+        isSelectiveClearEnabled = isEnabled;
     }
 }

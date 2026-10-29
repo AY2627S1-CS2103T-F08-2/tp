@@ -29,6 +29,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.core.FeatureFlags;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.ClearAppointmentCommand;
+import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.logic.commands.CommandResult.Navigation;
@@ -73,6 +75,46 @@ public class LogicManagerTest {
     @AfterEach
     public void tearDown() {
         FeatureFlags.setSettingsEnabled(false);
+        FeatureFlags.setSelectiveClearEnabled(false);
+    }
+
+    @Test
+    public void execute_clearBeforeRelease_clearsAtOnce() throws Exception {
+        model.addPatient(new PatientBuilder(AMY).build());
+        // selective clearing is not released, so clear works as before, and clearappt is unknown (#217)
+        assertParseException("clearappt S1", MESSAGE_UNKNOWN_COMMAND);
+        logic.execute("clear");
+        assertTrue(model.getLaiNurse().getPatientList().isEmpty());
+    }
+
+    @Test
+    public void execute_clearAfterRelease_asksForThePhrase() throws Exception {
+        FeatureFlags.setSelectiveClearEnabled(true);
+        Patient amy = new PatientBuilder(AMY).withAppointments("2026-10-05", "2026-10-06").build();
+        model.addPatient(amy);
+
+        // the first time, clear only says what would go
+        CommandResult prompt = logic.execute("clear");
+        assertEquals(String.format(Messages.MESSAGE_CONFIRM, String.format(ClearCommand.MESSAGE_DELETES, 1, 2)),
+                prompt.getFeedbackToUser());
+        assertEquals(1, model.getLaiNurse().getPatientList().size());
+
+        // any other input cancels it, and runs no command
+        assertEquals(Messages.MESSAGE_CANCELLED, logic.execute("list").getFeedbackToUser());
+        assertEquals(1, model.getLaiNurse().getPatientList().size());
+
+        // the phrase confirms it
+        logic.execute("clearappt " + amy.getId().value + " --to 2026-10-05");
+        assertEquals(ClearAppointmentCommand.MESSAGE_SUCCESS.formatted(1),
+                logic.execute(Messages.CONFIRMATION_PHRASE).getFeedbackToUser());
+        assertEquals(1, model.findPatientById(amy.getId()).orElseThrow().getSchedule().asList().size());
+        logic.execute("clear");
+        logic.execute("  " + Messages.CONFIRMATION_PHRASE + " ");
+        assertTrue(model.getLaiNurse().getPatientList().isEmpty());
+
+        // with nothing to delete, there is nothing to confirm
+        assertCommandException("clear --archived", ClearCommand.MESSAGE_NO_ARCHIVED_PATIENTS);
+        assertEquals(ListCommand.MESSAGE_SUCCESS, logic.execute("list").getFeedbackToUser());
     }
 
     @Test

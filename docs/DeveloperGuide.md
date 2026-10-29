@@ -1050,6 +1050,30 @@ The settings of #216 decide how marks, past clashes and archived patients behave
 * The panels follow the settings through `useSettings`, which `MainWindow` calls with `Logic#getSettings()`, and
   refresh when they change.
 
+### Clearing selectively (not released yet)
+
+The selective clearing of #217 is behind `FeatureFlags#isSelectiveClearEnabled()`. Before its release, `clear` deletes
+every patient at once, as before, and `clearappt` is an unknown command.
+
+* `clear --archived` (`ClearCommand` with `isArchivedOnly`) deletes only archived patients. `clearappt`
+  (`ClearAppointmentCommand`) deletes every appointment, all of one patient's appointments, or every appointment from
+  `--from` to `--to`, of every patient, or with `--id`, of one. The patients stay. A date without a time given to `--from` is the start of that day, and one
+  given to `--to` its end, and an appointment with no time counts as at the start of its day. A patient's remaining
+  appointments are numbered again in date order.
+* Both are `Confirmable`. When `LogicManager` parses one, it asks for `Confirmable#describeDeletion` and returns it with
+  `Messages#MESSAGE_CONFIRM` instead of running the command, which it keeps as `pendingCommand`. If the next input is
+  `Messages#CONFIRMATION_PHRASE`, it runs the command, and saves as after any command. Any other input cancels it, and
+  runs no command. A command with nothing to delete fails at once, so there is nothing to confirm.
+
+**Aspect: How a clear is confirmed**
+
+* **Alternative 1 (Current choice):** The next input must be a fixed phrase.
+    * Pros: The user cannot confirm by reflex, as by pressing Up and Enter to run the same command again.
+    * Cons: The user must type the phrase exactly, and `LogicManager` keeps state between inputs.
+* **Alternative 2:** Run the same command again to confirm it.
+    * Pros: Nothing new to type.
+    * Cons: Up and Enter repeats the command, so it confirms as easily as by mistake.
+
 
 --------------------------------------------------------------------------------------------------------------------
 

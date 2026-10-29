@@ -8,8 +8,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.ArchiveCommand;
+import seedu.address.logic.commands.ClearAppointmentCommand;
 import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditAppointmentCommand;
@@ -47,6 +49,15 @@ public class IdCompleter {
     private IdCompleter() {}
 
     /**
+     * Returns true if {@code commandWord} takes the ID of an existing patient first, with further arguments after
+     * it, such as {@code clearappt} once it is released (#217).
+     */
+    private static boolean isTakingIdFirst(String commandWord) {
+        return COMMANDS_TAKING_ID_FIRST.contains(commandWord) || FeatureFlags.isSelectiveClearEnabled()
+                && commandWord.equals(ClearAppointmentCommand.COMMAND_WORD);
+    }
+
+    /**
      * Returns each way to complete {@code commandText} with one of {@code ids}, in the order of {@code ids}.
      * The text after the ID, such as the options of {@code edit}, is kept unchanged.
      * Returns an empty list if {@code commandText} has no patient ID where its command expects one,
@@ -62,7 +73,7 @@ public class IdCompleter {
         String commandWord = matcher.group("commandWord");
         String rest = matcher.group("rest") == null ? "" : matcher.group("rest");
         boolean isIdLast = COMMANDS_TAKING_ONLY_ID.contains(commandWord) && rest.isEmpty();
-        if (!isIdLast && !COMMANDS_TAKING_ID_FIRST.contains(commandWord)) {
+        if (!isIdLast && !isTakingIdFirst(commandWord)) {
             return List.of();
         }
 
