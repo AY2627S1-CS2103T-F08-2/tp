@@ -120,6 +120,7 @@ row is wider than the panel.
 patients in it, since loading the row's FXML for every patient that scrolls into view makes scrolling stutter.
 The panel also takes the list of all appointments, so that a row shows its next appointment in red if it clashes, and
 refreshes its rows when any appointment changes, since a change to one patient can make another's appointment clash.
+`PinMark#setColor` can color a row's pin, such as red, for settings that may change what a mark means (#216).
 Above the rows, a header says whether the list is filtered,
 and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
 as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. Both
