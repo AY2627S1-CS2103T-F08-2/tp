@@ -53,6 +53,7 @@ public class JsonLaiNurseStorage {
         String suffixedName = extensionStart > 0
                 ? fileName.substring(0, extensionStart) + "." + suffix + fileName.substring(extensionStart)
                 : fileName + "." + suffix;
+        assert !suffixedName.equals(fileName) : "A suffixed file must not be the file itself.";
         return filePath.resolveSibling(suffixedName);
     }
 

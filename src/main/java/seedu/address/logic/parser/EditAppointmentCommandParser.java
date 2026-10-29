@@ -33,22 +33,12 @@ public class EditAppointmentCommandParser implements Parser<EditAppointmentComma
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage, prefixes);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, prefixes);
 
-        String[] preamble = argMultimap.getPreamble().split("\\s+");
-        if (preamble.length != 2) {
-            throw new ParseException(invalidFormatMessage);
-        }
-        PatientId id;
-        try {
-            id = ParserUtil.parseId(preamble[0]);
-        } catch (ParseException pe) {
-            throw new ParseException(invalidFormatMessage, pe);
-        }
+        String[] preamble = splitPreamble(argMultimap, invalidFormatMessage);
+        PatientId id = parseId(preamble[0], invalidFormatMessage);
         argMultimap.verifyNoDuplicatePrefixesFor(prefixes);
-
         long number = ParserUtil.parseAppointmentNumber(preamble[1]);
-        Optional<Appointment> newDateTime = argMultimap.getValue(PREFIX_TO).isPresent()
-                ? Optional.of(ParserUtil.parseAppointment(argMultimap.getValue(PREFIX_TO).get()))
-                : Optional.empty();
+
+        Optional<Appointment> newDateTime = parseNewDateTime(argMultimap);
         Optional<OptionalFieldEdit<AppointmentDetails>> detailsEdit = ParserUtil.parseOptionalFieldEdit(
                 argMultimap, PREFIX_DETAILS, PREFIX_ADD_DETAILS, ParserUtil::parseAppointmentDetails);
         if (newDateTime.isEmpty() && detailsEdit.isEmpty()) {
@@ -56,5 +46,41 @@ public class EditAppointmentCommandParser implements Parser<EditAppointmentComma
         }
 
         return new EditAppointmentCommand(id, number, newDateTime, detailsEdit);
+    }
+
+    /**
+     * Returns the two words before the options: the patient ID, then the appointment number.
+     *
+     * @throws ParseException if there are not exactly two words.
+     */
+    private static String[] splitPreamble(ArgumentMultimap argMultimap, String invalidFormatMessage)
+            throws ParseException {
+        String[] preamble = argMultimap.getPreamble().split("\\s+");
+        if (preamble.length != 2) {
+            throw new ParseException(invalidFormatMessage);
+        }
+        return preamble;
+    }
+
+    /**
+     * Parses {@code id}, and reports an invalid one as an invalid format, since the usage shows where the ID goes.
+     */
+    private static PatientId parseId(String id, String invalidFormatMessage) throws ParseException {
+        try {
+            return ParserUtil.parseId(id);
+        } catch (ParseException pe) {
+            throw new ParseException(invalidFormatMessage, pe);
+        }
+    }
+
+    /**
+     * Returns the date, or date and time, given with {@code PREFIX_TO}, if there is one.
+     */
+    private static Optional<Appointment> parseNewDateTime(ArgumentMultimap argMultimap) throws ParseException {
+        Optional<String> newDateTime = argMultimap.getValue(PREFIX_TO);
+        if (newDateTime.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(ParserUtil.parseAppointment(newDateTime.get()));
     }
 }
