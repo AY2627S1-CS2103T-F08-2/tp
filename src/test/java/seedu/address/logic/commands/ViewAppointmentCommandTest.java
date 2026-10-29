@@ -150,8 +150,10 @@ public class ViewAppointmentCommandTest {
         Model archiveModel = modelWithArchivedBenson();
 
         executeOrFail(new ViewAppointmentCommand(LocalDate.of(2026, 10, 6)), archiveModel);
+        executeOrFail(new ViewAppointmentCommand(Optional.empty(), Optional.empty(), Optional.of(BENSON.getId())),
+                archiveModel);
 
-        // the patient list is never touched
+        // the patient list is never touched, whichever appointments show
         assertEquals(List.of(DANIEL), archiveModel.getFilteredPatientList());
         assertEquals(PatientScope.DEFAULT, archiveModel.getPatientListScope().getValue());
     }

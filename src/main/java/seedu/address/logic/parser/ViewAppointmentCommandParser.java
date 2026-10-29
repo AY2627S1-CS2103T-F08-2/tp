@@ -195,11 +195,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
      * if a format change ever makes both possible, the ID wins, as the value of the ID option.
      */
     private static boolean isMisplacedDate(String word) {
-        if (!isRealDate(word)) {
-            return false;
-        }
-        assert !PatientId.isValidId(word) : "A real date contains punctuation, so it cannot be a patient ID.";
-        return true;
+        return isRealDate(word) && !PatientId.isValidId(word);
     }
 
     /** Returns true if {@code word} is a real date in the {@code yyyy-MM-dd} format. */
