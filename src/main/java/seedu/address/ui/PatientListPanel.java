@@ -22,6 +22,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -41,6 +42,7 @@ public class PatientListPanel extends UiPart<Region> {
 
     private final ObservableList<Patient> shownPatients;
     private final ObservableList<Patient> allPatients;
+    private final ObservableList<PatientAppointment> allAppointments;
     private final Label placeholder = new Label();
     /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
     private ReadOnlyDoubleProperty rowGutter;
@@ -59,16 +61,21 @@ public class PatientListPanel extends UiPart<Region> {
 
     /**
      * Creates a {@code PatientListPanel} that lists {@code shownPatients}, the patients that the filter shows,
-     * out of {@code allPatients}.
+     * out of {@code allPatients}. A patient's next appointment is red if it clashes with another of
+     * {@code allAppointments}.
      * {@code onPatientChosen} receives the ID of each patient that the user clicks, or moves to with the keyboard.
      * {@code onUpAtTop} runs when the user presses Up at the first patient, so that the focus can move on.
      */
     public PatientListPanel(ObservableList<Patient> shownPatients, ObservableList<Patient> allPatients,
-            Consumer<PatientId> onPatientChosen, Runnable onUpAtTop) {
+            ObservableList<PatientAppointment> allAppointments, Consumer<PatientId> onPatientChosen,
+            Runnable onUpAtTop) {
         super(FXML);
-        requireAllNonNull(shownPatients, allPatients, onPatientChosen, onUpAtTop);
+        requireAllNonNull(shownPatients, allPatients, allAppointments, onPatientChosen, onUpAtTop);
         this.shownPatients = shownPatients;
         this.allPatients = allPatients;
+        this.allAppointments = allAppointments;
+        // A change to one patient's appointments can make another patient's next appointment clash, or stop clashing
+        allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> patientListView.refresh());
         patientListView.setItems(shownPatients);
         rowGutter = ListHeaders.alignEndWithRows(header, patientListView, PatientRow.END_PADDING);
         patientListView.setCellFactory(listView -> new PatientListViewCell());
@@ -258,7 +265,7 @@ public class PatientListPanel extends UiPart<Region> {
                 setGraphic(null);
                 setText(null);
             } else {
-                row.show(patient, getIndex() + 1);
+                row.show(patient, getIndex() + 1, allAppointments);
                 setGraphic(row.getRoot());
             }
         }

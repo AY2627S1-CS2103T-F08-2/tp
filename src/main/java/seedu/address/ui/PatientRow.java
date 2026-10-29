@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Optional;
 
 import javafx.fxml.FXML;
@@ -9,7 +10,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 
 /**
  * A UI component that displays one {@code Patient} as a row of the patient list: the list number, name,
@@ -24,6 +27,7 @@ public class PatientRow extends UiPart<Region> {
 
     private static final String FXML = "PatientRow.fxml";
     private static final String TODAY_STYLE_CLASS = "patient-row-appointment-today";
+    private static final String CLASH_STYLE_CLASS = "patient-row-appointment-clash";
 
     /*
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -52,28 +56,35 @@ public class PatientRow extends UiPart<Region> {
     }
 
     /**
-     * Shows {@code patient} with the list number {@code displayedIndex}, in place of what the row showed before.
+     * Shows {@code patient} with the list number {@code displayedIndex}, in place of what the row showed before. The
+     * patient's next appointment is red if it clashes with another of {@code allAppointments}, which holds the
+     * appointments of every patient, also those hidden by a filter.
      */
-    public void show(Patient patient, int displayedIndex) {
+    public void show(Patient patient, int displayedIndex, Collection<PatientAppointment> allAppointments) {
         index.setText(displayedIndex + ".");
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);
         LocalDateTime now = LocalDateTime.now();
         Optional<Appointment> next = AppointmentFormatter.findFirstNotPassed(patient.getSchedule().asList().stream()
                 .filter(appointment -> !appointment.isDone()).toList(), now);
-        nextAppointment.getStyleClass().remove(TODAY_STYLE_CLASS);
+        nextAppointment.getStyleClass().removeAll(TODAY_STYLE_CLASS, CLASH_STYLE_CLASS);
         nextAppointment.setVisible(next.isPresent());
         nextAppointment.setManaged(next.isPresent());
-        next.ifPresent(appointment -> showNextAppointment(appointment, now.toLocalDate()));
+        next.ifPresent(appointment -> showNextAppointment(appointment, now.toLocalDate(),
+                !AppointmentClashes.find(allAppointments, new PatientAppointment(patient, appointment)).isEmpty()));
     }
 
     /**
-     * Shows {@code appointment}, the patient's next one, highlighted if it is today.
+     * Shows {@code appointment}, the patient's next one, orange if it is today, and red if {@code isClashing}, also
+     * when it is today.
      */
-    private void showNextAppointment(Appointment appointment, LocalDate today) {
+    private void showNextAppointment(Appointment appointment, LocalDate today, boolean isClashing) {
         nextAppointment.setText(AppointmentFormatter.formatShort(appointment, today));
         if (AppointmentFormatter.isToday(appointment, today)) {
             nextAppointment.getStyleClass().add(TODAY_STYLE_CLASS);
+        }
+        if (isClashing) {
+            nextAppointment.getStyleClass().add(CLASH_STYLE_CLASS);
         }
     }
 }

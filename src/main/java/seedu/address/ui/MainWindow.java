@@ -213,7 +213,7 @@ public class MainWindow extends UiPart<Stage> {
         patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
         patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), logic.getPatientList(),
-                patientDetailPanel::show, this::focusViewTabs);
+                logic.getAppointmentList(), patientDetailPanel::show, this::focusViewTabs);
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
 
         appointmentDetailPanel = new PatientDetailPanel(logic.getPatientList(), logic.getAppointmentList(),

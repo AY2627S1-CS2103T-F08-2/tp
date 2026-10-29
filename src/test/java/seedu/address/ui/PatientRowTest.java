@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import javafx.application.Platform;
 import javafx.scene.control.Label;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.testutil.PatientBuilder;
 
 public class PatientRowTest {
@@ -36,14 +38,14 @@ public class PatientRowTest {
             Patient withoutAppointment = new PatientBuilder().withId("S2345678B").withName("Bernice Yu").build();
             PatientRow row = new PatientRow();
 
-            row.show(withTodayAppointment, 1);
+            row.show(withTodayAppointment, 1, List.of());
             assertEquals("1.", label(row, "#index").getText());
             assertEquals("ALEX YEOH", label(row, "#name").getText());
             Label nextAppointment = label(row, "#nextAppointment");
             assertTrue(nextAppointment.isVisible());
             assertTrue(nextAppointment.getStyleClass().contains("patient-row-appointment-today"));
 
-            row.show(withoutAppointment, 2);
+            row.show(withoutAppointment, 2, List.of());
             assertEquals("2.", label(row, "#index").getText());
             assertEquals("BERNICE YU", label(row, "#name").getText());
             assertEquals("S2345678B", label(row, "#patientId").getText());
@@ -52,11 +54,36 @@ public class PatientRowTest {
             assertFalse(nextAppointment.getStyleClass().contains("patient-row-appointment-today"));
 
             // a later appointment is shown again, without today's highlight
-            row.show(new PatientBuilder().withAppointments(LocalDate.now().plusDays(2) + " 10:00").build(), 3);
+            row.show(new PatientBuilder().withAppointments(LocalDate.now().plusDays(2) + " 10:00").build(), 3,
+                    List.of());
             assertTrue(nextAppointment.isVisible());
             assertTrue(nextAppointment.isManaged());
             assertFalse(nextAppointment.getStyleClass().contains("patient-row-appointment-today"));
         });
+    }
+
+    @Test
+    public void show_clashingNextAppointment_redEvenToday() throws Exception {
+        onFxThread(() -> {
+            String today = LocalDate.now() + " 23:59";
+            Patient alex = new PatientBuilder().withId("S1234567A").withAppointments(today).build();
+            Patient bernice = new PatientBuilder().withId("S2345678B").withAppointments(today).build();
+            List<PatientAppointment> appointments = List.of(entry(alex), entry(bernice));
+            PatientRow row = new PatientRow();
+            Label nextAppointment = label(row, "#nextAppointment");
+
+            row.show(alex, 1, appointments);
+            assertTrue(nextAppointment.getStyleClass().contains("patient-row-appointment-clash"));
+            assertTrue(nextAppointment.getStyleClass().contains("patient-row-appointment-today"));
+
+            // without Bernice's appointment, Alex's no longer clashes
+            row.show(alex, 1, List.of(entry(alex)));
+            assertFalse(nextAppointment.getStyleClass().contains("patient-row-appointment-clash"));
+        });
+    }
+
+    private static PatientAppointment entry(Patient patient) {
+        return new PatientAppointment(patient, patient.getSchedule().asList().getFirst());
     }
 
     private static Label label(PatientRow row, String selector) {

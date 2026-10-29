@@ -106,6 +106,7 @@ exactly the same date and time, including visits to the same patient, when both 
 cause clash warnings or red highlighting. Only visits with a time can clash: two date-only visits on the same day do
 not, and neither do a date-only visit and a timed one. A clashing appointment has a red boxed `!` before its time, and its time, and its date in
 the details, are red, even when it has passed or is selected. This includes a clash with a patient hidden by a filter.
+In the patient list, a patient's next appointment is red if it clashes, also when it is today.
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 

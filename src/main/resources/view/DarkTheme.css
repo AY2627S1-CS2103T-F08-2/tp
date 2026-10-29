@@ -429,6 +429,11 @@
     -fx-text-fill: -lainurse-urgent;
 }
 
+/* A next appointment that clashes is red, also when it is today. */
+.list-cell .patient-row-appointment-clash {
+    -fx-text-fill: -lainurse-clash;
+}
+
 /* Patient details. Each selector names .patient-detail to win over ".patient-detail .label" below. */
 .patient-detail {
     -fx-background-color: #3c3e3f;

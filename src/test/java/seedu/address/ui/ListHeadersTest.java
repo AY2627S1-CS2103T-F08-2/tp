@@ -46,7 +46,8 @@ public class ListHeadersTest {
         for (int count : List.of(2, 40)) {
             onFxThread(() -> {
                 ObservableList<Patient> patients = FXCollections.observableArrayList(patients(count));
-                PatientListPanel panel = new PatientListPanel(patients, patients, id -> { }, () -> { });
+                PatientListPanel panel = new PatientListPanel(patients, patients, FXCollections.observableArrayList(),
+                        id -> { }, () -> { });
                 StackPane root = new StackPane(panel.getRoot());
                 styleAndLayout(root);
                 assertEquals(endX(root, ".patient-row-appointment"), endX(root, ".list-header-count"), 0.5);
