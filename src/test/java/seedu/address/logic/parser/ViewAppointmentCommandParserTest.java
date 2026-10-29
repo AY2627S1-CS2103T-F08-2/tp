@@ -44,7 +44,7 @@ public class ViewAppointmentCommandParserTest {
     private static final String MONTH_13_DATE = "2026-13-01";
     private static final String IMPOSSIBLE_DATE = "2026-02-30";
 
-    private ViewAppointmentCommandParser parser = new ViewAppointmentCommandParser();
+    private final ViewAppointmentCommandParser parser = new ViewAppointmentCommandParser();
 
     @Test
     public void parse_validDateOnly_returnsCommand() {
@@ -180,7 +180,12 @@ public class ViewAppointmentCommandParserTest {
         // The check covers the value whatever other options are present
         assertParseFailure(parser, ID_FLAG + VALID_ID + " " + FROM_FLAG + START + " " + END,
                 ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
-        // The last word decides, as it does for the ID value
+    }
+
+    @Test
+    public void parse_optionValueEndingInNonDate_throwsDateError() {
+        // The last word decides whether a multi-word value reads as two dates, as it does for the ID value:
+        // a word that is not a real date, such as an impossible one, fails as the date that the option takes
         assertParseFailure(parser, FROM_FLAG + START + " " + MONTH_13_DATE, DateUtil.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, FROM_FLAG + START + " " + NOT_A_DATE, DateUtil.MESSAGE_CONSTRAINTS);
     }

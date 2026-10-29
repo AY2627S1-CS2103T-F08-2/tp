@@ -11,7 +11,6 @@ import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_A
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_PATIENT_FROM_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_PATIENT_LISTED_OVERVIEW;
-import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -70,12 +69,11 @@ public class ViewAppointmentCommandTest {
     }
 
     @Test
-    public void execute_noAppointmentsFound_emptyList() {
+    public void execute_noAppointmentsFound_emptyPage() {
         LocalDate date = LocalDate.of(2030, 1, 1); // Far future, no appointments
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
 
-
-        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 0, date.toString());
+        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 0, date);
         // the appointment view shows the range on one page, here with no appointments
         assertCommandSuccess(command, model, pageResult(expectedMessage, new AppointmentRange(date, date)),
                 expectedModel);
@@ -87,44 +85,56 @@ public class ViewAppointmentCommandTest {
         LocalDate date = LocalDate.of(2026, 10, 6);
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
 
-
-        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date.toString());
+        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date);
         assertCommandSuccess(command, model, pageResult(expectedMessage, new AppointmentRange(date, date)),
                 expectedModel);
     }
 
     @Test
-    public void execute_archivedPatient_shownOnlyInScopeThatHasThem() {
+    public void execute_rangeWithArchivedPatient_defaultScopeCountsOnlyUnarchived() {
         // Benson, archived, has an appointment on 2026-10-05 and Daniel on 2026-10-06
-        Patient archivedBenson = BENSON.withArchived(true);
+        Model archiveModel = modelWithArchivedBenson();
         LocalDate start = LocalDate.of(2026, 10, 1);
         LocalDate end = LocalDate.of(2026, 10, 31);
-        AppointmentRange range = new AppointmentRange(start, end);
-        Model archiveModel = new ModelManager(new LaiNurseBuilder().withPatient(DANIEL).withPatient(archivedBenson)
-                .build(), new UserPrefs());
 
         // the default scope leaves Benson out of the count
         CommandResult result = executeOrFail(
                 new ViewAppointmentCommand(Optional.of(start), Optional.of(end)), archiveModel);
         assertEquals(new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 1, start, end),
-                range).withAppointmentScope(PatientScope.DEFAULT).withNavigation(Navigation.toView(View.APPOINTMENTS)),
+                new AppointmentRange(start, end)).withAppointmentScope(PatientScope.DEFAULT)
+                .withNavigation(Navigation.toView(View.APPOINTMENTS)),
                 result);
+    }
+
+    @Test
+    public void execute_rangeWithScope_countsArchivedPatientsAsAsked() {
+        Model archiveModel = modelWithArchivedBenson();
+        LocalDate start = LocalDate.of(2026, 10, 1);
+        LocalDate end = LocalDate.of(2026, 10, 31);
 
         // --all counts both, and --archived only Benson
-        result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
+        CommandResult result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
                 Optional.empty(), PatientScope.ALL), archiveModel);
         assertEquals(new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 2, start, end),
-                range).withAppointmentScope(PatientScope.ALL).withNavigation(Navigation.toView(View.APPOINTMENTS)),
+                new AppointmentRange(start, end)).withAppointmentScope(PatientScope.ALL)
+                .withNavigation(Navigation.toView(View.APPOINTMENTS)),
                 result);
         result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
                 Optional.empty(), PatientScope.ARCHIVED), archiveModel);
         assertEquals(Optional.of(PatientScope.ARCHIVED), result.getAppointmentScope());
         assertEquals(String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 1, start, end),
                 result.getFeedbackToUser());
+    }
 
-        // --id shows an archived patient's appointments, in the scope of archived patients, so the header shows
+    @Test
+    public void execute_idWithArchivedPatient_appointmentsInScopeThatHasThem() {
+        Model archiveModel = modelWithArchivedBenson();
+        LocalDate start = LocalDate.of(2026, 10, 1);
+        LocalDate end = LocalDate.of(2026, 10, 31);
+
+        // --id shows an archived patient's appointments in the scope of archived patients, so the header shows
         // "(1)", and a patient who is not archived in the other one, so it shows "1"
-        result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
+        CommandResult result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
                 Optional.of(BENSON.getId())), archiveModel);
         assertEquals(Optional.of(PatientScope.ARCHIVED), result.getAppointmentScope());
         result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
@@ -133,8 +143,17 @@ public class ViewAppointmentCommandTest {
         result = executeOrFail(new ViewAppointmentCommand(Optional.empty(), Optional.empty(),
                 Optional.of(BENSON.getId())), archiveModel);
         assertEquals(Optional.of(PatientScope.ARCHIVED), result.getAppointmentScope());
+    }
 
-        // the patient list is never touched
+    @Test
+    public void execute_anyViewappt_leavesPatientListAsItIs() {
+        Model archiveModel = modelWithArchivedBenson();
+
+        executeOrFail(new ViewAppointmentCommand(LocalDate.of(2026, 10, 6)), archiveModel);
+        executeOrFail(new ViewAppointmentCommand(Optional.empty(), Optional.empty(), Optional.of(BENSON.getId())),
+                archiveModel);
+
+        // the patient list is never touched, whichever appointments show
         assertEquals(List.of(DANIEL), archiveModel.getFilteredPatientList());
         assertEquals(PatientScope.DEFAULT, archiveModel.getPatientListScope().getValue());
     }
@@ -333,7 +352,8 @@ public class ViewAppointmentCommandTest {
                 Optional.of(start), Optional.of(end), Optional.of(multiId), FIXED_CLOCK);
         // --from unlocks the past, so all three appointments are in the range
         String expectedMessage = String.format(
-                MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW, 3, multi.getName().fullName, start, end);
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW,
+                3, multi.getName().fullName, start, end);
         CommandResult expectedResult = pageResult(expectedMessage,
                 new AppointmentRange(start, end, multiId));
         assertCommandSuccess(command, relativeModel, expectedResult, expectedRelativeModel);
@@ -441,6 +461,13 @@ public class ViewAppointmentCommandTest {
 
     private static Patient patientWithAppointment(String id, LocalDate date) {
         return new PatientBuilder().withId(id).withAppointments(date.toString()).build();
+    }
+
+    /** Returns a model where Benson is archived, and only Benson and Daniel have appointments in October 2026. */
+    private static Model modelWithArchivedBenson() {
+        // Benson, archived, has an appointment on 2026-10-05 and Daniel on 2026-10-06
+        return new ModelManager(new LaiNurseBuilder().withPatient(DANIEL).withPatient(BENSON.withArchived(true))
+                .build(), new UserPrefs());
     }
 
     /** Returns a LaiNurse with four patients, having appointments yesterday, today, in three days and in a month. */

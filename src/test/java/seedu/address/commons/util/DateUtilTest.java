@@ -43,6 +43,10 @@ public class DateUtilTest {
     @Test
     public void getStartOfWeek_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> DateUtil.getStartOfWeek(null));
+    }
+
+    @Test
+    public void getEndOfWeek_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> DateUtil.getEndOfWeek(null));
     }
 
@@ -55,6 +59,11 @@ public class DateUtilTest {
     public void parseDate_zeroYear_isAccepted() {
         // year 0000 is a valid ISO-8601 date and stays accepted
         assertEquals(LocalDate.of(0, 1, 1), DateUtil.parseDate("0000-01-01"));
+    }
+
+    @Test
+    public void parseDate_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> DateUtil.parseDate(null));
     }
 
     @Test
@@ -107,8 +116,7 @@ public class DateUtilTest {
     }
 
     @Test
-    public void parseDateAndParseTime_null_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> DateUtil.parseDate(null));
+    public void parseTime_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> DateUtil.parseTime(null));
     }
 }
