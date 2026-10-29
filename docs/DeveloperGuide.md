@@ -345,12 +345,6 @@ The `Model` component,
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they
   should make sense on their own without depending on other components)
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `LaiNurse`, and each `Person` references tags from that list. This lets `LaiNurse` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
-
-<img src="images/BetterModelClassDiagram.png" width="450" />
-
-</div>
-
 ### Storage component
 
 **API** : [
