@@ -26,7 +26,8 @@ import seedu.address.model.patient.PatientNameComparator;
 
 /**
  * Finds and lists patients whose fields contain any of the supplied substrings.
- * Matching ignores case and repeated whitespace. Patients matching more fields appear first.
+ * Matching ignores case and repeated whitespace. Patients matching more fields appear first, but archived patients
+ * always come last.
  */
 public class FindCommand extends Command {
 
@@ -34,7 +35,8 @@ public class FindCommand extends Command {
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds patients matching any supplied field substring "
             + "(case-insensitive) and displays them as a list with index numbers.\n"
-            + "Patients matching more fields appear first; ties are in name order. The first is selected.\n"
+            + "Patients matching more fields appear first, with archived ones last; ties are in name order. "
+            + "The first is selected.\n"
             + "Parameters: [" + PREFIX_ID + "ID] [" + PREFIX_NAME + "NAME] [" + PREFIX_ADDRESS + "ADDRESS] "
             + "[" + PREFIX_PHONE + "PHONE] [" + PREFIX_MEDICAL_HISTORY + "HISTORY] [" + PREFIX_NOTES + "NOTES] "
             + "[" + PREFIX_ALL.toString().trim() + " or " + PREFIX_ARCHIVED.toString().trim() + "]\n"

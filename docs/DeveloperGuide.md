@@ -412,8 +412,9 @@ search, as described in [Viewing appointments by date](#viewing-appointments-by-
 
 `FindCommand` passes the predicate and a comparator to `Model#updateFilteredPatientList(predicate, comparator)` and
 reports the existing patient count message. The comparator orders patients by descending match count, then by
-`PatientNameComparator`, so ties are in name order. Each search replaces the previous filter and searches the full
-patient collection. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to patient records update
+`PatientNameComparator`, so ties are in name order. `ModelManager` puts `ARCHIVED_LAST` before any comparator, so the
+whole order is archived patients last, then the match count, then the name. Each search replaces the previous filter
+and searches all the patients in the scope of the patient list. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to patient records update
 the same observable view. Filtering and sorting do not change stored records or their order. The single-argument
 filter method clears sorting, as does a null comparator; existing calls from `view`, `add` and `edit`
 therefore restore name order. The appointment list is independent of this sorting. `find` searches only the patients
@@ -1111,7 +1112,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, medical history or notes
-2.  LaiNurse shows a list of matching patients, with the patients that match the most fields first, and patients that match the same number of fields in name order
+2.  LaiNurse shows a list of matching patients, with archived patients, if the list shows them, last, then the patients that match the most fields first, and patients that match the same number of fields in name order
 
     Use case ends.
 
