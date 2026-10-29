@@ -10,7 +10,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PATIENTS;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -80,10 +79,7 @@ public class EditCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        List<Patient> allPatients = model.getLaiNurse().getPatientList();
-
-        Optional<Patient> foundPatient = allPatients.stream()
-                .filter(patient -> patient.getId().equals(targetId)).findFirst();
+        Optional<Patient> foundPatient = model.findPatientById(targetId);
         if (foundPatient.isEmpty()) {
             logger.fine("Rejected edit: no patient has the given ID.");
             throw new CommandException(String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, targetId));
