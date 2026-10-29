@@ -152,13 +152,14 @@ public class JsonLaiNurseStorageTest {
     }
 
     @Test
-    public void saveLaiNurse_backupCannotBeWritten_dataFileSavedAndIoExceptionThrown() throws Exception {
+    public void saveLaiNurse_backupCannotBeWritten_dataFileSavedAndBackupFailedExceptionThrown() throws Exception {
         JsonLaiNurseStorage storage = new JsonLaiNurseStorage(testFolder.resolve("lainurse.json"));
         // a folder where the backup should be cannot be written as a file
         Files.createDirectories(storage.getLaiNurseBackupFilePath());
 
         LaiNurse original = getTypicalLaiNurse();
-        assertThrows(IOException.class, () -> storage.saveLaiNurse(original));
+        // a distinct exception, so that the caller keeps the change that the data file holds
+        assertThrows(BackupFailedException.class, () -> storage.saveLaiNurse(original));
         assertEquals(original, new LaiNurse(storage.readLaiNurse().get()));
     }
 

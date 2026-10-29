@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_PATIENT_NOT_FOUND;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
@@ -17,6 +18,7 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +42,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
+import seedu.address.storage.BackupFailedException;
 import seedu.address.storage.JsonLaiNurseStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -306,12 +309,62 @@ public class LogicManagerTest {
 
         logic = new LogicManager(model, storage);
 
-        // Triggers the saveLaiNurse method by executing an add command
+        // Triggers the saveLaiNurse method by executing an add command, which the failed save undoes
         String addCommand = AddCommand.COMMAND_WORD + ID_DESC_AMY + NAME_DESC_AMY + PHONE_DESC_AMY
                 + ADDRESS_DESC_AMY;
-        Patient expectedPatient = new PatientBuilder(AMY).build();
-        ModelManager expectedModel = new ModelManager();
-        expectedModel.addPatient(expectedPatient);
-        assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
+        assertCommandFailure(addCommand, CommandException.class, expectedMessage, new ModelManager());
+    }
+
+    @Test
+    public void execute_saveFailsThenWorks_retryAppliesChangeOnce() throws Exception {
+        Patient amy = new PatientBuilder(AMY).withNotes("Original").build();
+        model.addPatient(amy);
+        List<IOException> failures = new ArrayList<>(List.of(DUMMY_AD_EXCEPTION));
+        logic = new LogicManager(model, storageFailingWith(failures));
+        String addNotes = "edit " + amy.getId().value + " --add-notes followup";
+
+        // the failed save puts the notes back as they were (#198)
+        assertThrows(CommandException.class, () -> logic.execute(addNotes));
+        assertEquals("ORIGINAL", notesOf(amy));
+
+        // so running the command again adds the text once
+        logic.execute(addNotes);
+        assertEquals("ORIGINAL; FOLLOWUP", notesOf(amy));
+    }
+
+    @Test
+    public void execute_backupFails_keepsChangeAndWarns() throws Exception {
+        Path backupPath = temporaryFolder.resolve("lainurse.backup.json");
+        List<IOException> failures = new ArrayList<>(List.of(
+                new BackupFailedException(backupPath, new IOException("disk full"))));
+        logic = new LogicManager(model, storageFailingWith(failures));
+
+        // the data file holds the change, so the command succeeds, and only says that the backup failed
+        String addCommand = AddCommand.COMMAND_WORD + ID_DESC_AMY + NAME_DESC_AMY + PHONE_DESC_AMY
+                + ADDRESS_DESC_AMY;
+        CommandResult result = logic.execute(addCommand);
+        assertTrue(result.getFeedbackToUser().endsWith(String.format(LogicManager.BACKUP_WARNING_FORMAT, backupPath)));
+        assertTrue(model.hasPatient(new PatientBuilder(AMY).build()));
+    }
+
+    /**
+     * Returns a storage that saves to the temporary folder, but fails the next saves with {@code failures}, in order,
+     * until there are none left.
+     */
+    private StorageManager storageFailingWith(List<IOException> failures) {
+        JsonLaiNurseStorage laiNurseStorage = new JsonLaiNurseStorage(temporaryFolder.resolve("lainurse.json")) {
+            @Override
+            public void saveLaiNurse(ReadOnlyLaiNurse laiNurse) throws IOException {
+                if (!failures.isEmpty()) {
+                    throw failures.remove(0);
+                }
+                super.saveLaiNurse(laiNurse);
+            }
+        };
+        return new StorageManager(laiNurseStorage, new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json")));
+    }
+
+    private String notesOf(Patient patient) {
+        return model.findPatientById(patient.getId()).orElseThrow().getNotes().orElseThrow().value;
     }
 }

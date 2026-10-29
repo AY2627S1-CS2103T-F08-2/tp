@@ -814,6 +814,25 @@ Rather than hardcoding command names and usage strings inside `HelpCommand`:
   replacing any earlier copy.
 
 `LogicManager` saves after every command that succeeds, as before, so it writes the backup without knowing about it.
+What a failed save does depends on which file failed:
+
+* If the data file cannot be written, the command's change must not stay, or running the command again would apply it
+  twice, such as text added twice with `--add-notes` (#198). So `LogicManager#execute` copies the data before it runs
+  the command, and if the save fails, puts the copy back with `Model#setLaiNurse`, unless the command changed nothing.
+  The error says that nothing was changed.
+* If only the backup cannot be written, the data file already holds the change, so it stays.
+  `JsonLaiNurseStorage#saveLaiNurse(ReadOnlyLaiNurse)` throws a `BackupFailedException`, a kind of `IOException`, and
+  `LogicManager` returns the command's result with `BACKUP_WARNING_FORMAT` added, through
+  `CommandResult#withNoteAppended`, instead of failing the command.
+
+**Aspect: What a command does when its data cannot be saved**
+
+* **Alternative 1 (Current choice): Undo the change, and say so.**
+    * *Pros:* The model always matches the data file, and the command can simply be run again.
+    * *Cons:* Every command copies the data first. The patients are immutable, so this copies only the list.
+* **Alternative 2: Keep the change, and warn that it is not saved yet.**
+    * *Pros:* No copy is needed, and the next command that saves also saves this change.
+    * *Cons:* A user who runs the command again applies it twice, and closing the app loses the change.
 
 At launch, `MainApp#initModelManager` asks `LaiNurseLoader#load(Storage)` for the data to start with.
 `LaiNurseLoader` returns a `LaiNurseLoader.Result`: the data, and a message for the user if the data did not come from
@@ -2309,6 +2328,22 @@ before you change any file in its `data` folder.
 
     1. Test case: `delete` a patient, then close the app.<br>
        Expected: Both files no longer hold that patient.
+
+1. Saving when a file cannot be written
+
+    1. Prerequisites: Launch the app, and run `edit S1234567A --notes Original`. Then make `data/lainurse.json`
+       read-only, while the app stays open.
+
+    1. Test case: `edit S1234567A --add-notes Followup`<br>
+       Expected: An error says that the data could not be saved, and that nothing was changed. Alex Yeoh's notes are
+       still `ORIGINAL`.
+
+    1. Test case: make `data/lainurse.json` writable again, and run the same command again.<br>
+       Expected: Alex Yeoh's notes are `ORIGINAL; FOLLOWUP`, with `FOLLOWUP` once, in the app and in the file.
+
+    1. Test case: make only `data/lainurse.backup.json` read-only, and run `edit S1234567A --add-notes More`.<br>
+       Expected: The notes change, and the message ends with a warning that the data could not be backed up.
+       `data/lainurse.json` holds the change.
 
 1. Dealing with a missing data file
 

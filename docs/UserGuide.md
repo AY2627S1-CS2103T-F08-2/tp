@@ -474,6 +474,8 @@ LaiNurse saves your data automatically after every command that succeeds. You do
 
 Each save writes your data to two files in the `data` folder: the data file, `lainurse.json`, and then a backup of it, `lainurse.backup.json`. Both hold the same data: the data as LaiNurse last saved it.
 
+If LaiNurse cannot save the data file, for example because it is read-only, the command shows an error and changes nothing, so you can run it again once the file can be written. If only the backup cannot be saved, the command still takes effect, as the data file holds it, and its message ends with a warning that the data could not be backed up.
+
 ### Editing the data file
 
 LaiNurse saves its data as a JSON file, `data/lainurse.json`, inside the folder you launched it from. If you followed the [Quick start](#quick-start), that is the folder containing the JAR file. Advanced users are welcome to update data directly by editing that data file. Close LaiNurse before you edit it, as LaiNurse overwrites the file the next time a command succeeds. Every command that succeeds saves, `exit` included, while closing the window with its close button does not.
