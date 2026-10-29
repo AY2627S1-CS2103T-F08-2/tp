@@ -86,6 +86,7 @@ public class EditCommand extends Command {
         }
         Patient patientToEdit = foundPatient.get();
         Patient editedPatient = createEditedPatient(patientToEdit, editPatientDescriptor);
+        assert editedPatient.getId().equals(patientToEdit.getId()) : "An edit never changes the patient's ID.";
 
         model.setPatient(patientToEdit, editedPatient);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);

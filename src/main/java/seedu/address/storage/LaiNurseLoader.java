@@ -107,6 +107,7 @@ public class LaiNurseLoader {
      * its own by {@code corruptFileMessage}.
      */
     private static Optional<String> message(String format, Storage storage, String corruptFileMessage) {
+        assert format.contains("%1$s") && format.contains("%2$s") : "The message must name both files.";
         return Optional.of(String.format(format, storage.getLaiNurseFilePath(), storage.getLaiNurseBackupFilePath())
                 + "\n" + corruptFileMessage);
     }

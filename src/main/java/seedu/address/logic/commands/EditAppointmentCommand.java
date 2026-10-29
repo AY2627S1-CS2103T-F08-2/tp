@@ -99,6 +99,7 @@ public class EditAppointmentCommand extends Command {
         editedAppointment = isMoved
                 ? editedSchedule.getLastAt(editedAppointment)
                 : editedSchedule.findByNumber(oldAppointment.getNumber()).orElseThrow();
+        assert editedAppointment.isDone() == oldAppointment.isDone() : "An edit keeps the appointment's mark.";
         Patient editedPatient = patient.withSchedule(editedSchedule);
         model.setPatient(patient, editedPatient);
 
