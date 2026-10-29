@@ -49,13 +49,15 @@ public final class AppointmentClashes {
 
     /**
      * Returns true if {@code entry} can clash under {@code settings} at {@code now}: it has a time, and it is
-     * unmarked, of a patient who is not archived, and still to come, unless the settings let it clash anyway.
+     * unmarked, of a patient who is not archived, and still to come, unless the settings let it clash anyway. If past
+     * appointments cannot clash, neither can marked ones, which count as past.
      */
     private static boolean canClash(PatientAppointment entry, Settings settings, LocalDateTime now) {
         Appointment appointment = entry.getAppointment();
+        boolean isPast = appointment.hasPassed(now) || appointment.isDone();
         return appointment.getTime().isPresent()
                 && (!appointment.isDone() || !settings.isMarkStoppingClashes())
                 && (!entry.getPatient().isArchived() || settings.isArchivedClashing())
-                && (!appointment.hasPassed(now) || settings.isPastClashing());
+                && (!isPast || settings.isPastClashing());
     }
 }

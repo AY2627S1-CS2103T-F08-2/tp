@@ -21,7 +21,7 @@ public class Settings {
         MARK_STOPS_CLASHES("mark-stops-clashes"),
         /** On: a marked appointment counts as over, as one that has passed. Off: a mark only shows a pin. */
         MARK_COUNTS_AS_DONE("mark-counts-as-done"),
-        /** On: appointments that have passed can clash. Off: they never do. */
+        /** On: appointments that have passed can clash. Off: they never do, and neither do marked ones. */
         PAST_CLASHES("past-clashes"),
         /** On: archived patients' appointments clash like any other. Off: they never do. */
         ARCHIVED_CLASHES("archived-clashes");

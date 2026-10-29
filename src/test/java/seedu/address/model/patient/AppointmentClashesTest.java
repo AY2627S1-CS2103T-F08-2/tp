@@ -109,5 +109,10 @@ public class AppointmentClashesTest {
                 AppointmentClashes.find(entries, entry(ben, 2), all, now));
         assertEquals(List.of(entry(ben, 2), entry(carl, 1)),
                 AppointmentClashes.find(entries, entry(alex, 2), all, now));
+
+        // without past clashes, a marked appointment counts as past, so it does not clash either
+        Settings noPastButMarks = all.with(Settings.Key.PAST_CLASHES, false);
+        assertEquals(List.of(entry(carl, 1)), AppointmentClashes.find(entries, entry(ben, 2), noPastButMarks, now));
+        assertEquals(List.of(), AppointmentClashes.find(entries, entry(alex, 2), noPastButMarks, now));
     }
 }
