@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
@@ -204,6 +205,27 @@ public class CommandResultTest {
     }
 
     @Test
+    public void withAppointmentScope_heldAndCompared() {
+        CommandResult scopeResult = new CommandResult("feedback", RANGE).withAppointmentScope(PatientScope.ALL);
+        assertEquals(Optional.of(PatientScope.ALL), scopeResult.getAppointmentScope());
+        assertEquals(Optional.of(RANGE), scopeResult.getAppointmentRange());
+
+        // a plain result keeps whose appointments show
+        assertEquals(Optional.empty(), new CommandResult("feedback").getAppointmentScope());
+
+        // navigating keeps the scope
+        assertEquals(Optional.of(PatientScope.ALL),
+                scopeResult.withNavigation(Navigation.toView(View.APPOINTMENTS)).getAppointmentScope());
+
+        assertEquals(scopeResult, new CommandResult("feedback", RANGE).withAppointmentScope(PatientScope.ALL));
+        assertEquals(scopeResult.hashCode(),
+                new CommandResult("feedback", RANGE).withAppointmentScope(PatientScope.ALL).hashCode());
+        assertNotEquals(scopeResult, new CommandResult("feedback", RANGE));
+        assertNotEquals(scopeResult, new CommandResult("feedback", RANGE).withAppointmentScope(PatientScope.ARCHIVED));
+        assertThrows(NullPointerException.class, () -> new CommandResult("feedback").withAppointmentScope(null));
+    }
+
+    @Test
     public void appointmentRangeContains_boundariesIncluded() {
         assertFalse(RANGE.contains(START.minusDays(1)));
         assertTrue(RANGE.contains(START));
@@ -260,26 +282,27 @@ public class CommandResultTest {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName()
                 + "{feedbackToUser=feedback, showHelp=false, exit=false, view=null, "
-                + "appointmentRange=null, navigation=null, isSelectionCleared=false}";
+                + "appointmentRange=null, appointmentScope=null, navigation=null, isSelectionCleared=false}";
         assertEquals(expected, commandResult.toString());
 
         CommandResult viewResult = new CommandResult("feedback").withSelectionCleared().withView(View.PATIENTS);
         String expectedView = CommandResult.class.getCanonicalName()
                 + "{feedbackToUser=feedback, showHelp=false, exit=false, view=PATIENTS, "
-                + "appointmentRange=null, navigation=null, isSelectionCleared=true}";
+                + "appointmentRange=null, appointmentScope=null, navigation=null, isSelectionCleared=true}";
         assertEquals(expectedView, viewResult.toString());
 
-        CommandResult appointmentResult = new CommandResult("feedback", RANGE);
+        CommandResult appointmentResult = new CommandResult("feedback", RANGE).withAppointmentScope(PatientScope.ALL);
         String expectedAppointment = CommandResult.class.getCanonicalName()
                 + "{feedbackToUser=feedback, showHelp=false, exit=false, view=null, "
-                + "appointmentRange=" + RANGE + ", navigation=null, isSelectionCleared=false}";
+                + "appointmentRange=" + RANGE + ", appointmentScope=ALL, navigation=null, isSelectionCleared=false}";
         assertEquals(expectedAppointment, appointmentResult.toString());
 
         Navigation navigation = Navigation.toView(View.PATIENTS);
         CommandResult navigationResult = new CommandResult("feedback").withNavigation(navigation);
         String expectedNavigation = CommandResult.class.getCanonicalName()
                 + "{feedbackToUser=feedback, showHelp=false, exit=false, view=PATIENTS, "
-                + "appointmentRange=null, navigation=" + navigation + ", isSelectionCleared=false}";
+                + "appointmentRange=null, appointmentScope=null, navigation=" + navigation
+                + ", isSelectionCleared=false}";
         assertEquals(expectedNavigation, navigationResult.toString());
     }
 

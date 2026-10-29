@@ -93,6 +93,7 @@ public class EditCommand extends Command {
 
         model.setPatient(patientToEdit, editedPatient);
         model.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+        model.showInPatientList(editedPatient);
         logger.fine("Edited patient " + targetId + ".");
         return new CommandResult(String.format(MESSAGE_EDIT_PATIENT_SUCCESS, Messages.format(editedPatient)))
                 .withNavigation(Navigation.toPatient(editedPatient.getId()));
@@ -118,7 +119,7 @@ public class EditCommand extends Command {
                 .orElse(patientToEdit.getNotes());
 
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, updatedNotes, patientToEdit.getSchedule());
+                updatedMedicalHistory, updatedNotes, patientToEdit.getSchedule(), patientToEdit.isArchived());
     }
 
     @Override

@@ -44,6 +44,18 @@ public class NameTest {
     }
 
     @Test
+    public void isValidName_invisibleCharacters() {
+        // a name of invisible characters only looks blank, so it is blank (#218)
+        assertFalse(Name.isValidName("\u200B"));
+        assertFalse(Name.isValidName("\u200B\uFEFF\u2060"));
+        assertThrows(IllegalArgumentException.class, () -> new Name("\u200B"));
+
+        // a name with a composite emoji keeps the joiner that it needs
+        assertTrue(Name.isValidName("\uD83D\uDC69\u200D\u2695\uFE0F"));
+        assertEquals("ALEX \uD83D\uDC69\u200D\u2695\uFE0F", new Name("alex \uD83D\uDC69\u200D\u2695\uFE0F").fullName);
+    }
+
+    @Test
     public void constructor_normalizesValue() {
         assertEquals("PETER JACK", new Name("  peter   jack ").fullName);
     }

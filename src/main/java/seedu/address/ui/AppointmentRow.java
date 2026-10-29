@@ -20,7 +20,6 @@ public class AppointmentRow extends UiPart<Region> {
 
     private static final String FXML = "AppointmentRow.fxml";
     private static final String TIME_STYLE_CLASS = "appointment-entry-time";
-    private static final String NO_TIME_STYLE_CLASS = "appointment-entry-no-time";
     private static final String PASSED_STYLE_CLASS = "appointment-entry-passed";
     private static final String CLASH_STYLE_CLASS = "appointment-entry-clash";
 
@@ -71,8 +70,10 @@ public class AppointmentRow extends UiPart<Region> {
         Patient patient = entry.appointment().getPatient();
         number.setText(entry.number() + ".");
         time.setText(AppointmentFormatter.formatTime(appointment));
-        time.getStyleClass().removeAll(TIME_STYLE_CLASS, NO_TIME_STYLE_CLASS);
-        time.getStyleClass().add(appointment.getTime().isPresent() ? TIME_STYLE_CLASS : NO_TIME_STYLE_CLASS);
+        // An appointment with no time takes the color of its row, as one with a time does
+        if (!time.getStyleClass().contains(TIME_STYLE_CLASS)) {
+            time.getStyleClass().add(TIME_STYLE_CLASS);
+        }
         TimeMark.show(time, clashMark, pinMark, isClashing, appointment.isDone());
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);

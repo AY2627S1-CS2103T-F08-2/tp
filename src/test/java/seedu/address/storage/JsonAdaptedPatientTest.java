@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.storage.JsonAdaptedPatient.MISSING_FIELD_MESSAGE_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -46,6 +47,33 @@ public class JsonAdaptedPatientTest {
     public void toModelType_validPatientDetails_returnsPatient() throws Exception {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(BENSON);
         assertEquals(BENSON, patient.toModelType());
+    }
+
+    @Test
+    public void toModelType_archivedPatient_staysArchived() throws Exception {
+        Patient archivedBenson = BENSON.withArchived(true);
+        assertEquals(archivedBenson, new JsonAdaptedPatient(archivedBenson).toModelType());
+        assertTrue(JsonUtil.toJsonString(new JsonAdaptedPatient(archivedBenson)).contains("\"archived\" : true"));
+        // a patient who is not archived is saved without the field, as before archiving existed
+        assertFalse(JsonUtil.toJsonString(new JsonAdaptedPatient(BENSON)).contains("archived"));
+    }
+
+    @Test
+    public void toModelType_archivedNotBoolean_throwsIllegalValueException() throws Exception {
+        for (String value : new String[] {"\"true\"", "1", "0", "\"yes\""}) {
+            JsonAdaptedPatient patient = JsonUtil.fromJsonString("{\"id\": \"S1234567A\", \"name\": \"Alex\", "
+                    + "\"phone\": \"91234567\", \"address\": \"Blk 1\", \"archived\": " + value + "}",
+                    JsonAdaptedPatient.class);
+            assertThrows(IllegalValueException.class, JsonAdaptedPatient.MESSAGE_ARCHIVED_CONSTRAINTS,
+                    patient::toModelType);
+        }
+        // a boolean loads, and false or null means not archived
+        JsonAdaptedPatient notArchived = JsonUtil.fromJsonString("{\"id\": \"S1234567A\", \"name\": \"Alex\", "
+                + "\"phone\": \"91234567\", \"address\": \"Blk 1\", \"archived\": false}", JsonAdaptedPatient.class);
+        assertFalse(notArchived.toModelType().isArchived());
+        JsonAdaptedPatient nullArchived = JsonUtil.fromJsonString("{\"id\": \"S1234567A\", \"name\": \"Alex\", "
+                + "\"phone\": \"91234567\", \"address\": \"Blk 1\", \"archived\": null}", JsonAdaptedPatient.class);
+        assertFalse(nullArchived.toModelType().isArchived());
     }
 
     @Test

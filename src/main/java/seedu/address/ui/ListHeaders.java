@@ -16,7 +16,7 @@ import javafx.scene.layout.Region;
 
 /**
  * Lines up the end of a list's header with the end of its rows, at the same place in every list, whether or not the
- * list shows a vertical scroll bar. So a count at the end of the header, such as "6 patients", ends where the rows'
+ * list shows a vertical scroll bar. So a count at the end of the header, such as "6", ends where the rows'
  * last column ends, and where the other list's count ends, so it stays in place as the user switches views.
  */
 final class ListHeaders {

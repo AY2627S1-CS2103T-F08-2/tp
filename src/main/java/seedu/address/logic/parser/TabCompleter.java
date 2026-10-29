@@ -5,6 +5,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ALL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ARCHIVED;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
@@ -29,6 +31,7 @@ import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ViewAppointmentCommand;
+import seedu.address.logic.commands.ViewCommand;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -52,10 +55,15 @@ public class TabCompleter {
             EditCommand.COMMAND_WORD, options(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
                     PREFIX_ADD_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ADD_NOTES),
             FindCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                    PREFIX_MEDICAL_HISTORY, PREFIX_NOTES),
+                    PREFIX_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ALL, PREFIX_ARCHIVED),
             AddAppointmentCommand.COMMAND_WORD, options(PREFIX_DATE, PREFIX_DETAILS),
             EditAppointmentCommand.COMMAND_WORD, options(PREFIX_TO, PREFIX_DETAILS, PREFIX_ADD_DETAILS),
-            ViewAppointmentCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_FROM, PREFIX_TO));
+            ViewAppointmentCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_FROM, PREFIX_TO, PREFIX_ALL,
+                    PREFIX_ARCHIVED),
+            ViewCommand.COMMAND_WORD, options(PREFIX_ALL, PREFIX_ARCHIVED));
+
+    /** The options that choose the scope, of which a command takes at most one. */
+    private static final List<String> SCOPE_OPTIONS = options(PREFIX_ALL, PREFIX_ARCHIVED);
 
     /**
      * Commands whose {@code --id} option takes the whole ID of an existing patient. {@code add} takes a new one, and
@@ -76,7 +84,8 @@ public class TabCompleter {
      * {@code delete} and {@code deleteappt}, and {@code view} gives {@code viewappt}. A command word that no other
      * command word starts with, such as {@code addappt}, is completed with a patient ID.</li>
      * <li>A word that starts with {@code -} is completed to the options of the command that start with it, other
-     * than itself and the options already typed.</li>
+     * than itself, the options already typed, and the options that cannot be given with them: a second scope
+     * option, or a scope option with a patient ID in {@code view} or {@code viewappt}.</li>
      * <li>The word after {@code help} is completed to a command word, or to {@code window}.</li>
      * <li>The word after {@code --id} in {@code viewappt} is completed to a patient ID.</li>
      * <li>Otherwise, {@link IdCompleter} completes the patient ID that the command takes first.</li>
@@ -110,6 +119,7 @@ public class TabCompleter {
         if (word.startsWith(OPTION_START)) {
             List<String> unusedOptions = OPTIONS.getOrDefault(commandWord, List.of()).stream()
                     .filter(option -> !earlierWords.contains(option))
+                    .filter(option -> !isExcluded(option, earlierWords))
                     .toList();
             return completeWord(before, word, unusedOptions);
         }
@@ -139,6 +149,26 @@ public class TabCompleter {
                 .filter(word -> word.startsWith(lowercasePartialWord) && !word.equals(partialWord))
                 .map(word -> new Completion(before + word, word))
                 .toList();
+    }
+
+    /**
+     * Returns true if {@code option} cannot be given with {@code earlierWords}, the command word and what follows
+     * it: a scope option after another, or a scope option and a patient ID together, in {@code view} or
+     * {@code viewappt}, where the ID shows that patient, archived or not.
+     */
+    private static boolean isExcluded(String option, List<String> earlierWords) {
+        String commandWord = earlierWords.get(0);
+        boolean hasScope = earlierWords.stream().anyMatch(SCOPE_OPTIONS::contains);
+        boolean hasId = switch (commandWord) {
+            case ViewCommand.COMMAND_WORD -> earlierWords.size() > 1 && !earlierWords.get(1).startsWith(OPTION_START);
+            case ViewAppointmentCommand.COMMAND_WORD -> earlierWords.contains(PREFIX_ID.getPrefix().strip());
+            default -> false;
+        };
+        if (SCOPE_OPTIONS.contains(option)) {
+            return hasScope || hasId;
+        }
+        return commandWord.equals(ViewAppointmentCommand.COMMAND_WORD)
+                && option.equals(PREFIX_ID.getPrefix().strip()) && hasScope;
     }
 
     private static List<String> options(Prefix... prefixes) {

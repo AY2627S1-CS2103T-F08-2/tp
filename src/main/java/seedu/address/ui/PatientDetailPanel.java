@@ -59,7 +59,7 @@ public class PatientDetailPanel extends UiPart<Region> {
      */
     private static final double DATE_NARROW_MIN_WIDTH = 90;
     /**
-     * The width of an appointment's time beside its details, wide enough for "Unspecified time" with room after it,
+     * The width of an appointment's time beside its details, wide enough for "Unspecified" with room after it,
      * so that the details of all rows line up where they would after a wider date.
      */
     private static final double TIME_WIDTH = 140;
@@ -272,8 +272,8 @@ public class PatientDetailPanel extends UiPart<Region> {
         date.minWidthProperty().bind(dateWidth);
         date.prefWidthProperty().bind(dateWidth);
         Label time = new Label(AppointmentFormatter.formatDetailTime(appointment));
-        time.getStyleClass().add(appointment.getTime().isPresent()
-                ? "detail-appointment-time" : "detail-appointment-no-time");
+        // An appointment with no time takes the color of its row, as one with a time does
+        time.getStyleClass().add("detail-appointment-time");
         time.setWrapText(true);
         time.setMinWidth(0);
         time.setMinHeight(Region.USE_PREF_SIZE);

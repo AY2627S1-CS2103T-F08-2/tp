@@ -54,7 +54,7 @@ public class TabCompleterTest {
                 "editappt S1234567A 2 --add-details"), texts("editappt S1234567A 2 --"));
         assertEquals(List.of("--medical-history"), words("edit S1234567A --m"));
         assertEquals(List.of("--add-medical-history", "--add-notes"), words("edit S1234567A --add-"));
-        assertEquals(List.of("--id", "--from", "--to"), words("viewappt -"));
+        assertEquals(List.of("--id", "--from", "--to", "--all", "--archived"), words("viewappt -"));
         assertEquals(List.of("--date", "--details"), words("addappt S1234567A --d"));
         assertEquals(List.of("--details"), words("addappt S1234567A --date 2026-12-01 --d"));
     }
@@ -95,11 +95,25 @@ public class TabCompleterTest {
     }
 
     @Test
+    public void complete_scopeOptions_offersOnlyThoseThatCanBeGiven() {
+        assertEquals(List.of("--all", "--archived"), words("view --"));
+        assertEquals(List.of("--archived"), words("view --ar"));
+        assertEquals(List.of("--address", "--all", "--archived"), words("find --name Alex --a"));
+        // at most one scope option
+        assertEquals(List.of(), words("view --all --"));
+        assertEquals(List.of("--id", "--name", "--phone", "--address", "--medical-history", "--notes"),
+                words("find --archived --"));
+        // an ID shows that patient, archived or not
+        assertEquals(List.of(), words("view S1234567A --"));
+        assertEquals(List.of("--from", "--to"), words("viewappt --id S1234567A --"));
+        assertEquals(List.of("--from", "--to"), words("viewappt --all --"));
+    }
+
+    @Test
     public void complete_noOptionToComplete_returnsEmptyList() {
         // the whole option, which no other option starts with
         assertEquals(List.of(), words("edit S1234567A --notes"));
         // commands without options
-        assertEquals(List.of(), words("view --"));
         assertEquals(List.of(), words("deleteappt S1234567A --"));
         assertEquals(List.of(), words("xyz --"));
     }

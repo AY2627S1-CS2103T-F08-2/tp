@@ -81,7 +81,7 @@ public final class PatientContainsSubstringsPredicate implements Predicate<Patie
 
     private static Optional<String> normalizeCriterion(Optional<String> criterion) {
         return criterion.map(value -> {
-            String normalizedValue = TextNormalizer.normalize(value);
+            String normalizedValue = TextNormalizer.normalizeText(value);
             checkArgument(!normalizedValue.isEmpty(), "Search values must not be blank.");
             return normalizedValue;
         });

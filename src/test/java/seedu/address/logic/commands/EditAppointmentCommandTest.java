@@ -270,4 +270,19 @@ public class EditAppointmentCommandTest {
 
         assertCommandSuccess(command, model, expectedResult, expectedModel);
     }
+
+    @Test
+    public void execute_archivedPatient_notesArchived() throws Exception {
+        Patient archivedBenson = BENSON.withArchived(true);
+        model.setPatient(BENSON, archivedBenson);
+        String feedback = new EditAppointmentCommand(BENSON.getId(), 1,
+                Optional.of(new Appointment("2026-10-07 10:00")), Optional.empty()).execute(model).getFeedbackToUser();
+        assertTrue(feedback.endsWith(Messages.formatArchivedNote(archivedBenson)));
+
+        // a patient who is not archived gets no note
+        model.setPatient(model.findPatientById(BENSON.getId()).orElseThrow(), BENSON);
+        feedback = new EditAppointmentCommand(BENSON.getId(), 1,
+                Optional.of(new Appointment("2026-10-08 10:00")), Optional.empty()).execute(model).getFeedbackToUser();
+        assertFalse(feedback.contains("archived"));
+    }
 }

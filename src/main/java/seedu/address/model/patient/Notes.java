@@ -30,7 +30,7 @@ public class Notes {
     public Notes(String notes) {
         requireNonNull(notes);
         checkArgument(isValidNotes(notes), MESSAGE_CONSTRAINTS);
-        value = TextNormalizer.normalize(notes);
+        value = TextNormalizer.normalizeText(notes);
     }
 
     /**
@@ -38,7 +38,7 @@ public class Notes {
      * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidNotes(String test) {
-        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
+        return TextNormalizer.normalizeText(test).matches(VALIDATION_REGEX);
     }
 
     @Override

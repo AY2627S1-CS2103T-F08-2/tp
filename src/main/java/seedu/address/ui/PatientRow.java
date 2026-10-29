@@ -28,6 +28,7 @@ public class PatientRow extends UiPart<Region> {
     private static final String FXML = "PatientRow.fxml";
     private static final String TODAY_STYLE_CLASS = "patient-row-appointment-today";
     private static final String CLASH_STYLE_CLASS = "patient-row-appointment-clash";
+    private static final String ARCHIVED_STYLE_CLASS = "patient-row-archived";
 
     /*
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -58,9 +59,13 @@ public class PatientRow extends UiPart<Region> {
     /**
      * Shows {@code patient} with the list number {@code displayedIndex}, in place of what the row showed before. The
      * patient's next appointment is red if it clashes with another of {@code allAppointments}, which holds the
-     * appointments of every patient, also those hidden by a filter.
+     * appointments of every patient, also those hidden by a filter. An archived patient is greyed out.
      */
     public void show(Patient patient, int displayedIndex, Collection<PatientAppointment> allAppointments) {
+        rowPane.getStyleClass().remove(ARCHIVED_STYLE_CLASS);
+        if (patient.isArchived()) {
+            rowPane.getStyleClass().add(ARCHIVED_STYLE_CLASS);
+        }
         index.setText(displayedIndex + ".");
         name.setText(patient.getName().fullName);
         patientId.setText(patient.getId().value);

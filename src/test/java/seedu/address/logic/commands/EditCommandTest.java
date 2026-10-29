@@ -27,6 +27,7 @@ import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.PatientScope;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
@@ -56,6 +57,25 @@ public class EditCommandTest {
         expectedModel.setPatient(firstPatient, editedPatient);
 
         assertCommandSuccess(editCommand, model, editResult(expectedMessage, firstPatient.getId()), expectedModel);
+    }
+
+    @Test
+    public void execute_archivedPatient_staysArchivedAndShown() {
+        Patient archivedBenson = BENSON.withArchived(true);
+        model.setPatient(BENSON, archivedBenson);
+        Patient editedPatient = new PatientBuilder(archivedBenson).withPhone(VALID_PHONE_BOB).build();
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withPhone(VALID_PHONE_BOB).build();
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PATIENT_SUCCESS,
+                Messages.format(editedPatient));
+        Model expectedModel = new ModelManager(new LaiNurse(model.getLaiNurse()), new UserPrefs());
+        expectedModel.setPatient(archivedBenson, editedPatient);
+        // The scope shows archived patients too, so that the patient's row is in the list to select
+        expectedModel.setPatientListScope(PatientScope.ALL);
+
+        assertCommandSuccess(new EditCommand(BENSON.getId(), descriptor), model,
+                new CommandResult(expectedMessage).withNavigation(Navigation.toPatient(BENSON.getId())),
+                expectedModel);
     }
 
     @Test

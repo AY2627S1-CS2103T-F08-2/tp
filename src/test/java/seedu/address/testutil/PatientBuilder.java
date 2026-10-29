@@ -31,6 +31,7 @@ public class PatientBuilder {
     private Optional<MedicalHistory> medicalHistory;
     private Optional<Notes> notes;
     private AppointmentSchedule appointments;
+    private boolean isArchived;
 
     /**
      * Creates a {@code PatientBuilder} with the default details and no optional fields.
@@ -56,6 +57,7 @@ public class PatientBuilder {
         medicalHistory = patientToCopy.getMedicalHistory();
         notes = patientToCopy.getNotes();
         appointments = patientToCopy.getSchedule();
+        isArchived = patientToCopy.isArchived();
     }
 
     /**
@@ -149,8 +151,16 @@ public class PatientBuilder {
         return this;
     }
 
+    /**
+     * Sets whether the {@code Patient} that we are building is archived.
+     */
+    public PatientBuilder withArchived(boolean isArchived) {
+        this.isArchived = isArchived;
+        return this;
+    }
+
     public Patient build() {
-        return new Patient(id, name, phone, address, medicalHistory, notes, appointments);
+        return new Patient(id, name, phone, address, medicalHistory, notes, appointments, isArchived);
     }
 
 }

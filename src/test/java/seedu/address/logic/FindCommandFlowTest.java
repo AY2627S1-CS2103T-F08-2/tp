@@ -96,8 +96,9 @@ public class FindCommandFlowTest {
 
     @Test
     public void execute_successiveSearches_replacePreviousFilters() throws Exception {
+        // viewappt leaves the patient list as it is
         execute("viewappt 2026-10-05");
-        assertEquals(List.of(BENSON), model.getFilteredPatientList());
+        assertEquals(getTypicalPatients(), model.getFilteredPatientList());
 
         execute("find --id T --name Fiona");
         assertEquals(List.of(FIONA, ELLE), model.getFilteredPatientList());
@@ -112,7 +113,7 @@ public class FindCommandFlowTest {
         assertEquals(List.of(CARL), model.getFilteredPatientList());
 
         execute("viewappt --from 2026-10-01 --to 2026-10-31");
-        assertEquals(List.of(BENSON, DANIEL), model.getFilteredPatientList());
+        assertEquals(List.of(CARL), model.getFilteredPatientList());
     }
 
     @Test
@@ -176,10 +177,11 @@ public class FindCommandFlowTest {
     }
 
     @Test
-    public void execute_viewAppointmentAfterRankedSearch_restoresNameOrder() throws Exception {
+    public void execute_viewAppointmentAfterRankedSearch_keepsRankedResults() throws Exception {
         executeRankedSearch();
+        List<Patient> rankedPatients = List.copyOf(model.getFilteredPatientList());
         execute("viewappt --from 2026-10-01 --to 2026-10-31");
-        assertEquals(List.of(BENSON, DANIEL), model.getFilteredPatientList());
+        assertEquals(rankedPatients, model.getFilteredPatientList());
     }
 
     @Test

@@ -302,6 +302,51 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void patientListScope_hidesOrShowsArchivedPatientsLast() {
+        Patient archivedAlice = ALICE.withArchived(true);
+        modelManager = new ModelManager(new LaiNurseBuilder().withPatient(archivedAlice).withPatient(ZAC)
+                .withPatient(BOB).build(), new UserPrefs());
+        assertEquals(PatientScope.DEFAULT, modelManager.getPatientListScope().getValue());
+        assertEquals(List.of(BOB, ZAC), modelManager.getFilteredPatientList());
+
+        // archived patients come last, also in the order of a filter
+        modelManager.setPatientListScope(PatientScope.ALL);
+        assertEquals(List.of(BOB, ZAC, archivedAlice), modelManager.getFilteredPatientList());
+        modelManager.updateFilteredPatientList(patient -> !patient.equals(BOB), BY_NAME);
+        assertEquals(List.of(ZAC, archivedAlice), modelManager.getFilteredPatientList());
+        assertTrue(modelManager.hasPatientFilter());
+
+        // a new scope keeps the filter
+        modelManager.setPatientListScope(PatientScope.ARCHIVED);
+        assertEquals(List.of(archivedAlice), modelManager.getFilteredPatientList());
+        modelManager.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
+        assertFalse(modelManager.hasPatientFilter());
+        assertThrows(NullPointerException.class, () -> modelManager.setPatientListScope(null));
+    }
+
+    @Test
+    public void showInPatientList_hiddenPatient_showsAllPatients() {
+        Patient archivedAlice = ALICE.withArchived(true);
+        modelManager = new ModelManager(new LaiNurseBuilder().withPatient(archivedAlice).withPatient(BOB).build(),
+                new UserPrefs());
+        modelManager.showInPatientList(BOB);
+        assertEquals(PatientScope.DEFAULT, modelManager.getPatientListScope().getValue());
+        modelManager.showInPatientList(archivedAlice);
+        assertEquals(PatientScope.ALL, modelManager.getPatientListScope().getValue());
+
+        modelManager.setPatientListScope(PatientScope.ARCHIVED);
+        modelManager.showInPatientList(BOB);
+        assertEquals(PatientScope.ALL, modelManager.getPatientListScope().getValue());
+    }
+
+    @Test
+    public void equals_differentScope_returnsFalse() {
+        ModelManager other = new ModelManager();
+        other.setPatientListScope(PatientScope.ALL);
+        assertFalse(modelManager.equals(other));
+    }
+
+    @Test
     public void equals() {
         LaiNurse laiNurse = new LaiNurseBuilder().withPatient(ALICE).withPatient(BENSON).build();
         LaiNurse differentLaiNurse = new LaiNurse();

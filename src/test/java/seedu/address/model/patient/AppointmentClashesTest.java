@@ -66,4 +66,15 @@ public class AppointmentClashesTest {
         assertEquals(List.of(), AppointmentClashes.find(entries, entry(patient, 2)));
         assertEquals(List.of(entry(patient, 1)), AppointmentClashes.find(entries, entry(patient, 3)));
     }
+
+    @Test
+    public void find_archivedPatient_neitherCausesNorReceivesClashes() {
+        Patient alex = new PatientBuilder().withId("S1234567A").withAppointments("2026-10-05 09:30").build();
+        Patient ben = new PatientBuilder().withId("S2345678B").withAppointments("2026-10-05 09:30")
+                .withArchived(true).build();
+        Patient carl = new PatientBuilder().withId("S3456789C").withAppointments("2026-10-05 09:30").build();
+        List<PatientAppointment> entries = List.of(entry(alex, 1), entry(ben, 1), entry(carl, 1));
+        assertEquals(List.of(entry(carl, 1)), AppointmentClashes.find(entries, entry(alex, 1)));
+        assertTrue(AppointmentClashes.find(entries, entry(ben, 1)).isEmpty());
+    }
 }

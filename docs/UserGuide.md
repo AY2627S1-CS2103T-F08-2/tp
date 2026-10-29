@@ -28,7 +28,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
     Some example commands you can try:
 
-   * `list` : Lists all patients.
+   * `view` : Lists all patients.
 
    * `add --id T0123456B --name John Doe --phone 98765432 --address John street, block 123, #01-01` : Adds a patient named `John Doe` with the ID `T0123456B`.
 
@@ -53,8 +53,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
   For example, in `add --name NAME`, replace `NAME` with a value such as `John Doe`.
 
-* Command words and option words are syntax and must be typed in lowercase: `list` runs the list command while `LIST` is rejected as an unknown command, and `--details` is accepted while `--DETAILS` is not.<br>
-  The target of `help` is a command word too, so `help list` works but `help LIST` does not. This does not restrict the data you type: IDs and search matching are case-insensitive.<br>
+* Command words and option words are syntax and must be typed in lowercase: `view` runs the view command while `VIEW` is rejected as an unknown command, and `--details` is accepted while `--DETAILS` is not.<br>
+  The target of `help` is a command word too, so `help view` works but `help VIEW` does not. This does not restrict the data you type: IDs and search matching are case-insensitive.<br>
   Tab turns command words and options into lowercase as it finishes them. See [Using the keyboard](#using-the-keyboard).
 
 * Items in square brackets are optional.<br>
@@ -67,8 +67,8 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --phone PHONE`, `--phone PHONE --name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `list`, `exit`, and `clear`, are ignored.<br>
-  For example, `list 123` is interpreted as `list`.
+* Extraneous parameters for commands that take no parameters, such as `exit` and `clear`, are ignored.<br>
+  For example, `exit 123` is interpreted as `exit`.
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
@@ -85,18 +85,20 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
 
 * **Patients**: the list of patients, sorted by name, each with their next appointment, and beside it the details of one patient.
   * The list is sorted by patient name. Case does not matter, and the ID breaks ties between patients with the same name, so two patients with the same name keep one fixed order. Renaming a patient with [`edit`](#editing-a-patient-edit) moves their row. After [`find`](#locating-patients-by-substrings-find), the patients that match more fields come first, and patients that match the same number of fields are in name order.
-  * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
+  * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
+  * The list hides [archived](#archiving-a-patient-archive) patients, and the header counts only the others, such as `12`. `view --all` shows archived patients too, at the bottom of the list and greyed out, and the header counts them in brackets: `12 (2)`. `view --archived` shows only them, under `Archived patients`, with `(2)`. When the list is filtered, each count shows how many of each kind it shows, such as `3 of 12 (1 of 2)`. This choice is the list's **scope**. It stays until you choose another, and goes back to the default, which hides archived patients, when LaiNurse restarts.
   * The next appointment of a patient is their first **undone** appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` in a small box after the patient ID:
   this is the appointment's number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. A patient's
   appointments are numbered from 1 in date order. The details panel shows the same number, dimmed, before each date.
-  * An appointment with no time shows `‒‒:‒‒` in the list, and `Unspecified time` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
+  * An appointment with no time shows `‒‒:‒‒` in the list, and `Unspecified` in the details, in the color of its row. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
   * A done appointment shows a pin before its time in the list and patient details, and an undone one shows nothing.
     You mark and unmark appointments yourself with
     `markappt` and `unmarkappt`. Done visits remain listed, and past/upcoming grouping and counts still depend on
     dates and times. A visit can be done before its scheduled time or remain undone after it has passed.
+  * The view shows the appointments of patients who are not archived. After `viewappt --all`, it shows archived patients' appointments too, and after `viewappt --archived`, only theirs. The count in the header then has the same form as the patient list's: `49 (2)` after `viewappt --all`, and `(2)` after `viewappt --archived`.
   * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. A plain [`viewappt`](#viewing-appointments-viewappt) shows the weekly view of this week. After `viewappt` with a date, a range or `--id`, the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
 
 In both views, the list and the details share the width of the window, and grow and shrink together as you resize it.
@@ -106,21 +108,22 @@ exactly the same date and time, including visits to the same patient, when both 
 cause clash warnings or red highlighting. Only visits with a time can clash: two date-only visits on the same day do
 not, and neither do a date-only visit and a timed one. A clashing appointment has a red boxed `!` before its time, and its time, and its date in
 the details, are red, even when it has passed or is selected. This includes a clash with a patient hidden by a filter.
-In the patient list, a patient's next appointment is red if it clashes, also when it is today.
+In the patient list, a patient's next appointment is red if it clashes, also when it is today. An archived patient's appointments never clash.
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
-Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
+Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `find`, `view`, `add`, `edit`, `archive` and `unarchive` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
 
-* `add`, `edit` and `view` select the patient that they add, edit or show. `list` and `find` select the first patient in the list.
+* `add`, `edit` and `view ID` select the patient that they add, edit or show. If the patient list's scope hides that patient, because they are archived, or because the list shows only archived patients, the list shows all patients. `view` without an ID and `find` select the first patient in the list.
+* `archive` and `unarchive` select the patient if the list still shows them. Otherwise, they select nothing, and the list keeps its scope: archiving a patient hides them.
 * `viewappt` selects the next appointment from now: the first appointment on the page that has not passed, or the first on the page if all have passed. This automatic selection remains date-based and can select a done appointment.
-* `addappt`, `editappt`, `markappt` and `unmarkappt` select the appointment that they change: on the page shown, if that page has it, or else in the weekly view of its week.
+* `addappt`, `editappt`, `markappt` and `unmarkappt` select the appointment that they change: on the page shown, if that page has it, or else in the weekly view of its week. If the patient is archived and the view hides their appointments, it shows archived patients' appointments too.
 * `delete`, `deleteappt` and `clear` select nothing, and the details beside the list show their starting message.
 * `help`, and a command that fails, change nothing.
 
 You can also click a tab, or move to the tabs with the keyboard and press Left or Right. Switching views this way runs no command, so each view still shows what it showed before.
 
-In the weekly view, click the arrow buttons above the list to see another week, or press Left or Right with the focus in the list. The arrows show only in the weekly view. Esc in the list goes back from a `viewappt` page to the weekly view of the selected appointment's week, and keeps that appointment selected. In the weekly view, Esc does nothing; a plain `viewappt` goes back to this week.
+In the weekly view, click the arrow buttons above the list to see another week, or press Left or Right with the focus in the list. The arrows show only in the weekly view. Esc in the list goes back from a `viewappt` page to the weekly view of the selected appointment's week, and keeps that appointment selected. It also removes `--all` or `--archived`, unless the selected appointment is an archived patient's. In the weekly view, Esc hides archived patients' appointments again, if they are shown, and otherwise does nothing; a plain `viewappt` goes back to this week.
 
 ### Using the keyboard
 
@@ -156,7 +159,7 @@ Shift+Up and Shift+Down | Scroll the details beside the list.
 Tab | Moves to the view tabs.
 Any letter, digit or space | Goes back to the command box and types it there, after what you typed before.
 Enter | Goes back to the command box, keeping what you typed.
-Esc | In the patient view, shows all patients, as `list` does, but keeps the patient already selected and the status message, as it runs no command. In the appointment view, goes back from a `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and keeps the selection. In the weekly view, it does nothing.
+Esc | In the patient view, removes the filter of `find`, and keeps the scope, such as `--all`. With no filter, it goes back to the default scope, as `view` does. It runs no command, so it keeps the patient already selected and the status message. So after `view --all` and a `find`, the first Esc shows all patients, archived ones too, and the second hides the archived ones again. In the appointment view, goes back from a `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and keeps the selection. In the weekly view, it hides archived patients' appointments again, if they are shown, and otherwise does nothing.
 
 * Shift+Tab does nothing, in the command box or in the view.
 * The appointment list takes the focus even in a week with no appointments, so that Left and Right still work. Up there moves to the view tabs.
@@ -166,8 +169,8 @@ Esc | In the patient view, shows all patients, as `list` does, but keeps the pat
 * While you type, the left end of the status bar shows a **Tab** key followed by each word that Tab can fill in, such as **Tab** `delete · deleteappt` after `dele`. With more than five, it shows the first five and how many others there are, such as `+19 more`. Press Tab to fill in the first one, and Tab again to go through the others. The status bar keeps showing them while you do. When Tab has nothing to fill in, or the focus is not in the command box, the status bar shows only where your data is saved.
 * Tab finishes these words:
   * **Command words.** For example, `dele` gives `delete`, then `deleteappt`. `view` gives `viewappt`, so type a space after `view` to finish a patient ID instead. When there is only one match, the next Tab goes on to the patient ID if the command takes one, so `addap` gives `addappt`, and the next Tab `addappt S1234567A`.
-  * **Options.** Type `-` or the start of an option. For example, `edit S1234567A --ph` gives `edit S1234567A --phone`. Tab offers only the options of that command, and skips the ones you have already typed.
-  * **Patient IDs** after `view`, `delete`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` or `unmarkappt`, and after `--id` in `viewappt`. Type the first few characters of the ID, or none. Patients in the displayed list come first. For example, `view s12` gives `view S1234567A`.<br>
+  * **Options.** Type `-` or the start of an option. For example, `edit S1234567A --ph` gives `edit S1234567A --phone`. Tab offers only the options of that command, and skips the ones you have already typed, and the ones that cannot be given with them: `--all` and `--archived` exclude each other, and in `view` and `viewappt`, a patient ID excludes both.
+  * **Patient IDs** after `view`, `delete`, `archive`, `unarchive`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` or `unmarkappt`, and after `--id` in `viewappt`. Type the first few characters of the ID, or none. Patients in the displayed list come first, and archived patients last. For example, `view s12` gives `view S1234567A`.<br>
     With `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt`, Tab also works after you have typed the remaining arguments, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`, and `markappt s12 2` becomes `markappt S1234567A 2`.
   * **Help topics** after `help`. For example, `help ad` gives `help add`, then `help addappt`. `help w` gives `help window`.
 * Tab matches what you type in any case, but fills in command words, options and help topics in lowercase, as LaiNurse expects them. For example, `DELE` gives `delete`, then `deleteappt`, and `--PH` gives `--phone`. A whole word in the wrong case, such as `VIEW`, gives the lowercase word first, then the longer ones: `view`, then `viewappt`. The command word and options before the word you complete must already be in lowercase, so `EDIT S1234567A --PH` and `HELP W` give nothing to fill in.
@@ -209,12 +212,13 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * Medical history and notes are independently optional. If an option is supplied, its value must not be blank.
 * Notes record other personal information not covered by the other fields, such as the patient's hobbies, pet peeves and daily routines. Use `--medical-history` for health information.
 * Parameters may appear in any order. Each option may appear only once. Separate options and values using spaces or tabs; values may contain spaces.
-* IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again. LaiNurse then names the patient who has that ID, such as `ALEX YEOH (S1234567A) already exists in LaiNurse.`
+* IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again. LaiNurse then names the patient who has that ID, such as `ALEX YEOH (S1234567A) already exists in LaiNurse.` If that patient is archived, it says so, and how to unarchive them: `ALEX YEOH (S1234567A) already exists in LaiNurse, and is archived. To unarchive them: 'unarchive S1234567A'`
 * Names, addresses, medical history and notes accept any non-blank text. IDs and these text fields are stored in uppercase, with repeated whitespace collapsed.
+* Invisible characters that text pasted from a website can carry, such as the zero-width space, are removed from names, addresses, medical history, notes and appointment details, so a value is stored as you see it, and a value of such characters only counts as blank. For example, `Alex` and `Smith` joined by a zero-width space is stored as `ALEXSMITH`, which `find --name alexsmith` finds. The characters that some scripts and emoji need, such as in 👩‍⚕️, are kept. An ID, a phone number or a date with an invisible character is rejected.
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * A new patient starts with no appointments. Set their appointments with [`addappt`](#adding-an-appointment-addappt).
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
-* After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change. The new patient is selected in the list, and their details are shown, as `view` does.
+* After a patient is added, the list shows all patients again, even if it was showing `find` results. It keeps its scope, unless it shows only archived patients: then it shows all patients, archived ones too, so that the new patient is in it. The list numbers of other patients may change. The new patient is selected in the list, and their details are shown, as `view` does.
 
 Examples:
 
@@ -222,17 +226,6 @@ Examples:
 * `add --medical-history Asthma --address Block 312, Clementi Ave 2 --phone 91234567 --name Betsy Crowe --id S2222222B`
 * `add --id S4444444D --name Mary Tan --phone 91234567 --address Blk 10 Clementi Ave 2 --notes Enjoys gardening; walks every morning`
 * `add --name James Ho --id S3333333C --address 123, Clementi Rd, 1234665 --phone 22224444`
-
-### Listing all patients: `list`
-
-Shows a list of all patients, sorted by name.
-
-Format: `list`
-
-* The first patient is selected, and their details are shown.
-* Each row shows the patient's list number, name and ID, and their next appointment if they have one. The next appointment is the earliest one today or later, so past appointments are not shown. A name too long for the row ends in `…`, and `view` shows it in full.
-* To see a patient's phone number, address, medical history and notes, use `view`, described below.
-* Next appointments are shown relative to today: `Today 09:30`, `Tomorrow`, a weekday such as `Tue 14:00` within the next 6 days, and a date such as `30 Nov` or `5 Jan 2027` after that. Today's appointments are highlighted.
 
 ### Editing a patient: `edit`
 
@@ -252,6 +245,7 @@ Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-hi
 * Omitting all the options for a field keeps its existing value.
 * The patient's appointments are not changed here. Change them with [`addappt`](#adding-an-appointment-addappt), [`editappt`](#editing-an-appointment-editappt) or [`deleteappt`](#deleting-an-appointment-deleteappt); they keep their details and order otherwise.
 * After a patient is edited, the list shows all patients again. The edited patient is selected in the list, and their details are shown, as `view` does. Renaming a patient moves their row, to keep the list sorted by name.
+* An archived patient can be edited, and stays archived.
 
 Examples:
 *  `edit S1234567A --phone 91234567 --address Blk 30 Geylang Street 29, #06-41` changes the phone number and address of patient `S1234567A`.
@@ -264,7 +258,7 @@ Examples:
 
 Finds patients whose specified fields contain any of the supplied substrings.
 
-Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES]`
+Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES] [--all] [--archived]`
 
 * `find` searches patient details only. To search by appointment date, use [`viewappt`](#viewing-appointments-viewappt).
 
@@ -280,7 +274,8 @@ Format: `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--med
 * `--notes` searches the patient's personal notes. Patients without notes do not match this option, but may match another supplied option.
 * Whitespace-delimited words beginning with `--` are reserved for options, including within quoted values. Unknown options, misspellings, and `--name=value` syntax are rejected. Text such as `Anne--Marie` is accepted.
 * The first match is selected, and their details are shown. If nothing matches, nothing is selected.
-* Each search checks all patients, even when the list is already filtered. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. To see all patients again, enter `list`, or press Esc twice: once to move to the patient list, and once to show all patients with the selected patient still selected.
+* Each search checks all patients in the list's scope, even when the list is already filtered. By default, that is the patients who are not archived. No matches produces an empty list and a count of zero. Invalid commands leave the displayed list unchanged. To see all patients again, enter `view`, or press Esc twice: once to move to the patient list, and once to show all patients with the selected patient still selected.
+* `--all` searches all patients, archived ones too, and `--archived` only archived patients. Either option also sets the list's scope, so the list keeps showing archived patients after you clear the search. They take no value, and cannot be given together. At least one other option is still needed.
 
 Examples:
 
@@ -291,26 +286,28 @@ Examples:
 * `find --medical-history penicillin --name tan` finds patients whose medical history contains `penicillin` or whose name contains `tan`.
 * `find --notes "enjoys gardening"` finds patients whose notes contain that phrase.
 * `find --notes morning --name tan` finds patients whose notes contain `morning` or whose name contains `tan`.
+* `find --name yu --archived` finds archived patients whose name contains `yu`.
 
 ### Viewing appointments: `viewappt`
 
-Shows only the appointments on a date, or between two dates, in the appointment view, and lists the patients who have one. With `--id`, shows only that patient's appointments.
+Shows only the appointments on a date, or between two dates, in the appointment view. With `--id`, shows only that patient's appointments.
 
-Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`
+Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`, or an optional `[--all]` or `[--archived]`
 
 * All dates must be real dates, in the appointment date format described in the notes about the command format above.
 * `viewappt DATE` looks for appointments on `DATE`.
 * With `--from` and `--to`, the range includes both dates. Give one of them or both, in any order, each at most once.
-* Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week, and the patient list shows the patients with an appointment this week. To see the appointments from today onwards, give `--from` with today's date.
+* Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week, and says `Listed all appointments of patients who are not archived.`; with `--all` or `--archived`, it says which appointments it lists instead. To see the appointments from today onwards, give `--from` with today's date.
 * "Today" is the current date on your computer, in its time zone. If your computer is set to a different time zone from where you visit patients, "today" can be a day off near midnight.
 * The `--from` date must not be later than the `--to` date. With only `--to`, the date must not be before today. To see past appointments, give `--from` too.
 * `DATE` cannot be combined with `--from` or `--to`, and comes before the options.
-* `--id ID` narrows the appointment page and the patient list to the patient with that ID, together with the date range. It combines with `DATE` (which must come first, as above) and with `--from` and `--to` in any order, and can be the only argument: `viewappt --id ID` shows every appointment of that patient, past and upcoming, on one page.
-* The ID is case-insensitive, as in [`view`](#viewing-a-patients-details-view), and must belong to a patient. If no patient has it, LaiNurse shows an error, and the appointment page and the patient list stay as they were.
+* `--id ID` narrows the appointment page to the patient with that ID, together with the date range. It combines with `DATE` (which must come first, as above) and with `--from` and `--to` in any order, and can be the only argument: `viewappt --id ID` shows every appointment of that patient, past and upcoming, on one page.
+* The ID is case-insensitive, as in [`view`](#listing-patients-and-viewing-a-patients-details-view), and must belong to a patient. If no patient has it, LaiNurse shows an error, and the appointment page stays as it was.
 * LaiNurse switches to the **Appointments** view, and shows the appointments in the range on one page, in place of the weekly view. With `--id`, the header above the list starts with the patient's ID. The next appointment from now is selected, and its patient's details are shown: on a page that includes today, the first that has not passed, and otherwise the first on the page. If no appointment is in the range, the page says `No appointments in this range.`
 * To go back to the weekly view, press Esc with the focus in the appointment list. The weekly view shows the week of the selected appointment, which stays selected, or this week if none is selected. See [The patient and appointment views](#the-patient-and-appointment-views).
-* The patient list, on the **Patients** tab, shows the patients with an appointment in the range, or with `--id`, only that patient if they have one. All of each patient's appointments are checked, with or without a time. Each patient appears once, in name order. If no appointment is in the range, the patient list is empty.
+* The patient list, on the **Patients** tab, stays as it was: `viewappt` does not change which patients it shows. Without `--id`, the status message says how many patients have an appointment in the range, such as `3 patient(s) with appointments on 2026-10-15`, and with `--id`, how many appointments that patient has in it.
 * Only dates are compared, so an appointment earlier today still counts.
+* Without `--id`, `viewappt` shows the appointments of patients who are not archived. `--all` shows archived patients' appointments too, and `--archived` only theirs. They take no value, and cannot be given together, or with `--id`, which shows that patient's appointments whether they are archived or not. Like the dates, the option applies to this `viewappt` only: the next `viewappt` without it hides archived patients' appointments again.
 
 Examples:
 * `viewappt` shows this week.
@@ -320,6 +317,7 @@ Examples:
 * `viewappt --from 2026-12-01` shows the appointments on or after December 1, 2026.
 * `viewappt --id S1234567A` shows all of Alex Yeoh's appointments.
 * `viewappt --id S1234567A --from 2026-10-01 --to 2026-10-31` shows the appointments Alex Yeoh has in that range.
+* `viewappt --all --from 2026-10-01` shows everyone's appointments from October 1, 2026, archived patients' too.
 
 ### Adding an appointment: `addappt`
 
@@ -327,7 +325,7 @@ Adds an appointment to a patient's schedule.
 
 Format: `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`
 
-* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
+* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` filter, which stays, the patient may still be hidden when you return to the Patients view.
 * `--date` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. Past dates are accepted. Without `--date`, LaiNurse says that the date is missing.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * `--date` and the optional `--details` can be in either order after the ID, and each may be given only once.
@@ -337,6 +335,7 @@ Format: `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`
   about each appointment that it clashes with: another patient's by their name, ID and appointment number, such as
   `BERNICE YU (S2345678B), appointment #1`, and the same patient's other visit as `this patient's appointment #1`.
   Visits are never rejected just because they clash.
+* An archived patient can be given appointments. They never clash, and the result ends with a note that the patient is archived, and how to unarchive them.
 * LaiNurse switches to the **Appointments** view and selects the new appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
@@ -362,6 +361,7 @@ Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [-
   order, after any appointment already at that date and time, and renumbers the others. Either way, it keeps its
   Done/Undone status. Use `unmarkappt` to reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
   warning if both visits are undone. An edit that changes only details also warns if the visit clashes.
+* For an archived patient, the result ends with a note that the patient is archived, as in `addappt`.
 * LaiNurse switches to the **Appointments** view and selects the edited appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
@@ -424,22 +424,64 @@ Format: `unmarkappt ID NUMBER`
 
 Example: `unmarkappt S1234567A 2` sets Alex Yeoh's appointment #2 back to undone.
 
-### Viewing a patient's details: `view`
+### Listing patients and viewing a patient's details: `view`
 
-Shows all the details of a patient in the panel beside the patient list.
+Shows a list of all patients, sorted by name, or all the details of a patient in the panel beside the patient list.
 
-Format: `view ID`
+Format: `view [--all]`, `view [--archived]` or `view ID`
+
+**Without an ID**, `view` lists all patients:
+
+* `view` lists the patients who are not archived, `view --all` all patients, with archived ones at the bottom and greyed out, and `view --archived` only archived patients. The list keeps this scope until you choose another. See [The patient and appointment views](#the-patient-and-appointment-views).
+* It removes the filter of `find`. The first patient is selected, and their details are shown.
+* Each row shows the patient's list number, name and ID, and their next appointment if they have one. The next appointment is the earliest one today or later, so past appointments are not shown. A name too long for the row ends in `…`, and `view ID` shows it in full.
+* Next appointments are shown relative to today: `Today 09:30`, `Tomorrow`, a weekday such as `Tue 14:00` within the next 6 days, and a date such as `30 Nov` or `5 Jan 2027` after that. Today's appointments are highlighted.
+* `--all` and `--archived` take no value, and cannot be given together.
+
+**With an ID**, `view` shows that patient's details:
 
 * Shows the patient with the specified `ID`. IDs are case-insensitive, so `s1234567a` and `S1234567A` refer to the same patient.
-* The patient does not need to be in the displayed list, because `view` searches all patients. The list then shows all patients again, and the patient's row is selected.
+* The patient does not need to be in the displayed list, because `view` searches all patients, archived ones too. The list then shows all patients again, and the patient's row is selected. If the patient is archived and the list hides archived patients, it shows them too, as `view --all` does.
+* `view ID` takes no `--all` or `--archived`, since it shows the patient whether they are archived or not.
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * LaiNurse switches to the **Patients** view.
-* The panel shows the patient's name, ID, phone number, address, medical history, notes and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last ten that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified time`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
+* The panel shows the patient's name, ID, phone number, address, medical history, notes and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last ten that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
 * The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete all patients with `clear`, it goes back to its starting message.
 * You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 
 Examples:
+* `view` lists the patients who are not archived.
+* `view --archived` lists the archived patients.
 * `view S1234567A` shows the details of the patient with the ID `S1234567A`.
+
+### Archiving a patient: `archive`
+
+Archives a patient, such as one who has been discharged, so that they are out of the way but not lost.
+
+Format: `archive ID`
+
+* Archives the patient with the specified `ID`. IDs are case-insensitive, and the patient does not need to be in the displayed list.
+* An archived patient keeps every detail and appointment. Every command that takes their ID still works on them, such as `view`, `edit` and `addappt`.
+* The patient list and the appointment view hide archived patients, until you give `--all` or `--archived` to [`view`](#listing-patients-and-viewing-a-patients-details-view), [`find`](#locating-patients-by-substrings-find) or [`viewappt`](#viewing-appointments-viewappt).
+* An archived patient's appointments never clash, with each other or with anyone else's.
+* Archiving a patient who is already archived shows an error and changes nothing.
+* LaiNurse switches to the **Patients** view. If the list still shows the patient, as after `view --all`, they stay selected, now greyed out. Otherwise, nothing is selected.
+
+Examples:
+* `archive S2345678B` archives Bernice Yu.
+
+### Unarchiving a patient: `unarchive`
+
+Unarchives a patient, so that they show again with the other patients.
+
+Format: `unarchive ID`
+
+* Unarchives the patient with the specified `ID`, which works as in [`archive`](#archiving-a-patient-archive). Their appointments can clash again.
+* Unarchiving a patient who is not archived shows an error and changes nothing.
+* LaiNurse switches to the **Patients** view, and selects the patient if the list shows them. After `view --archived`, the list no longer does, so nothing is selected.
+
+Examples:
+* `unarchive S2345678B` unarchives Bernice Yu.
 
 ### Deleting a patient: `delete`
 
@@ -491,6 +533,8 @@ When LaiNurse launches, it loads its data as follows:
 
 Whenever `lainurse.json` cannot be loaded, LaiNurse first copies it to `data/lainurse.corrupt.json`, replacing any earlier copy, so your edits are not lost when the next save overwrites `lainurse.json`. The result display then tells you which file could not be loaded, what LaiNurse loaded instead, and where the copy is kept. To get your edits back, close the window with its close button, fix the mistake in `lainurse.corrupt.json`, and copy it over `lainurse.json`. Do not close LaiNurse with `exit` first if it started with no data, as `exit` saves that empty data over `lainurse.json` and the backup.
 
+An archived patient is saved with `"archived": true`. A patient who is not archived is saved without it, and a file with no `archived` field, such as one saved by an earlier version, loads with no patient archived. If supplied, `archived` must be the JSON boolean `true` or `false`, as `marked` must; a string or a number makes the file fail to load.
+
 Appointments are saved with their mark, for example
 `{"dateTime": "2026-10-05 09:30", "marked": false, "details": "INSULIN REVIEW"}`. Their numbers are not saved:
 LaiNurse numbers each patient's appointments in date order when it loads them, and appointments at the same date and
@@ -501,7 +545,7 @@ mark as `done`, still loads.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 Do not edit `lainurse.backup.json`. LaiNurse cannot stop you from editing it, and it does not check it until it needs it. The backup protects you only in the cases in the table above.<br>
-If the backup is missing or cannot be loaded either, LaiNurse starts with no data, and the next command that succeeds, even `list`, `help` or `exit`, saves that empty data over both files. Your data is then only in `lainurse.corrupt.json`. To leave both files as they are, close the window with its close button instead.<br>
+If the backup is missing or cannot be loaded either, LaiNurse starts with no data, and the next command that succeeds, even `view`, `help` or `exit`, saves that empty data over both files. Your data is then only in `lainurse.corrupt.json`. To leave both files as they are, close the window with its close button instead.<br>
 LaiNurse keeps only one backup, and every save replaces it. If you edit `lainurse.json` and LaiNurse loads it, the next save writes your edits to the backup too, so the backup cannot undo an edit that loads but that you regret.<br>
 If `lainurse.json` is missing, LaiNurse loads the sample data even when there is a backup, and the next save replaces the backup with the sample data. To restore from the backup instead, close the window with its close button and copy `lainurse.backup.json` to `lainurse.json` first.<br>
 Appointment dates and times in the file follow the formats above, and a file saved by an earlier version with a signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load. Furthermore, certain edits can cause LaiNurse to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
@@ -531,16 +575,17 @@ Action | Format, Examples
 --------|-----------------
 **Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
 **AddAppt** | `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen`
+**Archive** | `archive ID`<br> e.g., `archive S2345678B`
 **Clear** | `clear`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **DeleteAppt** | `deleteappt ID NUMBER`<br> e.g., `deleteappt S1234567A 1`
 **Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`<br> e.g., `edit S1234567A --notes Walks every morning`, `edit S1234567A --add-medical-history Asthma`
 **EditAppt** | `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`<br> e.g., `editappt S1234567A 1 --to 2026-10-06 10:00`, `editappt S1234567A 1 --add-details Bring glucometer`
-**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one option required)
-**List** | `list`
+**Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES] [--all] [--archived]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one field option required), `find --name yu --archived`
 **MarkAppt** | `markappt ID NUMBER`<br> e.g., `markappt S1234567A 2`
+**Unarchive** | `unarchive ID`<br> e.g., `unarchive S2345678B`
 **UnmarkAppt** | `unmarkappt ID NUMBER`<br> e.g., `unmarkappt S1234567A 2`
-**View** | `view ID`<br> e.g., `view S1234567A`
-**ViewAppt** | `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`<br> e.g., `viewappt 2026-10-15`, `viewappt --id S1234567A --from 2026-10-01`
+**View** | `view [--all]`, `view [--archived]` or `view ID`<br> e.g., `view`, `view --all`, `view S1234567A`
+**ViewAppt** | `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`, or an optional `[--all]` or `[--archived]`<br> e.g., `viewappt 2026-10-15`, `viewappt --id S1234567A --from 2026-10-01`, `viewappt --all`
 **Help** | `help [COMMAND]`<br> e.g., `help`, `help add`, `help window`
 **Exit** | `exit`

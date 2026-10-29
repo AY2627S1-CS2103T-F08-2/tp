@@ -2,6 +2,7 @@ package seedu.address.model.patient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ID_BOB;
@@ -164,7 +165,25 @@ public class PatientTest {
                 + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
                 + ", medicalHistory=" + BENSON.getMedicalHistory().get()
                 + ", notes=null"
-                + ", schedule=" + BENSON.getSchedule() + "}";
+                + ", schedule=" + BENSON.getSchedule() + ", isArchived=false}";
         assertEquals(expected, BENSON.toString());
+    }
+
+    @Test
+    public void withArchivedAndWithSchedule_keepEveryOtherDetail() {
+        Patient archived = BENSON.withArchived(true);
+        assertTrue(archived.isArchived());
+        assertFalse(BENSON.isArchived());
+        // archiving changes equality, but not identity
+        assertNotEquals(BENSON, archived);
+        assertTrue(BENSON.isSamePatient(archived));
+        assertEquals(BENSON, archived.withArchived(false));
+
+        // a new schedule keeps the patient archived
+        Patient rescheduled = archived.withSchedule(AppointmentSchedule.empty());
+        assertTrue(rescheduled.isArchived());
+        assertEquals(AppointmentSchedule.empty(), rescheduled.getSchedule());
+        assertEquals(BENSON.getName(), rescheduled.getName());
+        assertEquals(BENSON.getMedicalHistory(), rescheduled.getMedicalHistory());
     }
 }

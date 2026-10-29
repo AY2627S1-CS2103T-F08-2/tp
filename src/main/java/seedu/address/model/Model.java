@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.patient.Patient;
@@ -74,26 +75,55 @@ public interface Model {
     void setPatient(Patient target, Patient editedPatient);
 
     /**
-     * Returns an unmodifiable, observable view of the filtered patient list in its current display order: name
-     * order, as {@link seedu.address.model.patient.PatientNameComparator#PATIENT_NAME_ORDER} gives, unless the last
-     * filter update gave a comparator.
+     * Returns an unmodifiable, observable view of the filtered patient list in its current display order: archived
+     * patients last, and otherwise name order, as
+     * {@link seedu.address.model.patient.PatientNameComparator#PATIENT_NAME_ORDER} gives, unless the last filter
+     * update gave a comparator. The list shows only the patients in the scope, and of those, the ones that the filter
+     * keeps.
      */
     ObservableList<Patient> getFilteredPatientList();
 
     /**
-     * Updates the filter using {@code predicate} and restores name order.
+     * Updates the filter using {@code predicate} and restores name order. The scope stays.
      *
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate);
 
     /**
-     * Updates the filter using {@code predicate} and orders the results using {@code comparator}.
-     * A null comparator restores name order. The stored patient order is unchanged.
+     * Updates the filter using {@code predicate} and orders the results using {@code comparator}, with archived
+     * patients last. A null comparator restores name order. The scope stays, and the stored patient order is
+     * unchanged.
      *
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPatientList(Predicate<Patient> predicate, Comparator<Patient> comparator);
+
+    /**
+     * Returns true if the patient list has a filter, such as one that {@code find} or {@code viewappt} sets, that
+     * may hide some patients in the scope.
+     */
+    boolean hasPatientFilter();
+
+    /**
+     * Returns the scope of the patient list: whether it shows archived patients. {@code view} and {@code find} set it.
+     * The appointment view has no scope: {@code viewappt} filters it by whether patients are archived, as it does by
+     * date and patient.
+     */
+    ObservableValue<PatientScope> getPatientListScope();
+
+    /**
+     * Sets the scope of the patient list. The filter stays.
+     *
+     * @throws NullPointerException if {@code scope} is null.
+     */
+    void setPatientListScope(PatientScope scope);
+
+    /**
+     * Makes the scope of the patient list show {@code patient}: if it does not, the scope becomes
+     * {@link PatientScope#ALL}, as when a command goes to an archived patient.
+     */
+    void showInPatientList(Patient patient);
 
     /**
      * Returns an unmodifiable list of every appointment of every patient, in time order. It follows the patients,

@@ -3,6 +3,8 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ALL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ARCHIVED;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -16,6 +18,7 @@ import java.util.stream.Stream;
 import seedu.address.commons.util.TextNormalizer;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 
 /**
@@ -24,8 +27,12 @@ import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 public class FindCommandParser implements Parser<FindCommand> {
 
     private static final Pattern OPTION_PATTERN = Pattern.compile("(?<!\\S)--\\S*");
-    private static final Prefix[] SUPPORTED_PREFIXES = {
+    private static final Prefix[] SEARCH_PREFIXES = {
         PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES
+    };
+    private static final Prefix[] SUPPORTED_PREFIXES = {
+        PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ALL,
+        PREFIX_ARCHIVED
     };
 
     /**
@@ -35,20 +42,23 @@ public class FindCommandParser implements Parser<FindCommand> {
      */
     public FindCommand parse(String args) throws ParseException {
         requireNonNull(args);
-        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args,
-                String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE), SUPPORTED_PREFIXES);
+        String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE);
+        String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
+                SUPPORTED_PREFIXES);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, SUPPORTED_PREFIXES);
 
         if (!argMultimap.getPreamble().isEmpty()
-                || Stream.of(SUPPORTED_PREFIXES).noneMatch(prefix -> argMultimap.getValue(prefix).isPresent())) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
+                || Stream.of(SEARCH_PREFIXES).noneMatch(prefix -> argMultimap.getValue(prefix).isPresent())) {
+            throw new ParseException(invalidFormatMessage);
         }
 
         argMultimap.verifyNoDuplicatePrefixesFor(SUPPORTED_PREFIXES);
+        Optional<PatientScope> scope = ParserUtil.parseScope(argMultimap, invalidFormatMessage);
         return new FindCommand(new PatientContainsSubstringsPredicate(
                 parseSearchValue(argMultimap, PREFIX_ID), parseSearchValue(argMultimap, PREFIX_NAME),
                 parseSearchValue(argMultimap, PREFIX_PHONE), parseSearchValue(argMultimap, PREFIX_ADDRESS),
-                parseSearchValue(argMultimap, PREFIX_MEDICAL_HISTORY), parseSearchValue(argMultimap, PREFIX_NOTES)));
+                parseSearchValue(argMultimap, PREFIX_MEDICAL_HISTORY), parseSearchValue(argMultimap, PREFIX_NOTES)),
+                scope);
     }
 
     /**
@@ -72,7 +82,7 @@ public class FindCommandParser implements Parser<FindCommand> {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
         }
 
-        if (TextNormalizer.normalize(value).isEmpty() || OPTION_PATTERN.matcher(value).find()) {
+        if (TextNormalizer.normalizeText(value).isEmpty() || OPTION_PATTERN.matcher(value).find()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
         }
         return Optional.of(value);

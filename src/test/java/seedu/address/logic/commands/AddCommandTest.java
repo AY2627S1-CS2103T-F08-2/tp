@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.Messages;
@@ -22,6 +23,7 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
+import seedu.address.model.PatientScope;
 import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.patient.Patient;
@@ -57,6 +59,16 @@ public class AddCommandTest {
 
         assertThrows(CommandException.class, String.format(AddCommand.MESSAGE_DUPLICATE_PATIENT,
                 validPatient.getName(), validPatient.getId()), () -> addCommand.execute(modelStub));
+    }
+
+    @Test
+    public void execute_duplicateArchivedPatient_suggestsUnarchive() {
+        Patient archivedPatient = new PatientBuilder().withArchived(true).build();
+        AddCommand addCommand = new AddCommand(new PatientBuilder().build());
+        ModelStub modelStub = new ModelStubWithPatient(archivedPatient);
+
+        assertThrows(CommandException.class, String.format(AddCommand.MESSAGE_DUPLICATE_ARCHIVED_PATIENT,
+                archivedPatient.getName(), archivedPatient.getId()), () -> addCommand.execute(modelStub));
     }
 
     @Test
@@ -131,6 +143,26 @@ public class AddCommandTest {
 
         @Override
         public Optional<Patient> findPatientById(PatientId id) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public boolean hasPatientFilter() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ObservableValue<PatientScope> getPatientListScope() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void setPatientListScope(PatientScope scope) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void showInPatientList(Patient patient) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -211,6 +243,11 @@ public class AddCommandTest {
         public void addPatient(Patient patient) {
             requireNonNull(patient);
             patientsAdded.add(patient);
+        }
+
+        @Override
+        public void showInPatientList(Patient patient) {
+            requireNonNull(patient);
         }
 
         @Override

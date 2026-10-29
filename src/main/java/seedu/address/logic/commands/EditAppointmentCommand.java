@@ -99,8 +99,7 @@ public class EditAppointmentCommand extends Command {
         editedAppointment = isMoved
                 ? editedSchedule.getLastAt(editedAppointment)
                 : editedSchedule.findByNumber(oldAppointment.getNumber()).orElseThrow();
-        Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
-                patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
+        Patient editedPatient = patient.withSchedule(editedSchedule);
         model.setPatient(patient, editedPatient);
 
         String message = String.format(MESSAGE_EDIT_APPOINTMENT_SUCCESS, editedAppointment.getNumber(),
@@ -110,7 +109,7 @@ public class EditAppointmentCommand extends Command {
         }
         PatientAppointment editedEntry = new PatientAppointment(editedPatient, editedAppointment);
         String warning = Messages.formatClashWarning(model.getAppointmentList(), editedEntry);
-        message += warning;
+        message += warning + Messages.formatArchivedNote(editedPatient);
         logger.fine("Edited appointment #" + editedAppointment.getNumber() + " of patient " + targetId
                 + (warning.isEmpty() ? "." : " with a clash warning."));
         return new CommandResult(message).withNavigation(Navigation.toAppointment(editedEntry));
