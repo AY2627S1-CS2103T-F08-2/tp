@@ -178,6 +178,7 @@ public class ViewAppointmentCommand extends Command {
                     + " is before today " + today + ".");
             throw new CommandException(String.format(MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY, end, today));
         }
+        assert !start.isAfter(end) : "The range must be in order once the end-before-today case is rejected.";
 
         AppointmentBetweenDatesPredicate inRange = new AppointmentBetweenDatesPredicate(start, end);
         if (patientId.isEmpty()) {
@@ -235,6 +236,8 @@ public class ViewAppointmentCommand extends Command {
         List<Appointment> appointments = patient.getSchedule().asList(); // in time order
         LocalDate first = appointments.isEmpty() ? today : appointments.get(0).getDate();
         LocalDate last = appointments.isEmpty() ? today : appointments.get(appointments.size() - 1).getDate();
+        assert appointments.isEmpty() || !last.isBefore(first)
+                : "The schedule lists appointments in time order, so the last date is not before the first.";
         logger.fine("Viewed all " + appointments.size() + " appointment(s) of patient " + id + ".");
         return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW,
                 appointments.size(), patient.getName().fullName), new CommandResult.AppointmentRange(first, last, id))
