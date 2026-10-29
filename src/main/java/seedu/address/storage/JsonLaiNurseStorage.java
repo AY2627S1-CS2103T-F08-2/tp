@@ -26,9 +26,9 @@ public class JsonLaiNurseStorage {
 
     private static final Logger logger = LogsCenter.getLogger(JsonLaiNurseStorage.class);
 
-    private Path filePath;
-    private Path backupFilePath;
-    private Path corruptFilePath;
+    private final Path filePath;
+    private final Path backupFilePath;
+    private final Path corruptFilePath;
 
     /**
      * Creates a {@code JsonLaiNurseStorage} for the data file at {@code filePath}, with its backup and corrupt copy
@@ -39,6 +39,8 @@ public class JsonLaiNurseStorage {
         this.filePath = filePath;
         this.backupFilePath = withSuffix(filePath, "backup");
         this.corruptFilePath = withSuffix(filePath, "corrupt");
+        // A save writes the data file and then the backup, so the backup must never be the data file itself
+        assert !backupFilePath.equals(filePath) && !corruptFilePath.equals(filePath);
     }
 
     /**
