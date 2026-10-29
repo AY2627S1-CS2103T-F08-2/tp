@@ -21,19 +21,20 @@ import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 
 /**
- * Deletes many appointments at once (#217): all of one patient's, or every one from one date, or date and time, to
- * another, of every patient or of one. An appointment with no time counts as at the start of its day, a date without a
- * time given to {@code --from} as the start of that day, and one given to {@code --to} as its end.
+ * Deletes many appointments at once (#217): every appointment, all of one patient's, or every one from one date, or
+ * date and time, to another, of every patient or of one. An appointment with no time counts as at the start of its
+ * day, a date without a time given to {@code --from} as the start of that day, and one given to {@code --to} as its
+ * end.
  */
 public class ClearAppointmentCommand extends Command implements Confirmable {
 
     public static final String COMMAND_WORD = "clearappt";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Deletes all appointments of the patient with the "
-            + "given ID, or every appointment from one date, or date and time, to another, of every patient, or with "
-            + PREFIX_ID.toString().trim() + ", of one, after you confirm it.\n"
-            + "Parameters: ID, or [" + PREFIX_ID + "ID] [" + PREFIX_FROM + "DATE_OR_DATETIME] [" + PREFIX_TO
-            + "DATE_OR_DATETIME], with at least one option\n"
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Deletes every appointment, or with an ID, all "
+            + "appointments of that patient, or every appointment from one date, or date and time, to another, of "
+            + "every patient, or with " + PREFIX_ID.toString().trim() + ", of one, after you confirm it.\n"
+            + "Parameters: [ID], or [" + PREFIX_ID + "ID] [" + PREFIX_FROM + "DATE_OR_DATETIME] [" + PREFIX_TO
+            + "DATE_OR_DATETIME]\n"
             + "Example: " + COMMAND_WORD + " S1234567A, or " + COMMAND_WORD + " " + PREFIX_FROM + "2026-10-01 "
             + PREFIX_TO + "2026-10-31 12:00";
 
@@ -50,16 +51,14 @@ public class ClearAppointmentCommand extends Command implements Confirmable {
 
     /**
      * Creates a ClearAppointmentCommand that deletes the appointments of the patient with {@code patientId}, or of
-     * every patient if it is empty, from {@code from} to {@code to}, either of which may be empty for no limit.
+     * every patient if it is empty, from {@code from} to {@code to}, either of which may be empty for no limit. With
+     * all three empty, it deletes every appointment.
      *
-     * @throws IllegalArgumentException if all three are empty, or {@code from} is after {@code to}.
+     * @throws IllegalArgumentException if {@code from} is after {@code to}.
      */
     public ClearAppointmentCommand(Optional<PatientId> patientId, Optional<Appointment> from,
             Optional<Appointment> to) {
         requireAllNonNull(patientId, from, to);
-        if (patientId.isEmpty() && from.isEmpty() && to.isEmpty()) {
-            throw new IllegalArgumentException("A patient or a range must be given.");
-        }
         if (from.isPresent() && to.isPresent() && startOf(from.get()).isAfter(endOf(to.get()))) {
             throw new IllegalArgumentException(MESSAGE_FROM_AFTER_TO);
         }

@@ -1055,8 +1055,8 @@ The selective clearing of #217 is behind `FeatureFlags#isSelectiveClearEnabled()
 every patient at once, as before, and `clearappt` is an unknown command.
 
 * `clear --archived` (`ClearCommand` with `isArchivedOnly`) deletes only archived patients. `clearappt`
-  (`ClearAppointmentCommand`) deletes all of one patient's appointments, or every appointment from `--from` to `--to`,
-  of every patient, or with `--id`, of one. A date without a time given to `--from` is the start of that day, and one
+  (`ClearAppointmentCommand`) deletes every appointment, all of one patient's appointments, or every appointment from
+  `--from` to `--to`, of every patient, or with `--id`, of one. The patients stay. A date without a time given to `--from` is the start of that day, and one
   given to `--to` its end, and an appointment with no time counts as at the start of its day. A patient's remaining
   appointments are numbered again in date order.
 * Both are `Confirmable`. When `LogicManager` parses one, it asks for `Confirmable#describeDeletion` and returns it with

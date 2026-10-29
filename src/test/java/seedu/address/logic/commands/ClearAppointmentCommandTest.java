@@ -31,11 +31,22 @@ public class ClearAppointmentCommandTest {
             new UserPrefs());
 
     @Test
-    public void constructor_nothingGiven_throwsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> new ClearAppointmentCommand(Optional.empty(),
-                Optional.empty(), Optional.empty()));
+    public void constructor_fromAfterTo_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new ClearAppointmentCommand(Optional.empty(),
                 at("2026-10-06"), at("2026-10-05")));
+    }
+
+    @Test
+    public void execute_nothingGiven_deletesEveryAppointment() throws Exception {
+        ClearAppointmentCommand command = new ClearAppointmentCommand(Optional.empty(), Optional.empty(),
+                Optional.empty());
+        assertEquals(String.format(ClearAppointmentCommand.MESSAGE_DELETES, 5, 2), command.describeDeletion(model));
+        assertEquals(String.format(ClearAppointmentCommand.MESSAGE_SUCCESS, 5), command.execute(model)
+                .getFeedbackToUser());
+        assertEquals(List.of(), appointmentsOf(ALEX.getId()));
+        assertEquals(List.of(), appointmentsOf(BEN.getId()));
+        // the patients stay
+        assertEquals(2, model.getLaiNurse().getPatientList().size());
     }
 
     @Test

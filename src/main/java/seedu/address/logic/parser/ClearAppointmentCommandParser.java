@@ -20,8 +20,8 @@ public class ClearAppointmentCommandParser implements Parser<ClearAppointmentCom
 
     /**
      * Parses the given {@code String} of arguments in the context of the ClearAppointmentCommand and returns a
-     * ClearAppointmentCommand object for execution: a patient ID alone, or {@code --from} and {@code --to}, with an
-     * optional {@code --id}, in any order.
+     * ClearAppointmentCommand object for execution: nothing, for every appointment, a patient ID alone, or
+     * {@code --from} and {@code --to}, with an optional {@code --id}, in any order.
      *
      * @throws ParseException if the user input does not conform to the expected format.
      */
@@ -44,9 +44,6 @@ public class ClearAppointmentCommandParser implements Parser<ClearAppointmentCom
                 : Optional.of(ParserUtil.parseId(preamble));
         Optional<Appointment> from = parseOptionalDateTime(argMultimap, PREFIX_FROM);
         Optional<Appointment> to = parseOptionalDateTime(argMultimap, PREFIX_TO);
-        if (patientId.isEmpty() && from.isEmpty() && to.isEmpty()) {
-            throw new ParseException(invalidFormatMessage);
-        }
         if (from.isPresent() && to.isPresent()
                 && ClearAppointmentCommand.startOf(from.get()).isAfter(ClearAppointmentCommand.endOf(to.get()))) {
             throw new ParseException(ClearAppointmentCommand.MESSAGE_FROM_AFTER_TO);
