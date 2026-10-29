@@ -105,4 +105,10 @@ public class DateUtilTest {
         assertThrows(DateTimeParseException.class, () -> DateUtil.parseTime("09:60"));
         assertThrows(DateTimeParseException.class, () -> DateUtil.parseTime("9:30"));
     }
+
+    @Test
+    public void parseDateAndParseTime_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> DateUtil.parseDate(null));
+        assertThrows(NullPointerException.class, () -> DateUtil.parseTime(null));
+    }
 }
