@@ -1975,7 +1975,7 @@ testers are expected to do more *exploratory* testing.
        pixels wide, each takes about half. In a wider window, the details take more, up to 72% when the window is
        1,920 pixels wide. At the narrowest, nothing is cut off at the sides of the window, and neither the list nor the
        details scroll sideways. In the details, long values such as Alex Yeoh's address wrap without breaking a word.
-       Beside Alex Yeoh's blood-test appointment, e.g. Mon 2 Nov, `Unspecified time` wraps onto two lines, with the
+       Beside Alex Yeoh's blood-test appointment, e.g. Mon 2 Nov, `Unspecified` shows in place of a time, with the
        appointment's details,
        `MONTHLY BLOOD TEST`, under it. In a wide window, the details of each appointment move beside its time.
 
@@ -1997,7 +1997,7 @@ testers are expected to do more *exploratory* testing.
        no time, because the one at 00:00 has passed.
 
     1. Test case: `view T0567890E`<br>
-       Expected: Under **Appointments**, the panel lists today's appointment with `Unspecified time`, then the one at
+       Expected: Under **Appointments**, the panel lists today's appointment with `Unspecified`, then the one at
        23:59, both in orange. Under **Past**, it lists the one at 00:00, dimmed.
 
     1. Test case: click the **Appointments** tab, then press Esc<br>

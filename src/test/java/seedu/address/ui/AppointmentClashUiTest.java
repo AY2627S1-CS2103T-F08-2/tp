@@ -151,7 +151,7 @@ public class AppointmentClashUiTest {
                 styleAndLayout(rowRoot, 500);
                 // a marked appointment has a pin before its time, and an unmarked one has nothing
                 assertEquals(done, !rowRoot.lookupAll(".pin-mark").isEmpty());
-                assertEquals(AppointmentFormatter.NO_TIME, label(rowRoot, ".appointment-entry-no-time").getText());
+                assertEquals(AppointmentFormatter.NO_TIME, label(rowRoot, ".appointment-entry-time").getText());
 
                 ModelManager model = model(patient);
                 PatientDetailPanel details = new PatientDetailPanel(model.getLaiNurse().getPatientList(),
@@ -160,7 +160,7 @@ public class AppointmentClashUiTest {
                 StackPane detailRoot = new StackPane(details.getRoot());
                 styleAndLayout(detailRoot, 320);
                 assertEquals(done, !detailRoot.lookupAll(".pin-mark").isEmpty());
-                Label time = label(detailRoot, ".detail-appointment-no-time");
+                Label time = label(detailRoot, ".detail-appointment-time");
                 assertEquals(done ? "Marked" : null,
                         Optional.ofNullable(time.getGraphic()).map(Node::getAccessibleText).orElse(null));
             }

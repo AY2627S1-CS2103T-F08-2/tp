@@ -674,13 +674,6 @@
     -fx-text-fill: #e6eaec;
 }
 
-/* The same font as a time, so that the placeholder is as wide as one. */
-.list-cell .appointment-entry-no-time {
-    -fx-font-family: "Segoe UI Semibold";
-    -fx-font-size: 14px;
-    -fx-text-fill: #a3adb2;
-}
-
 /* An appointment's details, under its patient. */
 .list-cell .appointment-entry-details {
     -fx-font-family: "Segoe UI";
@@ -757,7 +750,6 @@
     -fx-border-width: 0 0 1 0;
 }
 
-.patient-detail .detail-appointment-no-time,
 .patient-detail .detail-appointment-past .label {
     -fx-text-fill: #a3adb2;
 }
@@ -794,12 +786,9 @@
 
 /* A clash takes precedence over today's orange and past/selected text dimming, only on date/time labels. */
 .list-cell .appointment-entry-clash .appointment-entry-time,
-.list-cell .appointment-entry-clash .appointment-entry-no-time,
 .list-cell:filled:selected .appointment-entry-clash .appointment-entry-time,
-.list-cell:filled:selected .appointment-entry-clash .appointment-entry-no-time,
 .patient-detail .detail-appointment-clash .detail-appointment-date,
-.patient-detail .detail-appointment-clash .detail-appointment-time,
-.patient-detail .detail-appointment-clash .detail-appointment-no-time {
+.patient-detail .detail-appointment-clash .detail-appointment-time {
     -fx-text-fill: -lainurse-clash;
 }
 
