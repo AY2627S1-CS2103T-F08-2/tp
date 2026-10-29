@@ -112,7 +112,8 @@ public class JsonLaiNurseStorage {
      * Saves the given {@link ReadOnlyLaiNurse} to the data file, and then to the backup.
      * The backup is written only once the data file has been, so it always holds data that was saved.
      * @param laiNurse cannot be null.
-     * @throws IOException if there was any problem writing to either file.
+     * @throws BackupFailedException if the data file was saved, but the backup could not be.
+     * @throws IOException if there was any problem writing to the data file.
      */
     public void saveLaiNurse(ReadOnlyLaiNurse laiNurse) throws IOException {
         saveLaiNurse(laiNurse, filePath);
@@ -120,7 +121,7 @@ public class JsonLaiNurseStorage {
             saveLaiNurse(laiNurse, backupFilePath);
         } catch (IOException e) {
             logger.warning("Saved data to " + filePath + " but could not back it up to " + backupFilePath + ": " + e);
-            throw e;
+            throw new BackupFailedException(backupFilePath, e);
         }
         logger.fine("Saved data to " + filePath + " and backed it up to " + backupFilePath);
     }

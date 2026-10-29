@@ -20,21 +20,29 @@ import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.LaiNurseParser;
 import seedu.address.logic.parser.TabCompleter;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.PatientScope;
+import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
+import seedu.address.storage.BackupFailedException;
 import seedu.address.storage.Storage;
 
 /**
  * The main LogicManager of the app.
  */
 public class LogicManager implements Logic {
-    public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";
+    public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s\n"
+            + "Nothing was changed, so you can run the command again once LaiNurse can save.";
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
-            "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+            "Could not save data to file %s due to insufficient permissions to write to the file or the folder.\n"
+            + "Nothing was changed, so you can run the command again once LaiNurse can save.";
+
+    public static final String BACKUP_WARNING_FORMAT =
+            "Warning: the data is saved, but it could not be backed up to %s.";
 
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
@@ -57,13 +65,22 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = laiNurseParser.parseCommand(commandText);
+        // The data as it was, to put back if it cannot be saved, so that the command can be run again without its
+        // change applying twice, such as text added twice to a patient's notes
+        ReadOnlyLaiNurse dataBefore = new LaiNurse(model.getLaiNurse());
         commandResult = command.execute(model);
 
         try {
             storage.saveLaiNurse(model.getLaiNurse());
+        } catch (BackupFailedException e) {
+            // The data file holds the change, so the change stays, and only the backup is out of date
+            commandResult = commandResult.withNoteAppended(
+                    String.format(BACKUP_WARNING_FORMAT, e.getBackupFilePath()));
         } catch (AccessDeniedException e) {
+            restore(dataBefore);
             throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
         } catch (IOException ioe) {
+            restore(dataBefore);
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
         }
 
@@ -73,6 +90,17 @@ public class LogicManager implements Logic {
         commandResult = command.getView().map(commandResult::withView).orElse(commandResult);
         checkNavigation(commandResult, model);
         return commandResult;
+    }
+
+    /**
+     * Puts back {@code dataBefore}, the data before a command whose change could not be saved. Data that the command
+     * did not change is left as it is, so that the lists do not refresh for nothing.
+     */
+    private void restore(ReadOnlyLaiNurse dataBefore) {
+        if (!dataBefore.equals(model.getLaiNurse())) {
+            model.setLaiNurse(dataBefore);
+            logger.info("Put back the data as it was before the command, as it could not be saved.");
+        }
     }
 
     /**

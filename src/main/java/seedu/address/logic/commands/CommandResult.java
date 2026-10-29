@@ -232,6 +232,16 @@ public class CommandResult {
                 true);
     }
 
+    /**
+     * Returns a copy of this result whose message ends with {@code note}, on a line of its own, such as a warning
+     * about something that happened after the command.
+     */
+    public CommandResult withNoteAppended(String note) {
+        requireNonNull(note);
+        return new CommandResult(feedbackToUser + "\n" + note, showHelp, exit, view, appointmentRange,
+                appointmentScope, navigation, isSelectionCleared);
+    }
+
     public String getFeedbackToUser() {
         return feedbackToUser;
     }
