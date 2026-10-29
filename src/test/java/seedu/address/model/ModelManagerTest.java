@@ -321,6 +321,10 @@ public class ModelManagerTest {
         assertEquals(List.of(archivedAlice), modelManager.getFilteredPatientList());
         modelManager.updateFilteredPatientList(PREDICATE_SHOW_ALL_PATIENTS);
         assertFalse(modelManager.hasPatientFilter());
+        assertFalse(modelManager.isPatientListFiltered().getValue());
+        // a filter that keeps every patient is still a filter
+        modelManager.updateFilteredPatientList(patient -> true);
+        assertTrue(modelManager.isPatientListFiltered().getValue());
         assertThrows(NullPointerException.class, () -> modelManager.setPatientListScope(null));
     }
 

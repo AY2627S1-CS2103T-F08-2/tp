@@ -152,6 +152,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public ObservableValue<Boolean> isPatientListFiltered() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public ObservableValue<PatientScope> getPatientListScope() {
             throw new AssertionError("This method should not be called.");
         }

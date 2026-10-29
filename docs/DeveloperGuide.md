@@ -122,8 +122,10 @@ The panel also takes the list of all appointments, so that a row shows its next 
 refreshes its rows when any appointment changes, since a change to one patient can make another's appointment clash.
 `PinMark#setColor` can color a row's pin, such as red, for settings that may change what a mark means (#216).
 Above the rows, a header says whether the list is filtered,
-and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
-as filtered while it shows fewer patients than its scope has, so it needs no knowledge of `find`. Both
+and how many patients it shows. The panel takes both the filtered list and the list of all patients, and
+`Logic#isPatientListFiltered`, which is true while the list has a filter, such as after `find`. It counts the list as
+filtered then, even if the filter hides no one, such as `6 of 6`, so that the header shows what the first Esc removes,
+and the Esc does not seem to do nothing. Both
 lists end their header where their rows' last column ends, with `ListHeaders#alignEndWithRows`: the header's end
 padding is the list's inset, plus the width of its vertical scroll bar, plus a row's end padding, which is 12 pixels
 in both lists. While a list shows no scroll bar, each of its cells leaves the scroll bar's width empty at its end
