@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -25,9 +26,11 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.Name;
@@ -71,6 +74,14 @@ public class LaiNurseParserTest {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " " + targetId.value);
         assertEquals(new DeleteCommand(targetId), command);
+    }
+
+    @Test
+    public void parseCommand_archiveAndUnarchive() throws Exception {
+        PatientId targetId = new PatientId("S1234567A");
+        assertEquals(new ArchiveCommand(targetId), parser.parseCommand(ArchiveCommand.COMMAND_WORD + " S1234567A"));
+        assertEquals(new UnarchiveCommand(targetId),
+                parser.parseCommand(UnarchiveCommand.COMMAND_WORD + " S1234567A"));
     }
 
     @Test
@@ -159,6 +170,9 @@ public class LaiNurseParserTest {
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
+        // view without an ID lists the patients in a scope
+        assertEquals(new ListCommand(), parser.parseCommand(ViewCommand.COMMAND_WORD));
+        assertEquals(new ListCommand(PatientScope.ALL), parser.parseCommand(ViewCommand.COMMAND_WORD + " --all"));
     }
 
     @Test

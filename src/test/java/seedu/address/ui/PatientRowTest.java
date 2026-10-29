@@ -82,6 +82,21 @@ public class PatientRowTest {
         });
     }
 
+    @Test
+    public void show_archivedPatient_greyedOutUntilAnotherPatientShows() throws Exception {
+        onFxThread(() -> {
+            Patient archived = new PatientBuilder().withId("S1234567A").withArchived(true).build();
+            PatientRow row = new PatientRow();
+
+            row.show(archived, 1, List.of());
+            assertTrue(row.getRoot().getStyleClass().contains("patient-row-archived"));
+
+            // a reused row shows the next patient as it is
+            row.show(new PatientBuilder().withId("S2345678B").build(), 2, List.of());
+            assertFalse(row.getRoot().getStyleClass().contains("patient-row-archived"));
+        });
+    }
+
     private static PatientAppointment entry(Patient patient) {
         return new PatientAppointment(patient, patient.getSchedule().asList().getFirst());
     }

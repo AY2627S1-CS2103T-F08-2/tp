@@ -51,8 +51,8 @@ public class AppointmentRowTest {
             row.show(new AppointmentPage.Entry(2, entry(bernice)), LocalDateTime.now(), false);
             assertEquals("2.", label(row, "#number").getText());
             assertEquals("BERNICE YU", label(row, "#name").getText());
-            assertTrue(label(row, "#time").getStyleClass().contains("appointment-entry-no-time"));
-            assertFalse(label(row, "#time").getStyleClass().contains("appointment-entry-time"));
+            // no style of its own, so that it takes the color of its row
+            assertTrue(label(row, "#time").getStyleClass().contains("appointment-entry-time"));
             assertFalse(row.getRoot().getStyleClass().contains("appointment-entry-passed"));
             assertFalse(row.getRoot().getStyleClass().contains("appointment-entry-clash"));
         });

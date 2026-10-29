@@ -2,12 +2,14 @@ package seedu.address.logic;
 
 import java.util.List;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 
@@ -28,10 +30,16 @@ public interface Logic {
     ObservableList<Patient> getFilteredPatientList();
 
     /**
-     * Removes the filter of the patient list, so that it shows all patients in name order, as {@code list} does.
+     * Undoes one step of what the patient list shows, as Esc does: removes its filter, so that it shows every patient
+     * in the scope in name order, or if it has no filter, goes back to the default scope, as {@code view} does.
      * This runs no command, so there is no result to show, nothing is selected, and nothing is saved.
      */
-    void showAllPatients();
+    void resetPatientList();
+
+    /**
+     * Returns the scope of the patient list: whether it shows archived patients.
+     */
+    ObservableValue<PatientScope> getPatientListScope();
 
     /** Returns an unmodifiable view of the list of all patients, whatever the current filter */
     ObservableList<Patient> getPatientList();
@@ -42,7 +50,7 @@ public interface Logic {
     /**
      * Returns each way to complete the word that {@code commandText} ends with, such as the command word in
      * {@code dele}, the option in {@code edit S1234567A --ph} or the patient ID in {@code view S12}, with the patients
-     * in the filtered list first. Returns an empty list if there is nothing to complete.
+     * in the filtered list first, and archived patients last. Returns an empty list if there is nothing to complete.
      *
      * @see seedu.address.logic.parser.TabCompleter#complete(String, List)
      */

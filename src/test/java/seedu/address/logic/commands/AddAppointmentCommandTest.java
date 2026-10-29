@@ -90,6 +90,17 @@ public class AddAppointmentCommandTest {
     }
 
     @Test
+    public void execute_archivedPatient_notesArchivedWithoutClashWarning() throws Exception {
+        Patient archivedBenson = BENSON.withArchived(true);
+        model.setPatient(BENSON, archivedBenson);
+        // the same time as Benson's appointment, which would clash if he were not archived
+        String feedback = new AddAppointmentCommand(BENSON.getId(), BENSON_APPOINTMENT).execute(model)
+                .getFeedbackToUser();
+        assertTrue(feedback.endsWith(Messages.formatArchivedNote(archivedBenson)));
+        assertFalse(feedback.contains("Warning"));
+    }
+
+    @Test
     public void execute_unknownId_failure() {
         AddAppointmentCommand command = new AddAppointmentCommand(new PatientId("S0000000Z"), NEW_APPOINTMENT);
         assertCommandFailure(command, model, String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, "S0000000Z"));

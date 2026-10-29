@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ARCHIVED;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.util.DateUtil;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ViewAppointmentCommand;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.PatientId;
 
 public class ViewAppointmentCommandParserTest {
@@ -247,5 +249,28 @@ public class ViewAppointmentCommandParserTest {
     /** Returns the error for {@code id}, which no patient has, as it shows in upper case. */
     private static String notFound(String id) {
         return String.format(Messages.MESSAGE_PATIENT_NOT_FOUND, id.toUpperCase());
+    }
+
+    @Test
+    public void parse_scopeOption_returnsCommandWithScope() {
+        Optional<LocalDate> none = Optional.empty();
+        assertParseSuccess(parser, "--all",
+                new ViewAppointmentCommand(none, none, Optional.empty(), PatientScope.ALL));
+        assertParseSuccess(parser, VALID_DATE_STRING + " --archived", new ViewAppointmentCommand(
+                Optional.of(VALID_DATE), Optional.of(VALID_DATE), Optional.empty(), PatientScope.ARCHIVED));
+        assertParseSuccess(parser, "--all " + FROM_FLAG + START + " " + TO_FLAG + END, new ViewAppointmentCommand(
+                Optional.of(START), Optional.of(END), Optional.empty(), PatientScope.ALL));
+    }
+
+    @Test
+    public void parse_scopeOptionMisused_throwsParseException() {
+        assertParseFailure(parser, "--all --archived", Messages.MESSAGE_CONFLICTING_SCOPES);
+        assertParseFailure(parser, "--archived --archived",
+                Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ARCHIVED));
+        assertParseFailure(parser, ID_FLAG + VALID_ID + " --all", Messages.MESSAGE_SCOPE_WITH_ID);
+        // a date after a scope option is in the wrong place, and any other word is not a value it takes
+        assertParseFailure(parser, "--all " + VALID_DATE_STRING,
+                ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+        assertParseFailure(parser, "--all everyone", INVALID_FORMAT_MESSAGE);
     }
 }

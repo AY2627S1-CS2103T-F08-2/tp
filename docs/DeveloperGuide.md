@@ -123,7 +123,7 @@ refreshes its rows when any appointment changes, since a change to one patient c
 `PinMark#setColor` can color a row's pin, such as red, for settings that may change what a mark means (#216).
 Above the rows, a header says whether the list is filtered,
 and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
-as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. Both
+as filtered while it shows fewer patients than its scope has, so it needs no knowledge of `find`. Both
 lists end their header where their rows' last column ends, with `ListHeaders#alignEndWithRows`: the header's end
 padding is the list's inset, plus the width of its vertical scroll bar, plus a row's end padding, which is 12 pixels
 in both lists. While a list shows no scroll bar, each of its cells leaves the scroll bar's width empty at its end
@@ -217,14 +217,16 @@ Shift+Down and typed text do there:
 
 * Enter, and any printable character, move the focus back to the command box. A typed character is added to the text
   there.
-* Esc resets the view, and keeps the selected entry so that it is seen among the rest. In the patient view,
-  `MainWindow#resetView` calls `Logic#showAllPatients`, which removes the filter of the patient list as `list` does,
-  but runs no command. So nothing is saved, the status message stays, and no `Navigation` selects the first patient;
-  `resetView` only selects again, in the longer list, the patient whose details are shown. (Running `list` itself would
+* Esc resets the view by one step, and keeps the selected entry so that it is seen among the rest. In the patient
+  view, `MainWindow#resetView` calls `Logic#resetPatientList`, which removes the filter of the patient list, such as
+  that of `find`, and keeps its scope. With no filter, it goes back to the default scope, as `view` does. It runs no
+  command. So nothing is saved, the status message stays, and no `Navigation` selects the first patient;
+  `resetView` only selects again, in the longer list, the patient whose details are shown. (Running `view` itself would
   show the first patient's details and then the earlier patient's again.) In the appointment view,
-  `AppointmentListPanel#reset` goes back from a
-  `viewappt` page to the weekly view of the selected appointment's week, or of this week if none is selected, and
-  keeps the selection. In the weekly view, there is no range to remove, so Esc does nothing.
+  `AppointmentListPanel#reset` removes the filter of `viewappt`: from a page, it goes back to the weekly view of the
+  selected appointment's week, or of this week if none is selected, with the default scope, unless the selected
+  appointment is an archived patient's. In the weekly view, it goes back to the default scope. It keeps the selection
+  if it can. See [Archiving patients](#archiving-patients).
 * Tab moves the focus between the tabs and the list. The appointment list always takes the focus, so that Left and
   Right can leave an empty week.
 * Shift+Up and Shift+Down scroll the details beside the list, with `PatientDetailPanel#scroll`, as the details never
@@ -331,12 +333,14 @@ How the parsing works:
 The `Model` component,
 
 * stores the LaiNurse data i.e., all `Patient` objects (which are contained in a `UniquePatientList` object).
-* stores the `Patient` objects selected by the current filter, such as search results, in a separate _filtered_ list. It
-  exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe and bind to, so the UI updates
-  when the list changes. The filtered list is in name order: `ModelManager` keeps a `SortedList` with
-  `PatientNameComparator`, which compares by name ignoring case and then by patient ID, between the patient list and
-  the filter. A second `SortedList` over the filter orders the results when a command gives a comparator, such as by
-  the number of fields matched by `find`. The stored patient order is unchanged.
+* stores the `Patient` objects selected by the current scope and filter, such as search results, in a separate
+  _filtered_ list. The scope, a `PatientScope`, chooses whether archived patients show, and the filter chooses among
+  the patients in the scope. It exposes this list as an unmodifiable `ObservableList<Patient>` that the UI can observe
+  and bind to, so the UI updates when the list changes. The filtered list has archived patients last, and is otherwise
+  in name order: `ModelManager` keeps a `SortedList` with `PatientNameComparator`, which compares by name ignoring case
+  and then by patient ID, between the patient list and the filter. A second `SortedList` over the filter orders the
+  results when a command gives a comparator, such as by the number of fields matched by `find`, still with archived
+  patients last. The stored patient order is unchanged.
 * keeps a list of every appointment of every patient, each as a `PatientAppointment`, in time order. It rebuilds the
   list whenever a patient is added, edited or deleted, and exposes it as an unmodifiable
   `ObservableList<PatientAppointment>` for the appointment view. The filter on the patient list does not change it.
@@ -411,8 +415,10 @@ reports the existing patient count message. The comparator orders patients by de
 `PatientNameComparator`, so ties are in name order. Each search replaces the previous filter and searches the full
 patient collection. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to patient records update
 the same observable view. Filtering and sorting do not change stored records or their order. The single-argument
-filter method clears sorting, as does a null comparator; existing calls from `list`, `add`, `edit` and `viewappt`
-therefore restore name order. The appointment list is independent of this sorting.
+filter method clears sorting, as does a null comparator; existing calls from `view`, `add` and `edit`
+therefore restore name order. The appointment list is independent of this sorting. `find` searches only the patients
+in the scope of the patient list, and `--all` or `--archived` sets that scope first, with
+`Model#setPatientListScope`. See [Archiving patients](#archiving-patients).
 
 ### Editing a patient's details
 
@@ -590,7 +596,7 @@ it succeeds, no appointment exists to select, and the deleted one cannot be high
 has no `Navigation`, while `getView()` still shows the appointments view, so `MainWindow` switches to that view with
 the selection cleared, and `AppointmentListPanel` keeps the page that was shown; the deleted row disappears from
 it. `Model#setPatient()` does not change the filter
-of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there, as with `addappt`.
+of the patient list, so a patient hidden by `find` stays hidden there, as with `addappt`.
 
 ### Marking and unmarking appointments
 
@@ -616,11 +622,10 @@ Both commands allow any date; editing preserves completion until an explicit sta
 ### Viewing appointments by date
 
 `viewappt` takes one date, a range given by `--from`, `--to`, or both, or none of these. A plain `viewappt`, with none
-of these and no `--id`, shows the weekly view of this week: the command filters the patient list to the patients with
-an appointment from this week's Monday to its Sunday, and returns no range, only a `Navigation.toView`, so that
-`MainWindow` shows this week and selects the next appointment from now. The command and the weekly view's
-`AppointmentWeek` both take the week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the
-patient list and the week shown cannot disagree on its days. `ViewAppointmentCommandParser`
+of these and no `--id`, shows the weekly view of this week: the command returns no range, only a
+`Navigation.toView`, so that `MainWindow` shows this week and selects the next appointment from now. As the weekly view
+lists every appointment, a week at a time, the message says which appointments it lists, by the scope that
+`--all` or `--archived` gives, as `view` does for patients. The header of the view counts them. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
 that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
 `2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
@@ -634,8 +639,10 @@ when it runs: a missing start date becomes today, and a missing end date becomes
 default time zone. A package-private constructor takes another `Clock`, which lets tests fix the date. Because the
 command reads the date when it runs rather than when it is parsed, it never compares against a stale day. If only
 `--to` is given and its date is before today, the range would be empty, so the command shows an error that suggests
-adding `--from`. The command then filters the list with `AppointmentBetweenDatesPredicate`, which shows a patient if any
-of their appointments falls in the range. Only dates are compared, so a timed appointment earlier today still counts.
+adding `--from`. The command then counts, out of all patients, those that `AppointmentBetweenDatesPredicate` keeps:
+a patient with any appointment in the range. Only dates are compared, so a timed appointment earlier today still
+counts. `viewappt` never changes the patient list, its filter or its scope, as `find` and `view` never change the
+appointment view: each view keeps what the nurse last chose for it.
 
 The command also returns the range in its `CommandResult`, as a `CommandResult.AppointmentRange` whose end is
 `LocalDate.MAX` if the range has no end, and a `Navigation.toView(View.APPOINTMENTS)`. `MainWindow` then tells
@@ -648,11 +655,23 @@ none. A date typed after the options ends up inside the ID value; when the value
 its punctuation keeps from being a patient ID, the parser reports that a `DATE` must come before other options,
 rather than failing the ID. A value that ends in anything else, such as a digit-only ID typed with a stray space
 (`--id 123 456`), fails as an ID. When the command runs, it looks the patient up by ID,
-and if none matches, fails with the invalid-patient-ID error and leaves the list and the page as they were. Otherwise
-it narrows the list to that patient with an appointment in the range, and counts that patient's appointments in the
-range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
+and if none matches, fails with the invalid-patient-ID error and leaves the page as it was. Otherwise
+it counts that patient's appointments in the range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
 messages count patients. The `AppointmentRange` also carries the ID, and `AppointmentListPanel` filters the page's
 appointments by it, so the page shows only that patient's until Esc or another `viewappt` replaces the range.
+
+**Design considerations: whether `viewappt` filters the patient list**
+
+* **Alternative 1 (current choice):** `viewappt` shows its results only in the appointment view, and leaves the
+  patient list as it was.
+    * Pros: A nurse who found a patient with `find` and then checks the week still has that patient in the patient
+      list. Each view changes only through its own commands, so neither view changes behind the nurse's back.
+    * Cons: To see the patients with an appointment on a day as a list, the nurse reads them from the appointment view.
+* **Alternative 2:** `viewappt` also filters the patient list to the patients whose appointments it shows, as it did
+  before the appointment view existed.
+    * Pros: The **Patients** tab lists the patients of the day.
+    * Cons: The appointment view already shows them. A `viewappt` silently replaces a `find` filter, and with archived
+      patients, it would also have to change the patient list's scope.
 
 **Design considerations: where appointment searches belong**
 
@@ -669,7 +688,8 @@ appointments by it, so the page shows only that patient's until Esc or another `
 ### Patient and appointment views
 
 The main window shows a patient view or an appointment view, on two tabs. Commands choose the view: a command word
-that ends in `appt` shows the appointment view, and `list`, `find`, `view`, `add` and `edit` show the patient view.
+that ends in `appt` shows the appointment view, and `find`, `view`, `add`, `edit`, `archive` and `unarchive` show
+the patient view.
 Other commands keep the view that is shown.
 
 Each `Command` declares the view it shows by overriding `Command#getView()`, which returns `Optional.empty()` by default.
@@ -701,9 +721,10 @@ Each command navigates as follows:
 
 | Command | Result |
 | --- | --- |
-| `add`, `edit`, `view` | `Navigation.toPatient` of the patient that they add, edit or show. All three show all patients first, so that patient is always in the list. |
-| `list`, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
-| `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt` |
+| `add`, `edit`, `view ID` | `Navigation.toPatient` of the patient that they add, edit or show. All three show all patients first, and call `Model#showInPatientList`, which widens the scope to `ALL` if it hides the patient, so that patient is always in the list. |
+| `archive`, `unarchive` | `Navigation.toPatient` if the list still shows the patient, and otherwise `withSelectionCleared()`. The scope stays, so that archiving a patient hides them. |
+| `view` without an ID, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
+| `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt`. Every result also has the scope of the appointment view, `withAppointmentScope`. |
 | `addappt`, `editappt`, `markappt`, `unmarkappt` | `Navigation.toAppointment` of the changed appointment, with no range, so the page shown stays if it has the appointment |
 | `delete`, `deleteappt`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
 | `help`, `exit` | no navigation: keeps the view and the selection |
@@ -875,9 +896,98 @@ while writing the data file, the backup still holds the data saved before, and t
     * *Pros:* Harder to edit by mistake.
     * *Cons:* How to do so depends on the OS, and a read-only file must be made writable again before each save.
 
-### \[Proposed\] Data archiving
+### Archiving patients
 
-_{Explain here how the data archiving feature will be implemented}_
+A nurse archives a patient who no longer needs visits, such as one who has been discharged, with `archive ID`, and
+brings them back with `unarchive ID`. An archived patient keeps every detail and appointment, but is hidden from the
+patient list and the appointment view unless the nurse asks to see archived patients, and their appointments never
+clash.
+
+**Model.** `Patient` has an `isArchived` field, which `equals`, `hashCode` and `toString` include, but
+`isSamePatient` does not, so a patient keeps their identity when archived. `Patient#withArchived(boolean)` and
+`Patient#withSchedule(schedule)` return a copy with one thing changed. The commands that change appointments use
+`withSchedule`, so that they keep the archived flag. `ArchiveCommand` and `UnarchiveCommand` share
+`ArchiveStatusCommand`, as `markappt` and `unmarkappt` share `AppointmentStatusCommand`. Each replaces the patient
+with `Model#setPatient`, and fails if the patient already has the requested status.
+
+**Which patients show.** A `PatientScope` is one of `UNARCHIVED` (the default), `ALL` and `ARCHIVED`.
+
+* The patient list has a scope, which `ModelManager` keeps in an `ObjectProperty<PatientScope>`. Its filtered list
+  shows the patients that the scope includes and the filter keeps: `applyFilter()` sets the predicate of the
+  `FilteredList` to both. `updateFilteredPatientList` changes only the filter, and `setPatientListScope` only the
+  scope, so `find` keeps the scope, and a new scope keeps the filter. The base `SortedList` puts archived patients
+  last, and so does a comparator that a command gives, as `ModelManager` adds `ARCHIVED_LAST` before it. `view` with
+  no ID (a `ListCommand`) sets the scope that `--all` or `--archived` gives, or the default, and removes the filter.
+  `find --all` and `find --archived` set the scope, and a `find` without them keeps it. The scope is not saved, so
+  it is the default after a restart.
+* The appointment view has no scope of its own. Whether it shows archived patients' appointments is part of the
+  filter that `viewappt` sets, as its dates and `--id` are. So every `viewappt` result carries a `PatientScope`,
+  added with `CommandResult#withAppointmentScope`: the one that `--all` or `--archived` gives, the default
+  otherwise, or `ALL` with `--id`, which shows that patient whether archived or not. `AppointmentListPanel` keeps it
+  with its range and week, and shows only the appointments of the patients in it. `view` and `find` never change it,
+  and `viewappt` never changes the patient list.
+* A command that goes to a patient, such as `view ID`, `edit` or `add`, calls `Model#showInPatientList(patient)`,
+  which widens the scope to `ALL` if the scope hides the patient, so that the patient can be selected. A command that
+  goes to an appointment, such as `editappt`, makes `AppointmentListPanel#showAppointment` widen the appointment
+  view's scope in the same way. `archive` and `unarchive` do not widen the scope: they select the patient only if
+  the list still shows them, and otherwise clear the selection, so that archiving a patient hides them.
+* Esc undoes one step. In the patient view, `LogicManager#resetPatientList` removes the filter if there is one
+  (`Model#hasPatientFilter`), and otherwise sets the default scope. In the appointment view,
+  `AppointmentListPanel#reset` removes the range and the scope together, as both belong to the filter of `viewappt`,
+  but keeps archived patients' appointments if the selected one is an archived patient's.
+
+The sequence below shows `find --name yu --archived` after `view --all`. The scope is set first, and the filter
+then chooses among the patients in it.
+
+1. `FindCommandParser` parses `--archived` with `ParserUtil#parseScope`, which rejects a value, a repeated option
+   and `--all` with `--archived`, and creates a `FindCommand` with `Optional.of(PatientScope.ARCHIVED)`.
+2. `FindCommand#execute` calls `Model#setPatientListScope(ARCHIVED)`, and then
+   `Model#updateFilteredPatientList(predicate, comparator)`.
+3. The patient list shows the archived patients whose name contains `YU`. Its header, which `PatientListPanel` keeps
+   up to date by listening to the scope, reads `Filtered archived patients`.
+4. The first Esc removes the filter, so the list shows every archived patient. The second sets the default scope,
+   so the list shows the patients who are not archived.
+
+**Clashes.** `AppointmentClashes#find` skips an appointment whose patient is archived, and finds no clash for one,
+in the same way as it skips a done appointment. So the clash marks, the clash warnings and the red next appointments
+all leave archived patients out. `addappt` and `editappt` on an archived patient add a note to the result, from
+`Messages#formatArchivedNote`, so that the nurse knows why no clash was reported.
+
+**Storage.** `JsonAdaptedPatient` saves `"archived": true` for an archived patient, and leaves the field out
+otherwise, as `@JsonInclude(NON_NULL)` drops a null. A missing field loads as not archived, so files from earlier
+versions load unchanged.
+
+**UI.** `PatientListPanel` takes the scope as an `ObservableValue<PatientScope>`, and its header shows it: the title
+is `All patients` or `Archived patients`, and the count has the form `[count] ([archived count])`, with no
+words, so that it fits beside a long title or range, such as `109 (2)` with `ALL`. The default scope shows only the first part, and `ARCHIVED` only the part in
+brackets. A filtered list shows how many of each it shows, such as `3 of 109 (1 of 2)`. `PatientRow` greys out an
+archived patient. The count of `AppointmentListPanel` has the same form, for the appointments on its page. Tab
+completes `archive`, `unarchive`, `--all` and `--archived`, and `LogicManager#getCompletions` puts archived
+patients' IDs last.
+
+**Design considerations: whether the appointment view shares the patient list's scope**
+
+* **Alternative 1 (current choice):** The scope belongs to the patient list. The appointment view treats archived
+  patients as part of the filter of `viewappt`, which every `viewappt` sets again.
+    * Pros: A `find` or `view` on the patient list never changes the appointments that the nurse is working
+      through. Each `viewappt` shows exactly what it says, as its dates and `--id` do, so the nurse never has to
+      remember a scope set earlier.
+    * Cons: The nurse gives `--all` again on each `viewappt` that should show archived patients' appointments.
+* **Alternative 2:** One scope for both views, which `view`, `find` and `viewappt` all set.
+    * Pros: One idea to learn, and one option sets both views.
+    * Cons: A `find --all` in the patient view changes the appointment view as well, and a `viewappt` without an
+      option shows archived patients' appointments because of an earlier, unrelated command.
+
+**Design considerations: how archived patients are hidden**
+
+* **Alternative 1 (current choice):** A scope, kept apart from the filter, that commands set on their own.
+    * Pros: `find` searches within the scope and Esc can undo the filter and the scope one at a time, since the
+      two are kept apart.
+    * Cons: The model has a second piece of list state, which `equals` and the tests must cover.
+* **Alternative 2:** Hide archived patients through the filter predicate of each command.
+    * Pros: No new state in the model.
+    * Cons: Every command that filters must remember to hide archived patients, and the scope is lost whenever a
+      command replaces the filter.
 
 
 --------------------------------------------------------------------------------------------------------------------
@@ -932,7 +1042,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | home-based nurse | press Tab to finish command words, options and patient IDs, and see what Tab can fill in          | I type commands faster and with fewer mistakes                |
 | `* *`    | home-based nurse | see patients with no upcoming appointment                                                            | no one gets missed                                           |
 | `* *`    | home-based nurse | view one patient's appointments on a date or in a range                                              | I can prepare for that patient's visits                      |
-| `*`      | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
+| `* *`    | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
+| `* *`    | home-based nurse | see or search my archived patients when I need them                                                  | I can look up a former patient who calls again               |
+| `* *`    | home-based nurse | have archived patients' appointments not clash with my current visits                                | old visits do not raise false clash warnings                  |
 
 ### Use cases
 
@@ -1377,6 +1489,38 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 2a1. LaiNurse keeps the change and appends the clash warning, including hidden patients.
     * Use case resumes at step 3.
 
+**Use case: UC12 - Archive a patient**
+
+**MSS**
+
+1. Nurse requests to archive a patient using their ID.
+2. LaiNurse marks the patient as archived and saves the data.
+3. LaiNurse hides the patient from the patient list and the appointment view, and stops their appointments from
+   clashing.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The ID is missing or invalid.
+    * 1a1. LaiNurse shows an error message with the valid format.
+    * Use case resumes at step 1.
+* 1b. The given ID does not match any patient.
+    * 1b1. LaiNurse shows an error message.
+    * Use case resumes at step 1.
+* 1c. The patient is already archived.
+    * 1c1. LaiNurse says so and changes nothing.
+    * Use case ends.
+* 3a. The patient list shows archived patients, after `view --all`.
+    * 3a1. LaiNurse keeps the patient in the list, at the bottom and greyed out, and selected.
+    * Use case ends.
+* 4a. The nurse later requests to see archived patients, with `view --all` or `view --archived`.
+    * 4a1. LaiNurse shows them, and keeps showing them until the nurse chooses another scope.
+    * Use case ends.
+* 5a. The nurse requests to unarchive the patient.
+    * 5a1. LaiNurse shows the patient with the others again, and their appointments can clash again.
+    * Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements
@@ -1437,7 +1581,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Weekly view**: The appointment view's page that shows one week, from Monday to Sunday, with a heading for every
   day; a plain `viewappt` shows it.
 * **Filter**: A criterion that limits what a list shows. The patient list shows only the patients matching it, such as
-  after `find` or `viewappt`; its header then says `Filtered patients`, and the list currently shown is also called
+  after `find`; its header then says `Filtered patients`, and the list currently shown is also called
   the displayed list. A `viewappt` range similarly limits the appointment page to the appointments in it.
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
@@ -1568,7 +1712,7 @@ testers are expected to do more *exploratory* testing.
        list, with Bernice Yu still selected.
 
     1. Test case: after the test cases above, press Esc<br>
-       Expected: The list shows all patients again, and the header shows `All patients` and `6 patients`. The status
+       Expected: The list shows all patients again, and the header shows `All patients` and `6`. The status
        message does not change, as Esc runs no command. The patient shown in the panel stays selected, and the panel
        does not show another patient, even for a moment. The focus stays in the list.
 
@@ -1750,9 +1894,9 @@ testers are expected to do more *exploratory* testing.
        Expected: Two rows read `AARON TAN`, adjacent at the top: `S0245678G` above `S0356789H`, because the patient
        ID breaks the tie.
 
-### Viewing patients by appointment date
+### Viewing appointments by date in the appointment view
 
-1. Viewing patients who have an appointment on a given date
+1. Viewing the appointments on a given date
 
     1. Prerequisites: Start with the sample data. It anchors Alex Yeoh's appointments to `MON` 09:30 and to `BLOOD`,
        Bernice Yu's to `TUE`, and Irfan Ibrahim's to `WED` 14:00: `MON`, `TUE` and `WED` are the Monday, Tuesday and
@@ -1768,15 +1912,15 @@ testers are expected to do more *exploratory* testing.
        2026`, with no arrow buttons. The
        list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
        panel beside the list shows their details with that appointment marked. The status message shows
-       `1 patient(s) with appointments on WED`. On the **Patients** tab, only Irfan Ibrahim is listed.
+       `1 patient(s) with appointments on WED`. The **Patients** tab still lists all patients.
 
     1. Test case: `viewappt BLOOD`, the date of Alex Yeoh's second appointment<br>
-       Expected: Only Alex Yeoh's appointment on that Monday is shown, and it is selected. On the **Patients** tab, only
-       Alex Yeoh is listed, because every appointment of each patient is checked.
+       Expected: Only Alex Yeoh's appointment on that Monday is shown, and it is selected. The status message shows
+       `1 patient(s) with appointments on BLOOD`, because every appointment of each patient is checked.
 
     1. Test case: `viewappt SAT`, a date on which no patient has an appointment<br>
        Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
-       `0 patient(s) with appointments on SAT`. The patient list on the **Patients** tab is empty.
+       `0 patient(s) with appointments on SAT`.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
        Expected: The list is unchanged. The status message shows the date format error, as for
@@ -1791,28 +1935,27 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `viewappt`, with no date and no options<br>
        Expected: The weekly view of this week is shown, marked `This week`, with the arrow buttons above the list. Its
-       next appointment from now is selected, or nothing if the week has none. The status message names this week's
-       Monday and Sunday, in your computer's time zone, and the **Patients** tab lists the patients with an
-       appointment this week. To see the appointments from today onwards instead, use `viewappt --from` with today's
+       next appointment from now is selected, or nothing if the week has none. The status message says
+       `Listed all appointments of patients who are not archived.`
+       To see the appointments from today onwards instead, use `viewappt --from` with today's
        date.
 
     1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date),
        `viewappt --from 2026-02-30` (an impossible date for an option)<br>
        Expected: The list is unchanged. The first shows the command format; the second shows the date format error.
 
-1. Viewing patients who have an appointment in a date range
+1. Viewing the appointments in a date range
 
     1. Prerequisites: The same sample data as above.
 
     1. Test case: `viewappt --from MON --to SAT`<br>
        Expected: Above the list is the heading for the range, e.g. `Mon 5 Oct – Sat 10 Oct 2026`. The list shows the
        three sample appointments, each day under its own heading, with the next appointment from now selected, or the
-       first on the page if all three have passed. On the
-       **Patients** tab, Alex Yeoh, Bernice Yu and Irfan Ibrahim are listed. The status message shows
+       first on the page if all three have passed. The status message shows
        `3 patient(s) with appointments from MON to SAT`.
 
     1. Test case: `viewappt --to TUE --from TUE`<br>
-       Expected: Bernice Yu's appointment is selected, and only Bernice Yu is listed on the **Patients** tab. The
+       Expected: Bernice Yu's appointment is selected. The
        options may be in any order, and a one-day range is the same as `viewappt TUE`, including the status
        message `1 patient(s) with appointments on TUE`.
 
@@ -1820,11 +1963,10 @@ testers are expected to do more *exploratory* testing.
        Expected: Above the list is the heading for the open range, e.g. `From Wed 7 Oct 2026`. The list shows Irfan
        Ibrahim's appointment and Alex Yeoh's blood test. The next appointment from now is selected: Alex Yeoh's if
        today is on or before that date and Irfan Ibrahim's has passed, and otherwise Irfan Ibrahim's, the first on the
-       page. Both are listed on the
-       **Patients** tab. The status message shows `2 patient(s) with appointments on or after WED`.
+       page. The status message shows `2 patient(s) with appointments on or after WED`.
 
     1. Test case: `viewappt --to 2099-12-31`<br>
-       Expected: Only patients with an appointment from today onwards are listed on the **Patients** tab. The range in
+       Expected: Only appointments from today onwards are shown. The range in
        the status message starts with today's date, which is the current date in your computer's time zone. If no
        appointment is in the range, the appointment page says `No appointments in this range.`
 
@@ -1848,14 +1990,13 @@ testers are expected to do more *exploratory* testing.
        Expected: Above the list is `S1234567A,` followed by the dates of Alex Yeoh's first and last appointments, e.g.
        `S1234567A, Mon 5 Oct – Mon 2 Nov 2026`. The page shows both of Alex Yeoh's
        appointments, past and upcoming, and the next one from now is selected: the insulin review on `MON` if it has
-       not passed yet, and otherwise the one on `BLOOD`. On the **Patients** tab, only Alex Yeoh is listed. The
+       not passed yet, and otherwise the one on `BLOOD`. The
        status message shows `2 appointment(s) of ALEX YEOH`.
 
     1. Test case: `viewappt --id S1234567A --from MON --to SAT`<br>
        Expected: Above the list is the heading for the range with the ID, e.g. `S1234567A, Mon 5 Oct – Sat 10 Oct 2026`.
        The list shows only Alex Yeoh's
-       appointment at 09:30 on the Monday, which is selected. On the
-       **Patients** tab, only Alex Yeoh is listed. The status message shows
+       appointment at 09:30 on the Monday, which is selected. The status message shows
        `1 appointment(s) of ALEX YEOH from MON to SAT`.
 
     1. Test case: `viewappt MON --id S1234567A`, a date before the option<br>
@@ -1872,7 +2013,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --id S1234567A --from AFTER`, a range without appointments, where `AFTER` is any date after
        `BLOOD`, such as the day after it<br>
        Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
-       `0 appointment(s) of ALEX YEOH on or after` the date. The patient list on the **Patients** tab is empty.
+       `0 appointment(s) of ALEX YEOH on or after` the date.
 
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
        Expected: The list is unchanged. The status message shows `No patient has the ID S9999999Z.`
@@ -1896,11 +2037,12 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt TUE`<br>
        Expected: Under Tuesday's heading, e.g. `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`,
        then Eve Tan's at 15:00.
-       Bernice Yu's appointment is selected. Both are listed on the **Patients** tab. The status message shows
+       Bernice Yu's appointment is selected. The status message shows
        `2 patient(s) with appointments on TUE`.
 
-    1. Note: the patient list stays filtered after a `viewappt` command. After testing, enter `list` to show all
-       patients again.
+    1. Test case: `find --name alex`, then `viewappt TUE`, then click the **Patients** tab<br>
+       Expected: The patient list still shows only Alex Yeoh, as `find` left it. `viewappt` does not change the
+       patient list.
 
 1. _{ more test cases …​ }_
 
@@ -1950,8 +2092,8 @@ testers are expected to do more *exploratory* testing.
        Expected: The **Appointments** tab gets a blue border.
 
     1. Test case: after the test case above, press Left<br>
-       Expected: The **Patients** tab is selected. The list shows only Alex Yeoh, as `viewappt` left it, and the header
-       above it shows `Filtered patients` and `1 of 6`. The status message does not change. Right shows the appointment
+       Expected: The **Patients** tab is selected. The list shows all patients, as `viewappt` does not change it.
+       The status message does not change. Right shows the appointment
        view again, with the same page and selection as before.
 
     1. Test case: after the test cases above, press Down, then Up twice<br>
@@ -1973,7 +2115,7 @@ testers are expected to do more *exploratory* testing.
        pixels wide, each takes about half. In a wider window, the details take more, up to 72% when the window is
        1,920 pixels wide. At the narrowest, nothing is cut off at the sides of the window, and neither the list nor the
        details scroll sideways. In the details, long values such as Alex Yeoh's address wrap without breaking a word.
-       Beside Alex Yeoh's blood-test appointment, e.g. Mon 2 Nov, `Unspecified time` wraps onto two lines, with the
+       Beside Alex Yeoh's blood-test appointment, e.g. Mon 2 Nov, `Unspecified` shows in place of a time, with the
        appointment's details,
        `MONTHLY BLOOD TEST`, under it. In a wide window, the details of each appointment move beside its time.
 
@@ -1995,7 +2137,7 @@ testers are expected to do more *exploratory* testing.
        no time, because the one at 00:00 has passed.
 
     1. Test case: `view T0567890E`<br>
-       Expected: Under **Appointments**, the panel lists today's appointment with `Unspecified time`, then the one at
+       Expected: Under **Appointments**, the panel lists today's appointment with `Unspecified`, then the one at
        23:59, both in orange. Under **Past**, it lists the one at 00:00, dimmed.
 
     1. Test case: click the **Appointments** tab, then press Esc<br>
@@ -2270,11 +2412,70 @@ testers are expected to do more *exploratory* testing.
        Expected: Every visit starts undone. Saving writes booleans; an explicit non-boolean `done` value is
        rejected through the existing invalid-data loading behavior.
 
+### Archiving patients
+
+1. Archiving and unarchiving
+
+    1. Prerequisites: Start with the sample data, and enter `view`.
+    1. Test case: `archive S2345678B`<br>
+       Expected: Bernice Yu disappears from the list, nothing is selected, and the header reads `5`.
+    1. Test case: `archive S2345678B` again<br>
+       Expected: `BERNICE YU (S2345678B) is already archived.`, and nothing changes.
+    1. Test case: `view --all`<br>
+       Expected: All 6 patients show, with Bernice at the bottom and greyed out. The header reads
+       `5 (1)`.
+    1. Test case: `view --archived`, then `unarchive S2345678B`<br>
+       Expected: The list shows only Bernice, under `Archived patients`. After `unarchive`, the list is empty and says
+       `No archived patients.`, and nothing is selected.
+    1. Test cases: `archive`, `archive S0000000Z`, `unarchive S1234567A`<br>
+       Expected: The command format error, the missing-patient error, and `ALEX YEOH (S1234567A) is not archived.`
+
+1. Scopes, `find` and Esc
+
+    1. Prerequisites: Start with the sample data, enter `archive S2345678B`, then `view`.
+    1. Test case: `find --name yu`<br>
+       Expected: No patients, as `find` searches the patients who are not archived.
+    1. Test case: `find --name yu --all`, then press Esc twice<br>
+       Expected: The search shows Bernice, greyed out. The first Esc shows all 6 patients, archived last. The second
+       shows the 5 who are not archived.
+    1. Test case: `view S2345678B`<br>
+       Expected: The list shows all patients, archived last, and Bernice is selected.
+    1. Test cases: `view --all --archived`, `view S2345678B --all`, `view --all S2345678B`<br>
+       Expected: `--all and --archived cannot be given together.`, the error that an ID cannot be given with a scope
+       option, and the command format error.
+
+1. Appointments of archived patients
+
+    1. Prerequisites: Start with the sample data; use its Monday date for `MON`. Enter `archive S2345678B`.
+    1. Test case: `viewappt --from MON`<br>
+       Expected: Bernice's appointment does not show. `viewappt --all --from MON` shows it, and the count ends in
+       `(1)`. `viewappt --archived --from MON` shows only hers, with the count `(1)`.
+    1. Test case: `addappt S2345678B --date MON 09:30`<br>
+       Expected: No clash warning, although Alex Yeoh has an appointment then, and the result ends with a note that
+       Bernice is archived. Alex's appointment is not red.
+    1. Test case: `viewappt --all --from MON`, select Bernice's appointment, then press Esc twice<br>
+       Expected: The first Esc shows the weekly view of that week, still with Bernice's appointment, and the second
+       hides it.
+    1. Test case: `viewappt --id S2345678B --all`<br>
+       Expected: The error that an ID cannot be given with a scope option.
+
+1. Adding, saving and completing
+
+    1. Test case: `add --id S2345678B --name Test --phone 91234567 --address Test` while Bernice is archived<br>
+       Expected: `BERNICE YU (S2345678B) already exists in LaiNurse, and is archived. To unarchive them:
+       'unarchive S2345678B'`
+    1. Test case: archive a patient, then restart LaiNurse<br>
+       Expected: The patient is still archived, and the list shows the patients who are not archived. In
+       `data/lainurse.json`, the patient has `"archived" : true`, and no other patient has an `archived` field.
+    1. Test case: type `view --a`, then press Tab<br>
+       Expected: `--all`, then `--archived`. `view --all --` offers nothing, and `archive S` offers archived
+       patients' IDs last.
+
 ### Viewing help and command instructions
 
 1. Command overview via CLI
     * Test case: `help`
-        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `clear`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `markappt`, `unmarkappt`, `view`, `viewappt`) is displayed in the result box.
+        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `archive`, `clear`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `markappt`, `unarchive`, `unmarkappt`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
     * Test case: `help add`

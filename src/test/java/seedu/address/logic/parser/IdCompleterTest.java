@@ -27,6 +27,13 @@ public class IdCompleterTest {
     }
 
     @Test
+    public void complete_archiveCommands_completeId() {
+        for (String command : List.of("archive", "unarchive")) {
+            assertEquals(List.of(command + " S1234567A", command + " S1999999C"), completeTexts(command + " S1", IDS));
+        }
+    }
+
+    @Test
     public void complete_statusCommands_keepsAppointmentNumber() {
         for (String command : List.of("markappt", "unmarkappt")) {
             assertEquals(List.of(command + " S1234567A 2", command + " S1999999C 2"),

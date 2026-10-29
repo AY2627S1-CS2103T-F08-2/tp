@@ -74,7 +74,7 @@ public class AppointmentFormatterTest {
     @Test
     public void formatDetailTime_withAndWithoutTime() {
         assertEquals("09:30", AppointmentFormatter.formatDetailTime(new Appointment("2026-10-12 09:30")));
-        assertEquals("Unspecified time", AppointmentFormatter.formatDetailTime(new Appointment("2026-10-12")));
+        assertEquals("Unspecified", AppointmentFormatter.formatDetailTime(new Appointment("2026-10-12")));
     }
 
     @Test

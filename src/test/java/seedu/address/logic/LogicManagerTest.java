@@ -35,6 +35,7 @@ import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.PatientScope;
 import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
@@ -95,14 +96,23 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void showAllPatients_filteredList_showsAllWithoutSaving() {
+    public void resetPatientList_filterThenScope_undoesOneStepWithoutSaving() {
+        Patient archivedAmy = AMY.withArchived(true);
         model.addPatient(BOB);
-        model.addPatient(AMY);
+        model.addPatient(archivedAmy);
+        model.setPatientListScope(PatientScope.ALL);
         model.updateFilteredPatientList(patient -> patient.isSamePatient(BOB));
 
-        logic.showAllPatients();
+        // the first step removes the filter and keeps the scope, with archived patients last
+        logic.resetPatientList();
+        assertEquals(List.of(BOB, archivedAmy), logic.getFilteredPatientList());
+        assertEquals(PatientScope.ALL, logic.getPatientListScope().getValue());
 
-        assertEquals(List.of(AMY, BOB), logic.getFilteredPatientList()); // in name order
+        // the second goes back to the default scope
+        logic.resetPatientList();
+        assertEquals(List.of(BOB), logic.getFilteredPatientList());
+        assertEquals(PatientScope.DEFAULT, logic.getPatientListScope().getValue());
+
         // no command ran, so nothing was saved
         assertFalse(Files.exists(temporaryFolder.resolve("laiNurse.json")));
     }
@@ -228,6 +238,16 @@ public class LogicManagerTest {
         assertEquals(List.of("S1000003C", "S1000001A", "S1000002B"),
                 logic.getCompletions("viewappt --id s").stream().map(Completion::word).toList());
         assertEquals(List.of(), logic.getCompletions("list"));
+    }
+
+    @Test
+    public void getCompletions_archivedPatients_listsThemLast() {
+        model.addPatient(new PatientBuilder().withId("S1000001A").withName("Alpha").withArchived(true).build());
+        model.addPatient(new PatientBuilder().withId("S1000002B").withName("Bravo").build());
+        model.setPatientListScope(PatientScope.ALL);
+
+        assertEquals(List.of("S1000002B", "S1000001A"),
+                logic.getCompletions("archive S1").stream().map(Completion::word).toList());
     }
 
     /**

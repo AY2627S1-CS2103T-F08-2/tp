@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
@@ -134,6 +135,11 @@ public class CommandResult {
     /** The range whose appointments the appointment view should show, or null to keep what it shows. */
     private final AppointmentRange appointmentRange;
 
+    /**
+     * Whose appointments the appointment view should show, as part of its filter, or null to keep whose it shows.
+     */
+    private final PatientScope appointmentScope;
+
     /** Where the main window goes, or null to keep the selections of both views. */
     private final Navigation navigation;
 
@@ -144,7 +150,7 @@ public class CommandResult {
      * Constructs a {@code CommandResult} with the specified fields.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
-        this(feedbackToUser, showHelp, exit, null, null, null, false);
+        this(feedbackToUser, showHelp, exit, null, null, null, null, false);
     }
 
     /**
@@ -152,7 +158,7 @@ public class CommandResult {
      * {@code appointmentRange} on one page, with other fields set to their default value.
      */
     public CommandResult(String feedbackToUser, AppointmentRange appointmentRange) {
-        this(feedbackToUser, false, false, null, requireNonNull(appointmentRange), null, false);
+        this(feedbackToUser, false, false, null, requireNonNull(appointmentRange), null, null, false);
     }
 
     /**
@@ -160,16 +166,18 @@ public class CommandResult {
      * and other fields set to their default value.
      */
     public CommandResult(String feedbackToUser) {
-        this(feedbackToUser, false, false, null, null, null, false);
+        this(feedbackToUser, false, false, null, null, null, null, false);
     }
 
     private CommandResult(String feedbackToUser, boolean showHelp, boolean exit, View view,
-            AppointmentRange appointmentRange, Navigation navigation, boolean isSelectionCleared) {
+            AppointmentRange appointmentRange, PatientScope appointmentScope, Navigation navigation,
+            boolean isSelectionCleared) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
         this.view = view;
         this.appointmentRange = appointmentRange;
+        this.appointmentScope = appointmentScope;
         this.navigation = navigation;
         this.isSelectionCleared = isSelectionCleared;
     }
@@ -183,7 +191,17 @@ public class CommandResult {
         requireNonNull(view);
         checkArgument(navigation == null || navigation.view() == view,
                 "The view must be the one that the result navigates to.");
-        return new CommandResult(feedbackToUser, showHelp, exit, view, appointmentRange, navigation,
+        return new CommandResult(feedbackToUser, showHelp, exit, view, appointmentRange, appointmentScope,
+                navigation, isSelectionCleared);
+    }
+
+    /**
+     * Returns a copy of this result that asks the appointment view to show the appointments of the patients in
+     * {@code scope}, as part of its filter, as {@code viewappt} does with its range.
+     */
+    public CommandResult withAppointmentScope(PatientScope scope) {
+        requireNonNull(scope);
+        return new CommandResult(feedbackToUser, showHelp, exit, view, appointmentRange, scope, navigation,
                 isSelectionCleared);
     }
 
@@ -198,8 +216,8 @@ public class CommandResult {
         checkArgument(view == null || view == navigation.view(),
                 "The view must be the one that the result switches to.");
         checkArgument(!isSelectionCleared, "A result that clears the selection cannot select an entry.");
-        return new CommandResult(feedbackToUser, showHelp, exit, navigation.view(), appointmentRange, navigation,
-                false);
+        return new CommandResult(feedbackToUser, showHelp, exit, navigation.view(), appointmentRange,
+                appointmentScope, navigation, false);
     }
 
     /**
@@ -210,7 +228,8 @@ public class CommandResult {
      */
     public CommandResult withSelectionCleared() {
         checkArgument(navigation == null, "A result that navigates cannot also clear the selection.");
-        return new CommandResult(feedbackToUser, showHelp, exit, view, appointmentRange, null, true);
+        return new CommandResult(feedbackToUser, showHelp, exit, view, appointmentRange, appointmentScope, null,
+                true);
     }
 
     public String getFeedbackToUser() {
@@ -238,6 +257,14 @@ public class CommandResult {
      */
     public Optional<AppointmentRange> getAppointmentRange() {
         return Optional.ofNullable(appointmentRange);
+    }
+
+    /**
+     * Returns whose appointments the appointment view should show, as part of its filter, or
+     * {@code Optional#empty()} if whose it shows should not change.
+     */
+    public Optional<PatientScope> getAppointmentScope() {
+        return Optional.ofNullable(appointmentScope);
     }
 
     /**
@@ -271,13 +298,15 @@ public class CommandResult {
                 && exit == otherCommandResult.exit
                 && view == otherCommandResult.view
                 && Objects.equals(appointmentRange, otherCommandResult.appointmentRange)
+                && appointmentScope == otherCommandResult.appointmentScope
                 && Objects.equals(navigation, otherCommandResult.navigation)
                 && isSelectionCleared == otherCommandResult.isSelectionCleared;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit, view, appointmentRange, navigation, isSelectionCleared);
+        return Objects.hash(feedbackToUser, showHelp, exit, view, appointmentRange, appointmentScope, navigation,
+                isSelectionCleared);
     }
 
     @Override
@@ -288,6 +317,7 @@ public class CommandResult {
                 .add("exit", exit)
                 .add("view", view)
                 .add("appointmentRange", appointmentRange)
+                .add("appointmentScope", appointmentScope)
                 .add("navigation", navigation)
                 .add("isSelectionCleared", isSelectionCleared)
                 .toString();

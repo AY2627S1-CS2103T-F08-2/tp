@@ -5,6 +5,8 @@ import static seedu.address.logic.Messages.MESSAGE_PATIENT_NOT_FOUND;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ALL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ARCHIVED;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
@@ -16,8 +18,10 @@ import java.util.regex.Pattern;
 
 import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.TextNormalizer;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ViewAppointmentCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -32,7 +36,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
      * Parses the given {@code String} of arguments in the context of the ViewAppointmentCommand
      * and returns a ViewAppointmentCommand object for execution.
      * The arguments are a date with an optional patient ID, or a patient ID with an optional date range,
-     * or none of these.
+     * or none of these. Without a patient ID, {@code --all} or {@code --archived} may also be given.
      *
      * @throws ParseException if the user input does not conform to the expected format.
      */
@@ -40,14 +44,22 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT,
                 ViewAppointmentCommand.MESSAGE_USAGE);
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
-                PREFIX_FROM, PREFIX_TO, PREFIX_ID);
+                PREFIX_FROM, PREFIX_TO, PREFIX_ID, PREFIX_ALL, PREFIX_ARCHIVED);
         if (normalizedArgs.isBlank()) {
             // A plain viewappt shows this week
             return new ViewAppointmentCommand(Optional.empty(), Optional.empty(), Optional.empty());
         }
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO,
+                PREFIX_ALL, PREFIX_ARCHIVED);
         // Duplicate options are reported whatever the rest of the input looks like
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TO, PREFIX_ID);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TO, PREFIX_ID, PREFIX_ALL, PREFIX_ARCHIVED);
+        // A date after a scope option is read into its value, so the order is reported first, as after --id
+        verifyNoDateAfterScope(argMultimap, PREFIX_ALL);
+        verifyNoDateAfterScope(argMultimap, PREFIX_ARCHIVED);
+        PatientScope scope = ParserUtil.parseScope(argMultimap, invalidFormatMessage).orElse(PatientScope.DEFAULT);
+        if (scope != PatientScope.DEFAULT && argMultimap.getValue(PREFIX_ID).isPresent()) {
+            throw new ParseException(Messages.MESSAGE_SCOPE_WITH_ID);
+        }
         // A date after --id is read into the ID value, so the order is reported before that value is parsed
         verifyNoDateAfterId(argMultimap);
         // A second date is read into --from or --to, so the missing option is reported before the value is parsed
@@ -56,9 +68,9 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         String preamble = argMultimap.getPreamble();
         if (isDateLike(preamble)) {
             // A date that is not real gets the date error, as a date given to --from or --to does
-            return parseWithDate(argMultimap, ParserUtil.parseDate(preamble), invalidFormatMessage);
+            return parseWithDate(argMultimap, ParserUtil.parseDate(preamble), scope, invalidFormatMessage);
         }
-        return parseWithOptionalDateRange(argMultimap, invalidFormatMessage);
+        return parseWithOptionalDateRange(argMultimap, scope, invalidFormatMessage);
     }
 
     /**
@@ -67,14 +79,14 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
      * @throws ParseException if a range option is also present.
      */
     private static ViewAppointmentCommand parseWithDate(ArgumentMultimap argMultimap, LocalDate date,
-            String invalidFormatMessage) throws ParseException {
+            PatientScope scope, String invalidFormatMessage) throws ParseException {
         boolean hasRangeOptions = argMultimap.getValue(PREFIX_FROM).isPresent()
                 || argMultimap.getValue(PREFIX_TO).isPresent();
         if (hasRangeOptions) {
             throw new ParseException(invalidFormatMessage);
         }
         return new ViewAppointmentCommand(Optional.of(date), Optional.of(date),
-                parseOptionalPatientId(argMultimap));
+                parseOptionalPatientId(argMultimap), scope);
     }
 
     /**
@@ -83,7 +95,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
      * @throws ParseException if the user input does not conform to the expected format.
      */
     private static ViewAppointmentCommand parseWithOptionalDateRange(ArgumentMultimap argMultimap,
-            String invalidFormatMessage) throws ParseException {
+            PatientScope scope, String invalidFormatMessage) throws ParseException {
         if (!argMultimap.getPreamble().isEmpty()) {
             // A bare word that is not a date has no place in the range form
             throw new ParseException(invalidFormatMessage);
@@ -94,7 +106,19 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         if (startDate.isPresent() && endDate.isPresent() && startDate.get().isAfter(endDate.get())) {
             throw new ParseException(MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO);
         }
-        return new ViewAppointmentCommand(startDate, endDate, patientId);
+        return new ViewAppointmentCommand(startDate, endDate, patientId, scope);
+    }
+
+    /**
+     * Rejects a DATE that comes after {@code prefix}, a scope option that takes no value: the tokenizer reads the
+     * date as the option's value.
+     *
+     * @throws ParseException if the value of {@code prefix} is one word that can only be meant as a date.
+     */
+    private static void verifyNoDateAfterScope(ArgumentMultimap argMultimap, Prefix prefix) throws ParseException {
+        if (argMultimap.getValue(prefix).filter(ViewAppointmentCommandParser::isDateLike).isPresent()) {
+            throw new ParseException(MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
+        }
     }
 
     /**

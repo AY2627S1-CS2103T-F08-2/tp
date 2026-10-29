@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -20,6 +21,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.ModelManager;
+import seedu.address.model.PatientScope;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
 import seedu.address.testutil.PatientBuilder;
@@ -47,7 +49,7 @@ public class ListHeadersTest {
             onFxThread(() -> {
                 ObservableList<Patient> patients = FXCollections.observableArrayList(patients(count));
                 PatientListPanel panel = new PatientListPanel(patients, patients, FXCollections.observableArrayList(),
-                        id -> { }, () -> { });
+                        new SimpleObjectProperty<>(PatientScope.DEFAULT), id -> { }, () -> { });
                 StackPane root = new StackPane(panel.getRoot());
                 styleAndLayout(root);
                 assertEquals(endX(root, ".patient-row-appointment"), endX(root, ".list-header-count"), 0.5);

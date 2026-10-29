@@ -70,8 +70,7 @@ public class AddAppointmentCommand extends Command {
         AppointmentSchedule schedule = patient.getSchedule();
         AppointmentSchedule editedSchedule = schedule.add(toAdd);
         Appointment numbered = editedSchedule.getLastAt(toAdd);
-        Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
-                patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
+        Patient editedPatient = patient.withSchedule(editedSchedule);
         model.setPatient(patient, editedPatient);
 
         assert numbered.hasSameDateTime(toAdd) && numbered.getDetails().equals(toAdd.getDetails());
@@ -79,7 +78,7 @@ public class AddAppointmentCommand extends Command {
         String message = String.format(MESSAGE_ADD_APPOINTMENT_SUCCESS, numbered.getNumber(),
                 editedPatient.getName(), targetId, Messages.format(numbered));
         String warning = Messages.formatClashWarning(model.getAppointmentList(), created);
-        message += warning;
+        message += warning + Messages.formatArchivedNote(editedPatient);
         logger.fine("Added appointment #" + numbered.getNumber() + " of patient " + targetId
                 + (warning.isEmpty() ? "." : " with a clash warning."));
         return new CommandResult(message).withNavigation(Navigation.toAppointment(created));
