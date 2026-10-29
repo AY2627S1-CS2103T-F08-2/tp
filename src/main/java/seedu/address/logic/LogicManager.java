@@ -2,11 +2,13 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
@@ -19,6 +21,7 @@ import seedu.address.logic.parser.LaiNurseParser;
 import seedu.address.logic.parser.TabCompleter;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
@@ -104,8 +107,17 @@ public class LogicManager implements Logic {
     }
 
     @Override
-    public void showAllPatients() {
-        model.updateFilteredPatientList(Model.PREDICATE_SHOW_ALL_PATIENTS);
+    public void resetPatientList() {
+        if (model.hasPatientFilter()) {
+            model.updateFilteredPatientList(Model.PREDICATE_SHOW_ALL_PATIENTS);
+        } else {
+            model.setPatientListScope(PatientScope.DEFAULT);
+        }
+    }
+
+    @Override
+    public ObservableValue<PatientScope> getPatientListScope() {
+        return model.getPatientListScope();
     }
 
     @Override
@@ -120,9 +132,11 @@ public class LogicManager implements Logic {
 
     @Override
     public List<Completion> getCompletions(String commandText) {
+        // The sort is stable, so archived patients come last, and in each group, the shown patients come first
         List<PatientId> ids = Stream.concat(getFilteredPatientList().stream(), getPatientList().stream())
-                .map(Patient::getId)
                 .distinct()
+                .sorted(Comparator.comparing(Patient::isArchived))
+                .map(Patient::getId)
                 .toList();
         return TabCompleter.complete(commandText, ids);
     }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import seedu.address.logic.parser.CliSyntax;
 import seedu.address.logic.parser.Prefix;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentClashes;
@@ -23,6 +24,13 @@ public class Messages {
     public static final String MESSAGE_DUPLICATE_OPTION = "%1$s can be given only once.";
     public static final String MESSAGE_DUPLICATE_OPTIONS = "Each of these options can be given only once: %1$s.";
     public static final String MESSAGE_APPOINTMENT_NUMBER_NOT_FOUND = "Patient %1$s has no appointment #%2$d.";
+    public static final String MESSAGE_CONFLICTING_SCOPES = CliSyntax.PREFIX_ALL.toString().trim() + " and "
+            + CliSyntax.PREFIX_ARCHIVED.toString().trim() + " cannot be given together.";
+    public static final String MESSAGE_SCOPE_WITH_ID = "An ID shows that patient, archived or not, so "
+            + CliSyntax.PREFIX_ALL.toString().trim() + " and " + CliSyntax.PREFIX_ARCHIVED.toString().trim()
+            + " cannot be given with it.";
+    public static final String MESSAGE_ARCHIVED_PATIENT_NOTE = "\nNote: this patient is archived, so their "
+            + "appointments do not clash. To unarchive them: 'unarchive %1$s'";
     public static final String MESSAGE_CONFLICTING_FIELD_EDITS = "%1$s and %2$s cannot be given together. "
             + "%1$s replaces the value, or clears it if given no value, and %2$s adds to the end of it.";
 
@@ -68,6 +76,14 @@ public class Messages {
      */
     public static String format(Appointment appointment) {
         return appointment + appointment.getDetails().map(details -> "; Details: " + details).orElse("");
+    }
+
+    /**
+     * Returns a note that {@code patient} is archived, to add to the result of a change to their appointments, or an
+     * empty string if they are not archived.
+     */
+    public static String formatArchivedNote(Patient patient) {
+        return patient.isArchived() ? String.format(MESSAGE_ARCHIVED_PATIENT_NOTE, patient.getId()) : "";
     }
 
     /**

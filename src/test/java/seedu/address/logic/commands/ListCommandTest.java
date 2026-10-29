@@ -1,5 +1,7 @@
 package seedu.address.logic.commands;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
@@ -12,6 +14,7 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.PatientScope;
 import seedu.address.model.UserPrefs;
 
 /**
@@ -41,5 +44,30 @@ public class ListCommandTest {
     public void execute_listIsFiltered_showsEverything() {
         showPatientAtIndex(model, INDEX_FIRST_PATIENT);
         assertCommandSuccess(new ListCommand(), model, LIST_RESULT, expectedModel);
+    }
+
+    @Test
+    public void execute_scope_showsPatientsInScopeWithoutFilter() {
+        showPatientAtIndex(model, INDEX_FIRST_PATIENT);
+        expectedModel.setPatientListScope(PatientScope.ALL);
+        assertCommandSuccess(new ListCommand(PatientScope.ALL), model, new CommandResult(
+                ListCommand.MESSAGE_SUCCESS_ALL).withNavigation(Navigation.toView(View.PATIENTS)), expectedModel);
+
+        expectedModel.setPatientListScope(PatientScope.ARCHIVED);
+        assertCommandSuccess(new ListCommand(PatientScope.ARCHIVED), model, new CommandResult(
+                ListCommand.MESSAGE_SUCCESS_ARCHIVED).withNavigation(Navigation.toView(View.PATIENTS)), expectedModel);
+
+        // the default scope again
+        expectedModel.setPatientListScope(PatientScope.DEFAULT);
+        assertCommandSuccess(new ListCommand(), model, LIST_RESULT, expectedModel);
+    }
+
+    @Test
+    public void equals() {
+        assertEquals(new ListCommand(), new ListCommand(PatientScope.DEFAULT));
+        assertNotEquals(new ListCommand(), new ListCommand(PatientScope.ALL));
+        assertNotEquals(new ListCommand(), null);
+        assertEquals(ListCommand.class.getCanonicalName() + "{scope=ALL}",
+                new ListCommand(PatientScope.ALL).toString());
     }
 }

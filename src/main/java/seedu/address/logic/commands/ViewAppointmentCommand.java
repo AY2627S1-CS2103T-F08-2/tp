@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_PATIENT_NOT_FOUND;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ALL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ARCHIVED;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
@@ -20,6 +22,7 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentBetweenDatesPredicate;
 import seedu.address.model.patient.Patient;
@@ -30,6 +33,10 @@ import seedu.address.model.patient.PatientId;
  * patients who have one. With {@code --id}, only that patient's appointments are shown. Without a date, it shows
  * the weekly view of this week, or with {@code --id}, every appointment of that patient. In each case, the next
  * appointment from now is selected. The patient list is left as it is.
+ * <p>
+ * Whether archived patients' appointments show is part of the same filter, as the dates and {@code --id} are: the
+ * patients in the scope that the command gives, or the default scope. With {@code --id}, that patient's appointments
+ * show even if they are archived.
  */
 public class ViewAppointmentCommand extends Command {
 
@@ -39,8 +46,12 @@ public class ViewAppointmentCommand extends Command {
             + "range, in the appointment view. The patient list stays as it is. Without a date "
             + "or range, shows this week, or with " + PREFIX_ID + "alone, all of that patient's appointments. "
             + "A DATE must come before other options.\n"
+            + "Shows the appointments of patients who are not archived, or, with " + PREFIX_ALL.toString().trim()
+            + ", of all patients, or, with " + PREFIX_ARCHIVED.toString().trim()
+            + ", only of archived ones. An ID shows that patient's, archived or not.\n"
             + "Parameters: [DATE] or [" + PREFIX_FROM + "START_DATE] [" + PREFIX_TO + "END_DATE], with an optional ["
-            + PREFIX_ID + "ID] (dates in yyyy-MM-dd)\n"
+            + PREFIX_ID + "ID] or an optional [" + PREFIX_ALL.toString().trim() + " or "
+            + PREFIX_ARCHIVED.toString().trim() + "] (dates in yyyy-MM-dd)\n"
             + "Example: " + COMMAND_WORD + " 2026-10-15";
 
     public static final String MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW = "%1$d patient(s) with appointments on %2$s";
@@ -72,6 +83,7 @@ public class ViewAppointmentCommand extends Command {
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;
     private final Optional<PatientId> patientId; // narrows the appointments to one patient
+    private final PatientScope scope; // whose appointments show, unless patientId names one patient
     private final Clock clock; // gives today's date when no start date is given
 
     /**
@@ -99,14 +111,25 @@ public class ViewAppointmentCommand extends Command {
      */
     public ViewAppointmentCommand(Optional<LocalDate> startDate, Optional<LocalDate> endDate,
             Optional<PatientId> patientId) {
-        this(startDate, endDate, patientId, Clock.systemDefaultZone());
+        this(startDate, endDate, patientId, PatientScope.DEFAULT);
+    }
+
+    /**
+     * Creates a ViewAppointmentCommand to view the appointments of the patients in {@code scope} between two dates
+     * (inclusive), or of one patient, archived or not.
+     *
+     * @param scope Whose appointments are shown if {@code patientId} is empty.
+     */
+    public ViewAppointmentCommand(Optional<LocalDate> startDate, Optional<LocalDate> endDate,
+            Optional<PatientId> patientId, PatientScope scope) {
+        this(startDate, endDate, patientId, scope, Clock.systemDefaultZone());
     }
 
     /**
      * Creates a ViewAppointmentCommand that reads today's date from {@code clock}, so that tests can fix the date.
      */
     ViewAppointmentCommand(Optional<LocalDate> startDate, Optional<LocalDate> endDate, Clock clock) {
-        this(startDate, endDate, Optional.empty(), clock);
+        this(startDate, endDate, Optional.empty(), PatientScope.DEFAULT, clock);
     }
 
     /**
@@ -114,12 +137,21 @@ public class ViewAppointmentCommand extends Command {
      */
     ViewAppointmentCommand(Optional<LocalDate> startDate, Optional<LocalDate> endDate,
             Optional<PatientId> patientId, Clock clock) {
-        requireAllNonNull(startDate, endDate, patientId, clock);
+        this(startDate, endDate, patientId, PatientScope.DEFAULT, clock);
+    }
+
+    /**
+     * Creates a ViewAppointmentCommand that reads today's date from {@code clock}, so that tests can fix the date.
+     */
+    ViewAppointmentCommand(Optional<LocalDate> startDate, Optional<LocalDate> endDate,
+            Optional<PatientId> patientId, PatientScope scope, Clock clock) {
+        requireAllNonNull(startDate, endDate, patientId, scope, clock);
         checkArgument(startDate.isEmpty() || endDate.isEmpty() || !startDate.get().isAfter(endDate.get()),
                 MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO);
         this.startDate = startDate;
         this.endDate = endDate;
         this.patientId = patientId;
+        this.scope = scope;
         this.clock = clock;
     }
 
@@ -142,6 +174,7 @@ public class ViewAppointmentCommand extends Command {
         if (patientId.isEmpty()) {
             int count = countPatients(model, inRange);
             return new CommandResult(describeAll(count, start, end), new CommandResult.AppointmentRange(start, end))
+                    .withAppointmentScope(scope)
                     .withNavigation(Navigation.toView(View.APPOINTMENTS));
         }
 
@@ -153,6 +186,7 @@ public class ViewAppointmentCommand extends Command {
                 .count();
         return new CommandResult(describeForPatient(count, patient, start, end),
                 new CommandResult.AppointmentRange(start, end, id))
+                .withAppointmentScope(PatientScope.ALL)
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
     }
 
@@ -166,6 +200,7 @@ public class ViewAppointmentCommand extends Command {
         LocalDate sunday = DateUtil.getEndOfWeek(today);
         int count = countPatients(model, new AppointmentBetweenDatesPredicate(monday, sunday));
         return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW, count, monday, sunday))
+                .withAppointmentScope(scope)
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
     }
 
@@ -181,15 +216,18 @@ public class ViewAppointmentCommand extends Command {
         LocalDate last = appointments.isEmpty() ? today : appointments.get(appointments.size() - 1).getDate();
         return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW,
                 appointments.size(), patient.getName().fullName), new CommandResult.AppointmentRange(first, last, id))
+                .withAppointmentScope(PatientScope.ALL)
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
     }
 
     /**
-     * Returns how many patients {@code hasAppointmentShown} keeps, out of all patients, without changing the patient
-     * list.
+     * Returns how many patients in the command's scope {@code hasAppointmentShown} keeps, out of all patients, without
+     * changing the patient list.
      */
-    private static int countPatients(Model model, Predicate<Patient> hasAppointmentShown) {
-        return (int) model.getLaiNurse().getPatientList().stream().filter(hasAppointmentShown).count();
+    private int countPatients(Model model, Predicate<Patient> hasAppointmentShown) {
+        return (int) model.getLaiNurse().getPatientList().stream()
+                .filter(candidate -> scope.includes(candidate) && hasAppointmentShown.test(candidate))
+                .count();
     }
 
     /** Returns the status message for the appointments of every patient in the range. */
@@ -234,7 +272,8 @@ public class ViewAppointmentCommand extends Command {
         // The clock is not compared, as it is not part of what the user asked for
         return startDate.equals(otherViewAppointmentCommand.startDate)
                 && endDate.equals(otherViewAppointmentCommand.endDate)
-                && patientId.equals(otherViewAppointmentCommand.patientId);
+                && patientId.equals(otherViewAppointmentCommand.patientId)
+                && scope == otherViewAppointmentCommand.scope;
     }
 
     @Override
@@ -243,6 +282,7 @@ public class ViewAppointmentCommand extends Command {
                 .add("startDate", startDate)
                 .add("endDate", endDate)
                 .add("patientId", patientId)
+                .add("scope", scope)
                 .toString();
     }
 }

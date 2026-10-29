@@ -65,8 +65,7 @@ abstract class AppointmentStatusCommand extends Command {
                 && updatedAppointment.getDetails().equals(appointment.getDetails());
 
         AppointmentSchedule updatedSchedule = schedule.replace(appointment, updatedAppointment);
-        Patient updatedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
-                patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), updatedSchedule);
+        Patient updatedPatient = patient.withSchedule(updatedSchedule);
         model.setPatient(patient, updatedPatient);
 
         PatientAppointment updatedEntry = new PatientAppointment(updatedPatient, updatedAppointment);

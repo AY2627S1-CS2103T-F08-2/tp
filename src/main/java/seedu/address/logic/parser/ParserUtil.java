@@ -1,6 +1,8 @@
 package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ALL;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ARCHIVED;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -12,6 +14,7 @@ import seedu.address.commons.util.DateUtil;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
@@ -65,6 +68,31 @@ public class ParserUtil {
             return Optional.of(OptionalFieldEdit.append(parseValue.parse(appendValue.get())));
         }
         return Optional.empty();
+    }
+
+    /**
+     * Returns the scope that {@code PREFIX_ALL} or {@code PREFIX_ARCHIVED} gives in {@code argMultimap}, or
+     * {@code Optional#empty()} if neither is given. Neither option takes a value.
+     *
+     * @param invalidFormatMessage Message of the exception thrown if an option has a value.
+     * @throws ParseException if both options are given, either is given twice, or either has a value.
+     */
+    public static Optional<PatientScope> parseScope(ArgumentMultimap argMultimap, String invalidFormatMessage)
+            throws ParseException {
+        requireNonNull(argMultimap);
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ALL, PREFIX_ARCHIVED);
+        Optional<String> all = argMultimap.getValue(PREFIX_ALL);
+        Optional<String> archived = argMultimap.getValue(PREFIX_ARCHIVED);
+        if (all.isPresent() && archived.isPresent()) {
+            throw new ParseException(Messages.MESSAGE_CONFLICTING_SCOPES);
+        }
+        if (all.or(() -> archived).filter(value -> !value.isEmpty()).isPresent()) {
+            throw new ParseException(invalidFormatMessage);
+        }
+        if (all.isPresent()) {
+            return Optional.of(PatientScope.ALL);
+        }
+        return archived.isPresent() ? Optional.of(PatientScope.ARCHIVED) : Optional.empty();
     }
 
     /**

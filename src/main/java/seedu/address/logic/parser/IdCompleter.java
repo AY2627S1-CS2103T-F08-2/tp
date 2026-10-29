@@ -9,11 +9,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import seedu.address.logic.commands.AddAppointmentCommand;
+import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.MarkAppointmentCommand;
+import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.UnmarkAppointmentCommand;
 import seedu.address.logic.commands.ViewCommand;
 import seedu.address.model.patient.PatientId;
@@ -26,7 +28,8 @@ public class IdCompleter {
 
     /** Commands whose only parameter is the ID of an existing patient. */
     private static final Set<String> COMMANDS_TAKING_ONLY_ID =
-            Set.of(ViewCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD);
+            Set.of(ViewCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD, ArchiveCommand.COMMAND_WORD,
+                    UnarchiveCommand.COMMAND_WORD);
 
     /** Commands whose first parameter is the ID of an existing patient, with further arguments after it. */
     private static final Set<String> COMMANDS_TAKING_ID_FIRST =

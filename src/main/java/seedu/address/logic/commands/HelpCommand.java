@@ -30,6 +30,7 @@ public class HelpCommand extends Command {
         Map<String, String> map = new TreeMap<>();
         map.put(AddCommand.COMMAND_WORD, AddCommand.MESSAGE_USAGE);
         map.put(AddAppointmentCommand.COMMAND_WORD, AddAppointmentCommand.MESSAGE_USAGE);
+        map.put(ArchiveCommand.COMMAND_WORD, ArchiveCommand.MESSAGE_USAGE);
         map.put(ClearCommand.COMMAND_WORD, ClearCommand.MESSAGE_USAGE);
         map.put(DeleteCommand.COMMAND_WORD, DeleteCommand.MESSAGE_USAGE);
         map.put(DeleteAppointmentCommand.COMMAND_WORD, DeleteAppointmentCommand.MESSAGE_USAGE);
@@ -40,6 +41,7 @@ public class HelpCommand extends Command {
         map.put(HelpCommand.COMMAND_WORD, HelpCommand.MESSAGE_USAGE);
         map.put(ListCommand.COMMAND_WORD, ListCommand.MESSAGE_USAGE);
         map.put(MarkAppointmentCommand.COMMAND_WORD, MarkAppointmentCommand.MESSAGE_USAGE);
+        map.put(UnarchiveCommand.COMMAND_WORD, UnarchiveCommand.MESSAGE_USAGE);
         map.put(UnmarkAppointmentCommand.COMMAND_WORD, UnmarkAppointmentCommand.MESSAGE_USAGE);
         map.put(ViewCommand.COMMAND_WORD, ViewCommand.MESSAGE_USAGE);
         map.put(ViewAppointmentCommand.COMMAND_WORD, ViewAppointmentCommand.MESSAGE_USAGE);

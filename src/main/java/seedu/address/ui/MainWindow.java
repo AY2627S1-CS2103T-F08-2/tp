@@ -213,7 +213,8 @@ public class MainWindow extends UiPart<Stage> {
         patientDetailPanelPlaceholder.getChildren().add(patientDetailPanel.getRoot());
 
         patientListPanel = new PatientListPanel(logic.getFilteredPatientList(), logic.getPatientList(),
-                logic.getAppointmentList(), patientDetailPanel::show, this::focusViewTabs);
+                logic.getAppointmentList(), logic.getPatientListScope(), patientDetailPanel::show,
+                this::focusViewTabs);
         patientListPanelPlaceholder.getChildren().add(patientListPanel.getRoot());
 
         appointmentDetailPanel = new PatientDetailPanel(logic.getPatientList(), logic.getAppointmentList(),
@@ -394,17 +395,18 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Resets the current view, as Esc does, and keeps the selected entry so that it is seen among the rest. In the
-     * patient view, shows all patients, as the {@code list} command does, but without running a command, so the
-     * details panel and the status message stay as they are. In the appointment view, goes back from the
-     * appointments of a range to the weekly view of the selected appointment's week.
+     * Resets the current view by one step, as Esc does, and keeps the selected entry so that it is seen among the
+     * rest. In the patient view, removes the filter, such as that of {@code find}, or with no filter, goes back to
+     * the default scope, as {@code view} does, but without running a command, so the details panel and the status
+     * message stay as they are. In the appointment view, removes the filter of {@code viewappt}, as
+     * {@link AppointmentListPanel#reset} says.
      */
     private void resetView() {
         if (shownView == View.APPOINTMENTS) {
             appointmentListPanel.reset();
             return;
         }
-        logic.showAllPatients();
+        logic.resetPatientList();
         // Showing more rows can move the list's selection, so match it to the patient in the details panel
         patientDetailPanel.getShownId().ifPresentOrElse(patientListPanel::select, patientListPanel::clearSelection);
     }
@@ -582,6 +584,7 @@ public class MainWindow extends UiPart<Stage> {
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
 
             commandResult.getView().ifPresent(this::showView);
+            commandResult.getAppointmentScope().ifPresent(appointmentListPanel::setScope);
             commandResult.getAppointmentRange().ifPresent(appointmentListPanel::showRange);
 
             commandResult.getNavigation().ifPresent(navigation ->

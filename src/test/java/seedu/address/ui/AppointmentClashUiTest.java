@@ -219,7 +219,8 @@ public class AppointmentClashUiTest {
                     tomorrow.plusDays(1).toString()).build();
             ModelManager model = model(patient);
             PatientListPanel panel = new PatientListPanel(model.getFilteredPatientList(),
-                    model.getLaiNurse().getPatientList(), model.getAppointmentList(), ignored -> { }, () -> { });
+                    model.getLaiNurse().getPatientList(), model.getAppointmentList(), model.getPatientListScope(),
+                    ignored -> { }, () -> { });
             StackPane root = new StackPane(panel.getRoot());
             styleAndLayout(root, 800);
             assertEquals("Tomorrow", label(root, ".patient-row-appointment").getText());

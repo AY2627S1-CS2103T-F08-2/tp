@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.IllegalValueException;
@@ -29,6 +31,7 @@ import seedu.address.model.patient.Phone;
 class JsonAdaptedPatient {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Patient's %s field is missing!";
+    public static final String MESSAGE_ARCHIVED_CONSTRAINTS = "Patient's archived field must be a boolean.";
 
     private static final Logger logger = LogsCenter.getLogger(JsonAdaptedPatient.class);
 
@@ -39,6 +42,8 @@ class JsonAdaptedPatient {
     private final String medicalHistory; // null if not set
     private final String notes; // null if not set
     private final List<JsonAdaptedAppointment> appointments; // null if there are none
+    // null, or a NullNode if missing, if not archived; any other value but a boolean fails to load, as "marked" does
+    private final JsonNode archived;
 
     /**
      * Constructs a {@code JsonAdaptedPatient} with the given patient details.
@@ -47,7 +52,8 @@ class JsonAdaptedPatient {
     public JsonAdaptedPatient(@JsonProperty("id") String id, @JsonProperty("name") String name,
             @JsonProperty("phone") String phone, @JsonProperty("address") String address,
             @JsonProperty("medicalHistory") String medicalHistory, @JsonProperty("notes") String notes,
-            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments) {
+            @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments,
+            @JsonProperty("archived") JsonNode archived) {
         this.id = id;
         this.name = name;
         this.phone = phone;
@@ -55,6 +61,15 @@ class JsonAdaptedPatient {
         this.medicalHistory = medicalHistory;
         this.notes = notes;
         this.appointments = appointments;
+        this.archived = archived;
+    }
+
+    /**
+     * Constructs a {@code JsonAdaptedPatient} of a patient who is not archived, with the given patient details.
+     */
+    public JsonAdaptedPatient(String id, String name, String phone, String address, String medicalHistory,
+            String notes, List<JsonAdaptedAppointment> appointments) {
+        this(id, name, phone, address, medicalHistory, notes, appointments, null);
     }
 
     /**
@@ -70,6 +85,8 @@ class JsonAdaptedPatient {
         appointments = source.getSchedule().isEmpty()
                 ? null
                 : source.getSchedule().asList().stream().map(JsonAdaptedAppointment::new).toList();
+        // Saved only for an archived patient, so that a patient who is not archived is saved as before
+        archived = source.isArchived() ? BooleanNode.TRUE : null;
     }
 
     /**
@@ -140,8 +157,12 @@ class JsonAdaptedPatient {
             logger.fine("Assigned missing appointment numbers for patient " + modelId + ".");
         }
 
+        boolean isArchivedGiven = archived != null && !archived.isNull();
+        if (isArchivedGiven && !archived.isBoolean()) {
+            throw new IllegalValueException(MESSAGE_ARCHIVED_CONSTRAINTS);
+        }
         return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelNotes,
-                modelSchedule);
+                modelSchedule, isArchivedGiven && archived.booleanValue());
     }
 
 }

@@ -434,6 +434,15 @@
     -fx-text-fill: -lainurse-clash;
 }
 
+/* An archived patient is greyed out, as a passed appointment is. A selected one is less so, to stay readable. */
+.list-cell .patient-row-archived .label {
+    -fx-text-fill: #a3adb2;
+}
+
+.list-cell:filled:selected .patient-row-archived .label {
+    -fx-text-fill: #bcc3c7;
+}
+
 /* Patient details. Each selector names .patient-detail to win over ".patient-detail .label" below. */
 .patient-detail {
     -fx-background-color: #3c3e3f;

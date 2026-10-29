@@ -29,6 +29,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.PatientAppointment;
 
@@ -59,6 +60,8 @@ public class AppointmentListPanel extends UiPart<Region> {
     private AppointmentWeek week;
     /** The range shown on one page, or null in the weekly view. */
     private AppointmentRange range;
+    /** Whose appointments show, in the range or the week: part of the filter that {@code viewappt} sets. */
+    private PatientScope scope = PatientScope.DEFAULT;
     private AppointmentPage page;
     /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
     private ReadOnlyDoubleProperty rowGutter;
@@ -107,6 +110,15 @@ public class AppointmentListPanel extends UiPart<Region> {
     }
 
     /**
+     * Shows only the appointments of the patients in {@code scope}, on the page that is shown and on the pages that
+     * follow, until another {@code viewappt} or Esc. Selects nothing.
+     */
+    public void setScope(PatientScope scope) {
+        this.scope = requireNonNull(scope);
+        showPage();
+    }
+
+    /**
      * Shows the appointments in {@code range} on one page, in place of the weekly view, and selects the first
      * one. The weekly view keeps its week, which Esc goes back to.
      */
@@ -136,10 +148,15 @@ public class AppointmentListPanel extends UiPart<Region> {
 
     /**
      * Selects {@code appointment} on the page that is shown if it is there, so that a command run on a range stays
-     * on that range. Otherwise shows the weekly view of its week, in place of any range, and selects it there.
+     * on that range. Otherwise shows the weekly view of its week, in place of any range, and selects it there. If
+     * its patient is archived and archived patients' appointments are hidden, they show from then on.
      */
     public void showAppointment(PatientAppointment appointment) {
         requireNonNull(appointment);
+        if (!scope.includes(appointment.getPatient())) {
+            scope = PatientScope.ALL;
+            showPage();
+        }
         if (page.indexOf(appointment).isEmpty()) {
             week = AppointmentWeek.of(appointment.getAppointment().getDate());
             range = null;
@@ -163,18 +180,28 @@ public class AppointmentListPanel extends UiPart<Region> {
     }
 
     /**
-     * Resets the list, as Esc does: from a range, shows the weekly view of the selected appointment's week, or of
-     * this week if none is selected, and keeps the selected appointment, or else selects the next appointment from
-     * now. In the weekly view, there is no range to remove, so nothing changes.
+     * Resets the list, as Esc does, and keeps the selected appointment, or else selects the next appointment from
+     * now. From a range, removes the filter of {@code viewappt}: shows the weekly view of the selected appointment's
+     * week, or of this week if none is selected, with the appointments of the default scope, and of all patients if
+     * the selected appointment's patient is not in it. In the weekly view, goes back to the default scope. With
+     * nothing to remove, nothing changes.
      */
     public void reset() {
-        if (range == null) {
+        if (range == null && scope == PatientScope.DEFAULT) {
             return;
         }
         Optional<PatientAppointment> selected = page.getEntryAt(
                 appointmentListView.getSelectionModel().getSelectedIndex());
-        week = AppointmentWeek.of(selected.map(entry -> entry.getAppointment().getDate()).orElse(LocalDate.now()));
-        range = null;
+        if (range == null) {
+            scope = PatientScope.DEFAULT;
+        } else {
+            week = AppointmentWeek.of(selected.map(entry -> entry.getAppointment().getDate())
+                    .orElse(LocalDate.now()));
+            range = null;
+            boolean isSelectedHidden = selected.filter(entry -> !PatientScope.DEFAULT.includes(entry.getPatient()))
+                    .isPresent();
+            scope = isSelectedHidden ? PatientScope.ALL : PatientScope.DEFAULT;
+        }
         showPage();
         OptionalInt index = selected.map(page::indexOf).orElse(OptionalInt.empty());
         index.ifPresentOrElse(this::select, this::selectNextFromNow);
@@ -300,6 +327,7 @@ public class AppointmentListPanel extends UiPart<Region> {
         LocalDate today = pageTime.toLocalDate();
         // A range narrows the page to the appointments it contains, of its patient, if it has one
         List<PatientAppointment> pageAppointments = allAppointments.stream()
+                .filter(entry -> scope.includes(entry.getPatient()))
                 .filter(entry -> range == null || range.contains(entry))
                 .toList();
         page = range == null
@@ -325,7 +353,12 @@ public class AppointmentListPanel extends UiPart<Region> {
                     + AppointmentFormatter.formatRange(range.start(), range.end()));
             weekRelative.setText("");
         }
-        weekCount.setText(describeCount(page.getEntryCount()));
+        int archivedCount = (int) page.getRows().stream()
+                .filter(AppointmentPage.Entry.class::isInstance)
+                .map(AppointmentPage.Entry.class::cast)
+                .filter(entry -> entry.appointment().getPatient().isArchived())
+                .count();
+        weekCount.setText(describeCount(page.getEntryCount() - archivedCount, archivedCount, scope));
     }
 
     /**
@@ -415,11 +448,19 @@ public class AppointmentListPanel extends UiPart<Region> {
         }
     }
 
-    private static String describeCount(int count) {
-        return switch (count) {
-            case 0 -> "No appointments";
-            case 1 -> "1 appointment";
-            default -> count + " appointments";
+    /**
+     * Returns the count at the end of the header, in the same form as the patient list's, with no words, so that it
+     * fits beside a long range: the appointments of patients who are not archived, such as "49", and in brackets
+     * those of archived patients, such as "(2)". The default scope shows only the first, and
+     * {@link PatientScope#ARCHIVED} only the second.
+     */
+    static String describeCount(int unarchivedCount, int archivedCount, PatientScope scope) {
+        String unarchived = String.valueOf(unarchivedCount);
+        String archived = "(" + archivedCount + ")";
+        return switch (scope) {
+            case UNARCHIVED -> unarchived;
+            case ALL -> unarchived + " " + archived;
+            case ARCHIVED -> archived;
         };
     }
 

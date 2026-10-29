@@ -7,6 +7,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPatientAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PATIENT;
+import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.PatientScope;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.PatientId;
 
@@ -45,6 +47,18 @@ public class ViewCommandTest {
         Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
 
         assertCommandSuccess(new ViewCommand(bensonId), model, expectedResult, expectedModel);
+    }
+
+    @Test
+    public void execute_archivedPatient_showsAllPatientsAndSelectsPatient() {
+        model.setPatient(BENSON, BENSON.withArchived(true));
+        CommandResult expectedResult = new CommandResult("Showing patient: BENSON MEIER (S2345678B)")
+                .withNavigation(Navigation.toPatient(BENSON.getId()));
+        // The scope shows archived patients too, so that the patient's row is in the list to select
+        Model expectedModel = new ModelManager(model.getLaiNurse(), new UserPrefs());
+        expectedModel.setPatientListScope(PatientScope.ALL);
+
+        assertCommandSuccess(new ViewCommand(BENSON.getId()), model, expectedResult, expectedModel);
     }
 
     @Test

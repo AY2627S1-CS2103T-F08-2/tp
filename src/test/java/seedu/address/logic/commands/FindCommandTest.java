@@ -20,7 +20,9 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
+import seedu.address.model.PatientScope;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 
 /**
@@ -67,6 +69,31 @@ public class FindCommandTest {
     }
 
     @Test
+    public void execute_scope_searchesAndShowsThatScope() {
+        Patient archivedElle = ELLE.withArchived(true);
+        model.setPatient(ELLE, archivedElle);
+        expectedModel.setPatient(ELLE, archivedElle);
+        PatientContainsSubstringsPredicate predicate = prepareNamePredicate("Elle");
+
+        // without a scope, the default scope hides Elle
+        expectedModel.updateFilteredPatientList(predicate);
+        assertCommandSuccess(new FindCommand(predicate), model,
+                findResult(String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 0)), expectedModel);
+
+        // with --archived, the patient list shows archived patients from then on
+        expectedModel.setPatientListScope(PatientScope.ARCHIVED);
+        assertCommandSuccess(new FindCommand(predicate, Optional.of(PatientScope.ARCHIVED)), model,
+                findResult(String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 1)), expectedModel);
+        assertEquals(List.of(archivedElle), model.getFilteredPatientList());
+        assertEquals(PatientScope.ARCHIVED, model.getPatientListScope().getValue());
+
+        // a find without a scope keeps it
+        assertCommandSuccess(new FindCommand(predicate), model,
+                findResult(String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 1)), expectedModel);
+        assertFalse(new FindCommand(predicate).equals(new FindCommand(predicate, Optional.of(PatientScope.ALL))));
+    }
+
+    @Test
     public void execute_noMatchingSubstring_noPatientFound() {
         String expectedMessage = String.format(MESSAGE_PATIENTS_LISTED_OVERVIEW, 0);
         PatientContainsSubstringsPredicate predicate = prepareNamePredicate("Nobody");
@@ -91,7 +118,8 @@ public class FindCommandTest {
     public void toStringMethod() {
         PatientContainsSubstringsPredicate predicate = prepareNamePredicate("substring");
         FindCommand findCommand = new FindCommand(predicate);
-        String expected = FindCommand.class.getCanonicalName() + "{predicate=" + predicate + "}";
+        String expected = FindCommand.class.getCanonicalName() + "{predicate=" + predicate
+                + ", scope=Optional.empty}";
         assertEquals(expected, findCommand.toString());
     }
 

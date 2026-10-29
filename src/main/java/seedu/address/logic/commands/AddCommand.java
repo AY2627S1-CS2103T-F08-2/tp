@@ -42,6 +42,8 @@ public class AddCommand extends Command {
 
     public static final String MESSAGE_SUCCESS = "New patient added: %1$s";
     public static final String MESSAGE_DUPLICATE_PATIENT = "%1$s (%2$s) already exists in LaiNurse.";
+    public static final String MESSAGE_DUPLICATE_ARCHIVED_PATIENT = "%1$s (%2$s) already exists in LaiNurse, and is "
+            + "archived. To unarchive them: 'unarchive %2$s'";
 
     private final Patient toAdd;
 
@@ -59,11 +61,13 @@ public class AddCommand extends Command {
 
         Optional<Patient> existingPatient = model.findPatientById(toAdd.getId());
         if (existingPatient.isPresent()) {
-            throw new CommandException(String.format(MESSAGE_DUPLICATE_PATIENT,
-                    existingPatient.get().getName(), existingPatient.get().getId()));
+            Patient existing = existingPatient.get();
+            throw new CommandException(String.format(existing.isArchived() ? MESSAGE_DUPLICATE_ARCHIVED_PATIENT
+                    : MESSAGE_DUPLICATE_PATIENT, existing.getName(), existing.getId()));
         }
 
         model.addPatient(toAdd);
+        model.showInPatientList(toAdd);
         return new CommandResult(String.format(MESSAGE_SUCCESS, Messages.format(toAdd)))
                 .withNavigation(Navigation.toPatient(toAdd.getId()));
     }

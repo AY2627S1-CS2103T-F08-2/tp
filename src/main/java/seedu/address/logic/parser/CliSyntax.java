@@ -19,5 +19,9 @@ public class CliSyntax {
     public static final Prefix PREFIX_DATE = new Prefix("--date ");
     public static final Prefix PREFIX_DETAILS = new Prefix("--details ");
     public static final Prefix PREFIX_ADD_DETAILS = new Prefix("--add-details ");
+    /** Shows all patients, archived ones last. It takes no value. */
+    public static final Prefix PREFIX_ALL = new Prefix("--all ");
+    /** Shows only archived patients. It takes no value. */
+    public static final Prefix PREFIX_ARCHIVED = new Prefix("--archived ");
 
 }

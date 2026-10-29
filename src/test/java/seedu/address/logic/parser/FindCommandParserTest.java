@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ALL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.FindCommand;
+import seedu.address.model.PatientScope;
 import seedu.address.model.patient.PatientContainsSubstringsPredicate;
 
 public class FindCommandParserTest {
@@ -154,5 +156,25 @@ public class FindCommandParserTest {
         return new FindCommand(new PatientContainsSubstringsPredicate(Optional.ofNullable(id),
                 Optional.ofNullable(name), Optional.ofNullable(phone), Optional.ofNullable(address),
                 Optional.ofNullable(medicalHistory), Optional.ofNullable(notes)));
+    }
+
+    @Test
+    public void parse_scopeOption_returnsFindCommandWithScope() {
+        PatientContainsSubstringsPredicate mary = new PatientContainsSubstringsPredicate(Optional.empty(),
+                Optional.of("Mary"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        assertParseSuccess(parser, "--name Mary --all", new FindCommand(mary, Optional.of(PatientScope.ALL)));
+        assertParseSuccess(parser, "--archived --name Mary", new FindCommand(mary,
+                Optional.of(PatientScope.ARCHIVED)));
+        assertParseSuccess(parser, "--name Mary", new FindCommand(mary, Optional.empty()));
+    }
+
+    @Test
+    public void parse_scopeOptionMisused_throwsParseException() {
+        // a scope alone searches nothing
+        assertParseFailure(parser, "--all", INVALID_FORMAT_MESSAGE);
+        assertParseFailure(parser, "--name Mary --all --archived", Messages.MESSAGE_CONFLICTING_SCOPES);
+        assertParseFailure(parser, "--name Mary --all --all", Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ALL));
+        // the scope options take no value
+        assertParseFailure(parser, "--all Mary --name Jane", INVALID_FORMAT_MESSAGE);
     }
 }
