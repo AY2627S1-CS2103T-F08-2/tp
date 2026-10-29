@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 
 import org.junit.jupiter.api.Test;
@@ -89,5 +90,19 @@ public class DateUtilTest {
         assertThrows(DateTimeParseException.class,
                 "Text '2026-01-5' is not in the form yyyy-MM-dd: the day must have two digits", ()
                 -> DateUtil.parseDate("2026-01-5"));
+    }
+
+    @Test
+    public void parseTime_validTime_returnsLocalTime() {
+        assertEquals(LocalTime.of(9, 30), DateUtil.parseTime("09:30"));
+        assertEquals(LocalTime.of(23, 59), DateUtil.parseTime("23:59"));
+    }
+
+    @Test
+    public void parseTime_invalidTime_throwsDateTimeParseException() {
+        // out-of-range and one-digit fields are rejected, matching the UG's HH:mm format
+        assertThrows(DateTimeParseException.class, () -> DateUtil.parseTime("24:00"));
+        assertThrows(DateTimeParseException.class, () -> DateUtil.parseTime("09:60"));
+        assertThrows(DateTimeParseException.class, () -> DateUtil.parseTime("9:30"));
     }
 }
