@@ -53,7 +53,11 @@ public final class DateUtil {
                     "Text '" + date + "' is not in the form " + DATE_FORMAT + ": " + describeDateShapeError(date),
                     date, 0);
         }
-        return LocalDate.parse(date, DATE_FORMATTER);
+        // The shape and the formatter must agree, so that the date that parses is the date that was typed.
+        LocalDate parsed = LocalDate.parse(date, DATE_FORMATTER);
+        assert parsed.format(DATE_FORMATTER).equals(date)
+                : "A date of the right shape must round-trip through the formatter.";
+        return parsed;
     }
 
     /**
@@ -98,6 +102,10 @@ public final class DateUtil {
      * Returns the Sunday of the week, from Monday to Sunday, that contains {@code date}.
      */
     public static LocalDate getEndOfWeek(LocalDate date) {
-        return getStartOfWeek(date).plusDays(DAYS_IN_WEEK - 1);
+        LocalDate start = getStartOfWeek(date);
+        LocalDate end = start.plusDays(DAYS_IN_WEEK - 1);
+        assert getStartOfWeek(end).equals(start)
+                : "The end of the week must be in the same week as the start.";
+        return end;
     }
 }
