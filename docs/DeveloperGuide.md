@@ -1037,8 +1037,11 @@ The settings of #216 decide how marks, past clashes and archived patients behave
   `Model#setSettings`. `LogicManager` saves the user preferences after any command that changes them, so a changed
   setting is saved at once, not only when the app closes.
 * `AppointmentClashes#find` takes the settings and the current time. An appointment can clash if it has a time, and
-  is unmarked, of a patient who is not archived, and still to come, unless the settings let it clash anyway. The
-  clash warnings of `addappt`, `editappt`, `markappt` and `unmarkappt` and the clash marks in the UI all use it.
+  is unmarked, of a patient who is not archived, and still to come, unless the settings let it clash anyway. Without
+  past clashes, a marked appointment counts as past, so it does not clash either. The clash warnings of `addappt`,
+  `editappt`, `markappt` and `unmarkappt` and the clash marks in the UI all use it.
+* A marked appointment that clashes, which only `mark-stops-clashes off` allows, shows its pin in place of the boxed
+  `!`: `TimeMark` puts the pin first, and the style sheet colors it red in a clashing row.
 * A mark counts as done through `AppointmentFormatter#isOver`, which is true for an appointment that has passed, or,
   with `isMarkCountedAsDone`, that is marked. `AppointmentPage`, `AppointmentRow`, `DetailAppointments` and
   `PatientDetailPanel` use it, so a marked appointment is then greyed out, first in its day, and listed under
