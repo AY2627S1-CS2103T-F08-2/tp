@@ -123,7 +123,7 @@ refreshes its rows when any appointment changes, since a change to one patient c
 `PinMark#setColor` can color a row's pin, such as red, for settings that may change what a mark means (#216).
 Above the rows, a header says whether the list is filtered,
 and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
-as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. Both
+as filtered while it shows fewer patients than there are, so it needs no knowledge of `find`. Both
 lists end their header where their rows' last column ends, with `ListHeaders#alignEndWithRows`: the header's end
 padding is the list's inset, plus the width of its vertical scroll bar, plus a row's end padding, which is 12 pixels
 in both lists. While a list shows no scroll bar, each of its cells leaves the scroll bar's width empty at its end
@@ -410,7 +410,7 @@ reports the existing patient count message. The comparator orders patients by de
 `PatientNameComparator`, so ties are in name order. Each search replaces the previous filter and searches the full
 patient collection. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to patient records update
 the same observable view. Filtering and sorting do not change stored records or their order. The single-argument
-filter method clears sorting, as does a null comparator; existing calls from `list`, `add`, `edit` and `viewappt`
+filter method clears sorting, as does a null comparator; existing calls from `list`, `add` and `edit`
 therefore restore name order. The appointment list is independent of this sorting.
 
 ### Editing a patient's details
@@ -581,7 +581,7 @@ it succeeds, no appointment exists to select, and the deleted one cannot be high
 has no `Navigation`, while `getView()` still shows the appointments view, so `MainWindow` switches to that view with
 the selection cleared, and `AppointmentListPanel` keeps the page that was shown; the deleted row disappears from
 it. `Model#setPatient()` does not change the filter
-of the patient list, so a patient hidden by `find` or `viewappt` stays hidden there, as with `addappt`.
+of the patient list, so a patient hidden by `find` stays hidden there, as with `addappt`.
 
 ### Marking and unmarking appointments
 
@@ -607,11 +607,11 @@ Both commands allow any date; editing preserves completion until an explicit sta
 ### Viewing appointments by date
 
 `viewappt` takes one date, a range given by `--from`, `--to`, or both, or none of these. A plain `viewappt`, with none
-of these and no `--id`, shows the weekly view of this week: the command filters the patient list to the patients with
-an appointment from this week's Monday to its Sunday, and returns no range, only a `Navigation.toView`, so that
-`MainWindow` shows this week and selects the next appointment from now. The command and the weekly view's
-`AppointmentWeek` both take the week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the
-patient list and the week shown cannot disagree on its days. `ViewAppointmentCommandParser`
+of these and no `--id`, shows the weekly view of this week: the command counts the patients with an appointment
+from this week's Monday to its Sunday, and returns no range, only a `Navigation.toView`, so that `MainWindow` shows
+this week and selects the next appointment from now. The command and the weekly view's `AppointmentWeek` both take the
+week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the count and the week shown cannot
+disagree on its days. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
 that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
 `2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
@@ -625,8 +625,10 @@ when it runs: a missing start date becomes today, and a missing end date becomes
 default time zone. A package-private constructor takes another `Clock`, which lets tests fix the date. Because the
 command reads the date when it runs rather than when it is parsed, it never compares against a stale day. If only
 `--to` is given and its date is before today, the range would be empty, so the command shows an error that suggests
-adding `--from`. The command then filters the list with `AppointmentBetweenDatesPredicate`, which shows a patient if any
-of their appointments falls in the range. Only dates are compared, so a timed appointment earlier today still counts.
+adding `--from`. The command then counts, out of all patients, those that `AppointmentBetweenDatesPredicate` keeps:
+a patient with any appointment in the range. Only dates are compared, so a timed appointment earlier today still
+counts. `viewappt` never changes the patient list, its filter or its scope, as `find` never changes the appointment
+view: each view keeps what the nurse last chose for it.
 
 The command also returns the range in its `CommandResult`, as a `CommandResult.AppointmentRange` whose end is
 `LocalDate.MAX` if the range has no end, and a `Navigation.toView(View.APPOINTMENTS)`. `MainWindow` then tells
@@ -639,11 +641,22 @@ none. A date typed after the options ends up inside the ID value; when the value
 its punctuation keeps from being a patient ID, the parser reports that a `DATE` must come before other options,
 rather than failing the ID. A value that ends in anything else, such as a digit-only ID typed with a stray space
 (`--id 123 456`), fails as an ID. When the command runs, it looks the patient up by ID,
-and if none matches, fails with the invalid-patient-ID error and leaves the list and the page as they were. Otherwise
-it narrows the list to that patient with an appointment in the range, and counts that patient's appointments in the
-range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
+and if none matches, fails with the invalid-patient-ID error and leaves the page as it was. Otherwise
+it counts that patient's appointments in the range for the status message, so a patient seen twice on the day reads "2 appointment(s)", where the all-patients
 messages count patients. The `AppointmentRange` also carries the ID, and `AppointmentListPanel` filters the page's
 appointments by it, so the page shows only that patient's until Esc or another `viewappt` replaces the range.
+
+**Design considerations: whether `viewappt` filters the patient list**
+
+* **Alternative 1 (current choice):** `viewappt` shows its results only in the appointment view, and leaves the
+  patient list as it was.
+    * Pros: A nurse who found a patient with `find` and then checks the week still has that patient in the patient
+      list. Each view changes only through its own commands, so neither view changes behind the nurse's back.
+    * Cons: To see the patients with an appointment on a day as a list, the nurse reads them from the appointment view.
+* **Alternative 2:** `viewappt` also filters the patient list to the patients whose appointments it shows, as it did
+  before the appointment view existed.
+    * Pros: The **Patients** tab lists the patients of the day.
+    * Cons: The appointment view already shows them, and a `viewappt` silently replaces a `find` filter.
 
 **Design considerations: where appointment searches belong**
 
@@ -1428,7 +1441,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Weekly view**: The appointment view's page that shows one week, from Monday to Sunday, with a heading for every
   day; a plain `viewappt` shows it.
 * **Filter**: A criterion that limits what a list shows. The patient list shows only the patients matching it, such as
-  after `find` or `viewappt`; its header then says `Filtered patients`, and the list currently shown is also called
+  after `find`; its header then says `Filtered patients`, and the list currently shown is also called
   the displayed list. A `viewappt` range similarly limits the appointment page to the appointments in it.
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
@@ -1741,9 +1754,9 @@ testers are expected to do more *exploratory* testing.
        Expected: Two rows read `AARON TAN`, adjacent at the top: `S0245678G` above `S0356789H`, because the patient
        ID breaks the tie.
 
-### Viewing patients by appointment date
+### Viewing appointments by date in the appointment view
 
-1. Viewing patients who have an appointment on a given date
+1. Viewing the appointments on a given date
 
     1. Prerequisites: Start with the sample data. It anchors Alex Yeoh's appointments to `MON` 09:30 and to `BLOOD`,
        Bernice Yu's to `TUE`, and Irfan Ibrahim's to `WED` 14:00: `MON`, `TUE` and `WED` are the Monday, Tuesday and
@@ -1759,15 +1772,15 @@ testers are expected to do more *exploratory* testing.
        2026`, with no arrow buttons. The
        list shows only Irfan Ibrahim's appointment at 14:00, which is selected, and the
        panel beside the list shows their details with that appointment marked. The status message shows
-       `1 patient(s) with appointments on WED`. On the **Patients** tab, only Irfan Ibrahim is listed.
+       `1 patient(s) with appointments on WED`. The **Patients** tab still lists all patients.
 
     1. Test case: `viewappt BLOOD`, the date of Alex Yeoh's second appointment<br>
-       Expected: Only Alex Yeoh's appointment on that Monday is shown, and it is selected. On the **Patients** tab, only
-       Alex Yeoh is listed, because every appointment of each patient is checked.
+       Expected: Only Alex Yeoh's appointment on that Monday is shown, and it is selected. The status message shows
+       `1 patient(s) with appointments on BLOOD`, because every appointment of each patient is checked.
 
     1. Test case: `viewappt SAT`, a date on which no patient has an appointment<br>
        Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
-       `0 patient(s) with appointments on SAT`. The patient list on the **Patients** tab is empty.
+       `0 patient(s) with appointments on SAT`.
 
     1. Test case: `viewappt 2026-02-30`, an impossible date<br>
        Expected: The list is unchanged. The status message shows the date format error, as for
@@ -1783,27 +1796,26 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt`, with no date and no options<br>
        Expected: The weekly view of this week is shown, marked `This week`, with the arrow buttons above the list. Its
        next appointment from now is selected, or nothing if the week has none. The status message names this week's
-       Monday and Sunday, in your computer's time zone, and the **Patients** tab lists the patients with an
-       appointment this week. To see the appointments from today onwards instead, use `viewappt --from` with today's
+       Monday and Sunday, in your computer's time zone, and counts the patients with an appointment this week.
+       To see the appointments from today onwards instead, use `viewappt --from` with today's
        date.
 
     1. Other incorrect `viewappt` commands to try: `viewappt 2026-10-15 2026-10-20` (more than one date),
        `viewappt --from 2026-02-30` (an impossible date for an option)<br>
        Expected: The list is unchanged. The first shows the command format; the second shows the date format error.
 
-1. Viewing patients who have an appointment in a date range
+1. Viewing the appointments in a date range
 
     1. Prerequisites: The same sample data as above.
 
     1. Test case: `viewappt --from MON --to SAT`<br>
        Expected: Above the list is the heading for the range, e.g. `Mon 5 Oct – Sat 10 Oct 2026`. The list shows the
        three sample appointments, each day under its own heading, with the next appointment from now selected, or the
-       first on the page if all three have passed. On the
-       **Patients** tab, Alex Yeoh, Bernice Yu and Irfan Ibrahim are listed. The status message shows
+       first on the page if all three have passed. The status message shows
        `3 patient(s) with appointments from MON to SAT`.
 
     1. Test case: `viewappt --to TUE --from TUE`<br>
-       Expected: Bernice Yu's appointment is selected, and only Bernice Yu is listed on the **Patients** tab. The
+       Expected: Bernice Yu's appointment is selected. The
        options may be in any order, and a one-day range is the same as `viewappt TUE`, including the status
        message `1 patient(s) with appointments on TUE`.
 
@@ -1811,11 +1823,10 @@ testers are expected to do more *exploratory* testing.
        Expected: Above the list is the heading for the open range, e.g. `From Wed 7 Oct 2026`. The list shows Irfan
        Ibrahim's appointment and Alex Yeoh's blood test. The next appointment from now is selected: Alex Yeoh's if
        today is on or before that date and Irfan Ibrahim's has passed, and otherwise Irfan Ibrahim's, the first on the
-       page. Both are listed on the
-       **Patients** tab. The status message shows `2 patient(s) with appointments on or after WED`.
+       page. The status message shows `2 patient(s) with appointments on or after WED`.
 
     1. Test case: `viewappt --to 2099-12-31`<br>
-       Expected: Only patients with an appointment from today onwards are listed on the **Patients** tab. The range in
+       Expected: Only appointments from today onwards are shown. The range in
        the status message starts with today's date, which is the current date in your computer's time zone. If no
        appointment is in the range, the appointment page says `No appointments in this range.`
 
@@ -1839,14 +1850,13 @@ testers are expected to do more *exploratory* testing.
        Expected: Above the list is `S1234567A,` followed by the dates of Alex Yeoh's first and last appointments, e.g.
        `S1234567A, Mon 5 Oct – Mon 2 Nov 2026`. The page shows both of Alex Yeoh's
        appointments, past and upcoming, and the next one from now is selected: the insulin review on `MON` if it has
-       not passed yet, and otherwise the one on `BLOOD`. On the **Patients** tab, only Alex Yeoh is listed. The
+       not passed yet, and otherwise the one on `BLOOD`. The
        status message shows `2 appointment(s) of ALEX YEOH`.
 
     1. Test case: `viewappt --id S1234567A --from MON --to SAT`<br>
        Expected: Above the list is the heading for the range with the ID, e.g. `S1234567A, Mon 5 Oct – Sat 10 Oct 2026`.
        The list shows only Alex Yeoh's
-       appointment at 09:30 on the Monday, which is selected. On the
-       **Patients** tab, only Alex Yeoh is listed. The status message shows
+       appointment at 09:30 on the Monday, which is selected. The status message shows
        `1 appointment(s) of ALEX YEOH from MON to SAT`.
 
     1. Test case: `viewappt MON --id S1234567A`, a date before the option<br>
@@ -1863,7 +1873,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt --id S1234567A --from AFTER`, a range without appointments, where `AFTER` is any date after
        `BLOOD`, such as the day after it<br>
        Expected: The list says `No appointments in this range.`, and nothing is selected. The status message shows
-       `0 appointment(s) of ALEX YEOH on or after` the date. The patient list on the **Patients** tab is empty.
+       `0 appointment(s) of ALEX YEOH on or after` the date.
 
     1. Test case: `viewappt --id S9999999Z`, an ID that no patient has<br>
        Expected: The list is unchanged. The status message shows `No patient has the ID S9999999Z.`
@@ -1887,11 +1897,12 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `viewappt TUE`<br>
        Expected: Under Tuesday's heading, e.g. `Tue 6 Oct`, Bernice Yu's appointment comes first and shows `‒‒:‒‒`,
        then Eve Tan's at 15:00.
-       Bernice Yu's appointment is selected. Both are listed on the **Patients** tab. The status message shows
+       Bernice Yu's appointment is selected. The status message shows
        `2 patient(s) with appointments on TUE`.
 
-    1. Note: the patient list stays filtered after a `viewappt` command. After testing, enter `list` to show all
-       patients again.
+    1. Test case: `find --name alex`, then `viewappt TUE`, then click the **Patients** tab<br>
+       Expected: The patient list still shows only Alex Yeoh, as `find` left it. `viewappt` does not change the
+       patient list.
 
 1. _{ more test cases …​ }_
 
@@ -1941,8 +1952,8 @@ testers are expected to do more *exploratory* testing.
        Expected: The **Appointments** tab gets a blue border.
 
     1. Test case: after the test case above, press Left<br>
-       Expected: The **Patients** tab is selected. The list shows only Alex Yeoh, as `viewappt` left it, and the header
-       above it shows `Filtered patients` and `1 of 6`. The status message does not change. Right shows the appointment
+       Expected: The **Patients** tab is selected. The list shows all patients, as `viewappt` does not change it.
+       The status message does not change. Right shows the appointment
        view again, with the same page and selection as before.
 
     1. Test case: after the test cases above, press Down, then Up twice<br>

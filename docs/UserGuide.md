@@ -214,7 +214,7 @@ Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-hist
 * Phone numbers may contain digits, spaces, `+`, and `-`, and must contain at least three digits.
 * A new patient starts with no appointments. Set their appointments with [`addappt`](#adding-an-appointment-addappt).
 * Whitespace-delimited words beginning with `--` are reserved for options, including within text fields. Unknown options, misspellings, and `--name=value` syntax are rejected with the command usage instructions.
-* After a patient is added, the list shows all patients again, even if it was showing `find` or `viewappt` results. The list numbers of other patients may change. The new patient is selected in the list, and their details are shown, as `view` does.
+* After a patient is added, the list shows all patients again, even if it was showing `find` results. The list numbers of other patients may change. The new patient is selected in the list, and their details are shown, as `view` does.
 
 Examples:
 
@@ -294,22 +294,22 @@ Examples:
 
 ### Viewing appointments: `viewappt`
 
-Shows only the appointments on a date, or between two dates, in the appointment view, and lists the patients who have one. With `--id`, shows only that patient's appointments.
+Shows only the appointments on a date, or between two dates, in the appointment view. With `--id`, shows only that patient's appointments.
 
 Format: `viewappt [DATE]` or `viewappt [--from START_DATE] [--to END_DATE]`, each with an optional `[--id ID]`
 
 * All dates must be real dates, in the appointment date format described in the notes about the command format above.
 * `viewappt DATE` looks for appointments on `DATE`.
 * With `--from` and `--to`, the range includes both dates. Give one of them or both, in any order, each at most once.
-* Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week, and the patient list shows the patients with an appointment this week. To see the appointments from today onwards, give `--from` with today's date.
+* Without `--from`, the range starts today. Without `--to`, the range has no end. A plain `viewappt`, with no date and no options, shows the weekly view of this week. To see the appointments from today onwards, give `--from` with today's date.
 * "Today" is the current date on your computer, in its time zone. If your computer is set to a different time zone from where you visit patients, "today" can be a day off near midnight.
 * The `--from` date must not be later than the `--to` date. With only `--to`, the date must not be before today. To see past appointments, give `--from` too.
 * `DATE` cannot be combined with `--from` or `--to`, and comes before the options.
-* `--id ID` narrows the appointment page and the patient list to the patient with that ID, together with the date range. It combines with `DATE` (which must come first, as above) and with `--from` and `--to` in any order, and can be the only argument: `viewappt --id ID` shows every appointment of that patient, past and upcoming, on one page.
-* The ID is case-insensitive, as in [`view`](#viewing-a-patients-details-view), and must belong to a patient. If no patient has it, LaiNurse shows an error, and the appointment page and the patient list stay as they were.
+* `--id ID` narrows the appointment page to the patient with that ID, together with the date range. It combines with `DATE` (which must come first, as above) and with `--from` and `--to` in any order, and can be the only argument: `viewappt --id ID` shows every appointment of that patient, past and upcoming, on one page.
+* The ID is case-insensitive, as in [`view`](#viewing-a-patients-details-view), and must belong to a patient. If no patient has it, LaiNurse shows an error, and the appointment page stays as it was.
 * LaiNurse switches to the **Appointments** view, and shows the appointments in the range on one page, in place of the weekly view. With `--id`, the header above the list starts with the patient's ID. The next appointment from now is selected, and its patient's details are shown: on a page that includes today, the first that has not passed, and otherwise the first on the page. If no appointment is in the range, the page says `No appointments in this range.`
 * To go back to the weekly view, press Esc with the focus in the appointment list. The weekly view shows the week of the selected appointment, which stays selected, or this week if none is selected. See [The patient and appointment views](#the-patient-and-appointment-views).
-* The patient list, on the **Patients** tab, shows the patients with an appointment in the range, or with `--id`, only that patient if they have one. All of each patient's appointments are checked, with or without a time. Each patient appears once, in name order. If no appointment is in the range, the patient list is empty.
+* The patient list, on the **Patients** tab, stays as it was: `viewappt` does not change which patients it shows. Without `--id`, the status message says how many patients have an appointment in the range, such as `3 patient(s) with appointments on 2026-10-15`, and with `--id`, how many appointments that patient has in it.
 * Only dates are compared, so an appointment earlier today still counts.
 
 Examples:
@@ -327,7 +327,7 @@ Adds an appointment to a patient's schedule.
 
 Format: `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`
 
-* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` or `viewappt` filter, which stays, the patient may still be hidden when you return to the Patients view.
+* `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown: even under a `find` filter, which stays, the patient may still be hidden when you return to the Patients view.
 * `--date` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. Past dates are accepted. Without `--date`, LaiNurse says that the date is missing.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * `--date` and the optional `--details` can be in either order after the ID, and each may be given only once.
