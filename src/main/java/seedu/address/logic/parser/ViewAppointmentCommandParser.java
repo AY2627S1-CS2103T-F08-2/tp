@@ -14,8 +14,10 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.TextNormalizer;
 import seedu.address.logic.Messages;
@@ -32,6 +34,8 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
     /** One word of digits and punctuation, with at least one digit. */
     private static final Pattern DATE_LIKE_WORD = Pattern.compile("[\\d\\p{Punct}]*\\d[\\d\\p{Punct}]*");
 
+    private static final Logger logger = LogsCenter.getLogger(ViewAppointmentCommandParser.class);
+
     /**
      * Parses the given {@code String} of arguments in the context of the ViewAppointmentCommand
      * and returns a ViewAppointmentCommand object for execution.
@@ -47,6 +51,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
                 PREFIX_FROM, PREFIX_TO, PREFIX_ID, PREFIX_ALL, PREFIX_ARCHIVED);
         if (normalizedArgs.isBlank()) {
             // A plain viewappt shows this week
+            logger.fine("Parsed a plain viewappt: this week shows.");
             return new ViewAppointmentCommand(Optional.empty(), Optional.empty(), Optional.empty());
         }
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO,
@@ -58,6 +63,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         verifyNoDateAfterScope(argMultimap, PREFIX_ARCHIVED);
         PatientScope scope = ParserUtil.parseScope(argMultimap, invalidFormatMessage).orElse(PatientScope.DEFAULT);
         if (scope != PatientScope.DEFAULT && argMultimap.getValue(PREFIX_ID).isPresent()) {
+            logger.fine("Rejected viewappt: a scope option cannot combine with " + PREFIX_ID + ".");
             throw new ParseException(Messages.MESSAGE_SCOPE_WITH_ID);
         }
         // A date after --id is read into the ID value, so the order is reported before that value is parsed
@@ -83,8 +89,10 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         boolean hasRangeOptions = argMultimap.getValue(PREFIX_FROM).isPresent()
                 || argMultimap.getValue(PREFIX_TO).isPresent();
         if (hasRangeOptions) {
+            logger.fine("Rejected viewappt: a date cannot combine with " + PREFIX_FROM + " or " + PREFIX_TO + ".");
             throw new ParseException(invalidFormatMessage);
         }
+        logger.fine("Parsed a viewappt in the date form.");
         return new ViewAppointmentCommand(Optional.of(date), Optional.of(date),
                 parseOptionalPatientId(argMultimap), scope);
     }
@@ -98,14 +106,18 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
             PatientScope scope, String invalidFormatMessage) throws ParseException {
         if (!argMultimap.getPreamble().isEmpty()) {
             // A bare word that is not a date has no place in the range form
+            logger.fine("Rejected viewappt: a word that is not a date has no place before the options.");
             throw new ParseException(invalidFormatMessage);
         }
         Optional<PatientId> patientId = parseOptionalPatientId(argMultimap);
         Optional<LocalDate> startDate = parseOptionalDate(argMultimap, PREFIX_FROM);
         Optional<LocalDate> endDate = parseOptionalDate(argMultimap, PREFIX_TO);
         if (startDate.isPresent() && endDate.isPresent() && startDate.get().isAfter(endDate.get())) {
+            logger.fine("Rejected viewappt: the " + PREFIX_FROM + " date cannot be after the "
+                    + PREFIX_TO + " date.");
             throw new ParseException(MESSAGE_VIEW_APPOINTMENT_FROM_AFTER_TO);
         }
+        logger.fine("Parsed a viewappt in the range form.");
         return new ViewAppointmentCommand(startDate, endDate, patientId, scope);
     }
 
@@ -117,6 +129,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
      */
     private static void verifyNoDateAfterScope(ArgumentMultimap argMultimap, Prefix prefix) throws ParseException {
         if (argMultimap.getValue(prefix).filter(ViewAppointmentCommandParser::isDateLike).isPresent()) {
+            logger.fine("Rejected viewappt: a date cannot come after " + prefix + ".");
             throw new ParseException(MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
         }
     }
@@ -137,6 +150,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         String[] wordsInId = id.get().split("\\s+");
         String lastWord = wordsInId[wordsInId.length - 1];
         if (wordsInId.length > 1 && isMisplacedDate(lastWord)) {
+            logger.fine("Rejected viewappt: a date cannot come after " + PREFIX_ID + ".");
             throw new ParseException(MESSAGE_VIEW_APPOINTMENT_DATE_AFTER_OPTIONS);
         }
     }
@@ -157,6 +171,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         String[] words = value.get().split("\\s+");
         String lastWord = words[words.length - 1];
         if (words.length > 1 && isRealDate(lastWord)) {
+            logger.fine("Rejected viewappt: " + prefix + " takes only one date.");
             throw new ParseException(MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION);
         }
     }
@@ -207,6 +222,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
             return Optional.empty();
         }
         if (!id.get().isBlank() && !PatientId.isValidId(id.get().trim())) {
+            logger.fine("Rejected viewappt: no patient has the given ID.");
             throw new ParseException(String.format(MESSAGE_PATIENT_NOT_FOUND, TextNormalizer.normalize(id.get())));
         }
         return Optional.of(ParserUtil.parseId(id.get()));

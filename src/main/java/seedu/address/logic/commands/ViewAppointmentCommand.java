@@ -15,7 +15,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
@@ -82,6 +84,8 @@ public class ViewAppointmentCommand extends Command {
     public static final String MESSAGE_VIEW_APPOINTMENT_TWO_DATES_IN_ONE_OPTION =
             "Each date option takes only one date.\n"
                     + "Example: " + COMMAND_WORD + " " + PREFIX_FROM + "2026-10-01 " + PREFIX_TO + "2026-10-05";
+
+    private static final Logger logger = LogsCenter.getLogger(ViewAppointmentCommand.class);
 
     private final Optional<LocalDate> startDate;
     private final Optional<LocalDate> endDate;
@@ -170,12 +174,15 @@ public class ViewAppointmentCommand extends Command {
         LocalDate end = endDate.orElse(LocalDate.MAX);
         if (start.isAfter(end)) {
             // Only an end date without a start date can come before the start
+            logger.fine("Rejected viewappt: the " + PREFIX_TO + " date " + end
+                    + " is before today " + today + ".");
             throw new CommandException(String.format(MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY, end, today));
         }
 
         AppointmentBetweenDatesPredicate inRange = new AppointmentBetweenDatesPredicate(start, end);
         if (patientId.isEmpty()) {
             int count = countPatients(model, inRange);
+            logger.fine("Viewed appointments of " + count + " patient(s) from " + start + " to " + end + ".");
             return new CommandResult(describeAll(count, start, end), new CommandResult.AppointmentRange(start, end))
                     .withAppointmentScope(scope)
                     .withNavigation(Navigation.toView(View.APPOINTMENTS));
@@ -183,10 +190,14 @@ public class ViewAppointmentCommand extends Command {
 
         PatientId id = patientId.get();
         Patient patient = model.findPatientById(id)
-                .orElseThrow(() -> new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id)));
+                .orElseThrow(() -> {
+                    logger.fine("Rejected viewappt: no patient has the given ID.");
+                    return new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id));
+                });
         long count = patient.getSchedule().asList().stream()
                 .filter(appointment -> inRange.isWithinRange(appointment.getDate()))
                 .count();
+        logger.fine("Viewed " + count + " appointment(s) of patient " + id + " from " + start + " to " + end + ".");
         return new CommandResult(describeForPatient(count, patient, start, end),
                 new CommandResult.AppointmentRange(start, end, id))
                 .withAppointmentScope(scopeOf(patient))
@@ -205,6 +216,7 @@ public class ViewAppointmentCommand extends Command {
             case ALL -> MESSAGE_VIEW_APPOINTMENT_ALL_WITH_ARCHIVED_LISTED;
             case ARCHIVED -> MESSAGE_VIEW_APPOINTMENT_ARCHIVED_LISTED;
         };
+        logger.fine("Viewed this week's appointments.");
         return new CommandResult(message)
                 .withAppointmentScope(scope)
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
@@ -216,10 +228,14 @@ public class ViewAppointmentCommand extends Command {
      */
     private CommandResult showAllOfPatient(Model model, PatientId id, LocalDate today) throws CommandException {
         Patient patient = model.findPatientById(id)
-                .orElseThrow(() -> new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id)));
+                .orElseThrow(() -> {
+                    logger.fine("Rejected viewappt: no patient has the given ID.");
+                    return new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id));
+                });
         List<Appointment> appointments = patient.getSchedule().asList(); // in time order
         LocalDate first = appointments.isEmpty() ? today : appointments.get(0).getDate();
         LocalDate last = appointments.isEmpty() ? today : appointments.get(appointments.size() - 1).getDate();
+        logger.fine("Viewed all " + appointments.size() + " appointment(s) of patient " + id + ".");
         return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW,
                 appointments.size(), patient.getName().fullName), new CommandResult.AppointmentRange(first, last, id))
                 .withAppointmentScope(scopeOf(patient))
