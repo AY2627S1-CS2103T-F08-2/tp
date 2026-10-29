@@ -72,7 +72,7 @@ public class FindCommandParser implements Parser<FindCommand> {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
         }
 
-        if (TextNormalizer.normalize(value).isEmpty() || OPTION_PATTERN.matcher(value).find()) {
+        if (TextNormalizer.normalizeText(value).isEmpty() || OPTION_PATTERN.matcher(value).find()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
         }
         return Optional.of(value);

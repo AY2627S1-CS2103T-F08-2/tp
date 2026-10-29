@@ -395,9 +395,10 @@ curly double quotes surrounding a complete value are removed. Unknown options, u
 quotes cause a `ParseException` before the displayed list is changed. Words beginning with `--` remain reserved for
 options, including inside quoted values.
 
-`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by `TextNormalizer`, which like the
-command parser replaces horizontal spaces such as the non-breaking space with plain spaces before collapsing repeated
-whitespace. Each criterion
+`PatientContainsSubstringsPredicate` stores six optional string criteria normalized by
+`TextNormalizer#normalizeText`, which like the command parser replaces horizontal spaces such as the non-breaking space
+with plain spaces before collapsing repeated whitespace, and first removes invisible characters, as the free-text fields
+do. Each criterion
 is a literal, contiguous substring of its corresponding stored field. `countMatchingFields()` counts each matching
 supplied field once, and `test()` includes a patient when this count exceeds zero, preserving the OR search. Repeated
 occurrences of a substring in one field contribute only one match. Missing medical history or notes contributes no
@@ -513,7 +514,15 @@ between time zones, so changing the computer's time zone, or a daylight saving c
 A patient has optional `Notes` for other personal information not covered by the other fields, such as hobbies, pet peeves
 and daily routines. An appointment has optional `AppointmentDetails`, free text about the visit, such as what to do or
 bring. Both follow `MedicalHistory`: `TextNormalizer` trims the text, collapses its whitespace and stores it in upper case, and
-blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
+blank text is rejected.
+
+The free-text fields, `Name`, `Address`, `MedicalHistory`, `Notes` and `AppointmentDetails`, normalize with
+`TextNormalizer#normalizeText`, which first removes the zero-width space, the byte order mark and the word joiner (#218).
+Text pasted from a website can carry them, and they change nothing that is shown, so a name of them only would look
+blank, and `ALEX`, a zero-width space and `SMITH` would show as `ALEXSMITH` but not match a search for it. The
+zero-width non-joiner and joiner are kept, as Arabic, Persian and Urdu names and composite emoji need them.
+`PatientId`, `Phone` and `Appointment` keep `TextNormalizer#normalize`, which leaves invisible characters in, so that
+an ID or a date with one fails its check instead of silently matching another (#206). `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
 
 The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
 in a narrow panel. `AppointmentRow` shows its details under its patient, only when it has some. Before the time,
