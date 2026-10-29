@@ -24,13 +24,11 @@ public class LogsCenter {
     private static final int MAX_FILE_COUNT = 5;
     private static final int MAX_FILE_SIZE_IN_BYTES = (int) (Math.pow(2, 20) * 5); // 5MB
     private static final String LOG_FILE = "lainurse.log";
-    private static final Logger logger; // logger for this class
     private static Logger baseLogger; // to be used as the parent of all other loggers created by this class.
 
     // This static block ensures essential loggers are created early
     static {
         setBaseLogger();
-        logger = LogsCenter.getLogger(LogsCenter.class);
     }
 
     /**
@@ -85,15 +83,26 @@ public class LogsCenter {
         baseLogger.addHandler(consoleHandler);
 
         // add a FileHandler to log to a file
-        try {
-            FileHandler fileHandler = new FileHandler(LOG_FILE, MAX_FILE_SIZE_IN_BYTES, MAX_FILE_COUNT, true);
-            fileHandler.setFormatter(new SimpleFormatter());
-            fileHandler.setLevel(Level.ALL);
-            baseLogger.addHandler(fileHandler);
-        } catch (IOException e) {
-            logger.warning("Error adding file handler for logger.");
-        }
+        addFileHandler(baseLogger, LOG_FILE);
     }
 
+    /**
+     * Adds to {@code logger} a {@code FileHandler} that writes to the files named by {@code logFilePattern}, and
+     * returns true. If the file cannot be written, such as when it is read-only, logs a warning to the other handlers
+     * of {@code logger} instead, and returns false, so that LaiNurse still starts and logs to the console.
+     */
+    static boolean addFileHandler(Logger logger, String logFilePattern) {
+        try {
+            FileHandler fileHandler = new FileHandler(logFilePattern, MAX_FILE_SIZE_IN_BYTES, MAX_FILE_COUNT, true);
+            fileHandler.setFormatter(new SimpleFormatter());
+            fileHandler.setLevel(Level.ALL);
+            logger.addHandler(fileHandler);
+            return true;
+        } catch (IOException e) {
+            // Warns through the given logger, which already logs to the console, as this runs while the class is set up
+            logger.warning("Could not log to " + logFilePattern + ", so LaiNurse logs to the console only: " + e);
+            return false;
+        }
+    }
 
 }
