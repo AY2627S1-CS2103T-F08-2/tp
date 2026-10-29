@@ -1007,6 +1007,49 @@ patients' IDs last.
     * Cons: Every command that filters must remember to hide archived patients, and the scope is lost whenever a
       command replaces the filter.
 
+### Feature flags
+
+`FeatureFlags` in `commons.core` holds a switch for each feature that is built and tested, but not released to users
+yet. While a switch is off, LaiNurse behaves as if the feature did not exist: its commands are unknown to
+`LaiNurseParser`, `help` and Tab, and its settings keep their defaults. Releasing a feature means changing the initial
+value of its switch to `true`, and documenting the feature in the User Guide. Tests turn a switch on with its setter,
+and turn it off again after each test.
+
+**Aspect: How a feature is kept from users**
+
+* **Alternative 1 (Current choice):** A switch in one class, checked where the feature meets the user.
+    * Pros: The feature's code is merged, built and tested with everything else, and releasing it changes one line.
+    * Cons: Until the release, the code has paths that users cannot reach, and tests must cover them with the switch
+      on.
+* **Alternative 2:** Keep the feature on a branch until its release.
+    * Pros: The released code has no switch.
+    * Cons: The branch drifts from `master`, and merging it late changes much code at once.
+
+### Settings (not released yet)
+
+The settings of #216 decide how marks, past clashes and archived patients behave. They are behind
+`FeatureFlags#isSettingsEnabled()`.
+
+* `Settings` in `model` holds four switches: `isMarkStoppingClashes`, `isMarkCountedAsDone`, `isPastClashing` and
+  `isArchivedClashing`. Its defaults are how LaiNurse behaves without settings. `UserPrefs` saves it in
+  `preferences.json` with the window settings, and a file without it loads the defaults.
+* `ModelManager#getSettings()` gives the settings that apply as an `ObservableValue`: the user's once the feature is
+  released, and the defaults before. `set` (`SetCommand`) shows the settings, or turns one on or off with
+  `Model#setSettings`. `LogicManager` saves the user preferences after any command that changes them, so a changed
+  setting is saved at once, not only when the app closes.
+* `AppointmentClashes#find` takes the settings and the current time. An appointment can clash if it has a time, and
+  is unmarked, of a patient who is not archived, and still to come, unless the settings let it clash anyway. Without
+  past clashes, a marked appointment counts as past, so it does not clash either. The clash warnings of `addappt`,
+  `editappt`, `markappt` and `unmarkappt` and the clash marks in the UI all use it.
+* A marked appointment that clashes, which only `mark-stops-clashes off` allows, shows its pin in place of the boxed
+  `!`: `TimeMark` puts the pin first, and the style sheet colors it red in a clashing row.
+* A mark counts as done through `AppointmentFormatter#isOver`, which is true for an appointment that has passed, or,
+  with `isMarkCountedAsDone`, that is marked. `AppointmentPage`, `AppointmentRow`, `DetailAppointments` and
+  `PatientDetailPanel` use it, so a marked appointment is then greyed out, first in its day, and listed under
+  **Past**. `Appointment#hasPassed` moved into the model, so that clashes and the UI agree on what has passed.
+* The panels follow the settings through `useSettings`, which `MainWindow` calls with `Logic#getSettings()`, and
+  refresh when they change.
+
 
 --------------------------------------------------------------------------------------------------------------------
 

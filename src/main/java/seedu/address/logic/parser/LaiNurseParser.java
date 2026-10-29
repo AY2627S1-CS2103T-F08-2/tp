@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
@@ -22,6 +23,7 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.MarkAppointmentCommand;
+import seedu.address.logic.commands.SetCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.UnmarkAppointmentCommand;
 import seedu.address.logic.commands.ViewAppointmentCommand;
@@ -83,6 +85,12 @@ public class LaiNurseParser {
             case ViewCommand.COMMAND_WORD -> new ViewCommandParser().parse(arguments);
             case ExitCommand.COMMAND_WORD -> new ExitCommand();
             case HelpCommand.COMMAND_WORD -> new HelpCommandParser().parse(arguments);
+            case SetCommand.COMMAND_WORD -> {
+                if (!FeatureFlags.isSettingsEnabled()) {
+                    throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
+                }
+                yield new SetCommandParser().parse(arguments);
+            }
             default -> {
                 logger.finer("This user input caused a ParseException: " + userInput);
                 throw new ParseException(MESSAGE_UNKNOWN_COMMAND);

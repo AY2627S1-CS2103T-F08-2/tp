@@ -4,13 +4,12 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.PatientAppointment;
 
@@ -161,13 +160,17 @@ public final class AppointmentFormatter {
      */
     public static boolean hasPassed(Appointment appointment, LocalDateTime now) {
         requireNonNull(appointment);
-        requireNonNull(now);
-        LocalDate today = now.toLocalDate();
-        if (!isToday(appointment, today)) {
-            return isPast(appointment, today);
-        }
-        LocalTime thisMinute = now.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
-        return appointment.getTime().map(time -> time.isBefore(thisMinute)).orElse(false);
+        return appointment.hasPassed(now);
+    }
+
+    /**
+     * Returns true if {@code appointment} is over at {@code now}: it has passed, or, if {@code settings} count a
+     * mark as done (#216), it is marked. An appointment that is over is greyed out, listed under Past in the
+     * details, and never the next appointment.
+     */
+    public static boolean isOver(Appointment appointment, LocalDateTime now, Settings settings) {
+        requireNonNull(settings);
+        return hasPassed(appointment, now) || settings.isMarkCountedAsDone() && appointment.isDone();
     }
 
     /**

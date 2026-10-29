@@ -12,6 +12,7 @@ import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.AppointmentSchedule;
@@ -57,6 +58,20 @@ public class DetailAppointmentsTest {
         assertEquals(4, appointments.getPastCount());
         assertEquals("3 upcoming", appointments.describeUpcoming());
         assertEquals("4 of 4", appointments.describePast());
+    }
+
+    @Test
+    public void of_markCountedAsDone_markedListedAsPast() {
+        Appointment markedNextWeek = NEXT_WEEK.withDone(true);
+        AppointmentSchedule schedule = schedule(markedNextWeek, NEXT_MONTH, YESTERDAY);
+        // a mark counted as done (#216) makes an appointment past, wherever it is in time
+        DetailAppointments appointments = DetailAppointments.of(schedule, NOW, Optional.empty(),
+                Settings.DEFAULT.with(Settings.Key.MARK_COUNTS_AS_DONE, true));
+        assertEquals(List.of(NEXT_MONTH.toString()), names(appointments.getUpcoming()));
+        assertEquals(List.of(markedNextWeek.toString(), YESTERDAY.toString()), names(appointments.getPastShown()));
+        // the default settings keep it upcoming
+        assertEquals(List.of(markedNextWeek.toString(), NEXT_MONTH.toString()),
+                names(DetailAppointments.of(schedule, NOW, Optional.empty()).getUpcoming()));
     }
 
     @Test
@@ -110,6 +125,11 @@ public class DetailAppointmentsTest {
 
     private static List<String> values(List<Appointment> appointments) {
         return appointments.stream().map(appointment -> appointment.value).toList();
+    }
+
+    /** Returns the dates and times of {@code appointments}, as a schedule numbers its appointments anew. */
+    private static List<String> names(List<Appointment> appointments) {
+        return appointments.stream().map(Appointment::toString).toList();
     }
 
     private static AppointmentSchedule schedule(Appointment... appointments) {

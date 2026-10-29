@@ -108,8 +108,8 @@ public class EditAppointmentCommand extends Command {
             message += String.format(MESSAGE_MOVED_FROM, oldAppointment);
         }
         PatientAppointment editedEntry = new PatientAppointment(editedPatient, editedAppointment);
-        String warning = Messages.formatClashWarning(model.getAppointmentList(), editedEntry);
-        message += warning + Messages.formatArchivedNote(editedPatient);
+        String warning = Messages.formatClashWarning(model, editedEntry);
+        message += warning + Messages.formatArchivedNote(editedPatient, model.getSettings().getValue());
         logger.fine("Edited appointment #" + editedAppointment.getNumber() + " of patient " + targetId
                 + (warning.isEmpty() ? "." : " with a clash warning."));
         return new CommandResult(message).withNavigation(Navigation.toAppointment(editedEntry));

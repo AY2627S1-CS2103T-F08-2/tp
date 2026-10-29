@@ -71,7 +71,8 @@ abstract class AppointmentStatusCommand extends Command {
         PatientAppointment updatedEntry = new PatientAppointment(updatedPatient, updatedAppointment);
         String message = String.format(successMessage, updatedAppointment.getNumber(), updatedPatient.getName(),
                 targetId, Messages.format(updatedAppointment));
-        String warning = done ? "" : Messages.formatClashWarning(model.getAppointmentList(), updatedEntry);
+        // A marked appointment clashes only if the settings say so (#216), and then a mark warns as well
+        String warning = Messages.formatClashWarning(model, updatedEntry);
         logger.fine("Updated appointment #" + updatedAppointment.getNumber() + " of patient " + targetId
                 + " using " + commandWord + (warning.isEmpty() ? "." : " with a clash warning."));
         return new CommandResult(message + warning).withNavigation(Navigation.toAppointment(updatedEntry));

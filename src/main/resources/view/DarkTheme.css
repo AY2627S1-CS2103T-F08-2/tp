@@ -829,3 +829,12 @@
 .patient-detail .detail-appointment-today .pin-mark .pin-mark-shape {
     -fx-fill: -lainurse-urgent;
 }
+
+/*
+ * A marked appointment that clashes, which a setting allows (#216), shows its pin in red in place of the boxed "!",
+ * also when it has passed or is today. It comes after the other pin colors, so that it wins over them.
+ */
+.list-cell .appointment-entry-clash .pin-mark .pin-mark-shape,
+.patient-detail .detail-appointment-clash .pin-mark .pin-mark-shape {
+    -fx-fill: -lainurse-clash;
+}

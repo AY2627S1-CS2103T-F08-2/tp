@@ -4,8 +4,10 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
@@ -117,6 +119,21 @@ public class Appointment implements Comparable<Appointment> {
      */
     public Appointment withoutNumber() {
         return isNumbered() ? new Appointment(null, value, getDetails(), done) : this;
+    }
+
+    /**
+     * Returns true if this appointment has passed at {@code now}: it is on an earlier day, or earlier today at a time
+     * before the minute of {@code now}. An appointment today with no time has not passed, as it can still be at any
+     * time of the day.
+     */
+    public boolean hasPassed(LocalDateTime now) {
+        requireNonNull(now);
+        LocalDate today = now.toLocalDate();
+        if (!date.equals(today)) {
+            return date.isBefore(today);
+        }
+        LocalTime thisMinute = now.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
+        return time != null && time.isBefore(thisMinute);
     }
 
     /**

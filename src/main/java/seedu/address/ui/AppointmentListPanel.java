@@ -10,8 +10,11 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -30,6 +33,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.model.PatientScope;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.PatientAppointment;
 
@@ -52,6 +56,8 @@ public class AppointmentListPanel extends UiPart<Region> {
     private static final String ENTRY_CELL_STYLE_CLASS = "appointment-entry-cell";
 
     private final ObservableList<PatientAppointment> allAppointments;
+    /** The settings that decide clashes and which appointments are over (#216). */
+    private final ObjectProperty<Settings> settings = new SimpleObjectProperty<>(Settings.DEFAULT);
     private final Consumer<Optional<PatientAppointment>> onAppointmentChosen;
     private final Runnable onUpAtTop;
     private final ObservableList<AppointmentPage.Row> rows = FXCollections.observableArrayList();
@@ -105,8 +111,18 @@ public class AppointmentListPanel extends UiPart<Region> {
         appointmentListView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
         appointmentListView.setOnMouseClicked(event -> chooseSelected());
         allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> refresh());
+        settings.addListener((unused, oldSettings, newSettings) -> refresh());
         week = AppointmentWeek.of(LocalDate.now());
         showPage();
+    }
+
+    /**
+     * Shows the appointments by {@code newSettings} from now on, such as the settings that the user changes (#216),
+     * in place of the default ones.
+     */
+    public void useSettings(ObservableValue<Settings> newSettings) {
+        requireNonNull(newSettings);
+        settings.bind(newSettings);
     }
 
     /**
@@ -331,8 +347,8 @@ public class AppointmentListPanel extends UiPart<Region> {
                 .filter(entry -> range == null || range.contains(entry))
                 .toList();
         page = range == null
-                ? AppointmentPage.ofWeek(week, pageAppointments, pageTime)
-                : AppointmentPage.ofRange(range.start(), range.end(), pageAppointments, pageTime);
+                ? AppointmentPage.ofWeek(week, pageAppointments, pageTime, settings.get())
+                : AppointmentPage.ofRange(range.start(), range.end(), pageAppointments, pageTime, settings.get());
         appointmentListView.getSelectionModel().clearSelection();
         rows.setAll(page.getRows());
         appointmentListView.scrollTo(0);
@@ -517,8 +533,9 @@ public class AppointmentListPanel extends UiPart<Region> {
         }
 
         private Node showEntry(AppointmentPage.Entry entry) {
-            boolean isClashing = !AppointmentClashes.find(allAppointments, entry.appointment()).isEmpty();
-            entryRow.show(entry, pageTime, isClashing);
+            boolean isClashing = !AppointmentClashes.find(allAppointments, entry.appointment(), settings.get(),
+                    pageTime).isEmpty();
+            entryRow.show(entry, pageTime, isClashing, settings.get());
             return entryRow.getRoot();
         }
     }

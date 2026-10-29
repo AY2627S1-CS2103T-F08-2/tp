@@ -13,6 +13,7 @@ import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.PatientAppointment;
 
@@ -47,16 +48,20 @@ public final class AppointmentPage {
     private final int entryCount;
     /** The time that the page is for, which decides the appointments that have passed. */
     private final LocalDateTime now;
+    /** The settings, which decide whether a marked appointment counts as over (#216). */
+    private final Settings settings;
 
-    private AppointmentPage(List<LocalDate> days, List<PatientAppointment> appointments, LocalDateTime now) {
+    private AppointmentPage(List<LocalDate> days, List<PatientAppointment> appointments, LocalDateTime now,
+            Settings settings) {
         this.days = List.copyOf(days);
         this.now = now;
+        this.settings = settings;
         List<Row> pageRows = new ArrayList<>();
         int number = 0;
         for (LocalDate day : days) {
             List<PatientAppointment> onDay = appointments.stream()
                     .filter(entry -> entry.getAppointment().getDate().equals(day))
-                    .sorted(orderOnDay(day, now))
+                    .sorted(orderOnDay(day, now, settings))
                     .toList();
             pageRows.add(new DayHeading(day, onDay.size()));
             for (PatientAppointment entry : onDay) {
@@ -70,26 +75,26 @@ public final class AppointmentPage {
 
     /**
      * Returns the order of the appointments on {@code day}: by time, with those that have no time first. Today,
-     * those with no time come after the appointments that have passed at {@code now}, and before the rest.
+     * those with no time come after the appointments that are over at {@code now}, and before the rest. If
+     * {@code settings} count a mark as done, marked appointments come first on any other day too.
      */
-    private static Comparator<PatientAppointment> orderOnDay(LocalDate day, LocalDateTime now) {
-        if (!day.equals(now.toLocalDate())) {
-            return Comparator.naturalOrder();
-        }
-        Comparator<PatientAppointment> byGroup = Comparator.comparingInt(entry -> groupToday(entry, now));
+    private static Comparator<PatientAppointment> orderOnDay(LocalDate day, LocalDateTime now, Settings settings) {
+        Comparator<PatientAppointment> byGroup = day.equals(now.toLocalDate())
+                ? Comparator.comparingInt(entry -> groupToday(entry, now, settings))
+                : Comparator.comparingInt(entry -> settings.isMarkCountedAsDone()
+                        && entry.getAppointment().isDone() ? 0 : 1);
         return byGroup.thenComparing(Comparator.naturalOrder());
     }
 
     /**
-     * Returns where an appointment today goes: 0 if it has passed, 1 if it has no time, and 2 if it is still
-     * to come.
+     * Returns where an appointment today goes: 0 if it is over, 1 if it has no time, and 2 if it is still to come.
      */
-    private static int groupToday(PatientAppointment entry, LocalDateTime now) {
+    private static int groupToday(PatientAppointment entry, LocalDateTime now, Settings settings) {
         Appointment appointment = entry.getAppointment();
-        if (appointment.getTime().isEmpty()) {
-            return 1;
+        if (AppointmentFormatter.isOver(appointment, now, settings)) {
+            return 0;
         }
-        return AppointmentFormatter.hasPassed(appointment, now) ? 0 : 2;
+        return appointment.getTime().isEmpty() ? 1 : 2;
     }
 
     /**
@@ -98,8 +103,17 @@ public final class AppointmentPage {
      */
     public static AppointmentPage ofWeek(AppointmentWeek week, List<PatientAppointment> appointments,
             LocalDateTime now) {
-        requireAllNonNull(week, appointments, now);
-        return new AppointmentPage(week.getDays(), keep(appointments, week::contains), now);
+        return ofWeek(week, appointments, now, Settings.DEFAULT);
+    }
+
+    /**
+     * Returns the page of {@code week}, as {@link #ofWeek(AppointmentWeek, List, LocalDateTime)} does, under
+     * {@code settings}.
+     */
+    public static AppointmentPage ofWeek(AppointmentWeek week, List<PatientAppointment> appointments,
+            LocalDateTime now, Settings settings) {
+        requireAllNonNull(week, appointments, now, settings);
+        return new AppointmentPage(week.getDays(), keep(appointments, week::contains), now, settings);
     }
 
     /**
@@ -109,7 +123,16 @@ public final class AppointmentPage {
      */
     public static AppointmentPage ofRange(LocalDate start, LocalDate end, List<PatientAppointment> appointments,
             LocalDateTime now) {
-        requireAllNonNull(start, end, appointments, now);
+        return ofRange(start, end, appointments, now, Settings.DEFAULT);
+    }
+
+    /**
+     * Returns the page of the range, as {@link #ofRange(LocalDate, LocalDate, List, LocalDateTime)} does, under
+     * {@code settings}.
+     */
+    public static AppointmentPage ofRange(LocalDate start, LocalDate end, List<PatientAppointment> appointments,
+            LocalDateTime now, Settings settings) {
+        requireAllNonNull(start, end, appointments, now, settings);
         List<PatientAppointment> inRange = keep(appointments,
                 date -> !date.isBefore(start) && !date.isAfter(end));
         List<LocalDate> days = inRange.stream()
@@ -117,7 +140,7 @@ public final class AppointmentPage {
                 .distinct()
                 .sorted()
                 .toList();
-        return new AppointmentPage(days, inRange, now);
+        return new AppointmentPage(days, inRange, now, settings);
     }
 
     private static List<PatientAppointment> keep(List<PatientAppointment> appointments, Predicate<LocalDate> test) {
@@ -212,7 +235,7 @@ public final class AppointmentPage {
                 && !today.isBefore(days.get(0)) && !today.isAfter(days.get(days.size() - 1));
         if (isTodaySpanned) {
             OptionalInt notPassed = findEntry(IntStream.range(0, rows.size()), i -> !AppointmentFormatter
-                    .hasPassed(((Entry) rows.get(i)).appointment().getAppointment(), now));
+                    .isOver(((Entry) rows.get(i)).appointment().getAppointment(), now, settings));
             if (notPassed.isPresent()) {
                 return notPassed;
             }

@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
@@ -62,6 +63,15 @@ public class PatientRow extends UiPart<Region> {
      * appointments of every patient, also those hidden by a filter. An archived patient is greyed out.
      */
     public void show(Patient patient, int displayedIndex, Collection<PatientAppointment> allAppointments) {
+        show(patient, displayedIndex, allAppointments, Settings.DEFAULT);
+    }
+
+    /**
+     * Shows {@code patient}, as {@link #show(Patient, int, Collection)} does, with clashes as {@code settings} decide
+     * them (#216).
+     */
+    public void show(Patient patient, int displayedIndex, Collection<PatientAppointment> allAppointments,
+            Settings settings) {
         rowPane.getStyleClass().remove(ARCHIVED_STYLE_CLASS);
         if (patient.isArchived()) {
             rowPane.getStyleClass().add(ARCHIVED_STYLE_CLASS);
@@ -76,7 +86,8 @@ public class PatientRow extends UiPart<Region> {
         nextAppointment.setVisible(next.isPresent());
         nextAppointment.setManaged(next.isPresent());
         next.ifPresent(appointment -> showNextAppointment(appointment, now.toLocalDate(),
-                !AppointmentClashes.find(allAppointments, new PatientAppointment(patient, appointment)).isEmpty()));
+                !AppointmentClashes.find(allAppointments, new PatientAppointment(patient, appointment), settings, now)
+                        .isEmpty()));
     }
 
     /**

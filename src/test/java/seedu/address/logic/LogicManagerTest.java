@@ -22,10 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
@@ -66,6 +68,25 @@ public class LogicManagerTest {
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
         StorageManager storage = new StorageManager(laiNurseStorage, userPrefsStorage);
         logic = new LogicManager(model, storage);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        FeatureFlags.setSettingsEnabled(false);
+    }
+
+    @Test
+    public void execute_set_unknownUntilReleasedThenSavesPrefs() throws Exception {
+        // the settings are not released, so set is an unknown command (#216)
+        assertParseException("set past-clashes off", MESSAGE_UNKNOWN_COMMAND);
+
+        FeatureFlags.setSettingsEnabled(true);
+        logic.execute("set past-clashes off");
+        assertFalse(logic.getSettings().getValue().isPastClashing());
+        // saved at once, not only when the app closes
+        UserPrefs saved = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")).readUserPrefs()
+                .orElseThrow();
+        assertFalse(saved.getSettings().isPastClashing());
     }
 
     @Test

@@ -18,6 +18,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
@@ -39,6 +40,8 @@ public class ModelManager implements Model {
     private final SortedList<Patient> sortedPatients;
     private final ObservableList<PatientAppointment> appointments = FXCollections.observableArrayList();
     private final ObjectProperty<PatientScope> scope = new SimpleObjectProperty<>(PatientScope.DEFAULT);
+    /** The settings that apply, which are the user's only once the settings are released. */
+    private final ObjectProperty<Settings> settings = new SimpleObjectProperty<>(Settings.DEFAULT);
     /** The filter of the patient list, which chooses among the patients in the scope. */
     private Predicate<Patient> filter = PREDICATE_SHOW_ALL_PATIENTS;
     /** Whether {@link #filter} is a filter, not the predicate that keeps every patient. */
@@ -54,6 +57,7 @@ public class ModelManager implements Model {
 
         this.laiNurse = new LaiNurse(laiNurse);
         this.userPrefs = new UserPrefs(userPrefs);
+        settings.set(effective(this.userPrefs.getSettings()));
         filteredPatients = new FilteredList<>(new SortedList<>(this.laiNurse.getPatientList(),
                 ARCHIVED_LAST.thenComparing(PatientNameComparator.PATIENT_NAME_ORDER)));
         sortedPatients = new SortedList<>(filteredPatients);
@@ -71,6 +75,26 @@ public class ModelManager implements Model {
     @Override
     public ReadOnlyUserPrefs getUserPrefs() {
         return userPrefs;
+    }
+
+    @Override
+    public ObservableValue<Settings> getSettings() {
+        return settings;
+    }
+
+    @Override
+    public void setSettings(Settings newSettings) {
+        requireNonNull(newSettings);
+        userPrefs.setSettings(newSettings);
+        settings.set(effective(newSettings));
+    }
+
+    /**
+     * Returns the settings that apply when the user has {@code userSettings}: theirs once the settings are
+     * released, and the default ones before.
+     */
+    private static Settings effective(Settings userSettings) {
+        return FeatureFlags.isSettingsEnabled() ? userSettings : Settings.DEFAULT;
     }
 
     @Override

@@ -77,8 +77,8 @@ public class AddAppointmentCommand extends Command {
         PatientAppointment created = new PatientAppointment(editedPatient, numbered);
         String message = String.format(MESSAGE_ADD_APPOINTMENT_SUCCESS, numbered.getNumber(),
                 editedPatient.getName(), targetId, Messages.format(numbered));
-        String warning = Messages.formatClashWarning(model.getAppointmentList(), created);
-        message += warning + Messages.formatArchivedNote(editedPatient);
+        String warning = Messages.formatClashWarning(model, created);
+        message += warning + Messages.formatArchivedNote(editedPatient, model.getSettings().getValue());
         logger.fine("Added appointment #" + numbered.getNumber() + " of patient " + targetId
                 + (warning.isEmpty() ? "." : " with a clash warning."));
         return new CommandResult(message).withNavigation(Navigation.toAppointment(created));

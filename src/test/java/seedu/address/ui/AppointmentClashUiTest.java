@@ -29,6 +29,7 @@ import javafx.scene.shape.Shape;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.ModelManager;
+import seedu.address.model.Settings;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
@@ -130,6 +131,26 @@ public class AppointmentClashUiTest {
             assertEquals("10:00", selected.get().orElseThrow().getAppointment().getTime().orElseThrow().toString());
             assertTrue(root.lookupAll(".clash-mark").isEmpty());
             assertNotEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
+        });
+    }
+
+    @Test
+    public void row_markedClash_redPinInPlaceOfBoxedMark() throws Exception {
+        onFxThread(() -> {
+            // a marked appointment clashes only if a setting lets it (#216)
+            Patient patient = new PatientBuilder().withId("S1234567A").withSchedule(new AppointmentSchedule(List.of(
+                    new Appointment(LocalDate.now().plusDays(1) + " 09:30").withNumber(1).withDone(true)))).build();
+            AppointmentRow row = new AppointmentRow();
+            row.show(new AppointmentPage.Entry(1, entry(patient)), LocalDateTime.now(), true,
+                    Settings.DEFAULT.with(Settings.Key.MARK_STOPS_CLASHES, false));
+            // in a list cell, as in the appointment list, whose style the row's colors depend on
+            ListCell<AppointmentPage.Entry> cell = new ListCell<>();
+            cell.setGraphic(row.getRoot());
+            StackPane root = new StackPane(cell);
+            styleAndLayout(root, 800);
+            assertTrue(root.lookupAll(".clash-mark").isEmpty());
+            assertEquals(CLASH_COLOR, ((Shape) root.lookup(".pin-mark-shape")).getFill());
+            assertEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
         });
     }
 
