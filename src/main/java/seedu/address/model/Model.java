@@ -100,10 +100,16 @@ public interface Model {
     void updateFilteredPatientList(Predicate<Patient> predicate, Comparator<Patient> comparator);
 
     /**
-     * Returns true if the patient list has a filter, such as one that {@code find} or {@code viewappt} sets, that
-     * may hide some patients in the scope.
+     * Returns true if the patient list has a filter, such as one that {@code find} sets, that may hide some patients
+     * in the scope.
      */
     boolean hasPatientFilter();
+
+    /**
+     * Returns whether the patient list has a filter, as {@link #hasPatientFilter()} does, as a value that the UI can
+     * observe, so that its header says that the list is filtered even when the filter hides no one.
+     */
+    ObservableValue<Boolean> isPatientListFiltered();
 
     /**
      * Returns the scope of the patient list: whether it shows archived patients. {@code view} and {@code find} set it.

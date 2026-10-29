@@ -48,6 +48,7 @@ public class PatientListPanel extends UiPart<Region> {
     private final ObservableList<Patient> allPatients;
     private final ObservableList<PatientAppointment> allAppointments;
     private final ObservableValue<PatientScope> scope;
+    private final ObservableValue<Boolean> isFiltered;
     private final Label placeholder = new Label();
     /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
     private ReadOnlyDoubleProperty rowGutter;
@@ -66,20 +67,21 @@ public class PatientListPanel extends UiPart<Region> {
 
     /**
      * Creates a {@code PatientListPanel} that lists {@code shownPatients}, the patients in {@code scope} that the
-     * filter shows, out of {@code allPatients}. A patient's next appointment is red if it clashes with another of
-     * {@code allAppointments}.
+     * filter shows, out of {@code allPatients}. {@code isFiltered} is true while the list has a filter. A patient's
+     * next appointment is red if it clashes with another of {@code allAppointments}.
      * {@code onPatientChosen} receives the ID of each patient that the user clicks, or moves to with the keyboard.
      * {@code onUpAtTop} runs when the user presses Up at the first patient, so that the focus can move on.
      */
     public PatientListPanel(ObservableList<Patient> shownPatients, ObservableList<Patient> allPatients,
             ObservableList<PatientAppointment> allAppointments, ObservableValue<PatientScope> scope,
-            Consumer<PatientId> onPatientChosen, Runnable onUpAtTop) {
+            ObservableValue<Boolean> isFiltered, Consumer<PatientId> onPatientChosen, Runnable onUpAtTop) {
         super(FXML);
-        requireAllNonNull(shownPatients, allPatients, allAppointments, scope, onPatientChosen, onUpAtTop);
+        requireAllNonNull(shownPatients, allPatients, allAppointments, scope, isFiltered, onPatientChosen, onUpAtTop);
         this.shownPatients = shownPatients;
         this.allPatients = allPatients;
         this.allAppointments = allAppointments;
         this.scope = scope;
+        this.isFiltered = isFiltered;
         // A change to one patient's appointments can make another patient's next appointment clash, or stop clashing
         allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> patientListView.refresh());
         patientListView.setItems(shownPatients);
@@ -91,6 +93,7 @@ public class PatientListPanel extends UiPart<Region> {
         shownPatients.addListener(headerUpdater);
         allPatients.addListener(headerUpdater);
         scope.addListener((unused, oldScope, newScope) -> updateHeader());
+        isFiltered.addListener((unused, wasFiltered, isNowFiltered) -> updateHeader());
         updateHeader();
         // A mouse click, unlike a change of selection, never comes from the list updating itself.
         patientListView.setOnMouseClicked(event -> {
@@ -128,7 +131,8 @@ public class PatientListPanel extends UiPart<Region> {
 
     /**
      * Shows in the header whether the list is filtered, which patients its scope shows, and how many. The list
-     * counts as filtered while it shows fewer patients than its scope has. Also sets the message of an empty list.
+     * counts as filtered while it has a filter, such as after {@code find}, even one that hides no one, so that the
+     * header shows what the first Esc removes. Also sets the message of an empty list.
      */
     private void updateHeader() {
         PatientScope currentScope = scope.getValue();
@@ -136,10 +140,10 @@ public class PatientListPanel extends UiPart<Region> {
         int inScope = (int) allPatients.stream().filter(currentScope::includes).count();
         int archived = (int) allPatients.stream().filter(Patient::isArchived).count();
         int shownArchived = (int) shownPatients.stream().filter(Patient::isArchived).count();
-        boolean isFiltered = shown < inScope;
-        listTitle.setText(describeTitle(currentScope, isFiltered));
+        boolean hasFilter = isFiltered.getValue();
+        listTitle.setText(describeTitle(currentScope, hasFilter));
         listCount.setText(describeCount(currentScope, new Count(shown - shownArchived, allPatients.size() - archived),
-                new Count(shownArchived, archived)));
+                new Count(shownArchived, archived), hasFilter));
         if (allPatients.isEmpty()) {
             placeholder.setText(NO_PATIENTS_PLACEHOLDER);
         } else if (inScope == 0) {
@@ -163,29 +167,20 @@ public class PatientListPanel extends UiPart<Region> {
     /**
      * How many patients of one kind, archived or not, the list shows, out of how many there are.
      */
-    record Count(int shown, int total) {
-        boolean isFiltered() {
-            return shown < total;
-        }
-    }
+    record Count(int shown, int total) {}
 
     /**
      * Returns the count at the end of the header, in the form {@code [count] ([archived count])}, with no words, so
      * that it fits beside a long title: the patients who are not archived, such as "109", and in brackets the
      * archived ones, such as "(2)". The default scope shows only the first, and {@link PatientScope#ARCHIVED} only the
-     * second. A filtered list shows how many of each it shows, such as "3 of 109 (1 of 2)".
+     * second. If {@code hasFilter}, it shows how many of each the list shows, such as "3 of 109 (1 of 2)", or
+     * "109 of 109" for a filter that hides no one.
      */
-    static String describeCount(PatientScope scope, Count unarchived, Count archived) {
-        // Only the kinds of patient in the scope count, as the scope, not a filter, hides the others
-        boolean isFiltered = switch (scope) {
-            case UNARCHIVED -> unarchived.isFiltered();
-            case ALL -> unarchived.isFiltered() || archived.isFiltered();
-            case ARCHIVED -> archived.isFiltered();
-        };
-        String unarchivedCount = isFiltered
+    static String describeCount(PatientScope scope, Count unarchived, Count archived, boolean hasFilter) {
+        String unarchivedCount = hasFilter
                 ? unarchived.shown() + " of " + unarchived.total()
                 : String.valueOf(unarchived.total());
-        String archivedCount = "(" + (isFiltered
+        String archivedCount = "(" + (hasFilter
                 ? archived.shown() + " of " + archived.total()
                 : String.valueOf(archived.total())) + ")";
         return switch (scope) {

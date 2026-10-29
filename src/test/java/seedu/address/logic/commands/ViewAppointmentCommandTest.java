@@ -122,10 +122,17 @@ public class ViewAppointmentCommandTest {
         assertEquals(String.format(MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW, 1, start, end),
                 result.getFeedbackToUser());
 
-        // --id shows an archived patient's appointments
+        // --id shows an archived patient's appointments, in the scope of archived patients, so the header shows
+        // "(1)", and a patient who is not archived in the other one, so it shows "1"
         result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
                 Optional.of(BENSON.getId())), archiveModel);
-        assertEquals(Optional.of(PatientScope.ALL), result.getAppointmentScope());
+        assertEquals(Optional.of(PatientScope.ARCHIVED), result.getAppointmentScope());
+        result = executeOrFail(new ViewAppointmentCommand(Optional.of(start), Optional.of(end),
+                Optional.of(DANIEL.getId())), archiveModel);
+        assertEquals(Optional.of(PatientScope.UNARCHIVED), result.getAppointmentScope());
+        result = executeOrFail(new ViewAppointmentCommand(Optional.empty(), Optional.empty(),
+                Optional.of(BENSON.getId())), archiveModel);
+        assertEquals(Optional.of(PatientScope.ARCHIVED), result.getAppointmentScope());
 
         // the patient list is never touched
         assertEquals(List.of(DANIEL), archiveModel.getFilteredPatientList());
@@ -415,8 +422,8 @@ public class ViewAppointmentCommandTest {
      * appointment from now.
      */
     private static CommandResult pageResult(String message, AppointmentRange range) {
-        // One patient's appointments show even if they are archived
-        PatientScope scope = range.patientId() == null ? PatientScope.DEFAULT : PatientScope.ALL;
+        // One patient's appointments show in the scope that has them; these patients are not archived
+        PatientScope scope = range.patientId() == null ? PatientScope.DEFAULT : PatientScope.UNARCHIVED;
         return new CommandResult(message, range).withAppointmentScope(scope)
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
     }

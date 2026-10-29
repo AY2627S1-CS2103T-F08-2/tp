@@ -26,25 +26,26 @@ public class ListHeaderTextTest {
         Count unarchived = new Count(109, 109);
         Count archived = new Count(2, 2);
         assertEquals("109", PatientListPanel.describeCount(PatientScope.UNARCHIVED, unarchived,
-                new Count(0, 2)));
-        assertEquals("109 (2)", PatientListPanel.describeCount(PatientScope.ALL, unarchived,
-                archived));
-        assertEquals("(2)", PatientListPanel.describeCount(PatientScope.ARCHIVED, new Count(0, 109),
-                archived));
-        assertEquals("1 (0)", PatientListPanel.describeCount(PatientScope.ALL, new Count(1, 1),
-                new Count(0, 0)));
-        assertEquals("0", PatientListPanel.describeCount(PatientScope.UNARCHIVED, new Count(0, 0),
-                new Count(0, 0)));
+                new Count(0, 2), false));
+        assertEquals("109 (2)", PatientListPanel.describeCount(PatientScope.ALL, unarchived, archived, false));
+        assertEquals("(2)", PatientListPanel.describeCount(PatientScope.ARCHIVED, new Count(0, 109), archived, false));
+        assertEquals("1 (0)", PatientListPanel.describeCount(PatientScope.ALL, new Count(1, 1), new Count(0, 0),
+                false));
+        assertEquals("0", PatientListPanel.describeCount(PatientScope.UNARCHIVED, new Count(0, 0), new Count(0, 0),
+                false));
     }
 
     @Test
     public void describeCount_filtered_shownOfEach() {
         assertEquals("3 of 109", PatientListPanel.describeCount(PatientScope.UNARCHIVED, new Count(3, 109),
-                new Count(0, 2)));
+                new Count(0, 2), true));
         assertEquals("3 of 109 (1 of 2)", PatientListPanel.describeCount(PatientScope.ALL, new Count(3, 109),
-                new Count(1, 2)));
+                new Count(1, 2), true));
         assertEquals("(1 of 2)", PatientListPanel.describeCount(PatientScope.ARCHIVED, new Count(0, 109),
-                new Count(1, 2)));
+                new Count(1, 2), true));
+        // a filter that hides no one still shows, so that the first Esc visibly removes it
+        assertEquals("109 of 109", PatientListPanel.describeCount(PatientScope.UNARCHIVED, new Count(109, 109),
+                new Count(0, 2), true));
     }
 
     @Test
