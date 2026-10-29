@@ -9,10 +9,10 @@ import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 
 /**
- * A UI component that displays one appointment as a row of the appointment list: its number on the page, its time,
- * its patient's name, ID and number, and under them its optional details. A pin before the time shows that it is
- * marked. An appointment that has
- * passed is greyed out. {@link AppointmentListPanel} draws the day headings between the rows.
+ * A UI component that displays one appointment as a row of the appointment list: its place on the page, its time,
+ * its patient's name and ID, and its appointment number, and under them its optional details. A pin before the time
+ * shows that it is marked. An appointment that has passed is greyed out. {@link AppointmentListPanel} draws the day
+ * headings between the rows.
  * A list cell keeps one row and shows each of its appointments in it, since loading a row's FXML for every
  * appointment that scrolls into view makes scrolling stutter.
  */

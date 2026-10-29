@@ -32,7 +32,8 @@ public class EditAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "editappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the appointment of the patient with the "
-            + "given ID, using its number. Keeps its number and completion status. "
+            + "given ID, using its number. Keeps its completion status. Moving it gives it the number of its new "
+            + "place in date order. "
             + PREFIX_DETAILS.toString().trim() + " with no value clears the details, and "
             + PREFIX_ADD_DETAILS.toString().trim() + " adds text to the end of them, after \""
             + OptionalFieldEdit.APPEND_SEPARATOR + "\". The two cannot be given together.\n"

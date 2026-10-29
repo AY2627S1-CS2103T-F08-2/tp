@@ -109,8 +109,8 @@ public class AppointmentSchedule {
     }
 
     /**
-     * Returns a copy of these appointments without the appointment with the given number, in which the appointments
-     * after it move up one number.
+     * Returns a copy of these appointments without {@code appointment}, in which the appointments after it move up
+     * one number. Removing an appointment that is not one of these changes nothing.
      */
     public AppointmentSchedule remove(Appointment appointment) {
         requireNonNull(appointment);
@@ -120,7 +120,8 @@ public class AppointmentSchedule {
     }
 
     /**
-     * Returns whether an appointment with this number exists, regardless of its date/time or details.
+     * Returns whether one of these appointments has the number of {@code appointment}, whatever its date, time or
+     * details.
      */
     public boolean contains(Appointment appointment) {
         requireNonNull(appointment);
@@ -128,7 +129,8 @@ public class AppointmentSchedule {
     }
 
     /**
-     * Looks up a numbered appointment by identity, returning the stored date/time and details.
+     * Returns the appointment with the number of {@code appointment}, with its stored date, time and details, if
+     * there is one.
      */
     public Optional<Appointment> find(Appointment appointment) {
         requireNonNull(appointment);
