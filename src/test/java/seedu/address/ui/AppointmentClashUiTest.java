@@ -18,12 +18,14 @@ import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Shape;
 import seedu.address.logic.commands.CommandResult.AppointmentRange;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.ModelManager;
@@ -61,7 +63,8 @@ public class AppointmentClashUiTest {
             StackPane root = new StackPane(cell);
             styleAndLayout(root, 800);
             assertEquals("7.", label(root, ".appointment-entry-number").getText());
-            assertEquals("S1234567A #1", label(root, ".appointment-entry-id").getText());
+            assertEquals("S1234567A", label(root, ".appointment-entry-id").getText());
+            assertEquals("#1", label(root, ".appointment-entry-number-chip").getText());
             assertEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
             assertNotEquals(CLASH_COLOR, label(root, ".appointment-entry-name").getTextFill());
         });
@@ -79,9 +82,11 @@ public class AppointmentClashUiTest {
                 panel.show(alex.getId(), Optional.of(entry(alex).getAppointment()));
                 StackPane root = new StackPane(panel.getRoot());
                 styleAndLayout(root, 320);
-                assertTrue(label(root, ".detail-appointment-date").getText().startsWith("#1 · "));
+                assertEquals("#1", label(root, ".detail-appointment-number").getText());
+                assertFalse(label(root, ".detail-appointment-date").getText().contains("#"));
                 assertEquals(CLASH_COLOR, label(root, ".detail-appointment-date").getTextFill());
                 assertEquals(CLASH_COLOR, label(root, ".detail-appointment-time").getTextFill());
+                assertEquals(CLASH_COLOR, ((Shape) root.lookup(".clash-mark-part")).getFill());
                 assertFalse(root.lookupAll(".detail-appointment-marked").isEmpty());
                 assertTrue(label(root, ".detail-appointment-date").isWrapText());
                 Patient movedBen = new PatientBuilder(ben).withAppointments(LocalDate.now().plusDays(2).toString())
@@ -107,9 +112,12 @@ public class AppointmentClashUiTest {
             panel.showRange(new AppointmentRange(today, today, alex.getId()));
             StackPane root = new StackPane(panel.getRoot());
             styleAndLayout(root, 800);
-            assertEquals(CLASH_COLOR, label(root, ".appointment-day-clash").getTextFill());
+            // the time is red with a red boxed "!" before it, and the day heading keeps its colour
             assertEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
-            assertEquals("S1234567A #1", label(root, ".appointment-entry-id").getText());
+            assertEquals(CLASH_COLOR, ((Shape) root.lookup(".clash-mark-part")).getFill());
+            assertTrue(root.lookupAll(".appointment-day-clash").isEmpty());
+            assertEquals("S1234567A", label(root, ".appointment-entry-id").getText());
+            assertEquals("#1", label(root, ".appointment-entry-number-chip").getText());
             Patient moved = new PatientBuilder(alex).withSchedule(new AppointmentSchedule(List.of(
                     new Appointment(today + " 10:00").withNumber(1)))).build();
             model.setPatient(alex, moved);
@@ -120,7 +128,7 @@ public class AppointmentClashUiTest {
             assertEquals("10:00", label(root, ".appointment-entry-time").getText());
             assertTrue(selected.get().orElseThrow().isSameEntry(entry(alex)));
             assertEquals("10:00", selected.get().orElseThrow().getAppointment().getTime().orElseThrow().toString());
-            assertTrue(root.lookupAll(".appointment-day-clash").isEmpty());
+            assertTrue(root.lookupAll(".clash-mark").isEmpty());
             assertNotEquals(CLASH_COLOR, label(root, ".appointment-entry-time").getTextFill());
         });
     }
@@ -130,7 +138,7 @@ public class AppointmentClashUiTest {
     }
 
     @Test
-    public void completion_bothStatuses_visibleInRowsAndNarrowDetails() throws Exception {
+    public void completion_pinOnlyWhenMarked_inRowsAndNarrowDetails() throws Exception {
         onFxThread(() -> {
             for (boolean done : List.of(false, true)) {
                 Appointment appointment = new Appointment(LocalDate.now().minusDays(1).toString())
@@ -141,7 +149,8 @@ public class AppointmentClashUiTest {
                         LocalDateTime.now());
                 StackPane rowRoot = new StackPane(row.getRoot());
                 styleAndLayout(rowRoot, 500);
-                assertEquals(done ? "Done" : "Undone", label(rowRoot, ".appointment-entry-status").getText());
+                // a marked appointment has a pin before its time, and an unmarked one has nothing
+                assertEquals(done, !rowRoot.lookupAll(".pin-mark").isEmpty());
                 assertEquals(AppointmentFormatter.NO_TIME, label(rowRoot, ".appointment-entry-no-time").getText());
 
                 ModelManager model = model(patient);
@@ -150,11 +159,10 @@ public class AppointmentClashUiTest {
                 details.show(patient.getId(), Optional.of(appointment));
                 StackPane detailRoot = new StackPane(details.getRoot());
                 styleAndLayout(detailRoot, 320);
-                Label status = label(detailRoot, ".detail-appointment-status");
-                assertEquals(done ? "Done" : "Undone", status.getText());
-                assertTrue(status.isVisible());
-                assertTrue(status.isWrapText());
-                assertTrue(status.getBoundsInLocal().getWidth() >= status.prefWidth(-1));
+                assertEquals(done, !detailRoot.lookupAll(".pin-mark").isEmpty());
+                Label time = label(detailRoot, ".detail-appointment-no-time");
+                assertEquals(done ? "Marked" : null,
+                        Optional.ofNullable(time.getGraphic()).map(Node::getAccessibleText).orElse(null));
             }
         });
     }
@@ -181,9 +189,10 @@ public class AppointmentClashUiTest {
             model.setPatient(ben, doneBen);
             styleAndLayout(listRoot, 800);
             styleAndLayout(detailRoot, 320);
-            assertTrue(listRoot.lookupAll(".appointment-day-clash").isEmpty());
+            assertTrue(listRoot.lookupAll(".clash-mark").isEmpty());
             assertNotEquals(CLASH_COLOR, label(listRoot, ".appointment-entry-time").getTextFill());
             assertTrue(detailRoot.lookupAll(".detail-appointment-clash").isEmpty());
+            assertTrue(detailRoot.lookupAll(".clash-mark").isEmpty());
 
             model.setPatient(doneBen, ben);
             styleAndLayout(listRoot, 800);
@@ -194,8 +203,9 @@ public class AppointmentClashUiTest {
             model.setPatient(alex, withDone(alex, 1, true));
             styleAndLayout(listRoot, 800);
             styleAndLayout(detailRoot, 320);
-            assertEquals("Done", label(listRoot, ".appointment-entry-status").getText());
-            assertEquals("Done", label(detailRoot, ".detail-appointment-status").getText());
+            assertFalse(listRoot.lookupAll(".pin-mark").isEmpty());
+            assertFalse(detailRoot.lookupAll(".pin-mark").isEmpty());
+            assertTrue(listRoot.lookupAll(".clash-mark").isEmpty());
             assertTrue(listRoot.lookupAll(".appointment-entry-clash").isEmpty());
             assertTrue(detailRoot.lookupAll(".detail-appointment-clash").isEmpty());
         });
@@ -209,7 +219,7 @@ public class AppointmentClashUiTest {
                     tomorrow.plusDays(1).toString()).build();
             ModelManager model = model(patient);
             PatientListPanel panel = new PatientListPanel(model.getFilteredPatientList(),
-                    model.getLaiNurse().getPatientList(), ignored -> { }, () -> { });
+                    model.getLaiNurse().getPatientList(), model.getAppointmentList(), ignored -> { }, () -> { });
             StackPane root = new StackPane(panel.getRoot());
             styleAndLayout(root, 800);
             assertEquals("Tomorrow", label(root, ".patient-row-appointment").getText());

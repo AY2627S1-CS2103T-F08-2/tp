@@ -73,7 +73,8 @@ public class DetailAppointmentsTest {
     public void of_fewPastAppointments_allListed() {
         DetailAppointments appointments = DetailAppointments.of(schedule(YESTERDAY, NEXT_WEEK), NOW,
                 Optional.empty());
-        assertEquals(List.of(YESTERDAY), appointments.getPastShown());
+        // the schedule renumbers its appointments, so compare their dates and times
+        assertEquals(List.of(YESTERDAY.value), values(appointments.getPastShown()));
         assertEquals("1 of 1", appointments.describePast());
         assertEquals("1 upcoming", appointments.describeUpcoming());
     }
@@ -102,9 +103,13 @@ public class DetailAppointmentsTest {
                 todayLater), LocalDateTime.of(2026, 10, 16, 10, 0), Optional.empty());
 
         // an appointment today with no time has not passed
-        assertEquals(List.of(todayNoTime, todayLater), appointments.getUpcoming());
-        assertEquals(List.of(TODAY_EARLY, YESTERDAY), appointments.getPastShown());
+        assertEquals(List.of(todayNoTime.value, todayLater.value), values(appointments.getUpcoming()));
+        assertEquals(List.of(TODAY_EARLY.value, YESTERDAY.value), values(appointments.getPastShown()));
         assertEquals(2, appointments.getPastCount());
+    }
+
+    private static List<String> values(List<Appointment> appointments) {
+        return appointments.stream().map(appointment -> appointment.value).toList();
     }
 
     private static AppointmentSchedule schedule(Appointment... appointments) {

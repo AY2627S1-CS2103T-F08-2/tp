@@ -100,15 +100,20 @@ public class AppointmentStatusCommandFlowTest {
         logic.execute("addappt S1234567A --date 2026-10-05 09:30 --details Second visit");
         logic.execute("addappt S2345678B --date 2026-10-05 09:30");
         logic.execute("find --name alex");
-        CommandResult marked = logic.execute("markappt S1234567A 3");
+        // the second visit at 09:30 is #2, and marking it keeps its place
+        CommandResult marked = logic.execute("markappt S1234567A 2");
         assertFalse(appointment(1).isDone());
-        assertTrue(appointment(3).isDone());
+        assertTrue(appointment(2).isDone());
+        assertEquals("SECOND VISIT", appointment(2).getDetails().orElseThrow().value);
         assertFalse(marked.getFeedbackToUser().contains("Warning:"));
 
-        CommandResult unmarked = logic.execute("unmarkappt S1234567A 3");
-        assertTrue(unmarked.getFeedbackToUser().contains("ALEX YEOH (S1234567A), appointment #1"));
-        assertTrue(unmarked.getFeedbackToUser().contains("BERNICE YU (S2345678B), appointment #2"));
-        assertEquals(List.of(1, 3, 2), alex().getSchedule().asList().stream().map(Appointment::getNumber).toList());
+        CommandResult unmarked = logic.execute("unmarkappt S1234567A 2");
+        // Alex's own other visit is not named again, and Bernice's is
+        assertTrue(unmarked.getFeedbackToUser().contains("this patient's appointment #1"));
+        assertFalse(unmarked.getFeedbackToUser().contains("ALEX YEOH (S1234567A), appointment"));
+        assertTrue(unmarked.getFeedbackToUser().contains("BERNICE YU (S2345678B), appointment #1"));
+        assertEquals(List.of(1, 2, 3), alex().getSchedule().asList().stream().map(Appointment::getNumber).toList());
+        assertEquals("SECOND VISIT", appointment(2).getDetails().orElseThrow().value);
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
     }
 
@@ -117,17 +122,21 @@ public class AppointmentStatusCommandFlowTest {
         logic.execute("markappt S1234567A 1");
         logic.execute("editappt S1234567A 1 --details Bring pen");
         assertTrue(appointment(1).isDone());
+        // moved after the blood test that is already on 2026-11-02, so it becomes #2
         CommandResult moved = logic.execute("editappt S1234567A 1 --to 2026-11-02");
-        assertTrue(appointment(1).isDone());
-        assertEquals("BRING PEN", appointment(1).getDetails().orElseThrow().value);
+        assertTrue(appointment(2).isDone());
+        assertEquals("BRING PEN", appointment(2).getDetails().orElseThrow().value);
+        assertFalse(appointment(1).isDone());
         assertFalse(moved.getFeedbackToUser().contains("Warning:"));
         logic.execute("edit S1234567A --phone 91234567");
-        assertTrue(appointment(1).isDone());
+        assertTrue(appointment(2).isDone());
         logic.execute("addappt S1234567A --date 2026-12-01");
         assertFalse(appointment(3).isDone());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+        // deleting #1 moves the marked appointment up to #1
         logic.execute("deleteappt S1234567A 1");
-        assertTrue(alex().getSchedule().findByNumber(1).isEmpty());
+        assertTrue(appointment(1).isDone());
+        assertEquals(2, alex().getSchedule().asList().size());
     }
 
     @Test

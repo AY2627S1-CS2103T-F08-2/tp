@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.CommandResult;
-import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.DeleteAppointmentCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -85,7 +84,7 @@ public class DeleteAppointmentCommandFlowTest {
         CommandResult result = logic.execute("deleteappt S1234567A 1");
 
         assertEquals(expected, patient(ALEX_ID));
-        assertEquals(Optional.of(View.APPOINTMENTS), result.getView());
+        assertEquals(Optional.empty(), result.getView());
         // the find filter stays, so the patient remains hidden in the patient list
         assertEquals(expectedFilteredList, model.getFilteredPatientList());
     }
@@ -164,12 +163,15 @@ public class DeleteAppointmentCommandFlowTest {
                 .filter(patient -> patient.getId().equals(patientId)).findFirst().orElseThrow();
     }
     @Test
-    public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndNumbers() throws Exception {
+    public void execute_deleteNumberFromSameTime_keepsOtherVisitsAndRenumbers() throws Exception {
         logic.execute("addappt S1234567A --date 2026-10-05 09:30");
         CommandResult result = logic.execute("deleteappt S1234567A 1");
         assertEquals("Deleted appointment 1 of ALEX YEOH (S1234567A): "
                 + "2026-10-05 09:30; Details: INSULIN REVIEW", result.getFeedbackToUser());
-        assertEquals(List.of(3, 2), patient(ALEX_ID).getSchedule().asList().stream()
+        // the other visit at 09:30 and the blood test move up one number
+        assertEquals(List.of("2026-10-05 09:30", "2026-11-02"), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(appointment -> appointment.value).toList());
+        assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule().asList().stream()
                 .map(Appointment::getNumber).toList());
         assertTrue(result.isSelectionCleared());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());

@@ -2,14 +2,12 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Optional;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.AppointmentLookup.Target;
-import seedu.address.logic.commands.CommandResult.View;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Appointment;
@@ -61,7 +59,7 @@ public class DeleteAppointmentCommand extends Command {
                 AppointmentLookup.find(targetId, patient.getSchedule(), targetAppointment, COMMAND_WORD);
 
         AppointmentSchedule editedSchedule = patient.getSchedule().remove(foundAppointment);
-        assert editedSchedule.findByNumber(foundAppointment.getNumber()).isEmpty();
+        assert editedSchedule.asList().size() == patient.getSchedule().asList().size() - 1;
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);
@@ -70,11 +68,6 @@ public class DeleteAppointmentCommand extends Command {
         String message = String.format(MESSAGE_DELETE_APPOINTMENT_SUCCESS, foundAppointment.getNumber(),
                 editedPatient.getName(), targetId, Messages.format(foundAppointment));
         return new CommandResult(message).withSelectionCleared();
-    }
-
-    @Override
-    public Optional<View> getView() {
-        return Optional.of(View.APPOINTMENTS);
     }
 
     @Override

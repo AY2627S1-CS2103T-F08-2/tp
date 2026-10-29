@@ -36,12 +36,14 @@ public class AppointmentClashesTest {
     }
 
     @Test
-    public void find_dateOnly_matchesOnlyOtherDateOnlyOnSameDay() {
+    public void find_dateOnly_neverClashes() {
         Patient patient = new PatientBuilder().withAppointments("2026-10-05", "2026-10-05",
                 "2026-10-05 00:00", "2026-10-06").build();
         List<PatientAppointment> entries = patient.getSchedule().asList().stream()
                 .map(appointment -> new PatientAppointment(patient, appointment)).toList();
-        assertEquals(List.of(entry(patient, 2)), AppointmentClashes.find(entries, entry(patient, 1)));
+        // two date-only visits on one day, and a date-only visit and one at 00:00 on that day
+        assertTrue(AppointmentClashes.find(entries, entry(patient, 1)).isEmpty());
+        assertTrue(AppointmentClashes.find(entries, entry(patient, 2)).isEmpty());
         assertTrue(AppointmentClashes.find(entries, entry(patient, 3)).isEmpty());
         assertThrows(NullPointerException.class, () -> AppointmentClashes.find(null, entry(patient, 1)));
         assertThrows(NullPointerException.class, () -> AppointmentClashes.find(entries, null));

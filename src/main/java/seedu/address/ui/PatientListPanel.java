@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -17,9 +18,11 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
 
 /**
@@ -39,8 +42,13 @@ public class PatientListPanel extends UiPart<Region> {
 
     private final ObservableList<Patient> shownPatients;
     private final ObservableList<Patient> allPatients;
+    private final ObservableList<PatientAppointment> allAppointments;
     private final Label placeholder = new Label();
+    /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
+    private ReadOnlyDoubleProperty rowGutter;
 
+    @FXML
+    private HBox header;
     @FXML
     private Label listTitle;
     @FXML
@@ -53,17 +61,23 @@ public class PatientListPanel extends UiPart<Region> {
 
     /**
      * Creates a {@code PatientListPanel} that lists {@code shownPatients}, the patients that the filter shows,
-     * out of {@code allPatients}.
+     * out of {@code allPatients}. A patient's next appointment is red if it clashes with another of
+     * {@code allAppointments}.
      * {@code onPatientChosen} receives the ID of each patient that the user clicks, or moves to with the keyboard.
      * {@code onUpAtTop} runs when the user presses Up at the first patient, so that the focus can move on.
      */
     public PatientListPanel(ObservableList<Patient> shownPatients, ObservableList<Patient> allPatients,
-            Consumer<PatientId> onPatientChosen, Runnable onUpAtTop) {
+            ObservableList<PatientAppointment> allAppointments, Consumer<PatientId> onPatientChosen,
+            Runnable onUpAtTop) {
         super(FXML);
-        requireAllNonNull(shownPatients, allPatients, onPatientChosen, onUpAtTop);
+        requireAllNonNull(shownPatients, allPatients, allAppointments, onPatientChosen, onUpAtTop);
         this.shownPatients = shownPatients;
         this.allPatients = allPatients;
+        this.allAppointments = allAppointments;
+        // A change to one patient's appointments can make another patient's next appointment clash, or stop clashing
+        allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> patientListView.refresh());
         patientListView.setItems(shownPatients);
+        rowGutter = ListHeaders.alignEndWithRows(header, patientListView, PatientRow.END_PADDING);
         patientListView.setCellFactory(listView -> new PatientListViewCell());
         placeholder.getStyleClass().add("list-placeholder");
         patientListView.setPlaceholder(placeholder);
@@ -232,9 +246,15 @@ public class PatientListPanel extends UiPart<Region> {
      * Custom {@code ListCell} that displays the graphics of a {@code Patient} using a {@code PatientRow}.
      */
     class PatientListViewCell extends ListCell<Patient> {
+        // One row for the cell's life: building a row loads its FXML, too slow to do for each row scrolled into view
+        private final PatientRow row = new PatientRow();
+
         PatientListViewCell() {
             // Sizes the cell to the list instead of its content, so the list never scrolls sideways.
             setPrefWidth(0);
+            // Fits the row to the cell, so a long name ends in "..." and the ID stays visible.
+            row.getRoot().prefWidthProperty().bind(widthProperty().subtract(rowGutter));
+            paddingProperty().bind(ListHeaders.cellPadding(rowGutter));
         }
 
         @Override
@@ -245,10 +265,8 @@ public class PatientListPanel extends UiPart<Region> {
                 setGraphic(null);
                 setText(null);
             } else {
-                Region row = new PatientRow(patient, getIndex() + 1).getRoot();
-                // Fits the row to the cell, so a long name ends in "..." and the ID stays visible.
-                row.prefWidthProperty().bind(widthProperty());
-                setGraphic(row);
+                row.show(patient, getIndex() + 1, allAppointments);
+                setGraphic(row.getRoot());
             }
         }
     }

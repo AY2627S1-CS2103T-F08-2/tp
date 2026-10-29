@@ -32,7 +32,8 @@ public class EditAppointmentCommand extends Command {
     public static final String COMMAND_WORD = "editappt";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the appointment of the patient with the "
-            + "given ID, using its number. Keeps its number and completion status. "
+            + "given ID, using its number. Keeps its completion status. Moving it gives it the number of its new "
+            + "place in date order. "
             + PREFIX_DETAILS.toString().trim() + " with no value clears the details, and "
             + PREFIX_ADD_DETAILS.toString().trim() + " adds text to the end of them, after \""
             + OptionalFieldEdit.APPEND_SEPARATOR + "\". The two cannot be given together.\n"
@@ -92,10 +93,12 @@ public class EditAppointmentCommand extends Command {
         Appointment editedAppointment = createEditedAppointment(oldAppointment);
 
         boolean isMoved = !editedAppointment.hasSameDateTime(oldAppointment);
-        assert editedAppointment.getNumber() == oldAppointment.getNumber();
 
-        AppointmentSchedule editedSchedule = schedule.remove(oldAppointment).add(editedAppointment);
-        assert editedSchedule.findByNumber(oldAppointment.getNumber()).orElseThrow().equals(editedAppointment);
+        // A moved appointment comes after the others at its new date and time, and the numbers change with it
+        AppointmentSchedule editedSchedule = schedule.replace(oldAppointment, editedAppointment);
+        editedAppointment = isMoved
+                ? editedSchedule.getLastAt(editedAppointment)
+                : editedSchedule.findByNumber(oldAppointment.getNumber()).orElseThrow();
         Patient editedPatient = new Patient(patient.getId(), patient.getName(), patient.getPhone(),
                 patient.getAddress(), patient.getMedicalHistory(), patient.getNotes(), editedSchedule);
         model.setPatient(patient, editedPatient);

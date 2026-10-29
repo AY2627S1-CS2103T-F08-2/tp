@@ -9,7 +9,8 @@ public class MarkAppointmentCommand extends AppointmentStatusCommand {
 
     public static final String COMMAND_WORD = "markappt";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Marks an appointment as done.\n"
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Marks an appointment as done. A done appointment "
+            + "does not clash, and is not the patient's next appointment.\n"
             + "Parameters: ID NUMBER\n"
             + "Example: " + COMMAND_WORD + " S1234567A 2";
 

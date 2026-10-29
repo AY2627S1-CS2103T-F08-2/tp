@@ -50,7 +50,9 @@ public class PatientAppointment implements Comparable<PatientAppointment> {
 
     /**
      * Returns true if {@code other} is the same appointment of the same patient, even if the patient's other
-     * details, or the appointment's details, have changed since.
+     * details, or the appointment's details, have changed since. Appointments are matched by number, and a number
+     * changes when an earlier appointment of the patient is added, moved or deleted, so each command that changes a
+     * schedule navigates to the appointment that it changed.
      */
     public boolean isSameEntry(PatientAppointment other) {
         return other != null

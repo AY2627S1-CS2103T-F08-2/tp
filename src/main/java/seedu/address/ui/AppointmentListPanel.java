@@ -11,6 +11,7 @@ import java.util.OptionalInt;
 import java.util.function.Consumer;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -41,6 +42,11 @@ public class AppointmentListPanel extends UiPart<Region> {
 
     private static final String FXML = "AppointmentListPanel.fxml";
     private static final String THIS_WEEK_STYLE_CLASS = "list-header-note-this";
+    /**
+     * The space after the last column of a day heading and an appointment row, as set in the style sheet. The list
+     * header lines up with it.
+     */
+    private static final double ROW_END_PADDING = 12;
     private static final String DAY_CELL_STYLE_CLASS = "appointment-day-cell";
     private static final String ENTRY_CELL_STYLE_CLASS = "appointment-entry-cell";
 
@@ -54,9 +60,13 @@ public class AppointmentListPanel extends UiPart<Region> {
     /** The range shown on one page, or null in the weekly view. */
     private AppointmentRange range;
     private AppointmentPage page;
+    /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
+    private ReadOnlyDoubleProperty rowGutter;
     /** When the page was built, which decides the appointments that have passed. */
     private LocalDateTime pageTime = LocalDateTime.now();
 
+    @FXML
+    private HBox header;
     @FXML
     private Button previousWeekButton;
     @FXML
@@ -84,6 +94,7 @@ public class AppointmentListPanel extends UiPart<Region> {
         this.onAppointmentChosen = onAppointmentChosen;
         this.onUpAtTop = onUpAtTop;
         appointmentListView.setItems(rows);
+        rowGutter = ListHeaders.alignEndWithRows(header, appointmentListView, ROW_END_PADDING);
         appointmentListView.setCellFactory(listView -> new RowCell());
         Label placeholder = new Label("No appointments in this range.");
         placeholder.getStyleClass().add("list-placeholder");
@@ -417,9 +428,23 @@ public class AppointmentListPanel extends UiPart<Region> {
      * appointments can be selected.
      */
     private class RowCell extends ListCell<AppointmentPage.Row> {
+        // One heading and one appointment row for the cell's life, since building them for each row scrolled into
+        // view, and loading the appointment row's FXML, makes scrolling stutter
+        private final Label day = new Label();
+        private final Label count = new Label();
+        private final HBox headingBox;
+        private final AppointmentRow entryRow = new AppointmentRow();
+
         RowCell() {
             // Sizes the cell to the list instead of its content, so the list never scrolls sideways.
             setPrefWidth(0);
+            paddingProperty().bind(ListHeaders.cellPadding(rowGutter));
+            count.getStyleClass().add("appointment-day-count");
+            count.setMinWidth(Region.USE_PREF_SIZE);
+            Region filler = new Region();
+            HBox.setHgrow(filler, Priority.ALWAYS);
+            headingBox = new HBox(day, filler, count);
+            headingBox.getStyleClass().add("appointment-day-box");
         }
 
         @Override
@@ -434,40 +459,26 @@ public class AppointmentListPanel extends UiPart<Region> {
             } else if (row instanceof AppointmentPage.DayHeading heading) {
                 getStyleClass().add(DAY_CELL_STYLE_CLASS);
                 setMouseTransparent(true);
-                setGraphic(createHeading(heading));
+                setGraphic(showHeading(heading));
             } else if (row instanceof AppointmentPage.Entry entry) {
                 getStyleClass().add(ENTRY_CELL_STYLE_CLASS);
-                setGraphic(createEntry(entry));
+                setGraphic(showEntry(entry));
             }
         }
 
-        private Node createHeading(AppointmentPage.DayHeading heading) {
+        private Node showHeading(AppointmentPage.DayHeading heading) {
             LocalDate today = pageTime.toLocalDate();
-            Label day = new Label(AppointmentFormatter.formatDayHeading(heading.date(), today));
-            day.getStyleClass().add(heading.date().equals(today) ? "appointment-day-today" : "appointment-day");
-            boolean hasClash = page.getRows().stream()
-                    .filter(AppointmentPage.Entry.class::isInstance)
-                    .map(AppointmentPage.Entry.class::cast)
-                    .map(AppointmentPage.Entry::appointment)
-                    .filter(entry -> entry.getAppointment().getDate().equals(heading.date()))
-                    .anyMatch(entry -> !AppointmentClashes.find(allAppointments, entry).isEmpty());
-            if (hasClash) {
-                day.getStyleClass().add("appointment-day-clash");
-            }
-            Label count = new Label(heading.appointmentCount() == 0
-                    ? "None" : String.valueOf(heading.appointmentCount()));
-            count.getStyleClass().add("appointment-day-count");
-            count.setMinWidth(Region.USE_PREF_SIZE);
-            Region filler = new Region();
-            HBox.setHgrow(filler, Priority.ALWAYS);
-            HBox box = new HBox(day, filler, count);
-            box.getStyleClass().add("appointment-day-box");
-            return box;
+            day.setText(AppointmentFormatter.formatDayHeading(heading.date(), today));
+            day.getStyleClass().setAll("label",
+                    heading.date().equals(today) ? "appointment-day-today" : "appointment-day");
+            count.setText(heading.appointmentCount() == 0 ? "None" : String.valueOf(heading.appointmentCount()));
+            return headingBox;
         }
 
-        private Node createEntry(AppointmentPage.Entry entry) {
+        private Node showEntry(AppointmentPage.Entry entry) {
             boolean isClashing = !AppointmentClashes.find(allAppointments, entry.appointment()).isEmpty();
-            return new AppointmentRow(entry, pageTime, isClashing).getRoot();
+            entryRow.show(entry, pageTime, isClashing);
+            return entryRow.getRoot();
         }
     }
 }

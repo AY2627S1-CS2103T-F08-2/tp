@@ -26,7 +26,7 @@ public final class AppointmentFormatter {
      */
     public static final String NO_TIME = "\u2012\u2012:\u2012\u2012";
     /** The text shown in the patient details in place of the time of an appointment that has only a date. */
-    public static final String NO_TIME_DETAIL = "No time specified";
+    public static final String NO_TIME_DETAIL = "Unspecified time";
 
     /** Appointments up to this many days ahead are shown by weekday, such as "Tue". */
     private static final int DAYS_SHOWN_AS_WEEKDAY = 6;
@@ -42,13 +42,6 @@ public final class AppointmentFormatter {
 
     private AppointmentFormatter() {}
 
-    /**
-     * Returns the manually set completion status, independently of whether the appointment has passed.
-     */
-    public static String formatStatus(Appointment appointment) {
-        requireNonNull(appointment);
-        return appointment.isDone() ? "Done" : "Undone";
-    }
 
     /**
      * Returns a short description of {@code appointment} for the patient list, such as "Today 09:30",

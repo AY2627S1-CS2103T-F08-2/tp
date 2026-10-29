@@ -88,12 +88,13 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12 patients`, or `3 of 12` when filtered. An empty list says `No patients yet.` or `No patients match the filter.`
   * The next appointment of a patient is their first **undone** appointment that has not passed.
   * The details list every upcoming appointment of the patient, in time order, and their last ten past appointments, dimmed.
-* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` beside the patient ID:
-  this is the appointment's stable number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. The details
-  panel shows the same number before its date.
-  * An appointment with no time shows `‒‒:‒‒` in the list, and `No time specified` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
+* **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. If it is older than the patient's last ten past appointments, the details list it under **Past** as well. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` in a small box after the patient ID:
+  this is the appointment's number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. A patient's
+  appointments are numbered from 1 in date order. The details panel shows the same number, dimmed, before each date.
+  * An appointment with no time shows `‒‒:‒‒` in the list, and `Unspecified time` in the details. It comes first in its day, except today: there it comes after the appointments that have passed, right above the next one.
   * The appointments that have passed are greyed out.
-  * Each appointment shows **Done** or **Undone** in the list and patient details. Completion is set manually with
+  * A done appointment shows a pin before its time in the list and patient details, and an undone one shows nothing.
+    You mark and unmark appointments yourself with
     `markappt` and `unmarkappt`. Done visits remain listed, and past/upcoming grouping and counts still depend on
     dates and times. A visit can be done before its scheduled time or remain undone after it has passed.
   * The view has two kinds of page. The **weekly view** shows one week, from Monday to Sunday, with a heading for every day. Its header shows the dates, and `This week`, `Last week` or `Next week` when it is one of those. A plain [`viewappt`](#viewing-appointments-viewappt) shows the weekly view of this week. After `viewappt` with a date, a range or `--id`, the view shows only the appointments that it found, on one page, with a heading for each day that has one. Its header shows the dates.
@@ -102,13 +103,14 @@ In both views, the list and the details share the width of the window, and grow 
 
 An appointment has passed once its time today has gone by, or once its day is over if it has no time. So one at 10:00 has passed from 10:01. LaiNurse keeps up with the clock while it is left open: within a few seconds of an appointment passing, it is greyed out and moves under **Past**, and after midnight, the new day is marked as today. Orange marks what is today, such as today's heading and today's appointments. Blue marks what is selected, and what has the keyboard focus. Red marks clashes: two or more appointments at
 exactly the same date and time, including visits to the same patient, when both are undone. Done visits do not
-cause clash warnings or red highlighting. Two date-only visits on the same day also
-clash; a date-only visit and a timed visit do not. Clashing times and detail dates remain red even when past or
-selected. A day heading turns red if an appointment shown beneath it clashes, including with a hidden patient.
+cause clash warnings or red highlighting. Only visits with a time can clash: two date-only visits on the same day do
+not, and neither do a date-only visit and a timed one. A clashing appointment has a red boxed `!` before its time, and its time, and its date in
+the details, are red, even when it has passed or is selected. This includes a clash with a patient hidden by a filter.
+In the patient list, a patient's next appointment is red if it clashes, also when it is today.
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
-Commands switch the view. `viewappt`, `editappt`, `addappt`, `deleteappt`, `markappt` and `unmarkappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
+Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `list`, `find`, `view`, `add` and `edit` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
 
 * `add`, `edit` and `view` select the patient that they add, edit or show. `list` and `find` select the first patient in the list.
 * `viewappt` selects the next appointment from now: the first appointment on the page that has not passed, or the first on the page if all have passed. This automatic selection remains date-based and can select a done appointment.
@@ -329,10 +331,12 @@ Format: `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`
 * `--date` gives the date, or date and time, of the new appointment, in the appointment date format described in the notes about the command format above. Past dates are accepted. Without `--date`, LaiNurse says that the date is missing.
 * `--details` sets the appointment's details, such as what to do or bring. Like notes, details are stored in upper case, and cannot be blank.
 * `--date` and the optional `--details` can be in either order after the ID, and each may be given only once.
-* The new appointment starts **Undone** and receives the patient's highest remaining appointment number plus one, starting at #1.
-  Deleting a visit leaves the other numbers unchanged. If the highest number is deleted, it can be reused.
+* The new appointment starts **Undone**.
+* A patient's appointments are numbered from 1 in date order: by date, then by time, with an appointment that has no time first on its date. A new appointment at the same date and time as another comes after it. Adding, moving or deleting an appointment renumbers the patient's appointments after it, so check the number shown before you use it in a command.
 * Clashes are allowed, including several undone visits to the same patient at exactly the same time. The result warns
-  about the other patients and their appointment numbers. Visits are never rejected just because they clash.
+  about each appointment that it clashes with: another patient's by their name, ID and appointment number, such as
+  `BERNICE YU (S2345678B), appointment #1`, and the same patient's other visit as `this patient's appointment #1`.
+  Visits are never rejected just because they clash.
 * LaiNurse switches to the **Appointments** view and selects the new appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
 Examples:
@@ -347,15 +351,16 @@ Moves one of a patient's appointments to another date or time, or changes its de
 Format: `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
-* `NUMBER` is the appointment's positive number shown as `#N`, without the `#`. Numbers belong to a patient;
-  they are different from the positions down the appointment page. If the patient has no such number, nothing is changed.
+* `NUMBER` is the appointment's number shown as `#N`, without the `#`: its place among the patient's appointments in
+  date order. Numbers belong to a patient; they are different from the positions down the appointment page. If the patient has no such number, nothing is changed.
 * `--to` moves the appointment to a new date, or date and time, in the same format as in [`addappt`](#adding-an-appointment-addappt). Giving a date alone turns it into an appointment with no time.
 * `--details` sets the appointment's details, such as what to do or bring, replacing any it had. Like notes, details are stored in upper case. With no value, `--details` clears the details.
 * `--add-details` adds text to the end of the details, after `; `, or sets the details if the appointment has none. The text to add cannot be blank. `--details` and `--add-details` cannot be given together.
 * Give at least one of `--to`, `--details` and `--add-details`. The options may appear in any order after the ID and number, each at most once.
 * Moving an appointment keeps its details, unless `--details` is also given to replace or clear them, or `--add-details` to add to them.
-* Moving an appointment or changing its details keeps its number and Done/Undone status. Use `unmarkappt` to
-  reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
+* Changing only an appointment's details keeps its number. Moving it gives it the number of its new place in date
+  order, after any appointment already at that date and time, and renumbers the others. Either way, it keeps its
+  Done/Undone status. Use `unmarkappt` to reopen a done visit, even after rescheduling it. A move onto another visit is allowed and produces a clash
   warning if both visits are undone. An edit that changes only details also warns if the visit clashes.
 * LaiNurse switches to the **Appointments** view and selects the edited appointment. If the page shown has it, the page stays; otherwise, the week of the appointment is shown.
 
@@ -373,10 +378,10 @@ Deletes one appointment of a patient, identified by its number.
 Format: `deleteappt ID NUMBER`
 
 * `ID` is the patient's ID, as in [`edit`](#editing-a-patient-edit), and must come first. The patient does not have to be in the list currently shown.
-* `NUMBER` is the positive appointment number shown as `#N`, without the `#`. Only that visit is removed;
-  surviving appointments keep their numbers, even when they share the same date and time.
+* `NUMBER` is the positive appointment number shown as `#N`, without the `#`. Only that visit is removed, even when
+  others share its date and time. The patient's appointments after it move up one number.
 * If the patient has no appointment with that number, nothing is changed, and the error names the missing number.
-* LaiNurse switches to the **Appointments** view and keeps the page that is shown; the deleted appointment disappears from it. No other appointment, page or filter is changed.
+* LaiNurse keeps the view that is shown, as `delete` does. In the **Appointments** view, it keeps the page that is shown, and the deleted appointment disappears from it. No other appointment, page or filter is changed.
 
 Examples:
 * `deleteappt S1234567A 1` deletes Alex Yeoh's insulin review (#1), on the Monday of the sample week at 09:30, with its details.
@@ -390,13 +395,14 @@ Format: `markappt ID NUMBER`
 
 * `ID` is the patient's ID, ignoring case, and must come first. The patient need not be in the displayed list;
   the existing patient filter stays in place.
-* `NUMBER` is the appointment's positive stable number shown as `#N`, without the `#`. It belongs to that
+* `NUMBER` is the appointment's number shown as `#N`, without the `#`. It belongs to that
   patient and differs from the appointment's position down the page. Date/time selectors and extra arguments
   are not accepted.
 * Marking is allowed for past, current and future appointments. It changes only completion: the appointment
   keeps its number, date, time and details, and every other appointment stays as it was.
-* Done appointments remain visible with a **Done** label, but are skipped in the patient's next-appointment
-  summary and do not cause clashes. Date-based ordering, counts and automatic list selection stay the same.
+* Done appointments remain visible, with a pin before their time, but are skipped in the patient's next-appointment
+  summary and do not cause clashes. Marking one of two clashing visits removes the clash from both: the other visit's
+  time is no longer red, and loses its `!`. Date-based ordering, counts and automatic list selection stay the same.
 * A missing patient, missing appointment or already done appointment produces an error and changes nothing.
 * LaiNurse shows **Appointments** and selects the marked visit. If the current page contains it, that page
   stays; otherwise, the appointment's week is shown. The status is saved automatically.
@@ -410,7 +416,7 @@ Sets a done appointment back to **Undone**, for example to correct a mistaken co
 Format: `unmarkappt ID NUMBER`
 
 * Uses the same patient ID, appointment number, date permissions and navigation as `markappt`.
-* Changes only completion, keeping the appointment and its other values intact. The **Undone** label appears
+* Changes only completion, keeping the appointment and its other values intact. The pin goes away
   immediately, and the visit can again be the patient's next appointment if it has not passed.
 * Restores applicable clash highlighting and appends a warning naming any other undone visits at the same
   date and optional time, including visits of hidden patients.
@@ -428,7 +434,7 @@ Format: `view ID`
 * The patient does not need to be in the displayed list, because `view` searches all patients. The list then shows all patients again, and the patient's row is selected.
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * LaiNurse switches to the **Patients** view.
-* The panel shows the patient's name, ID, phone number, address, medical history, notes and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last ten that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `No time specified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
+* The panel shows the patient's name, ID, phone number, address, medical history, notes and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last ten that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified time`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
 * The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete all patients with `clear`, it goes back to its starting message.
 * You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 
@@ -483,13 +489,13 @@ When LaiNurse launches, it loads its data as follows:
 
 Whenever `lainurse.json` cannot be loaded, LaiNurse first copies it to `data/lainurse.corrupt.json`, replacing any earlier copy, so your edits are not lost when the next save overwrites `lainurse.json`. The result display then tells you which file could not be loaded, what LaiNurse loaded instead, and where the copy is kept. To get your edits back, close the window with its close button, fix the mistake in `lainurse.corrupt.json`, and copy it over `lainurse.json`. Do not close LaiNurse with `exit` first if it started with no data, as `exit` saves that empty data over `lainurse.json` and the backup.
 
-Appointments are saved with their patient-local numbers and completion status, for example
-`{"number": 2, "dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`. Older files with appointment strings
-or objects without numbers still load: missing numbers are assigned in chronological order, preserving file order
-for equal times. Existing numbers are kept; missing ones fill the lowest unused positive numbers. Same-time visits
-are all preserved; undone visits at the same time appear in red. Numbers must be unique within each patient and
-between 1 and 2147483647. A missing `done` field defaults to false (undone). If supplied, `done` must be the JSON
-boolean `true` or `false`; strings, numbers and null are invalid.
+Appointments are saved with their mark, for example
+`{"dateTime": "2026-10-05 09:30", "marked": false, "details": "INSULIN REVIEW"}`. Their numbers are not saved:
+LaiNurse numbers each patient's appointments in date order when it loads them, and appointments at the same date and
+time keep their order in the file. A `number` saved by an earlier version is ignored, and older files with appointment
+strings still load. Same-time visits are all preserved. A missing `marked` field defaults to false (unmarked). If supplied, `marked` must be the
+JSON boolean `true` or `false`; strings, numbers and null are invalid. A file from an earlier version, which saved the
+mark as `done`, still loads.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 Do not edit `lainurse.backup.json`. LaiNurse cannot stop you from editing it, and it does not check it until it needs it. The backup protects you only in the cases in the table above.<br>

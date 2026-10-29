@@ -25,7 +25,6 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
-import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
@@ -101,9 +100,10 @@ public class AddAppointmentCommandFlowTest {
     @Test
     public void execute_duplicateSlot_warnsAndPersistsBoth() throws Exception {
         CommandResult result = logic.execute("addappt S1234567A --date 2026-10-05 09:30");
-        assertEquals("Added appointment 3 of ALEX YEOH (S1234567A): 2026-10-05 09:30\n"
-                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #1.", result.getFeedbackToUser());
-        assertEquals(List.of(1, 3), patient(ALEX_ID).getSchedule()
+        // the new visit comes after the one already at that time, and the blood test moves to #3
+        assertEquals("Added appointment 2 of ALEX YEOH (S1234567A): 2026-10-05 09:30\n"
+                + "Warning: it clashes with this patient's appointment #1.", result.getFeedbackToUser());
+        assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule()
                 .findAtDateTime(new Appointment("2026-10-05 09:30")).stream().map(Appointment::getNumber).toList());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
     }
@@ -183,35 +183,25 @@ public class AddAppointmentCommandFlowTest {
     public void execute_crossPatientClash_warnsEvenWhenPatientHidden() throws Exception {
         logic.execute("find --name bernice");
         CommandResult result = logic.execute("addappt S2345678B --date 2026-10-05 09:30");
-        assertEquals("Added appointment 2 of BERNICE YU (S2345678B): 2026-10-05 09:30\n"
+        assertEquals("Added appointment 1 of BERNICE YU (S2345678B): 2026-10-05 09:30\n"
                 + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #1.", result.getFeedbackToUser());
         assertEquals(List.of(patient(BERNICE_ID)), model.getFilteredPatientList());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
     }
 
     @Test
-    public void execute_deletedHighestNumber_reusedAfterRestart() throws Exception {
-        logic.execute("addappt S1234567A --date 2026-12-01");
-        logic.execute("deleteappt S1234567A 3");
-        model = new ModelManager(storage.readLaiNurse().orElseThrow(), new UserPrefs());
-        logic = new LogicManager(model, storage);
+    public void execute_earlierAppointment_renumbersLaterOnesAlsoAfterRestart() throws Exception {
         CommandResult result = logic.execute("addappt S1234567A --date 2026-09-01");
-        assertEquals(3, result.getNavigation().orElseThrow().appointment().orElseThrow()
+        assertEquals(1, result.getNavigation().orElseThrow().appointment().orElseThrow()
                 .getAppointment().getNumber());
-        assertEquals(List.of(3, 1, 2), patient(ALEX_ID).getSchedule().asList().stream()
+        assertEquals(List.of("2026-09-01", "2026-10-05 09:30", "2026-11-02"), patient(ALEX_ID).getSchedule()
+                .asList().stream().map(appointment -> appointment.value).toList());
+        assertEquals(List.of(1, 2, 3), patient(ALEX_ID).getSchedule().asList().stream()
                 .map(Appointment::getNumber).toList());
+        model = new ModelManager(storage.readLaiNurse().orElseThrow(), new UserPrefs());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
-    }
-
-    @Test
-    public void execute_numberExhausted_rejectedWithoutChanges() throws Exception {
-        Patient original = patient(ALEX_ID);
-        Patient full = new PatientBuilder(original).withSchedule(new AppointmentSchedule(
-                List.of(new Appointment("2026-10-05").withNumber(Integer.MAX_VALUE)))).build();
-        model.setPatient(original, full);
-        storage.saveLaiNurse(model.getLaiNurse());
-        assertRejectedCommandLeavesDataUnchanged("addappt S1234567A --date 2026-10-06", CommandException.class,
-                AppointmentSchedule.MESSAGE_NUMBER_EXHAUSTED);
+        assertEquals(List.of(1, 2, 3), patient(ALEX_ID).getSchedule().asList().stream()
+                .map(Appointment::getNumber).toList());
     }
 
 }

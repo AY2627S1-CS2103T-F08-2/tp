@@ -116,9 +116,20 @@ under the time, shrinks the dates of all rows together and lets the times wrap, 
 row is wider than the panel.
 
 `PatientListPanel` shows each patient in the filtered list as a `PatientRow`, with their next appointment, and its
-`PatientDetailPanel` shows all the details of one patient. Above the rows, a header says whether the list is filtered,
+`PatientDetailPanel` shows all the details of one patient. Each list cell builds one `PatientRow` and shows each of its
+patients in it, since loading the row's FXML for every patient that scrolls into view makes scrolling stutter.
+The panel also takes the list of all appointments, so that a row shows its next appointment in red if it clashes, and
+refreshes its rows when any appointment changes, since a change to one patient can make another's appointment clash.
+`PinMark#setColor` can color a row's pin, such as red, for settings that may change what a mark means (#216).
+Above the rows, a header says whether the list is filtered,
 and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
-as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. When a
+as filtered while it shows fewer patients than there are, so it needs no knowledge of `find` or `viewappt`. Both
+lists end their header where their rows' last column ends, with `ListHeaders#alignEndWithRows`: the header's end
+padding is the list's inset, plus the width of its vertical scroll bar, plus a row's end padding, which is 12 pixels
+in both lists. While a list shows no scroll bar, each of its cells leaves the scroll bar's width empty at its end
+instead, with `ListHeaders#cellPadding`. So the count at the end of the header lines up with the rows' next
+appointments, or the day headings' counts, ends in the same place in both lists, and keeps its end in place as its
+text changes or the scroll bar comes and goes. When a
 `CommandResult` names a patient to view, as the result of `view` does, `MainWindow` tells that `PatientDetailPanel` to
 show the patient. After every command, `MainWindow` highlights the shown patient's row in `PatientListPanel`, or no row if
 that patient is not in the displayed list. `PatientDetailPanel` finds the patient by ID in the list of all patients from
@@ -148,7 +159,7 @@ in the command's range, on one page, and hides the week's arrow buttons; if the 
 patient's appointments. `AppointmentPage#ofWeek` and
 `AppointmentPage#ofRange` turn the appointments into rows: a heading for each day
 of the week, or for each day in the range that has an appointment, followed by that day's appointments, numbered down
-the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. An appointment with no time comes first in its day, except today, where it comes after the appointments that
+the page. The panel draws each heading itself, and each appointment as an `AppointmentRow`. As in the patient list, each list cell builds one heading and one row, and shows each of its rows in them. An appointment with no time comes first in its day, except today, where it comes after the appointments that
 have passed, right above the next one. A page is built as at the time given to it, so the page and the appointment that
 it selects first agree, and unit tests can fix the time. While a range is shown, the panel keeps the week of the weekly
 view, so that Esc goes back to it. The panel listens to the appointment list and rebuilds the page after a change,
@@ -448,32 +459,35 @@ patient whose schedule is empty, and `addappt` adds an appointment to it, `edita
 removes one. Each change returns a new `AppointmentSchedule` instead of modifying the old one,
 so a failed command leaves the patient unchanged.
 
-**Identity and order.** An `Appointment` has a patient-local immutable positive number, a date, optional time
-and optional details, plus a manually set completion boolean. Existing date/time constructors create unnumbered,
-undone inputs. `AppointmentSchedule` assigns
-missing numbers before exposing its immutable list. `isSameAppointment` compares assigned numbers; `equals` and
+**Identity and order.** An `Appointment` has a patient-local positive number, a date, optional time and optional
+details, plus a manually set completion boolean. Existing date/time constructors create unnumbered, undone inputs.
+`AppointmentSchedule` numbers its appointments before exposing its immutable list. `isSameAppointment` compares assigned numbers; `equals` and
 `hashCode` also compare date/time, details and completion. `hasSameDateTime` handles timestamp matching independently
 of identity and completion. `isDone()` reads completion; `withDone(boolean)` copies the appointment with a new status,
 preserving every other value. Assigning a number also preserves completion. Ordering and `toString()` remain date-based.
-`PatientAppointment#isSameEntry` combines patient ID and appointment number, so moving a visit preserves selection.
+`PatientAppointment#isSameEntry` combines patient ID and appointment number. A number can change when another
+appointment of the patient is added, moved or deleted, so each command that changes a schedule navigates to the
+appointment that it changed, and the selection follows it.
 The entry constructor verifies that the patient owns that exact numbered appointment.
 
-Schedules sort by date, optional time (absent first), then number. The global appointment list retains date/time,
-patient name and ID ordering, then uses number to distinguish a patient's simultaneous visits. Explicit duplicate
-numbers are rejected before sorting; timestamp duplicates are preserved. `addappt` assigns the highest remaining
-number plus one, starting at 1. Deletion leaves gaps and does not reserve deleted numbers; reaching the maximum
-integer number produces a `CommandException` before mutation.
+`AppointmentSchedule` numbers its appointments from 1 in date order: by date, then by optional time (absent
+first). At the same date and time, numbered inputs keep their number order, and unnumbered inputs come after them in
+input order. Every change renumbers the schedule. `add` puts the new appointment after the others at its date and
+time, and `remove` moves the later ones up a number. `replace` keeps an appointment's place when its date and time
+stay the same, as for a completion mark or new details, and otherwise puts it after the others at its new date and
+time. `getLastAt` finds the appointment that `add` or `replace` placed there. The number is therefore always the
+appointment's place in date order, which the v1.5 GUI vote chose (#163). Explicit duplicate numbers are rejected;
+timestamp duplicates are preserved. The global appointment list retains date/time, patient name and ID ordering,
+then uses number to distinguish a patient's simultaneous visits.
 
-**Storage and compatibility.** `JsonAdaptedAppointment` saves `number`, `dateTime`, boolean `done` and optional
-`details`, such as `{"number": 2, "dateTime": "2026-10-05 09:30", "done": false, "details": "INSULIN REVIEW"}`.
-It accepts legacy strings and objects
-without numbers. Missing numbers are assigned in chronological order, preserving input order for equal timestamps,
-using the lowest unused positive numbers while retaining every explicit number. A local JSON-node creator rejects
-non-integer, null, non-positive and out-of-range number values without changing global Jackson settings.
-Missing `done` fields default to false. An explicit `done` must be a JSON boolean: null, strings, numbers and
-other JSON types produce an `IllegalValueException`, without coercion. Both statuses persist across restarts.
-`JsonAdaptedPatient` translates duplicate-number validation into the existing `IllegalValueException` loading path.
-Migration does not save immediately; the normal save after a successful command persists the assigned numbers.
+**Storage and compatibility.** `JsonAdaptedAppointment` saves `dateTime`, boolean `marked` and optional
+`details`, such as `{"dateTime": "2026-10-05 09:30", "marked": false, "details": "INSULIN REVIEW"}`. It does not save
+the number, which is the appointment's place in date order: `JsonAdaptedPatient` saves each schedule in that order,
+and loading numbers the appointments again, with equal timestamps in their file order. Its JSON-node creator reads
+only the fields it knows, so a `number` that v1.5 and earlier saved is ignored. It also accepts legacy strings.
+It reads the mark from `marked`, or from `done`, which v1.5 and earlier saved, if there is no `marked`. A missing
+mark defaults to false. An explicit mark must be a JSON boolean: null, strings, numbers and other JSON types produce
+an `IllegalValueException`, without coercion. Both statuses persist across restarts.
 `JsonSerializableLaiNurse` continues to require the `patients` key.
 
 An appointment date is written `yyyy-MM-dd`, optionally followed by a time in `HH:mm`, with the year exactly
@@ -481,11 +495,13 @@ four digits and no sign. A data file without the `patients` key, such as one fro
 `persons`, fails to load, and LaiNurse starts with an empty list. A data file from an earlier version with a
 signed or wider year, such as `+12345-01-01` or `-2026-10-05`, also fails to load.
 
-**Clashes.** `AppointmentClashes.find` compares exact date and optional time over the unfiltered appointment list,
-excluding the target's patient ID and number and every done visit. A done target has no clashes. Two date-only
-undone visits on one day clash; a date-only visit and a
-timed visit do not. Both commands and UI use this query. Clashes never reject commands or data files, and are not
-stored as flags. Add/edit/unmark success messages include every conflicting patient and appointment number.
+**Clashes.** `AppointmentClashes.find` compares exact date and time over the unfiltered appointment list, excluding
+the target's patient ID and number and every done visit. A done target has no clashes, and neither does a date-only
+one, since its time is not known: two date-only visits on one day do not clash, and neither do a date-only visit and a
+timed one. Both commands and UI use this query. Clashes never reject commands or data files, and are not
+stored as flags. Add/edit/unmark success messages include every conflicting patient and appointment number. In the
+appointment list and the details, `ClashMark` puts a red boxed `!` before the time of each clashing appointment, so
+that a clash does not show by color alone. Day headings do not mark clashes, so that today's heading stays orange.
 
 **Time zones.** An `Appointment` holds a `LocalDate` and an optional `LocalTime`, with no time zone or offset, and is
 saved as text such as `2026-10-05 09:30`. This assumes that the nurse and their patients are in one time zone, which
@@ -500,8 +516,10 @@ bring. Both follow `MedicalHistory`: `TextNormalizer` trims the text, collapses 
 blank text is rejected. `Patient#getNotes()` and `Appointment#getDetails()` return an `Optional`.
 
 The details panel shows the notes under the medical history, and each appointment's details beside its time, or under it
-in a narrow panel. `AppointmentRow` shows its Done/Undone status under its patient and its details below that,
-only when it has some. The detail panel shows the same status under the appointment's date.
+in a narrow panel. `AppointmentRow` shows its details under its patient, only when it has some. Before the time,
+`TimeMark` shows the boxed `!` of `ClashMark` for a clash, or else the pin of `PinMark` for a done appointment, in
+both the row and the detail panel. A done appointment never clashes, so it never needs both. Both marks are drawn as
+shapes on a 16-pixel square, so they look the same whatever the font and the display scaling.
 
 `add` and `edit` accept the optional, single-valued `--notes` option defined by `CliSyntax.PREFIX_NOTES`.
 `ParserUtil.parseNotes` validates it using `Notes.isValidNotes` and throws a `ParseException` with
@@ -526,9 +544,10 @@ other missing number. `AppointmentLookup.Target` holds the positive number; the 
 and reports a missing number before any mutation.
 An assertion checks that the resolved appointment has the requested number.
 
-An edit builds the replacement with the old appointment number and completion status, and preserves date/time
-or details not supplied.
-It removes the old identity, adds the replacement and uses `Model#setPatient()` and `Navigation.toAppointment`.
+An edit builds the replacement with the old completion status, and preserves date/time or details not supplied.
+It puts the replacement in place of the old appointment with `AppointmentSchedule#replace`, so that a details-only
+edit keeps its number and a moved appointment comes after the others at its new date and time, and uses
+`Model#setPatient()` and `Navigation.toAppointment`.
 Moving onto another visit is permitted. After updating the model, `Messages.formatClashWarning` describes all
 other undone visits at the resulting time when the edited appointment is undone, including on details-only edits.
 
@@ -545,16 +564,17 @@ options and any other words between the ID and the options. A missing `--date` g
 appointment date format, as `--to` does in `editappt`. It logs parsing success or a rejected input at `FINE` level
 without logging appointment details. It finds the patient through
 `Model#findPatientById()`,
-assigns `schedule.getNextNumber()`, adds the numbered appointment, and replaces the patient. The result names its
-number and navigates to that exact stored appointment, followed by any clash warning. The existing patient filter
+adds the appointment with `AppointmentSchedule#add`, finds its number with `getLastAt`, and replaces the patient.
+The result names its number and navigates to that exact stored appointment, followed by any clash warning. The existing patient filter
 is retained, including when the patient or a clashing visit is hidden.
 
 ### Deleting an appointment
 
 `deleteappt ID NUMBER` removes exactly one numbered visit. `AppointmentLookup` reports a missing number before
-any change. The command replaces the patient with the selected identity removed; every other number and every
-other visit's details remain intact, even when visits share a timestamp. An assertion checks that the removed
-number is absent from the resulting schedule.
+any change. The command replaces the patient with the selected appointment removed. Every other visit's details
+remain intact, even when visits share a timestamp, and the appointments after it move up one number. An assertion
+checks that the resulting schedule has one appointment fewer. Like `delete`, it has no view of its own, so it keeps
+the view that is shown.
 
 Unlike `addappt` and `editappt`, the command clears the selection with `CommandResult#withSelectionCleared`: after
 it succeeds, no appointment exists to select, and the deleted one cannot be highlighted again. The returned result
@@ -1249,7 +1269,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. The edited appointment clashes with another visit, including to the same patient.
 
-    * 2a1. LaiNurse keeps the edit and appends a warning naming the other patients and appointment numbers.
+    * 2a1. LaiNurse keeps the edit and appends a warning naming the other appointments: another patient's with
+      the patient, and the same patient's as "this patient's appointment".
 
       Use case resumes at step 3.
 
@@ -1287,7 +1308,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 * 2a. Another undone appointment has the given date and time, including one of this patient's visits.
 
-    * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other patients and visit numbers.
+    * 2a1. LaiNurse adds the appointment and appends a clash warning naming the other appointments: another
+      patient's with the patient, and the same patient's as "this patient's appointment".
 
       Use case resumes at step 3.
 
@@ -1327,7 +1349,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 1. Nurse requests to mark or unmark an appointment using its patient ID and appointment number.
 2. LaiNurse changes only the appointment's completion status and saves the data.
-3. LaiNurse shows and selects the updated appointment, with its Done/Undone label.
+3. LaiNurse shows and selects the updated appointment, with a pin before its time if it is done.
 
    Use case ends.
 
@@ -1411,13 +1433,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Appointment**: A scheduled date, or date and time, for one of the nurse's home visits to a patient. A patient can
   have any number of appointments. It is in valid date format yyyy-MM-dd (year-month-date) or yyyy-MM-dd HH:mm in
   24-hour format, in local time with no time zone.
-* **Appointment number**: The stable number (`#N`) that an appointment keeps within its patient's schedule, used by
-  `editappt`, `deleteappt`, `markappt` and `unmarkappt`. It is not the appointment's position down the appointment
-  page.
+* **Appointment number**: The number (`#N`) of an appointment within its patient's schedule, from 1 in date order,
+  used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. It changes when an earlier appointment of the patient
+  is added, moved or deleted. It is not the appointment's position down the appointment page.
 * **List number**: A row's position in the displayed patient list, which changes as the list changes. Commands
   identify patients by patient ID, never by list number.
-* **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time (two date-only visits
-  on one day also clash). Clashing visits are shown in red, and a command that creates or restores a clash appends a
+* **Clash (clash warning)**: Two or more undone appointments at exactly the same date and time. Appointments with no
+  time never clash. Clashing visits are shown in red, with a boxed `!` before the time, and a command that creates or restores a clash appends a
   warning naming the other patients and appointment numbers.
 * **Details**: (1) An appointment's free text about the visit, set with `--details` and `--add-details`; (2) the panel
   beside a list that shows one patient's full information ("the details beside the list").
@@ -1942,7 +1964,7 @@ testers are expected to do more *exploratory* testing.
        pixels wide, each takes about half. In a wider window, the details take more, up to 72% when the window is
        1,920 pixels wide. At the narrowest, nothing is cut off at the sides of the window, and neither the list nor the
        details scroll sideways. In the details, long values such as Alex Yeoh's address wrap without breaking a word.
-       Beside Alex Yeoh's blood-test appointment, e.g. Mon 2 Nov, `No time specified` wraps onto two lines, with the
+       Beside Alex Yeoh's blood-test appointment, e.g. Mon 2 Nov, `Unspecified time` wraps onto two lines, with the
        appointment's details,
        `MONTHLY BLOOD TEST`, under it. In a wide window, the details of each appointment move beside its time.
 
@@ -1964,7 +1986,7 @@ testers are expected to do more *exploratory* testing.
        no time, because the one at 00:00 has passed.
 
     1. Test case: `view T0567890E`<br>
-       Expected: Under **Appointments**, the panel lists today's appointment with `No time specified`, then the one at
+       Expected: Under **Appointments**, the panel lists today's appointment with `Unspecified time`, then the one at
        23:59, both in orange. Under **Past**, it lists the one at 00:00, dimmed.
 
     1. Test case: click the **Appointments** tab, then press Esc<br>
@@ -2084,8 +2106,8 @@ testers are expected to do more *exploratory* testing.
        Expected: No appointment is changed. The status message says `Patient S1234567A has no appointment #99.`
 
     1. Test case: `editappt S1234567A 1 --to BLOOD`<br>
-       Expected: The appointment moves to `BLOOD`, keeps its number and details, and both visits are preserved.
-       The result warns about the other appointment number; both dates/times appear in red.
+       Expected: The appointment moves to `BLOOD` with its details, and both visits are preserved. It becomes #2,
+       after the blood test already on that date, which becomes #1. Neither has a time, so there is no clash warning.
 
     1. Test case: `editappt S1234567A 1`, with nothing to change<br>
        Expected: No appointment is changed. The status message says that at least one of `--to`, `--details` and
@@ -2109,8 +2131,9 @@ testers are expected to do more *exploratory* testing.
     1. Prerequisites: Start with the sample data.
 
     1. Test case: `addappt S1234567A --date MON 09:30`<br>
-       Expected: Appointment #3 is added at `MON 09:30`. Both visits remain, and the result warns about appointment
-       #1 of Alex Yeoh. Their times and that day's heading appear in red.
+       Expected: Appointment #2 is added at `MON 09:30`, after Alex Yeoh's visit at that time, and the blood test
+       becomes #3. Both visits remain, and the result warns about `this patient's appointment #1`. Their times appear
+       in red, each with a boxed `!` before it.
 
     1. Test case: `addappt S0000000Z --date 2026-10-14`<br>
        Expected: No appointment is added. The status message shows `No patient has the ID S0000000Z.`
@@ -2132,10 +2155,11 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `deleteappt S1234567A 1`<br>
        Expected: The appointment is deleted. The status message names the patient's ID and the deleted appointment with
-       its details. The **Appointments** tab is selected, on the page that was shown, and the appointment is gone from it.
+       its details. The tab that was selected stays selected. On the **Appointments** tab, the page that was shown
+       stays, and the appointment is gone from it. Appointment #2 becomes #1.
 
-    1. Test case: `deleteappt S1234567A 2`<br>
-       Expected: The date-only blood-test appointment is deleted, as above.
+    1. Test case: on the **Patients** tab, `deleteappt S1234567A 2`<br>
+       Expected: The date-only blood-test appointment is deleted, and the **Patients** tab stays selected.
 
 1. Deleting an appointment that cannot be deleted
 
@@ -2167,23 +2191,28 @@ testers are expected to do more *exploratory* testing.
 ### Appointment numbers, migration and clash highlighting
 
 1. Start with sample data. Run `addappt S2345678B --date MON 09:30`, using the sample week's Monday for `MON`.
-   Expected: Bernice's new appointment is #2. The warning names Alex Yeoh, ID `S1234567A`, appointment #1.
-   Both times and Monday's heading are red. A `viewappt --id S2345678B` filter still shows the warning color.
+   Expected: Bernice's new appointment is #1, before her Tuesday one, which becomes #2. The warning names Alex Yeoh,
+   ID `S1234567A`, appointment #1.
+   Both times are red, each with a boxed `!`. A `viewappt --id S2345678B` filter still shows the warning color.
 1. Run `addappt S1234567A --date MON 09:30 --details Second visit`.
-   Expected: Alex's new visit is #3 and the warning names Alex's #1 and Bernice's #2. Both Alex visits survive.
+   Expected: Alex's new visit is #2, after his visit at the same time, and his blood test becomes #3. The warning
+   names `this patient's appointment #1` and Bernice's #1. Both Alex visits survive.
 1. Run `editappt S1234567A --appt MON 09:30 --details Review`, then the equivalent `deleteappt` selector.
    Expected: Each rejects the unsupported option, shows its number-based command format and saves no changes.
-1. Run `editappt S1234567A 3 --to TUE 10:00`, then `view S1234567A`.
-   Expected: Only #3 moves; its number/details and selection survive the move. The detail date starts with `#3`.
-1. Run `deleteappt S1234567A 3`, restart, then add another visit to Alex.
-   Expected: Surviving numbers stay #1 and #2. The new visit receives #3.
-1. Load a legacy file with two appointment objects for one patient at the same time and different details, plus
-   an earlier plain-string appointment. Expected: All three load, numbered chronologically. Equal-time visits
-   keep their file order and appear red immediately. After a successful command and restart, all numbers persist.
+1. Run `editappt S1234567A 2 --to TUE 10:00`, then `view S1234567A`.
+   Expected: Only the second visit moves, with its details, and stays selected. It is still #2, between the visit
+   on Monday and the blood test. The details show `#2` before its date.
+1. Run `deleteappt S1234567A 1`, then restart.
+   Expected: The visit on Tuesday becomes #1 and the blood test #2, also after the restart.
+1. Load a file with two appointment objects for one patient at the same date and time and different details, plus
+   an earlier plain-string appointment, with `number` fields in any order. Expected: All three load, numbered in
+   date order. The two at the same time keep their file order and appear red immediately. The saved numbers are
+   ignored, and the next save leaves them out.
 1. Check clashing visits from yesterday and today, including selected rows and the marked detail appointment.
    Expected: Date/time text remains red. Other past text stays dimmed, today's non-clashing dates stay orange,
    and selection backgrounds stay blue. Moving/deleting the other visit removes obsolete red highlighting.
-1. Resize to a narrow window. Expected: `#N`, dates, times and long details remain readable with wrapping;
+1. Resize to a narrow window. Expected: `#N`, dates, times and long details remain readable with wrapping, and a
+   time never breaks inside a word;
    page positions remain distinct from patient-local appointment numbers.
 
 ### Marking and unmarking appointments
@@ -2192,28 +2221,30 @@ testers are expected to do more *exploratory* testing.
 
     1. Prerequisites: Start with sample data. Alex Yeoh (`S1234567A`) has appointments #1 and #2.
     1. Test case: `markappt S1234567A 2`<br>
-       Expected: Appointment #2 shows **Done** in the list and details and is selected in **Appointments**.
+       Expected: Appointment #2 shows a pin before its time in the list and details, and is selected in
+       **Appointments**.
        Its number, date, time and details stay unchanged. Appointment #1 stays undone. If #2 is in the future,
        it is no longer eligible for Alex's next-appointment summary, but stays in its date-based group.
     1. Test case: `markappt S1234567A 2` again<br>
        Expected: An already-done error; model, page, selection and saved file stay unchanged.
     1. Test case: `editappt S1234567A 2 --to 2099-12-31 --details Follow up`, then restart<br>
-       Expected: #2 keeps **Done**, its number and the new details after rescheduling and restart.
+       Expected: #2 keeps its pin and the new details after rescheduling and restart. It is still #2, as it is still
+       after #1.
     1. Test case: `unmarkappt S1234567A 2`, then the same command again<br>
-       Expected: The first command changes only the status to **Undone** and selects #2. The second reports
+       Expected: The first command only removes the pin, and selects #2. The second reports
        already undone and changes nothing. Restarting preserves the undone status.
 
 1. Clashes, hidden patients and page preservation
 
     1. Prerequisites: Start with sample data; use its Monday date for `MON`.
     1. Test case: `addappt S2345678B --date MON 09:30`, then `viewappt --id S1234567A`<br>
-       Expected: Alex's #1 clashes with Bernice's #2, even though Bernice is hidden on this appointment page.
-    1. Test case: `markappt S2345678B 2`, then `viewappt --id S1234567A`<br>
-       Expected: Alex's #1 and the day heading are no longer red. Bernice's visit remains visible when viewed.
-    1. Test case: `unmarkappt S2345678B 2`<br>
+       Expected: Alex's #1 clashes with Bernice's #1, even though Bernice is hidden on this appointment page.
+    1. Test case: `markappt S2345678B 1`, then `viewappt --id S1234567A`<br>
+       Expected: Alex's #1 is no longer red, and has no `!`. Bernice's visit remains visible when viewed.
+    1. Test case: `unmarkappt S2345678B 1`<br>
        Expected: The warning names Alex and #1. Both undone visits clash again; the updated visit is selected.
-    1. Test case: `viewappt --id S2345678B`, then `markappt S2345678B 2`<br>
-       Expected: The page stays, #2 remains selected and shows **Done**. The list and details update immediately,
+    1. Test case: `viewappt --id S2345678B`, then `markappt S2345678B 1`<br>
+       Expected: The page stays, and #1 remains selected and shows a pin. The list and details update immediately,
        including in a narrow window. Done status does not itself grey out a future visit.
 
 1. Invalid commands and completion

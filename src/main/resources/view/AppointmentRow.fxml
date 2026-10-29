@@ -19,8 +19,13 @@
           <Region fx:constant="USE_PREF_SIZE" />
         </minWidth>
       </Label>
+      <!-- The appointment's number within its patient, in a small box, as voted in #163 (A2). -->
+      <Label fx:id="appointmentNumber" styleClass="appointment-entry-number-chip">
+        <minWidth>
+          <Region fx:constant="USE_PREF_SIZE" />
+        </minWidth>
+      </Label>
     </HBox>
-    <Label fx:id="status" styleClass="appointment-entry-status, appointment-entry-details" />
     <!-- The appointment's details, on one line that ends in "..." if they are long. Hidden if there are none. -->
     <Label fx:id="details" styleClass="appointment-entry-details" minWidth="0" />
   </VBox>

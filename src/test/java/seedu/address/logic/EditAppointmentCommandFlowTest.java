@@ -139,13 +139,21 @@ public class EditAppointmentCommandFlowTest {
 
     @Test
     public void execute_moveOntoOtherAppointment_warnsAndPersistsBoth() throws Exception {
-        CommandResult result = logic.execute("editappt S1234567A 1 --to 2026-11-02");
-        assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-11-02; Details: INSULIN REVIEW"
-                + " (moved from 2026-10-05 09:30)\n"
-                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #2.", result.getFeedbackToUser());
+        CommandResult result = logic.execute("editappt S1234567A 2 --to 2026-10-05 09:30");
+        assertEquals("Edited appointment 2 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: MONTHLY BLOOD TEST"
+                + " (moved from 2026-11-02)\n"
+                + "Warning: it clashes with this patient's appointment #1.", result.getFeedbackToUser());
         assertEquals(List.of(1, 2), patient(ALEX_ID).getSchedule().asList().stream()
                 .map(Appointment::getNumber).toList());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
+    }
+
+    @Test
+    public void execute_moveOntoDateOnlyAppointment_noWarning() throws Exception {
+        // appointments with no time never clash, and the moved one comes after the blood test there
+        CommandResult result = logic.execute("editappt S1234567A 1 --to 2026-11-02");
+        assertEquals("Edited appointment 2 of ALEX YEOH (S1234567A): 2026-11-02; Details: INSULIN REVIEW"
+                + " (moved from 2026-10-05 09:30)", result.getFeedbackToUser());
     }
 
     @Test
@@ -230,13 +238,14 @@ public class EditAppointmentCommandFlowTest {
     }
 
     @Test
-    public void execute_numberSelectsDuplicate_keepsIdentityAfterMove() throws Exception {
+    public void execute_numberSelectsDuplicate_movesItAndRenumbers() throws Exception {
         logic.execute("addappt S1234567A --date 2026-10-05 09:30 --details Second visit");
-        CommandResult result = logic.execute("editappt S1234567A 3 --to 2026-09-01");
-        Appointment moved = patient(ALEX_ID).getSchedule().findByNumber(3).orElseThrow();
+        // the second visit at 09:30 is #2, and moving it before the others makes it #1
+        CommandResult result = logic.execute("editappt S1234567A 2 --to 2026-09-01");
+        Appointment moved = patient(ALEX_ID).getSchedule().findByNumber(1).orElseThrow();
         assertEquals("2026-09-01", moved.value);
         assertEquals("SECOND VISIT", moved.getDetails().orElseThrow().value);
-        assertEquals(3, result.getNavigation().orElseThrow().appointment().orElseThrow()
+        assertEquals(1, result.getNavigation().orElseThrow().appointment().orElseThrow()
                 .getAppointment().getNumber());
         assertEquals(1, patient(ALEX_ID).getSchedule().findAtDateTime(new Appointment("2026-10-05 09:30")).size());
         assertEquals(model.getLaiNurse(), storage.readLaiNurse().orElseThrow());
@@ -256,8 +265,8 @@ public class EditAppointmentCommandFlowTest {
         logic.execute("addappt S2345678B --date 2026-10-05 09:30");
         CommandResult result = logic.execute("editappt S1234567A 1 --details Review");
         assertEquals("Edited appointment 1 of ALEX YEOH (S1234567A): 2026-10-05 09:30; Details: REVIEW\n"
-                + "Warning: it clashes with ALEX YEOH (S1234567A), appointment #3; "
-                + "BERNICE YU (S2345678B), appointment #2.", result.getFeedbackToUser());
+                + "Warning: it clashes with this patient's appointment #2; "
+                + "BERNICE YU (S2345678B), appointment #1.", result.getFeedbackToUser());
     }
 
 }

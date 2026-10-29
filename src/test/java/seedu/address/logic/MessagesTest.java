@@ -5,9 +5,12 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TO;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.patient.Patient;
+import seedu.address.model.patient.PatientAppointment;
 import seedu.address.testutil.PatientBuilder;
 
 public class MessagesTest {
@@ -38,5 +41,21 @@ public class MessagesTest {
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_FROM, PREFIX_TO));
         assertEquals("Each of these options can be given only once: --to, --from.",
                 Messages.getErrorMessageForDuplicatePrefixes(PREFIX_TO, PREFIX_FROM));
+    }
+
+    @Test
+    public void formatClashWarning_samePatientAndOther_namesOnlyTheOtherPatient() {
+        Patient alex = new PatientBuilder().withId("S1234567A").withName("Alex Yeoh")
+                .withAppointments("2026-10-05 09:30", "2026-10-05 09:30").build();
+        Patient bernice = new PatientBuilder().withId("S2345678B").withName("Bernice Yu")
+                .withAppointments("2026-10-05 09:30").build();
+        List<PatientAppointment> appointments = List.of(entry(alex, 1), entry(alex, 2), entry(bernice, 1));
+        assertEquals("\nWarning: it clashes with this patient's appointment #1; BERNICE YU (S2345678B), "
+                + "appointment #1.", Messages.formatClashWarning(appointments, entry(alex, 2)));
+        assertEquals("", Messages.formatClashWarning(List.of(entry(alex, 1)), entry(alex, 1)));
+    }
+
+    private static PatientAppointment entry(Patient patient, int number) {
+        return new PatientAppointment(patient, patient.getSchedule().findByNumber(number).orElseThrow());
     }
 }

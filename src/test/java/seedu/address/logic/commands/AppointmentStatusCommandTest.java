@@ -64,7 +64,7 @@ public class AppointmentStatusCommandTest {
         CommandResult result = new UnmarkAppointmentCommand(patient.getId(), 2).execute(model);
         assertEquals("Unmarked appointment 2 of AMY BEE (S1234567A) as undone: "
                 + "2026-10-05 09:30; Details: BLOOD TEST\n"
-                + "Warning: it clashes with AMY BEE (S1234567A), appointment #1.", result.getFeedbackToUser());
+                + "Warning: it clashes with this patient's appointment #1.", result.getFeedbackToUser());
         assertEquals(Optional.of(View.APPOINTMENTS), result.getView());
         assertEquals(Optional.of(Navigation.toAppointment(new PatientAppointment(patient, appointment(2)))),
                 result.getNavigation());
