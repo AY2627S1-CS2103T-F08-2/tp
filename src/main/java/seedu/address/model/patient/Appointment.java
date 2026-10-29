@@ -28,6 +28,11 @@ public class Appointment implements Comparable<Appointment> {
     public static final String MESSAGE_NUMBER_CONSTRAINTS =
             "Appointment numbers must be positive whole numbers, such as 1 or 2.";
 
+    /** The order that {@link #compareTo} gives, built once rather than on every comparison. */
+    private static final Comparator<Appointment> NATURAL_ORDER = Comparator.comparing(Appointment::getDate)
+            .thenComparing(appointment -> appointment.time, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(appointment -> appointment.number, Comparator.nullsFirst(Comparator.naturalOrder()));
+
     /** The date, and the time if there is one, as in "2026-09-20" or "2026-09-20 14:00". */
     public final String value;
     private final LocalDate date;
@@ -190,10 +195,7 @@ public class Appointment implements Comparable<Appointment> {
      */
     @Override
     public int compareTo(Appointment other) {
-        return Comparator.comparing(Appointment::getDate)
-                .thenComparing(appointment -> appointment.time, Comparator.nullsFirst(Comparator.naturalOrder()))
-                .thenComparing(appointment -> appointment.number, Comparator.nullsFirst(Comparator.naturalOrder()))
-                .compare(this, other);
+        return NATURAL_ORDER.compare(this, other);
     }
 
     @Override
