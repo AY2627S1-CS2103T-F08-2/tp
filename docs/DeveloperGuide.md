@@ -122,8 +122,10 @@ The panel also takes the list of all appointments, so that a row shows its next 
 refreshes its rows when any appointment changes, since a change to one patient can make another's appointment clash.
 `PinMark#setColor` can color a row's pin, such as red, for settings that may change what a mark means (#216).
 Above the rows, a header says whether the list is filtered,
-and how many patients it shows. The panel takes both the filtered list and the list of all patients, and counts the list
-as filtered while it shows fewer patients than its scope has, so it needs no knowledge of `find`. Both
+and how many patients it shows. The panel takes both the filtered list and the list of all patients, and
+`Logic#isPatientListFiltered`, which is true while the list has a filter, such as after `find`. It counts the list as
+filtered then, even if the filter hides no one, such as `6 of 6`, so that the header shows what the first Esc removes,
+and the Esc does not seem to do nothing. Both
 lists end their header where their rows' last column ends, with `ListHeaders#alignEndWithRows`: the header's end
 padding is the list's inset, plus the width of its vertical scroll bar, plus a row's end padding, which is 12 pixels
 in both lists. While a list shows no scroll bar, each of its cells leaves the scroll bar's width empty at its end
@@ -406,8 +408,9 @@ search, as described in [Viewing appointments by date](#viewing-appointments-by-
 
 `FindCommand` passes the predicate and a comparator to `Model#updateFilteredPatientList(predicate, comparator)` and
 reports the existing patient count message. The comparator orders patients by descending match count, then by
-`PatientNameComparator`, so ties are in name order. Each search replaces the previous filter and searches the full
-patient collection. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to patient records update
+`PatientNameComparator`, so ties are in name order. `ModelManager` puts `ARCHIVED_LAST` before any comparator, so the
+whole order is archived patients last, then the match count, then the name. Each search replaces the previous filter
+and searches all the patients in the scope of the patient list. `ModelManager` keeps one `SortedList` over its `FilteredList`, so changes to patient records update
 the same observable view. Filtering and sorting do not change stored records or their order. The single-argument
 filter method clears sorting, as does a null comparator; existing calls from `view`, `add` and `edit`
 therefore restore name order. The appointment list is independent of this sorting. `find` searches only the patients
@@ -936,7 +939,8 @@ with `Model#setPatient`, and fails if the patient already has the requested stat
 * The appointment view has no scope of its own. Whether it shows archived patients' appointments is part of the
   filter that `viewappt` sets, as its dates and `--id` are. So every `viewappt` result carries a `PatientScope`,
   added with `CommandResult#withAppointmentScope`: the one that `--all` or `--archived` gives, the default
-  otherwise, or `ALL` with `--id`, which shows that patient whether archived or not. `AppointmentListPanel` keeps it
+  otherwise, or with `--id`, the scope that has that patient, `ARCHIVED` or `UNARCHIVED`, so that the patient's
+  appointments show whether archived or not, and the header counts them as `3` or `(3)`, not `3 (0)`. `AppointmentListPanel` keeps it
   with its range and week, and shows only the appointments of the patients in it. `view` and `find` never change it,
   and `viewappt` never changes the patient list.
 * A command that goes to a patient, such as `view ID`, `edit` or `add`, calls `Model#showInPatientList(patient)`,
@@ -1144,7 +1148,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 
 1.  Nurse requests to find patients using one or more substrings of their ID, name, phone number, address, medical history or notes
-2.  LaiNurse shows a list of matching patients, with the patients that match the most fields first, and patients that match the same number of fields in name order
+2.  LaiNurse shows a list of matching patients, with archived patients, if the list shows them, last, then the patients that match the most fields first, and patients that match the same number of fields in name order
 
     Use case ends.
 
@@ -1574,8 +1578,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 5a1. LaiNurse shows the patient with the others again, and their appointments can clash again.
     * Use case ends.
 
-*{More to be added}*
-
 ### Non-Functional Requirements
 
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed. On macOS, this must be the JDK version given in the User Guide's Quick Start.
@@ -1667,17 +1669,15 @@ testers are expected to do more *exploratory* testing.
 
     1. Download the JAR file and copy it into an empty folder.
 
-    1. Double-click the JAR file.<br>
+    1. Open a terminal in that folder, and run `java -jar lainurse.jar`.<br>
        Expected: The GUI opens with the sample patients. The window size may not be optimal.
 
 1. Saving window preferences
 
     1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-    1. Relaunch the app by double-clicking the JAR file.<br>
+    1. Relaunch the app with `java -jar lainurse.jar`, from the same folder.<br>
        Expected: The most recent window size and location are retained.
-
-1. _{ more test cases …​ }_
 
 ### Viewing a patient
 
@@ -1813,8 +1813,6 @@ testers are expected to do more *exploratory* testing.
 
     1. Other incorrect delete commands to try: `delete`, `delete S123-456` (not a valid ID)<br>
        Expected: No patient is deleted. The status message shows the correct command format.
-
-1. _{ more test cases …​ }_
 
 ### Recording and viewing patient notes
 
@@ -2097,8 +2095,6 @@ testers are expected to do more *exploratory* testing.
        Expected: The patient list still shows only Alex Yeoh, as `find` left it. `viewappt` does not change the
        patient list.
 
-1. _{ more test cases …​ }_
-
 ### Switching views and browsing appointments
 
 1. Browsing a `viewappt` page and the weekly view
@@ -2130,7 +2126,8 @@ testers are expected to do more *exploratory* testing.
        arrow buttons above the list. Alex Yeoh's appointment, selected by Ctrl+Up above, stays selected.
 
     1. Test case: press Esc again<br>
-       Expected: Nothing changes, because the weekly view has no range to remove.
+       Expected: Nothing changes, because the weekly view has no range to remove, and already hides archived
+       patients' appointments. After `viewappt --all`, this second Esc would hide them again.
 
     1. Test case: press Right, then Left twice, then enter `viewappt`<br>
        Expected: Right shows the week after the sample week, e.g. the week of Mon 12 Oct, and selects its first
@@ -2389,8 +2386,6 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: run `viewappt WED` first, then `deleteappt G1234567E 1`<br>
        Expected: The appointments view keeps showing Wednesday, now without Irfan Ibrahim's appointment.
-
-1. _{ more test cases …​ }_
 
 ### Appointment numbers, migration and clash highlighting
 

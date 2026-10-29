@@ -169,6 +169,11 @@ public class LogicManager implements Logic {
     }
 
     @Override
+    public ObservableValue<Boolean> isPatientListFiltered() {
+        return model.isPatientListFiltered();
+    }
+
+    @Override
     public ObservableList<Patient> getPatientList() {
         return model.getLaiNurse().getPatientList();
     }

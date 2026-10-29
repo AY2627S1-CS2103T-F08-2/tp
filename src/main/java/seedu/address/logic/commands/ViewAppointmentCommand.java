@@ -35,7 +35,8 @@ import seedu.address.model.patient.PatientId;
  * <p>
  * Whether archived patients' appointments show is part of the same filter, as the dates and {@code --id} are: the
  * patients in the scope that the command gives, or the default scope. With {@code --id}, that patient's appointments
- * show even if they are archived.
+ * show even if they are archived: the scope is the one that has the patient, so that the header counts the patient's
+ * appointments as it would count them among everyone's, such as "3", or "(3)" for an archived patient.
  */
 public class ViewAppointmentCommand extends Command {
 
@@ -188,7 +189,7 @@ public class ViewAppointmentCommand extends Command {
                 .count();
         return new CommandResult(describeForPatient(count, patient, start, end),
                 new CommandResult.AppointmentRange(start, end, id))
-                .withAppointmentScope(PatientScope.ALL)
+                .withAppointmentScope(scopeOf(patient))
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
     }
 
@@ -221,8 +222,16 @@ public class ViewAppointmentCommand extends Command {
         LocalDate last = appointments.isEmpty() ? today : appointments.get(appointments.size() - 1).getDate();
         return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW,
                 appointments.size(), patient.getName().fullName), new CommandResult.AppointmentRange(first, last, id))
-                .withAppointmentScope(PatientScope.ALL)
+                .withAppointmentScope(scopeOf(patient))
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
+    }
+
+    /**
+     * Returns the scope that has {@code patient}: archived patients only if they are archived, and otherwise the
+     * patients who are not archived. It is not the default scope, which a setting may change (#216).
+     */
+    private static PatientScope scopeOf(Patient patient) {
+        return patient.isArchived() ? PatientScope.ARCHIVED : PatientScope.UNARCHIVED;
     }
 
     /**
