@@ -8,7 +8,9 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -42,6 +44,8 @@ public class ModelManager implements Model {
     private final ObjectProperty<Settings> settings = new SimpleObjectProperty<>(Settings.DEFAULT);
     /** The filter of the patient list, which chooses among the patients in the scope. */
     private Predicate<Patient> filter = PREDICATE_SHOW_ALL_PATIENTS;
+    /** Whether {@link #filter} is a filter, not the predicate that keeps every patient. */
+    private final BooleanProperty isFiltered = new SimpleBooleanProperty(false);
 
     /**
      * Initializes a ModelManager with the given laiNurse and userPrefs.
@@ -165,6 +169,7 @@ public class ModelManager implements Model {
     public void updateFilteredPatientList(Predicate<Patient> predicate, Comparator<Patient> comparator) {
         requireNonNull(predicate);
         filter = predicate;
+        isFiltered.set(predicate != PREDICATE_SHOW_ALL_PATIENTS);
         applyFilter();
         sortedPatients.setComparator(comparator == null ? null : ARCHIVED_LAST.thenComparing(comparator));
         logger.fine(() -> "Updated patient filter: " + sortedPatients.size() + " patients, "
@@ -173,7 +178,12 @@ public class ModelManager implements Model {
 
     @Override
     public boolean hasPatientFilter() {
-        return filter != PREDICATE_SHOW_ALL_PATIENTS;
+        return isFiltered.get();
+    }
+
+    @Override
+    public ObservableValue<Boolean> isPatientListFiltered() {
+        return isFiltered;
     }
 
     @Override

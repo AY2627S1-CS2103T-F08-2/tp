@@ -47,6 +47,11 @@ public interface Logic {
      */
     ObservableValue<Settings> getSettings();
 
+    /**
+     * Returns whether the patient list has a filter, such as one that {@code find} sets, even one that hides no one.
+     */
+    ObservableValue<Boolean> isPatientListFiltered();
+
     /** Returns an unmodifiable view of the list of all patients, whatever the current filter */
     ObservableList<Patient> getPatientList();
 
