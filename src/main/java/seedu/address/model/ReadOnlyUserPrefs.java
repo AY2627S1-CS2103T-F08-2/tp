@@ -9,4 +9,9 @@ public interface ReadOnlyUserPrefs {
 
     GuiSettings getGuiSettings();
 
+    /**
+     * Returns the settings that decide how marks, past clashes and archived patients behave (#216).
+     */
+    Settings getSettings();
+
 }

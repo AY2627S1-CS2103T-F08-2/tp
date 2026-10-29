@@ -24,6 +24,8 @@ import seedu.address.model.LaiNurse;
 import seedu.address.model.Model;
 import seedu.address.model.PatientScope;
 import seedu.address.model.ReadOnlyLaiNurse;
+import seedu.address.model.Settings;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
@@ -40,6 +42,9 @@ public class LogicManager implements Logic {
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
             "Could not save data to file %s due to insufficient permissions to write to the file or the folder.\n"
             + "Nothing was changed, so you can run the command again once LaiNurse can save.";
+
+    public static final String PREFS_WARNING_FORMAT =
+            "Warning: the settings are changed, but could not be saved: %s";
 
     public static final String BACKUP_WARNING_FORMAT =
             "Warning: the data is saved, but it could not be backed up to %s.";
@@ -68,6 +73,7 @@ public class LogicManager implements Logic {
         // The data as it was, to put back if it cannot be saved, so that the command can be run again without its
         // change applying twice, such as text added twice to a patient's notes
         ReadOnlyLaiNurse dataBefore = new LaiNurse(model.getLaiNurse());
+        UserPrefs userPrefsBefore = new UserPrefs(model.getUserPrefs());
         commandResult = command.execute(model);
 
         try {
@@ -82,6 +88,15 @@ public class LogicManager implements Logic {
         } catch (IOException ioe) {
             restore(dataBefore);
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
+        }
+
+        // A command that changes the settings, such as set, saves them at once, not only when the app closes
+        if (!userPrefsBefore.equals(model.getUserPrefs())) {
+            try {
+                storage.saveUserPrefs(model.getUserPrefs());
+            } catch (IOException e) {
+                commandResult = commandResult.withNoteAppended(String.format(PREFS_WARNING_FORMAT, e.getMessage()));
+            }
         }
 
         // The view and the navigation are added and checked after saving, so that the data file still matches the
@@ -141,6 +156,11 @@ public class LogicManager implements Logic {
         } else {
             model.setPatientListScope(PatientScope.DEFAULT);
         }
+    }
+
+    @Override
+    public ObservableValue<Settings> getSettings() {
+        return model.getSettings();
     }
 
     @Override

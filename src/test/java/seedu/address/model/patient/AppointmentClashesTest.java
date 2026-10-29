@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.LaiNurse;
 import seedu.address.model.ModelManager;
+import seedu.address.model.Settings;
 import seedu.address.model.UserPrefs;
 import seedu.address.testutil.PatientBuilder;
 
@@ -76,5 +78,36 @@ public class AppointmentClashesTest {
         List<PatientAppointment> entries = List.of(entry(alex, 1), entry(ben, 1), entry(carl, 1));
         assertEquals(List.of(entry(carl, 1)), AppointmentClashes.find(entries, entry(alex, 1)));
         assertTrue(AppointmentClashes.find(entries, entry(ben, 1)).isEmpty());
+    }
+
+    @Test
+    public void find_settings_decideWhichAppointmentsClash() {
+        LocalDateTime now = LocalDateTime.of(2026, 10, 10, 12, 0);
+        Patient alex = new PatientBuilder().withId("S1234567A").withSchedule(new AppointmentSchedule(List.of(
+                new Appointment("2026-10-05 09:30").withNumber(1),
+                new Appointment("2026-10-20 09:30").withNumber(2).withDone(true)))).build();
+        Patient ben = new PatientBuilder().withId("S2345678B").withAppointments("2026-10-05 09:30",
+                "2026-10-20 09:30").build();
+        Patient carl = new PatientBuilder().withId("S3456789C").withAppointments("2026-10-20 09:30")
+                .withArchived(true).build();
+        List<PatientAppointment> entries = List.of(entry(alex, 1), entry(alex, 2), entry(ben, 1), entry(ben, 2),
+                entry(carl, 1));
+
+        // the defaults: a past clash counts, and the marked and archived appointments do not
+        assertEquals(List.of(entry(ben, 1)),
+                AppointmentClashes.find(entries, entry(alex, 1), Settings.DEFAULT, now));
+        assertEquals(List.of(), AppointmentClashes.find(entries, entry(ben, 2), Settings.DEFAULT, now));
+
+        // past clashes off: appointments that have passed never clash (#216)
+        Settings noPast = Settings.DEFAULT.with(Settings.Key.PAST_CLASHES, false);
+        assertEquals(List.of(), AppointmentClashes.find(entries, entry(alex, 1), noPast, now));
+
+        // a mark that does not stop clashes, and archived patients that clash
+        Settings all = Settings.DEFAULT.with(Settings.Key.MARK_STOPS_CLASHES, false)
+                .with(Settings.Key.ARCHIVED_CLASHES, true);
+        assertEquals(List.of(entry(alex, 2), entry(carl, 1)),
+                AppointmentClashes.find(entries, entry(ben, 2), all, now));
+        assertEquals(List.of(entry(ben, 2), entry(carl, 1)),
+                AppointmentClashes.find(entries, entry(alex, 2), all, now));
     }
 }

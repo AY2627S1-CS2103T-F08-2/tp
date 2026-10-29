@@ -1,5 +1,6 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
@@ -9,7 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -24,6 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
@@ -79,6 +84,8 @@ public class PatientDetailPanel extends UiPart<Region> {
 
     private final ObservableList<Patient> allPatients;
     private final ObservableList<PatientAppointment> allAppointments;
+    /** The settings that decide clashes and which appointments are over (#216). */
+    private final ObjectProperty<Settings> settings = new SimpleObjectProperty<>(Settings.DEFAULT);
     /** The width of the date in every appointment row, so that the times line up. */
     private final DoubleProperty dateWidth = new SimpleDoubleProperty(DATE_WIDTH);
     /** The time and details of each appointment row shown, which {@link #updateRowLayout()} arranges. */
@@ -136,8 +143,18 @@ public class PatientDetailPanel extends UiPart<Region> {
         placeholder.setText(placeholderText);
         allPatients.addListener((ListChangeListener<Patient>) change -> refresh());
         allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> refresh());
+        settings.addListener((unused, oldSettings, newSettings) -> refresh());
         upcomingRows.widthProperty().addListener((unused, oldWidth, width) -> updateRowLayout());
         refresh();
+    }
+
+    /**
+     * Shows the appointments by {@code newSettings} from now on, such as the settings that the user changes (#216),
+     * in place of the default ones.
+     */
+    public void useSettings(ObservableValue<Settings> newSettings) {
+        requireNonNull(newSettings);
+        settings.bind(newSettings);
     }
 
     /**
@@ -233,7 +250,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         }
         LocalDateTime now = LocalDateTime.now();
         DetailAppointments appointments = DetailAppointments.of(patient.getSchedule(), now,
-                Optional.ofNullable(markedAppointment));
+                Optional.ofNullable(markedAppointment), settings.get());
         upcomingNote.setText(appointments.describeUpcoming());
         rowParts.clear();
         upcomingRows.getChildren().setAll(createRows(patient, appointments.getUpcoming(), now));
@@ -278,7 +295,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         time.setMinWidth(0);
         time.setMinHeight(Region.USE_PREF_SIZE);
         boolean isClashing = !AppointmentClashes.find(allAppointments,
-                new PatientAppointment(patient, appointment)).isEmpty();
+                new PatientAppointment(patient, appointment), settings.get(), now).isEmpty();
         TimeMark.show(time, ClashMark.create(), PinMark.create(), isClashing, appointment.isDone());
         Label details = new Label(appointment.getDetails().map(Object::toString).orElse(""));
         details.getStyleClass().add("detail-appointment-details");
@@ -295,7 +312,7 @@ public class PatientDetailPanel extends UiPart<Region> {
         numberAndDate.setAlignment(Pos.BASELINE_LEFT);
         HBox row = new HBox(ROW_SPACING, numberAndDate, timeAndDetails.grid());
         row.getStyleClass().add(ROW_STYLE_CLASS);
-        if (AppointmentFormatter.hasPassed(appointment, now)) {
+        if (AppointmentFormatter.isOver(appointment, now, settings.get())) {
             row.getStyleClass().add(PAST_STYLE_CLASS);
         } else if (AppointmentFormatter.isToday(appointment, today)) {
             row.getStyleClass().add(TODAY_STYLE_CLASS);

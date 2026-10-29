@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
 
@@ -41,14 +42,24 @@ public final class DetailAppointments {
      */
     public static DetailAppointments of(AppointmentSchedule schedule, LocalDateTime now,
             Optional<Appointment> marked) {
-        requireAllNonNull(schedule, now, marked);
+        return of(schedule, now, marked, Settings.DEFAULT);
+    }
+
+    /**
+     * Splits {@code schedule}, as {@link #of(AppointmentSchedule, LocalDateTime, Optional)} does, with the
+     * appointments that are over under {@code settings}, such as marked ones if they count as done (#216), listed
+     * as past.
+     */
+    public static DetailAppointments of(AppointmentSchedule schedule, LocalDateTime now,
+            Optional<Appointment> marked, Settings settings) {
+        requireAllNonNull(schedule, now, marked, settings);
         List<Appointment> all = schedule.asList();
         List<Appointment> upcoming = all.stream()
-                .filter(appointment -> !AppointmentFormatter.hasPassed(appointment, now))
+                .filter(appointment -> !AppointmentFormatter.isOver(appointment, now, settings))
                 .sorted()
                 .toList();
         List<Appointment> pastLatestFirst = all.stream()
-                .filter(appointment -> AppointmentFormatter.hasPassed(appointment, now))
+                .filter(appointment -> AppointmentFormatter.isOver(appointment, now, settings))
                 .sorted(Comparator.reverseOrder())
                 .toList();
         List<Appointment> pastShown = IntStream.range(0, pastLatestFirst.size())

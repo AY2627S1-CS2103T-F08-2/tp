@@ -2,8 +2,11 @@ package seedu.address.model.patient;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+
+import seedu.address.model.Settings;
 
 /**
  * Finds exact date and time clashes between undone appointments, independently of patient and appointment identity.
@@ -15,17 +18,29 @@ public final class AppointmentClashes {
     private AppointmentClashes() {}
 
     /**
-     * Returns the other undone appointments of patients who are not archived at the target's date and time, in
-     * global display order, or none for a done target, one with no time, or one of an archived patient.
+     * Returns the other appointments that clash with the target, under the default settings: the undone appointments
+     * of patients who are not archived at the target's date and time, in global display order, or none for a done
+     * target, one with no time, or one of an archived patient.
      */
     public static List<PatientAppointment> find(Collection<PatientAppointment> appointments,
             PatientAppointment target) {
-        requireAllNonNull(appointments, target);
-        if (!canClash(target)) {
+        return find(appointments, target, Settings.DEFAULT, LocalDateTime.now());
+    }
+
+    /**
+     * Returns the other appointments that clash with the target at {@code now}, under {@code settings} (#216), in
+     * global display order, or none if the target cannot clash. An appointment can clash if it has a time, and the
+     * settings allow it: marked appointments, ones that have passed, and archived patients' each clash only if the
+     * settings say so.
+     */
+    public static List<PatientAppointment> find(Collection<PatientAppointment> appointments,
+            PatientAppointment target, Settings settings, LocalDateTime now) {
+        requireAllNonNull(appointments, target, settings, now);
+        if (!canClash(target, settings, now)) {
             return List.of();
         }
         return appointments.stream()
-                .filter(AppointmentClashes::canClash)
+                .filter(entry -> canClash(entry, settings, now))
                 .filter(entry -> !entry.isSameEntry(target))
                 .filter(entry -> entry.getAppointment().hasSameDateTime(target.getAppointment()))
                 .sorted()
@@ -33,10 +48,14 @@ public final class AppointmentClashes {
     }
 
     /**
-     * Returns true if {@code entry} can clash: it is undone, has a time, and is of a patient who is not archived.
+     * Returns true if {@code entry} can clash under {@code settings} at {@code now}: it has a time, and it is
+     * unmarked, of a patient who is not archived, and still to come, unless the settings let it clash anyway.
      */
-    private static boolean canClash(PatientAppointment entry) {
-        return !entry.getAppointment().isDone() && entry.getAppointment().getTime().isPresent()
-                && !entry.getPatient().isArchived();
+    private static boolean canClash(PatientAppointment entry, Settings settings, LocalDateTime now) {
+        Appointment appointment = entry.getAppointment();
+        return appointment.getTime().isPresent()
+                && (!appointment.isDone() || !settings.isMarkStoppingClashes())
+                && (!entry.getPatient().isArchived() || settings.isArchivedClashing())
+                && (!appointment.hasPassed(now) || settings.isPastClashing());
     }
 }

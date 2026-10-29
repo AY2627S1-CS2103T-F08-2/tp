@@ -26,6 +26,7 @@ import seedu.address.model.Model;
 import seedu.address.model.PatientScope;
 import seedu.address.model.ReadOnlyLaiNurse;
 import seedu.address.model.ReadOnlyUserPrefs;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
@@ -148,6 +149,16 @@ public class AddCommandTest {
 
         @Override
         public boolean hasPatientFilter() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ObservableValue<Settings> getSettings() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void setSettings(Settings settings) {
             throw new AssertionError("This method should not be called.");
         }
 

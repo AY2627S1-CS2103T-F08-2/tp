@@ -12,7 +12,9 @@ import java.util.OptionalInt;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
+import seedu.address.model.patient.AppointmentSchedule;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.testutil.PatientBuilder;
@@ -87,6 +89,33 @@ public class AppointmentPageTest {
         DetailAppointments details = DetailAppointments.of(patient.getSchedule(), NOW, Optional.of(done));
         assertEquals(List.of(done), details.getUpcoming());
         assertEquals(1, details.getPastCount());
+    }
+
+    @Test
+    public void markCountedAsDone_markedFirstInDayAndNotSelected() {
+        // Alex's appointment today at 09:30 and on Monday, both marked
+        Patient markedAlex = new PatientBuilder(ALEX).withSchedule(new AppointmentSchedule(List.of(
+                MONDAY_ALEX.getAppointment().withDone(true), TODAY_ALEX.getAppointment().withDone(true)))).build();
+        PatientAppointment doneEntry = new PatientAppointment(markedAlex,
+                markedAlex.getSchedule().asList().get(1));
+        PatientAppointment mondayDone = new PatientAppointment(markedAlex,
+                markedAlex.getSchedule().asList().get(0));
+        Settings markDone = Settings.DEFAULT.with(Settings.Key.MARK_COUNTS_AS_DONE, true);
+
+        // with a mark counted as done (#216), marked appointments come first in their day, and are not selected
+        AppointmentPage page = AppointmentPage.ofRange(TODAY, TODAY, List.of(doneEntry, TODAY_BEN), NOW, markDone);
+        assertEquals(List.of(new DayHeading(TODAY, 2), new Entry(1, doneEntry), new Entry(2, TODAY_BEN)),
+                page.getRows());
+        assertEquals(Optional.of(TODAY_BEN), page.getEntryAt(page.defaultEntryIndex().orElseThrow()));
+
+        // on another day too
+        Patient earlyBen = new PatientBuilder(BEN).withAppointments("2026-10-12 08:00").build();
+        PatientAppointment mondayEarly = entry(earlyBen, "2026-10-12 08:00");
+        page = AppointmentPage.ofWeek(THIS_WEEK, List.of(mondayEarly, mondayDone), NOW, markDone);
+        assertEquals(Optional.of(mondayDone), page.getEntryAt(page.firstEntryIndex().orElseThrow()));
+        // and not with the default settings
+        page = AppointmentPage.ofWeek(THIS_WEEK, List.of(mondayEarly, mondayDone), NOW);
+        assertEquals(Optional.of(mondayEarly), page.getEntryAt(page.firstEntryIndex().orElseThrow()));
     }
 
     @Test

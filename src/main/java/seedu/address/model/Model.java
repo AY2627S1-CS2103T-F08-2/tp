@@ -24,6 +24,17 @@ public interface Model {
     ReadOnlyUserPrefs getUserPrefs();
 
     /**
+     * Returns the settings that apply (#216), as a value that the UI can observe: the user's, or while the settings
+     * are not released ({@code FeatureFlags#isSettingsEnabled()}), the default ones.
+     */
+    ObservableValue<Settings> getSettings();
+
+    /**
+     * Replaces the user's settings with {@code settings}, which are saved with the other user preferences.
+     */
+    void setSettings(Settings settings);
+
+    /**
      * Returns the user prefs' GUI settings.
      */
     GuiSettings getGuiSettings();

@@ -10,6 +10,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.PatientScope;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 
@@ -40,6 +41,11 @@ public interface Logic {
      * Returns the scope of the patient list: whether it shows archived patients.
      */
     ObservableValue<PatientScope> getPatientListScope();
+
+    /**
+     * Returns the settings that apply, which decide how marks, past clashes and archived patients behave (#216).
+     */
+    ObservableValue<Settings> getSettings();
 
     /** Returns an unmodifiable view of the list of all patients, whatever the current filter */
     ObservableList<Patient> getPatientList();

@@ -1,5 +1,6 @@
 package seedu.address.logic;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,6 +8,8 @@ import java.util.stream.Stream;
 
 import seedu.address.logic.parser.CliSyntax;
 import seedu.address.logic.parser.Prefix;
+import seedu.address.model.Model;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
@@ -31,6 +34,8 @@ public class Messages {
             + " cannot be given with it.";
     public static final String MESSAGE_ARCHIVED_PATIENT_NOTE = "\nNote: this patient is archived, so their "
             + "appointments do not clash. To unarchive them: 'unarchive %1$s'";
+    public static final String MESSAGE_CLASHING_ARCHIVED_PATIENT_NOTE = "\nNote: this patient is archived. "
+            + "To unarchive them: 'unarchive %1$s'";
     public static final String MESSAGE_CONFLICTING_FIELD_EDITS = "%1$s and %2$s cannot be given together. "
             + "%1$s replaces the value, or clears it if given no value, and %2$s adds to the end of it.";
 
@@ -83,7 +88,28 @@ public class Messages {
      * empty string if they are not archived.
      */
     public static String formatArchivedNote(Patient patient) {
-        return patient.isArchived() ? String.format(MESSAGE_ARCHIVED_PATIENT_NOTE, patient.getId()) : "";
+        return formatArchivedNote(patient, Settings.DEFAULT);
+    }
+
+    /**
+     * Returns a note that {@code patient} is archived, as {@link #formatArchivedNote(Patient)} does, which says that
+     * their appointments do not clash only if {@code settings} keep archived patients from clashing (#216).
+     */
+    public static String formatArchivedNote(Patient patient, Settings settings) {
+        if (!patient.isArchived()) {
+            return "";
+        }
+        return String.format(settings.isArchivedClashing() ? MESSAGE_CLASHING_ARCHIVED_PATIENT_NOTE
+                : MESSAGE_ARCHIVED_PATIENT_NOTE, patient.getId());
+    }
+
+    /**
+     * Describes the clashes of {@code target} among the appointments of {@code model}, under its settings, as
+     * {@link #formatClashWarning(Collection, PatientAppointment)} does.
+     */
+    public static String formatClashWarning(Model model, PatientAppointment target) {
+        return formatClashWarning(AppointmentClashes.find(model.getAppointmentList(), target,
+                model.getSettings().getValue(), LocalDateTime.now()), target);
     }
 
     /**
@@ -92,7 +118,10 @@ public class Messages {
      * the patient.
      */
     public static String formatClashWarning(Collection<PatientAppointment> appointments, PatientAppointment target) {
-        List<PatientAppointment> clashes = AppointmentClashes.find(appointments, target);
+        return formatClashWarning(AppointmentClashes.find(appointments, target), target);
+    }
+
+    private static String formatClashWarning(List<PatientAppointment> clashes, PatientAppointment target) {
         if (clashes.isEmpty()) {
             return "";
         }

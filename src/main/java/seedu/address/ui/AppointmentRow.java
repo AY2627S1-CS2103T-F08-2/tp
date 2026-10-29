@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.Patient;
 
@@ -66,6 +67,14 @@ public class AppointmentRow extends UiPart<Region> {
      * with its time marked red, with a clash mark before it, if {@code isClashing}.
      */
     public void show(AppointmentPage.Entry entry, LocalDateTime now, boolean isClashing) {
+        show(entry, now, isClashing, Settings.DEFAULT);
+    }
+
+    /**
+     * Shows {@code entry}, as {@link #show(AppointmentPage.Entry, LocalDateTime, boolean)} does, greyed out if it is
+     * over under {@code settings}, such as when they count a mark as done (#216).
+     */
+    public void show(AppointmentPage.Entry entry, LocalDateTime now, boolean isClashing, Settings settings) {
         Appointment appointment = entry.appointment().getAppointment();
         Patient patient = entry.appointment().getPatient();
         number.setText(entry.number() + ".");
@@ -83,7 +92,7 @@ public class AppointmentRow extends UiPart<Region> {
         details.setVisible(appointment.getDetails().isPresent());
         details.setManaged(appointment.getDetails().isPresent());
         getRoot().getStyleClass().removeAll(PASSED_STYLE_CLASS, CLASH_STYLE_CLASS);
-        if (AppointmentFormatter.hasPassed(appointment, now)) {
+        if (AppointmentFormatter.isOver(appointment, now, settings)) {
             getRoot().getStyleClass().add(PASSED_STYLE_CLASS);
         }
         if (isClashing) {

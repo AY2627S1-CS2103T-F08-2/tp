@@ -8,8 +8,10 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -23,6 +25,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.PatientScope;
+import seedu.address.model.Settings;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
@@ -47,6 +50,8 @@ public class PatientListPanel extends UiPart<Region> {
     private final ObservableList<Patient> shownPatients;
     private final ObservableList<Patient> allPatients;
     private final ObservableList<PatientAppointment> allAppointments;
+    /** The settings that decide clashes (#216). */
+    private final ObjectProperty<Settings> settings = new SimpleObjectProperty<>(Settings.DEFAULT);
     private final ObservableValue<PatientScope> scope;
     private final Label placeholder = new Label();
     /** The room that each row leaves empty at its end, so that it ends where the header's count ends. */
@@ -82,6 +87,7 @@ public class PatientListPanel extends UiPart<Region> {
         this.scope = scope;
         // A change to one patient's appointments can make another patient's next appointment clash, or stop clashing
         allAppointments.addListener((ListChangeListener<PatientAppointment>) change -> patientListView.refresh());
+        settings.addListener((unused, oldSettings, newSettings) -> patientListView.refresh());
         patientListView.setItems(shownPatients);
         rowGutter = ListHeaders.alignEndWithRows(header, patientListView, PatientRow.END_PADDING);
         patientListView.setCellFactory(listView -> new PatientListViewCell());
@@ -124,6 +130,15 @@ public class PatientListPanel extends UiPart<Region> {
                 onPatientChosen.accept(newPatient.getId());
             }
         });
+    }
+
+    /**
+     * Shows the patients' next appointments by {@code newSettings} from now on, such as the settings that the user
+     * changes (#216), in place of the default ones.
+     */
+    public void useSettings(ObservableValue<Settings> newSettings) {
+        requireNonNull(newSettings);
+        settings.bind(newSettings);
     }
 
     /**
@@ -322,7 +337,7 @@ public class PatientListPanel extends UiPart<Region> {
                 setGraphic(null);
                 setText(null);
             } else {
-                row.show(patient, getIndex() + 1, allAppointments);
+                row.show(patient, getIndex() + 1, allAppointments, settings.get());
                 setGraphic(row.getRoot());
             }
         }

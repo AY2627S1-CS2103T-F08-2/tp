@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 
@@ -45,6 +46,9 @@ public class HelpCommand extends Command {
         map.put(UnmarkAppointmentCommand.COMMAND_WORD, UnmarkAppointmentCommand.MESSAGE_USAGE);
         map.put(ViewCommand.COMMAND_WORD, ViewCommand.MESSAGE_USAGE);
         map.put(ViewAppointmentCommand.COMMAND_WORD, ViewAppointmentCommand.MESSAGE_USAGE);
+        if (FeatureFlags.isSettingsEnabled()) {
+            map.put(SetCommand.COMMAND_WORD, SetCommand.MESSAGE_USAGE);
+        }
         COMMAND_USAGE_MAP = Collections.unmodifiableMap(map);
     }
 
