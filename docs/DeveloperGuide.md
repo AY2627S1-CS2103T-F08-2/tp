@@ -613,11 +613,10 @@ Both commands allow any date; editing preserves completion until an explicit sta
 ### Viewing appointments by date
 
 `viewappt` takes one date, a range given by `--from`, `--to`, or both, or none of these. A plain `viewappt`, with none
-of these and no `--id`, shows the weekly view of this week: the command counts the patients with an appointment
-from this week's Monday to its Sunday, and returns no range, only a `Navigation.toView`, so that `MainWindow` shows
-this week and selects the next appointment from now. The command and the weekly view's `AppointmentWeek` both take the
-week from `DateUtil#getStartOfWeek` and `DateUtil#getEndOfWeek` in Commons, so the count and the week shown cannot
-disagree on its days. `ViewAppointmentCommandParser`
+of these and no `--id`, shows the weekly view of this week: the command returns no range, only a
+`Navigation.toView`, so that `MainWindow` shows this week and selects the next appointment from now. As the weekly view
+lists every appointment, a week at a time, the message says which appointments it lists, by the scope that
+`--all` or `--archived` gives, as `view` does for patients. The header of the view counts them. `ViewAppointmentCommandParser`
 normalizes option separators in the same way as `add`, so unknown options are rejected. A single date becomes a range
 that starts and ends on that date. A word of digits and punctuation before the options, such as `2026-02-30` or
 `2026/10/15`, can only be meant as a date, so it gets the date error from `ParserUtil#parseDate`, as a date given to
@@ -1927,8 +1926,8 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: `viewappt`, with no date and no options<br>
        Expected: The weekly view of this week is shown, marked `This week`, with the arrow buttons above the list. Its
-       next appointment from now is selected, or nothing if the week has none. The status message names this week's
-       Monday and Sunday, in your computer's time zone, and counts the patients with an appointment this week.
+       next appointment from now is selected, or nothing if the week has none. The status message says
+       `Listed all appointments of patients who are not archived.`
        To see the appointments from today onwards instead, use `viewappt --from` with today's
        date.
 

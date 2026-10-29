@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import seedu.address.commons.util.DateUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.CommandResult.View;
@@ -59,8 +58,11 @@ public class ViewAppointmentCommand extends Command {
             "%1$d patient(s) with appointments from %2$s to %3$s";
     public static final String MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW =
             "%1$d patient(s) with appointments on or after %2$s";
-    public static final String MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW =
-            "%1$d patient(s) with appointments this week, from %2$s to %3$s";
+    public static final String MESSAGE_VIEW_APPOINTMENT_ALL_LISTED =
+            "Listed all appointments of patients who are not archived.";
+    public static final String MESSAGE_VIEW_APPOINTMENT_ALL_WITH_ARCHIVED_LISTED =
+            "Listed all appointments, with archived patients' ones.";
+    public static final String MESSAGE_VIEW_APPOINTMENT_ARCHIVED_LISTED = "Listed archived patients' appointments.";
     public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_ALL_LISTED_OVERVIEW = "%1$d appointment(s) of %2$s";
     public static final String MESSAGE_VIEW_APPOINTMENT_PATIENT_LISTED_OVERVIEW =
             "%1$d appointment(s) of %2$s on %3$s";
@@ -161,7 +163,7 @@ public class ViewAppointmentCommand extends Command {
         LocalDate today = LocalDate.now(clock);
         boolean hasDates = startDate.isPresent() || endDate.isPresent();
         if (!hasDates) {
-            return patientId.isEmpty() ? showThisWeek(model, today) : showAllOfPatient(model, patientId.get(), today);
+            return patientId.isEmpty() ? showThisWeek() : showAllOfPatient(model, patientId.get(), today);
         }
         LocalDate start = startDate.orElse(today);
         LocalDate end = endDate.orElse(LocalDate.MAX);
@@ -191,15 +193,18 @@ public class ViewAppointmentCommand extends Command {
     }
 
     /**
-     * Shows the weekly view of this week, from Monday to Sunday, and counts the patients with an appointment in it.
-     * The result has no range, so the appointment view shows the weekly view, not a page of a range. The week comes
-     * from {@code DateUtil}, as the weekly view's does, so the count matches the week shown.
+     * Shows the weekly view, which lists every appointment of the patients in the scope, a week at a time, starting
+     * from this week. The result has no range, so the appointment view shows the weekly view, not a page of a range.
+     * The message says which appointments are listed, as {@code view} says which patients are, since the header of
+     * the view counts them.
      */
-    private CommandResult showThisWeek(Model model, LocalDate today) {
-        LocalDate monday = DateUtil.getStartOfWeek(today);
-        LocalDate sunday = DateUtil.getEndOfWeek(today);
-        int count = countPatients(model, new AppointmentBetweenDatesPredicate(monday, sunday));
-        return new CommandResult(String.format(MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW, count, monday, sunday))
+    private CommandResult showThisWeek() {
+        String message = switch (scope) {
+            case UNARCHIVED -> MESSAGE_VIEW_APPOINTMENT_ALL_LISTED;
+            case ALL -> MESSAGE_VIEW_APPOINTMENT_ALL_WITH_ARCHIVED_LISTED;
+            case ARCHIVED -> MESSAGE_VIEW_APPOINTMENT_ARCHIVED_LISTED;
+        };
+        return new CommandResult(message)
                 .withAppointmentScope(scope)
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
     }

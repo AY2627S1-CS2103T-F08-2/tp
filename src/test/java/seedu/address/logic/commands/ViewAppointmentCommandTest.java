@@ -14,7 +14,6 @@ import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_A
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_PATIENT_RANGE_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_RANGE_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_TO_BEFORE_TODAY;
-import static seedu.address.logic.commands.ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.DANIEL;
@@ -223,12 +222,9 @@ public class ViewAppointmentCommandTest {
         LaiNurse laiNurse = laiNurseWithDatedAppointments();
         Model relativeModel = new ModelManager(laiNurse, new UserPrefs());
         Model expectedRelativeModel = new ModelManager(laiNurse, new UserPrefs());
-        // TODAY is a Monday, so this week is TODAY to the Sunday after it
-        LocalDate sunday = TODAY.plusDays(6);
-
         ViewAppointmentCommand command = new ViewAppointmentCommand(
                 Optional.empty(), Optional.empty(), FIXED_CLOCK);
-        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW, 2, TODAY, sunday);
+        String expectedMessage = ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_ALL_LISTED;
         // No range, so the appointment view shows the weekly view of this week, and the next appointment from now
         CommandResult expectedResult = new CommandResult(expectedMessage).withAppointmentScope(PatientScope.DEFAULT)
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
@@ -240,14 +236,27 @@ public class ViewAppointmentCommandTest {
         LaiNurse laiNurse = laiNurseWithDatedAppointments();
         Model relativeModel = new ModelManager(laiNurse, new UserPrefs());
         Model expectedRelativeModel = new ModelManager(laiNurse, new UserPrefs());
-        LocalDate sunday = TODAY.plusDays(6);
         Clock sundayClock = Clock.fixed(Instant.parse("2026-10-18T10:00:00Z"), ZoneOffset.UTC);
 
         ViewAppointmentCommand command = new ViewAppointmentCommand(Optional.empty(), Optional.empty(), sundayClock);
-        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_WEEK_LISTED_OVERVIEW, 2, TODAY, sunday);
+        String expectedMessage = ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_ALL_LISTED;
         assertCommandSuccess(command, relativeModel, new CommandResult(expectedMessage)
                 .withAppointmentScope(PatientScope.DEFAULT).withNavigation(Navigation.toView(View.APPOINTMENTS)),
                 expectedRelativeModel);
+    }
+
+    @Test
+    public void execute_plainWithScope_saysWhichAppointmentsAreListed() {
+        Model archiveModel = new ModelManager(new LaiNurseBuilder().withPatient(BENSON.withArchived(true)).build(),
+                new UserPrefs());
+        Optional<LocalDate> none = Optional.empty();
+        assertEquals(new CommandResult(ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_ALL_WITH_ARCHIVED_LISTED)
+                .withAppointmentScope(PatientScope.ALL).withNavigation(Navigation.toView(View.APPOINTMENTS)),
+                executeOrFail(new ViewAppointmentCommand(none, none, Optional.empty(), PatientScope.ALL),
+                        archiveModel));
+        assertEquals(ViewAppointmentCommand.MESSAGE_VIEW_APPOINTMENT_ARCHIVED_LISTED,
+                executeOrFail(new ViewAppointmentCommand(none, none, Optional.empty(), PatientScope.ARCHIVED),
+                        archiveModel).getFeedbackToUser());
     }
 
     @Test
