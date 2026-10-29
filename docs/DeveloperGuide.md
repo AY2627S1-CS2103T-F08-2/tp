@@ -2096,7 +2096,8 @@ testers are expected to do more *exploratory* testing.
        arrow buttons above the list. Alex Yeoh's appointment, selected by Ctrl+Up above, stays selected.
 
     1. Test case: press Esc again<br>
-       Expected: Nothing changes, because the weekly view has no range to remove.
+       Expected: Nothing changes, because the weekly view has no range to remove, and already hides archived
+       patients' appointments. After `viewappt --all`, this second Esc would hide them again.
 
     1. Test case: press Right, then Left twice, then enter `viewappt`<br>
        Expected: Right shows the week after the sample week, e.g. the week of Mon 12 Oct, and selects its first
