@@ -6,7 +6,9 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.DateUtil;
 import seedu.address.model.LaiNurse;
 import seedu.address.model.ReadOnlyLaiNurse;
@@ -25,6 +27,8 @@ import seedu.address.model.patient.Phone;
  * Contains utility methods for populating {@code LaiNurse} with sample data.
  */
 public class SampleDataUtil {
+
+    private static final Logger logger = LogsCenter.getLogger(SampleDataUtil.class);
 
     /**
      * Returns sample patients whose appointments are based on the week containing {@code today}, where a week
@@ -95,6 +99,7 @@ public class SampleDataUtil {
      * {@code today}. Tests pass a fixed date here so that the sample appointments land on known dates.
      */
     public static ReadOnlyLaiNurse getSampleLaiNurse(LocalDate today) {
+        logger.fine("Generating sample patients for the week of " + DateUtil.getStartOfWeek(today) + ".");
         LaiNurse sampleAb = new LaiNurse();
         for (Patient samplePatient : getSamplePatients(today)) {
             sampleAb.addPatient(samplePatient);
