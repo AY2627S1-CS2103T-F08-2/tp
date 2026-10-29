@@ -2,7 +2,9 @@
 
 # LaiNurse
 
-![Ui](docs/images/Ui.png)
+![Patients view](docs/images/Ui.png)
+
+![Appointments view](docs/images/Ui_1.png)
 
 **LaiNurse** is a desktop app that gives home nurses fast access to patient and appointment details for home visits. You type commands in a Command Line Interface (CLI), and a GUI shows the results.
 
