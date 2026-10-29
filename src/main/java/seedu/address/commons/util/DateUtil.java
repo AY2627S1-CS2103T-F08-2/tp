@@ -46,8 +46,10 @@ public final class DateUtil {
      * {@code 0000-01-01} is valid while {@code +12345-01-01} and {@code 2026-1-5} are not.
      *
      * @throws DateTimeParseException if the given {@code date} is invalid.
+     * @throws NullPointerException if {@code date} is null.
      */
     public static LocalDate parseDate(String date) {
+        requireNonNull(date);
         if (!PARSED_DATE_SHAPE.matcher(date).matches()) {
             throw new DateTimeParseException(
                     "Text '" + date + "' is not in the form " + DATE_FORMAT + ": " + describeDateShapeError(date),
@@ -84,8 +86,10 @@ public final class DateUtil {
      * Parses {@code String time} into a {@code LocalTime}.
      *
      * @throws DateTimeParseException if the given {@code time} is invalid.
+     * @throws NullPointerException if {@code time} is null.
      */
     public static LocalTime parseTime(String time) {
+        requireNonNull(time);
         return LocalTime.parse(time, TIME_FORMATTER);
     }
 
