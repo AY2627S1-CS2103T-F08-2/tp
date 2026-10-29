@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.model.patient.PatientId;
 
@@ -176,5 +177,21 @@ public class TabCompleterTest {
 
     private static List<String> words(String commandText) {
         return TabCompleter.complete(commandText, IDS).stream().map(Completion::word).toList();
+    }
+
+    @Test
+    public void complete_selectiveClearReleased_completesItsOptionsAndIds() {
+        FeatureFlags.setSelectiveClearEnabled(true);
+        try {
+            assertEquals(List.of("--id", "--from", "--to"), words("clearappt --"));
+            assertEquals(List.of("--archived"), words("clear --a"));
+            assertEquals(List.of("S1234567A", "S1999999C"), words("clearappt S1"));
+            assertEquals(List.of("S1234567A", "S1999999C"), words("clearappt --from 2026-10-01 --id S1"));
+        } finally {
+            FeatureFlags.setSelectiveClearEnabled(false);
+        }
+        // before the release, neither has options
+        assertEquals(List.of(), words("clearappt --"));
+        assertEquals(List.of(), words("clear --a"));
     }
 }

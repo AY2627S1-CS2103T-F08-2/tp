@@ -36,6 +36,11 @@ public class Messages {
             + "appointments do not clash. To unarchive them: 'unarchive %1$s'";
     public static final String MESSAGE_CLASHING_ARCHIVED_PATIENT_NOTE = "\nNote: this patient is archived. "
             + "To unarchive them: 'unarchive %1$s'";
+    /** What the user types to confirm a command that deletes much at once (#217). */
+    public static final String CONFIRMATION_PHRASE = "I LOVE 2103T";
+    public static final String MESSAGE_CONFIRM = "%1$s\nType \"" + CONFIRMATION_PHRASE + "\" to confirm, "
+            + "or anything else to cancel.";
+    public static final String MESSAGE_CANCELLED = "Cancelled. Nothing was deleted.";
     public static final String MESSAGE_CONFLICTING_FIELD_EDITS = "%1$s and %2$s cannot be given together. "
             + "%1$s replaces the value, or clears it if given no value, and %2$s adds to the end of it.";
 

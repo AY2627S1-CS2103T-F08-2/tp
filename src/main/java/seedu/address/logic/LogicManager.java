@@ -10,11 +10,13 @@ import java.util.stream.Stream;
 
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import seedu.address.commons.core.FeatureFlags;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.CommandResult.Navigation;
+import seedu.address.logic.commands.Confirmable;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.Completion;
 import seedu.address.logic.parser.LaiNurseParser;
@@ -54,6 +56,8 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final LaiNurseParser laiNurseParser;
+    /** A command that deletes much at once, waiting for the user to confirm it, or null (#217). */
+    private Command pendingCommand;
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -69,7 +73,22 @@ public class LogicManager implements Logic {
         logger.info("----------------[USER COMMAND][" + commandText + "]");
 
         CommandResult commandResult;
-        Command command = laiNurseParser.parseCommand(commandText);
+        Command command;
+        if (pendingCommand != null) {
+            // Only the phrase confirms the command; any other input cancels it, and runs no command
+            command = pendingCommand;
+            pendingCommand = null;
+            if (!commandText.trim().equals(Messages.CONFIRMATION_PHRASE)) {
+                return new CommandResult(Messages.MESSAGE_CANCELLED);
+            }
+        } else {
+            command = laiNurseParser.parseCommand(commandText);
+            if (FeatureFlags.isSelectiveClearEnabled() && command instanceof Confirmable confirmable) {
+                String deletion = confirmable.describeDeletion(model);
+                pendingCommand = command;
+                return new CommandResult(String.format(Messages.MESSAGE_CONFIRM, deletion));
+            }
+        }
         // The data as it was, to put back if it cannot be saved, so that the command can be run again without its
         // change applying twice, such as text added twice to a patient's notes
         ReadOnlyLaiNurse dataBefore = new LaiNurse(model.getLaiNurse());

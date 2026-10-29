@@ -12,6 +12,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ArchiveCommand;
+import seedu.address.logic.commands.ClearAppointmentCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.DeleteAppointmentCommand;
@@ -78,7 +79,15 @@ public class LaiNurseParser {
             case UnmarkAppointmentCommand.COMMAND_WORD -> new UnmarkAppointmentCommandParser().parse(arguments);
             case ArchiveCommand.COMMAND_WORD -> new ArchiveCommandParser().parse(arguments);
             case UnarchiveCommand.COMMAND_WORD -> new UnarchiveCommandParser().parse(arguments);
-            case ClearCommand.COMMAND_WORD -> new ClearCommand();
+            case ClearCommand.COMMAND_WORD -> FeatureFlags.isSelectiveClearEnabled()
+                    ? new ClearCommandParser().parse(arguments)
+                    : new ClearCommand();
+            case ClearAppointmentCommand.COMMAND_WORD -> {
+                if (!FeatureFlags.isSelectiveClearEnabled()) {
+                    throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
+                }
+                yield new ClearAppointmentCommandParser().parse(arguments);
+            }
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
             case ListCommand.COMMAND_WORD -> new ListCommand();
             case ViewAppointmentCommand.COMMAND_WORD -> new ViewAppointmentCommandParser().parse(arguments);

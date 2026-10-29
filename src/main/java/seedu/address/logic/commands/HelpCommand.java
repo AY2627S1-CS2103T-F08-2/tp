@@ -46,6 +46,9 @@ public class HelpCommand extends Command {
         map.put(UnmarkAppointmentCommand.COMMAND_WORD, UnmarkAppointmentCommand.MESSAGE_USAGE);
         map.put(ViewCommand.COMMAND_WORD, ViewCommand.MESSAGE_USAGE);
         map.put(ViewAppointmentCommand.COMMAND_WORD, ViewAppointmentCommand.MESSAGE_USAGE);
+        if (FeatureFlags.isSelectiveClearEnabled()) {
+            map.put(ClearAppointmentCommand.COMMAND_WORD, ClearAppointmentCommand.MESSAGE_USAGE);
+        }
         if (FeatureFlags.isSettingsEnabled()) {
             map.put(SetCommand.COMMAND_WORD, SetCommand.MESSAGE_USAGE);
         }
