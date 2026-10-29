@@ -238,8 +238,8 @@ public class CommandResult {
      */
     public CommandResult withNoteAppended(String note) {
         requireNonNull(note);
-        return new CommandResult(feedbackToUser + "\n" + note, showHelp, exit, view, appointmentRange, navigation,
-                isSelectionCleared);
+        return new CommandResult(feedbackToUser + "\n" + note, showHelp, exit, view, appointmentRange,
+                appointmentScope, navigation, isSelectionCleared);
     }
 
     public String getFeedbackToUser() {
