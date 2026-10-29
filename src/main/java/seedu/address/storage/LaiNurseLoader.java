@@ -76,25 +76,39 @@ public class LaiNurseLoader {
             logger.warning("Data file at " + storage.getLaiNurseFilePath() + " could not be loaded.");
         }
 
+        // The data file is copied before the backup is read, so that the copy is kept whatever the backup holds
         String corruptFileMessage = keepCorruptFile(storage);
+        return loadBackup(storage, corruptFileMessage);
+    }
+
+    /**
+     * Returns the data in the backup, or no data if the backup is missing or cannot be loaded either, with a message
+     * that says which, followed by {@code corruptFileMessage}.
+     */
+    private static Result loadBackup(Storage storage, String corruptFileMessage) {
         try {
             Optional<ReadOnlyLaiNurse> backupOptional = storage.readLaiNurseBackup();
             if (backupOptional.isPresent()) {
                 logger.warning("Loaded the backup at " + storage.getLaiNurseBackupFilePath() + " instead.");
-                return new Result(backupOptional.get(), Optional.of(String.format(MESSAGE_BACKUP_LOADED,
-                        storage.getLaiNurseFilePath(), storage.getLaiNurseBackupFilePath())
-                        + "\n" + corruptFileMessage));
+                return new Result(backupOptional.get(), message(MESSAGE_BACKUP_LOADED, storage, corruptFileMessage));
             }
             logger.warning("No backup at " + storage.getLaiNurseBackupFilePath()
                     + ". Will be starting with an empty patient list.");
-            return new Result(new LaiNurse(), Optional.of(String.format(MESSAGE_BACKUP_MISSING,
-                    storage.getLaiNurseFilePath(), storage.getLaiNurseBackupFilePath()) + "\n" + corruptFileMessage));
+            return new Result(new LaiNurse(), message(MESSAGE_BACKUP_MISSING, storage, corruptFileMessage));
         } catch (DataLoadingException e) {
             logger.warning("Backup at " + storage.getLaiNurseBackupFilePath() + " could not be loaded either."
                     + " Will be starting with an empty patient list.");
-            return new Result(new LaiNurse(), Optional.of(String.format(MESSAGE_BACKUP_NOT_LOADED,
-                    storage.getLaiNurseFilePath(), storage.getLaiNurseBackupFilePath()) + "\n" + corruptFileMessage));
+            return new Result(new LaiNurse(), message(MESSAGE_BACKUP_NOT_LOADED, storage, corruptFileMessage));
         }
+    }
+
+    /**
+     * Returns {@code format}, which names the data file and then the backup of {@code storage}, followed on a line of
+     * its own by {@code corruptFileMessage}.
+     */
+    private static Optional<String> message(String format, Storage storage, String corruptFileMessage) {
+        return Optional.of(String.format(format, storage.getLaiNurseFilePath(), storage.getLaiNurseBackupFilePath())
+                + "\n" + corruptFileMessage);
     }
 
     /**
