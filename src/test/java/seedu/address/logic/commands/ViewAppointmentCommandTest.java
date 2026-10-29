@@ -73,8 +73,7 @@ public class ViewAppointmentCommandTest {
         LocalDate date = LocalDate.of(2030, 1, 1); // Far future, no appointments
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
 
-
-        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 0, date.toString());
+        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 0, date);
         // the appointment view shows the range on one page, here with no appointments
         assertCommandSuccess(command, model, pageResult(expectedMessage, new AppointmentRange(date, date)),
                 expectedModel);
@@ -86,8 +85,7 @@ public class ViewAppointmentCommandTest {
         LocalDate date = LocalDate.of(2026, 10, 6);
         ViewAppointmentCommand command = new ViewAppointmentCommand(date);
 
-
-        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date.toString());
+        String expectedMessage = String.format(MESSAGE_VIEW_APPOINTMENT_LISTED_OVERVIEW, 1, date);
         assertCommandSuccess(command, model, pageResult(expectedMessage, new AppointmentRange(date, date)),
                 expectedModel);
     }

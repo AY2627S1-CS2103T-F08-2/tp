@@ -44,7 +44,7 @@ public class ViewAppointmentCommandParserTest {
     private static final String MONTH_13_DATE = "2026-13-01";
     private static final String IMPOSSIBLE_DATE = "2026-02-30";
 
-    private ViewAppointmentCommandParser parser = new ViewAppointmentCommandParser();
+    private final ViewAppointmentCommandParser parser = new ViewAppointmentCommandParser();
 
     @Test
     public void parse_validDateOnly_returnsCommand() {

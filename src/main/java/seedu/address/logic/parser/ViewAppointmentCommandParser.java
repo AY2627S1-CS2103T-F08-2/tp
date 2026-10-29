@@ -56,6 +56,24 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         }
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_FROM, PREFIX_TO,
                 PREFIX_ALL, PREFIX_ARCHIVED);
+        PatientScope scope = verifyOptionsAndParseScope(argMultimap, invalidFormatMessage);
+        String preamble = argMultimap.getPreamble();
+        if (isDateLike(preamble)) {
+            // A date that is not real gets the date error, as a date given to --from or --to does
+            LocalDate date = ParserUtil.parseDate(preamble);
+            return parseWithDate(argMultimap, date, scope, invalidFormatMessage);
+        }
+        return parseWithOptionalDateRange(argMultimap, scope, invalidFormatMessage);
+    }
+
+    /**
+     * Verifies that every option is unique and placed where its value reads as its value, then parses the patient
+     * scope, rejecting one that combines with {@code PREFIX_ID}.
+     *
+     * @throws ParseException if an option is duplicated or misplaced, or the scope is invalid or conflicts with an ID.
+     */
+    private static PatientScope verifyOptionsAndParseScope(ArgumentMultimap argMultimap,
+            String invalidFormatMessage) throws ParseException {
         // Duplicate options are reported whatever the rest of the input looks like
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_FROM, PREFIX_TO, PREFIX_ID, PREFIX_ALL, PREFIX_ARCHIVED);
         // A date after a scope option is read into its value, so the order is reported first, as after --id
@@ -71,12 +89,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         // A second date is read into --from or --to, so the missing option is reported before the value is parsed
         verifyNoSecondDate(argMultimap, PREFIX_FROM);
         verifyNoSecondDate(argMultimap, PREFIX_TO);
-        String preamble = argMultimap.getPreamble();
-        if (isDateLike(preamble)) {
-            // A date that is not real gets the date error, as a date given to --from or --to does
-            return parseWithDate(argMultimap, ParserUtil.parseDate(preamble), scope, invalidFormatMessage);
-        }
-        return parseWithOptionalDateRange(argMultimap, scope, invalidFormatMessage);
+        return scope;
     }
 
     /**

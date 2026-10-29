@@ -73,7 +73,7 @@ public class SampleDataUtil {
     }
 
     /**
-     * Returns an {@code Appointment} at {@code appointment}, a date or a date and time, with {@code details}.
+     * Returns an {@code Appointment} dated {@code appointment}, a date or a date and time, with {@code details}.
      */
     public static Appointment getAppointment(String appointment, String details) {
         return new Appointment(appointment, Optional.of(new AppointmentDetails(details)));

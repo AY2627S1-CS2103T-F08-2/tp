@@ -29,7 +29,7 @@ public final class DateUtil {
 
     // The "uuuu" pattern also accepts a sign and digits beyond four, such as "+12345-01-01",
     // which is not a shape a nurse would type, so only four unsigned digits are accepted.
-    private static final Pattern PARSED_DATE_SHAPE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
+    private static final Pattern VALID_DATE_SHAPE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
 
     // Used to name the part of a rejected date that does not have the shape it needs.
     private static final Pattern FOUR_DIGIT_SHAPE = Pattern.compile("\\d{4}");
@@ -50,7 +50,7 @@ public final class DateUtil {
      */
     public static LocalDate parseDate(String date) {
         requireNonNull(date);
-        if (!PARSED_DATE_SHAPE.matcher(date).matches()) {
+        if (!VALID_DATE_SHAPE.matcher(date).matches()) {
             throw new DateTimeParseException(
                     "Text '" + date + "' is not in the form " + DATE_FORMAT + ": " + describeDateShapeError(date),
                     date, 0);
