@@ -49,6 +49,34 @@ public class TextNormalizerTest {
     }
 
     @Test
+    public void normalizeText_invisibleCharacters_removedButJoinersKept() {
+        // EP: invisible characters only, which look blank (#218)
+        assertEquals("", TextNormalizer.normalizeText("\u200B"));
+        assertEquals("", TextNormalizer.normalizeText("\u200B\uFEFF\u2060 \u200B"));
+
+        // EP: inside and around words, where they change nothing that is shown
+        assertEquals("ALEXSMITH", TextNormalizer.normalizeText("Alex\u200BSmith"));
+        assertEquals("TAN AH", TextNormalizer.normalizeText("\uFEFFtan \u2060ah\u200B"));
+
+        // EP: the zero-width non-joiner, which Persian and Urdu words need, and the zero-width joiner, which
+        // composite emoji such as the health worker need, are kept
+        assertEquals("\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645",
+                TextNormalizer.normalizeText("\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645"));
+        assertEquals("NURSE \uD83D\uDC69\u200D\u2695\uFE0F",
+                TextNormalizer.normalizeText("nurse \uD83D\uDC69\u200D\u2695\uFE0F"));
+
+        // otherwise as normalize does
+        assertEquals("TAN AH KOW", TextNormalizer.normalizeText("  tan\u00A0ah\tkow "));
+        assertThrows(NullPointerException.class, () -> TextNormalizer.normalizeText(null));
+    }
+
+    @Test
+    public void normalize_invisibleCharacters_kept() {
+        // so that an ID, a phone number or a date with one fails its check (#206)
+        assertEquals("S1234567A\u200B", TextNormalizer.normalize("s1234567a\u200B"));
+    }
+
+    @Test
     public void normalize_turkishDefaultLocale_usesLocaleIndependentUpperCase() {
         // In the Turkish locale, "i".toUpperCase() gives a dotted capital I, not "I".
         Locale original = Locale.getDefault();

@@ -30,7 +30,7 @@ public class Name {
     public Name(String name) {
         requireNonNull(name);
         checkArgument(isValidName(name), MESSAGE_CONSTRAINTS);
-        fullName = TextNormalizer.normalize(name);
+        fullName = TextNormalizer.normalizeText(name);
     }
 
     /**
@@ -38,7 +38,7 @@ public class Name {
      * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidName(String test) {
-        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
+        return TextNormalizer.normalizeText(test).matches(VALIDATION_REGEX);
     }
 
 

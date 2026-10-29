@@ -133,6 +133,15 @@ public class PatientContainsSubstringsPredicateTest {
     }
 
     @Test
+    public void test_zeroWidthSpaceInName_foundByNameShown() {
+        // the list shows ALEXSMITH, so a search for it finds the patient (#218)
+        Patient alex = new PatientBuilder().withName("Alex\u200BSmith").build();
+        assertEquals("ALEXSMITH", alex.getName().fullName);
+        assertTrue(predicate(null, "alexsmith", null, null, null).test(alex));
+        assertTrue(predicate(null, "alex\u200Bsmith", null, null, null).test(alex));
+    }
+
+    @Test
     public void test_multiwordValueRequiresContiguousSubstring() {
         assertTrue(predicate(null, null, null, "Marina Bay", null).test(patient));
         assertFalse(predicate(null, null, null, "Bay Marina", null).test(patient));

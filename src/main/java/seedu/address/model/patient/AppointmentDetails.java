@@ -30,7 +30,7 @@ public class AppointmentDetails {
     public AppointmentDetails(String details) {
         requireNonNull(details);
         checkArgument(isValidAppointmentDetails(details), MESSAGE_CONSTRAINTS);
-        value = TextNormalizer.normalize(details);
+        value = TextNormalizer.normalizeText(details);
     }
 
     /**
@@ -38,7 +38,7 @@ public class AppointmentDetails {
      * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidAppointmentDetails(String test) {
-        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
+        return TextNormalizer.normalizeText(test).matches(VALIDATION_REGEX);
     }
 
     @Override

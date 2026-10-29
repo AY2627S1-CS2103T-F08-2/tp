@@ -29,7 +29,7 @@ public class MedicalHistory {
     public MedicalHistory(String medicalHistory) {
         requireNonNull(medicalHistory);
         checkArgument(isValidMedicalHistory(medicalHistory), MESSAGE_CONSTRAINTS);
-        value = TextNormalizer.normalize(medicalHistory);
+        value = TextNormalizer.normalizeText(medicalHistory);
     }
 
     /**
@@ -37,7 +37,7 @@ public class MedicalHistory {
      * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidMedicalHistory(String test) {
-        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
+        return TextNormalizer.normalizeText(test).matches(VALIDATION_REGEX);
     }
 
     @Override

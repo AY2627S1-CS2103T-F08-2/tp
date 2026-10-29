@@ -29,7 +29,7 @@ public class Address {
     public Address(String address) {
         requireNonNull(address);
         checkArgument(isValidAddress(address), MESSAGE_CONSTRAINTS);
-        value = TextNormalizer.normalize(address);
+        value = TextNormalizer.normalizeText(address);
     }
 
     /**
@@ -37,7 +37,7 @@ public class Address {
      * Leading, trailing and repeated whitespace is ignored.
      */
     public static boolean isValidAddress(String test) {
-        return TextNormalizer.normalize(test).matches(VALIDATION_REGEX);
+        return TextNormalizer.normalizeText(test).matches(VALIDATION_REGEX);
     }
 
     @Override
