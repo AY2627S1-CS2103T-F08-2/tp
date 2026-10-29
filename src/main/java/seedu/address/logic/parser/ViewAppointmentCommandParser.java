@@ -225,7 +225,7 @@ public class ViewAppointmentCommandParser implements Parser<ViewAppointmentComma
         if (id.isEmpty()) {
             return Optional.empty();
         }
-        if (!id.get().isBlank() && !PatientId.isValidId(id.get().trim())) {
+        if (!id.get().isBlank() && !PatientId.isValidId(id.get())) {
             logger.fine("Rejected viewappt: no patient has the given ID.");
             throw new ParseException(String.format(MESSAGE_PATIENT_NOT_FOUND, TextNormalizer.normalize(id.get())));
         }

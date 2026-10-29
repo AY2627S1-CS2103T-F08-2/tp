@@ -182,7 +182,7 @@ public class ViewAppointmentCommand extends Command {
 
         AppointmentBetweenDatesPredicate inRange = new AppointmentBetweenDatesPredicate(start, end);
         if (patientId.isEmpty()) {
-            int count = countPatients(model, inRange);
+            long count = countPatients(model, inRange);
             logger.fine("Viewed appointments of " + count + " patient(s) from " + start + " to " + end + ".");
             return new CommandResult(describeAll(count, start, end), new CommandResult.AppointmentRange(start, end))
                     .withAppointmentScope(scope)
@@ -190,11 +190,7 @@ public class ViewAppointmentCommand extends Command {
         }
 
         PatientId id = patientId.get();
-        Patient patient = model.findPatientById(id)
-                .orElseThrow(() -> {
-                    logger.fine("Rejected viewappt: no patient has the given ID.");
-                    return new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id));
-                });
+        Patient patient = findPatientOrThrow(model, id);
         long count = patient.getSchedule().asList().stream()
                 .filter(appointment -> inRange.isWithinRange(appointment.getDate()))
                 .count();
@@ -228,11 +224,7 @@ public class ViewAppointmentCommand extends Command {
      * gets an empty page of today.
      */
     private CommandResult showAllOfPatient(Model model, PatientId id, LocalDate today) throws CommandException {
-        Patient patient = model.findPatientById(id)
-                .orElseThrow(() -> {
-                    logger.fine("Rejected viewappt: no patient has the given ID.");
-                    return new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id));
-                });
+        Patient patient = findPatientOrThrow(model, id);
         List<Appointment> appointments = patient.getSchedule().asList(); // in time order
         LocalDate first = appointments.isEmpty() ? today : appointments.get(0).getDate();
         LocalDate last = appointments.isEmpty() ? today : appointments.get(appointments.size() - 1).getDate();
@@ -243,6 +235,17 @@ public class ViewAppointmentCommand extends Command {
                 appointments.size(), patient.getName().fullName), new CommandResult.AppointmentRange(first, last, id))
                 .withAppointmentScope(scopeOf(patient))
                 .withNavigation(Navigation.toView(View.APPOINTMENTS));
+    }
+
+    /**
+     * Returns the patient with {@code id} in {@code model}, or reports that no patient has it.
+     */
+    private static Patient findPatientOrThrow(Model model, PatientId id) throws CommandException {
+        return model.findPatientById(id)
+                .orElseThrow(() -> {
+                    logger.fine("Rejected viewappt: no patient has the given ID.");
+                    return new CommandException(String.format(MESSAGE_PATIENT_NOT_FOUND, id));
+                });
     }
 
     /**
@@ -257,14 +260,14 @@ public class ViewAppointmentCommand extends Command {
      * Returns how many patients in the command's scope {@code hasAppointmentShown} keeps, out of all patients, without
      * changing the patient list.
      */
-    private int countPatients(Model model, Predicate<Patient> hasAppointmentShown) {
-        return (int) model.getLaiNurse().getPatientList().stream()
+    private long countPatients(Model model, Predicate<Patient> hasAppointmentShown) {
+        return model.getLaiNurse().getPatientList().stream()
                 .filter(candidate -> scope.includes(candidate) && hasAppointmentShown.test(candidate))
                 .count();
     }
 
     /** Returns the status message for the appointments of every patient in the range. */
-    private String describeAll(int count, LocalDate start, LocalDate end) {
+    private String describeAll(long count, LocalDate start, LocalDate end) {
         if (endDate.isEmpty()) {
             return String.format(MESSAGE_VIEW_APPOINTMENT_FROM_LISTED_OVERVIEW, count, start);
         }
