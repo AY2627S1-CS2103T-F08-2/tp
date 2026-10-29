@@ -5,7 +5,9 @@ title: LaiNurse
 
 [![CI Status](https://github.com/AY2627S1-CS2103T-F08-2/tp/workflows/Java%20CI/badge.svg)](https://github.com/AY2627S1-CS2103T-F08-2/tp/actions)
 
-![Ui](images/Ui.png)
+![Patients view](images/Ui.png)
+
+![Appointments view](images/Ui_1.png)
 
 **LaiNurse is a desktop application that gives home nurses fast access to patient and appointment details for home visits.** While it has a GUI, most of the user interactions happen using a CLI (Command Line Interface).
 
