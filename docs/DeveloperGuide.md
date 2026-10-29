@@ -1538,8 +1538,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     * 5a1. LaiNurse shows the patient with the others again, and their appointments can clash again.
     * Use case ends.
 
-*{More to be added}*
-
 ### Non-Functional Requirements
 
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed. On macOS, this must be the JDK version given in the User Guide's Quick Start.
@@ -1631,17 +1629,15 @@ testers are expected to do more *exploratory* testing.
 
     1. Download the JAR file and copy it into an empty folder.
 
-    1. Double-click the JAR file.<br>
+    1. Open a terminal in that folder, and run `java -jar lainurse.jar`.<br>
        Expected: The GUI opens with the sample patients. The window size may not be optimal.
 
 1. Saving window preferences
 
     1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-    1. Relaunch the app by double-clicking the JAR file.<br>
+    1. Relaunch the app with `java -jar lainurse.jar`, from the same folder.<br>
        Expected: The most recent window size and location are retained.
-
-1. _{ more test cases …​ }_
 
 ### Viewing a patient
 
@@ -1777,8 +1773,6 @@ testers are expected to do more *exploratory* testing.
 
     1. Other incorrect delete commands to try: `delete`, `delete S123-456` (not a valid ID)<br>
        Expected: No patient is deleted. The status message shows the correct command format.
-
-1. _{ more test cases …​ }_
 
 ### Recording and viewing patient notes
 
@@ -2060,8 +2054,6 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `find --name alex`, then `viewappt TUE`, then click the **Patients** tab<br>
        Expected: The patient list still shows only Alex Yeoh, as `find` left it. `viewappt` does not change the
        patient list.
-
-1. _{ more test cases …​ }_
 
 ### Switching views and browsing appointments
 
@@ -2354,8 +2346,6 @@ testers are expected to do more *exploratory* testing.
 
     1. Test case: run `viewappt WED` first, then `deleteappt G1234567E 1`<br>
        Expected: The appointments view keeps showing Wednesday, now without Irfan Ibrahim's appointment.
-
-1. _{ more test cases …​ }_
 
 ### Appointment numbers, migration and clash highlighting
 
