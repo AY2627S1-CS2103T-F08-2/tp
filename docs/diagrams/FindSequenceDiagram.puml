@@ -46,6 +46,9 @@ deactivate FindCommand
 
 FindCommandParser --> LaiNurseParser : command
 deactivate FindCommandParser
+'Hidden arrow to position the destroy marker below the end of the activation bar.
+FindCommandParser -[hidden]-> LaiNurseParser
+destroy FindCommandParser
 
 LaiNurseParser --> LogicManager : command
 deactivate LaiNurseParser
