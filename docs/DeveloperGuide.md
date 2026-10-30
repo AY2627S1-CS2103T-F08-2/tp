@@ -282,9 +282,6 @@ call as an example.
 
 ![Interactions Inside the Logic Component for the `delete S1234567A` Command](images/DeleteSequenceDiagram.png)
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-</div>
-
 The appointment commands follow the same shape. The diagram below shows the `addappt` command, which uses
 `Model#findPatientById()` to find the patient among all patients and adds the appointment to their schedule.
 
