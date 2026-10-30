@@ -8,10 +8,10 @@ package seedu.address.commons.core;
 public final class FeatureFlags {
 
     /** The settings of #216, changed with the {@code set} command. */
-    private static boolean isSettingsEnabled = false;
+    private static boolean isSettingsEnabled = true;
 
     /** The selective clearing of #217: {@code clear --archived} and {@code clearappt}, with a confirmation. */
-    private static boolean isSelectiveClearEnabled = false;
+    private static boolean isSelectiveClearEnabled = true;
 
     private FeatureFlags() {} // prevents instantiation
 
