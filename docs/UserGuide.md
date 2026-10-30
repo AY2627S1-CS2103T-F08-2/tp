@@ -69,7 +69,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 * Options (words starting with `--`) can be in any order. A parameter that must come first, such as `ID` in `edit`, must stay first.<br>
   For example, if the command specifies `--name NAME --phone PHONE`, `--phone PHONE --name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `exit` and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `exit`, are ignored.<br>
   For example, `exit 123` is interpreted as `exit`.
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
@@ -111,17 +111,18 @@ cause clash warnings or red highlighting. Only visits with a time can clash: two
 not, and neither do a date-only visit and a timed one. A clashing appointment has a red boxed `!` before its time, and its time, and its date in
 the details, are red, even when it has passed or is selected. This includes a clash with a patient hidden by a filter.
 In the patient list, a patient's next appointment is red if it clashes, also when it is today. An archived patient's appointments never clash.
+These are the rules with the default settings. [`set`](#changing-settings-set) decides whether done, past and archived patients' appointments can clash, and whether a done appointment counts as past.
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
-Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `find`, `view`, `add`, `edit`, `archive` and `unarchive` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear` and `help`, keep the view that is shown. Commands also choose what is selected:
+Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `find`, `view`, `add`, `edit`, `archive` and `unarchive` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear`, `clearappt`, `set` and `help`, keep the view that is shown. Commands also choose what is selected:
 
 * `add`, `edit` and `view ID` select the patient that they add, edit or show. If the patient list's scope hides that patient, because they are archived, or because the list shows only archived patients, the list shows all patients. `view` without an ID and `find` select the first patient in the list.
 * `archive` and `unarchive` select the patient if the list still shows them. Otherwise, they select nothing, and the list keeps its scope: archiving a patient hides them.
 * `viewappt` selects the next appointment from now: the first appointment on the page that has not passed, or the first on the page if all have passed. This automatic selection remains date-based and can select a done appointment.
 * `addappt`, `editappt`, `markappt` and `unmarkappt` select the appointment that they change: on the page shown, if that page has it, or else in the weekly view of its week. If the patient is archived and the view hides their appointments, it shows archived patients' appointments too.
-* `delete`, `deleteappt` and `clear` select nothing, and the details beside the list show their starting message.
-* `help`, and a command that fails, change nothing.
+* `delete`, `deleteappt`, `clear` and `clearappt` select nothing, and the details beside the list show their starting message.
+* `help`, `set`, and a command that fails, change nothing.
 
 You can also click a tab, or move to the tabs with the keyboard and press Left or Right. Switching views this way runs no command, so each view still shows what it showed before.
 
@@ -389,6 +390,25 @@ Examples:
 * `deleteappt S1234567A 1` deletes Alex Yeoh's insulin review (#1), on the Monday of the sample week at 09:30, with its details.
 * `deleteappt S1234567A 2` deletes Alex Yeoh's monthly blood test (#2), four weeks later, which has no time.
 
+### Deleting many appointments: `clearappt`
+
+Deletes every appointment, all appointments of one patient, or every appointment in a range of dates. The patients stay. You confirm the deletion first.
+
+Format: `clearappt [ID]`, or `clearappt [--id ID] [--from DATE_OR_DATETIME] [--to DATE_OR_DATETIME]`
+
+* With no parameters, `clearappt` deletes every appointment of every patient.
+* With an `ID`, it deletes only that patient's appointments. The ID can come first, or after `--id`, but not both. The patient does not have to be in the list shown.
+* `--from` and `--to` limit the deletion to the appointments from one date, or date and time, to another, both included. Either can be left out, for no limit on that side. A date without a time is the start of that day after `--from`, and the end of that day after `--to`. An appointment with no time counts as at the start of its day: `--from 2026-10-05 10:00` keeps a date-only appointment on `2026-10-05`.
+* `--from` must not be after `--to`.
+* It deletes the appointments of every patient, also patients hidden by a filter, and archived patients.
+* The patient's remaining appointments are numbered again from 1, in date order.
+* LaiNurse keeps the view that is shown, and selects nothing.
+
+Examples:
+* `clearappt S1234567A` deletes both of Alex Yeoh's appointments, after you confirm it.
+* `clearappt --to 2026-10-04` deletes every appointment up to the end of 4 October 2026, such as the visits of last month that you no longer need.
+* `clearappt --id G1234567E --from 2026-10-01 --to 2026-10-31 12:00` deletes Irfan Ibrahim's appointments from 1 October 2026 to noon on 31 October 2026.
+
 ### Marking an appointment as done: `markappt`
 
 Marks one appointment as **Done**.
@@ -448,7 +468,7 @@ Format: `view [--all]`, `view [--archived]` or `view ID`
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * LaiNurse switches to the **Patients** view.
 * The panel shows the patient's name, ID, phone number, address, medical history, notes and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists the last ten that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
-* The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete all patients with `clear`, it goes back to its starting message.
+* The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete them with `clear`, it goes back to its starting message.
 * You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 
 Examples:
@@ -500,11 +520,46 @@ Format: `delete ID`
 Examples:
 * `delete S1234567A` deletes the patient with the ID `S1234567A`.
 
-### Deleting all patients: `clear`
+### Deleting many patients: `clear`
 
-Deletes all patients from LaiNurse. This cannot be undone.
+Deletes all patients, or only archived patients, with their appointments. You confirm the deletion first.
 
-Format: `clear`
+Format: `clear [--archived]`
+
+* With no parameters, `clear` deletes every patient.
+* With `--archived`, it deletes only [archived](#archiving-a-patient-archive) patients, such as patients discharged long ago. `--archived` takes no value.
+* LaiNurse keeps the view that is shown, and selects nothing.
+
+<div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
+`clear` and `clearappt` delete much at once, and cannot be undone. So they first say what they would delete, such as `This deletes 2 archived patient(s) and their 1 appointment(s).`, and wait. Type `I LOVE 2103T` exactly, in capitals, to confirm. Anything else, even another command, cancels: LaiNurse says `Cancelled. Nothing was deleted.`, and does not run what you typed. When there is nothing to delete, the command says so at once, and there is nothing to confirm.
+</div>
+
+Examples:
+* `clear --archived`, then `I LOVE 2103T`, deletes every archived patient.
+* `clear`, then `I LOVE 2103T`, deletes every patient. To start again from the sample data instead, see [Editing the data file](#editing-the-data-file).
+
+### Changing settings: `set`
+
+Shows the settings, or turns one on or off. The settings decide which appointments can clash, and what a done appointment means.
+
+Format: `set`, `set SETTING on` or `set SETTING off`
+
+* `set` alone lists each setting with `on` or `off`.
+* `set SETTING on` or `set SETTING off` changes one setting, such as `set past-clashes off`. Setting names and `on` and `off` are in lower case.
+* LaiNurse saves the settings at once, in `preferences.json`, and keeps them when it restarts.
+* The view and the selection stay. The list and the details follow the new setting at once.
+
+Setting | Default | When on | When off
+--------|---------|---------|---------
+`mark-stops-clashes` | on | A done appointment never clashes. | A done appointment clashes like any other, and its pin turns red in place of the `!`.
+`mark-counts-as-done` | off | A done appointment counts as past: it is greyed out, comes first in its day, and shows under **Past** in the details. | A done appointment only shows a pin.
+`past-clashes` | on | Appointments that have passed can clash. | Appointments that have passed never clash, and neither do done appointments.
+`archived-clashes` | off | Archived patients' appointments clash like any other. | Archived patients' appointments never clash.
+
+Examples:
+* `set` shows the settings.
+* `set past-clashes off` stops old clashes from showing in red.
+* `set mark-counts-as-done on` greys out each visit as soon as you mark it done.
 
 ### Exiting the program: `exit`
 
@@ -578,13 +633,15 @@ Action | Format, Examples
 **Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
 **AddAppt** | `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen`
 **Archive** | `archive ID`<br> e.g., `archive S2345678B`
-**Clear** | `clear`
+**Clear** | `clear [--archived]`, then `I LOVE 2103T` to confirm<br> e.g., `clear --archived`
+**ClearAppt** | `clearappt [ID]` or `clearappt [--id ID] [--from DATE_OR_DATETIME] [--to DATE_OR_DATETIME]`, then `I LOVE 2103T` to confirm<br> e.g., `clearappt S1234567A`, `clearappt --to 2026-10-04`
 **Delete** | `delete ID`<br> e.g., `delete T0123456B`
 **DeleteAppt** | `deleteappt ID NUMBER`<br> e.g., `deleteappt S1234567A 1`
 **Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`<br> e.g., `edit S1234567A --notes Walks every morning`, `edit S1234567A --add-medical-history Asthma`
 **EditAppt** | `editappt ID NUMBER [--to NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`<br> e.g., `editappt S1234567A 1 --to 2026-10-06 10:00`, `editappt S1234567A 1 --add-details Bring glucometer`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES] [--all] [--archived]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one field option required), `find --name yu --archived`
 **MarkAppt** | `markappt ID NUMBER`<br> e.g., `markappt S1234567A 2`
+**Set** | `set`, `set SETTING on` or `set SETTING off`<br> e.g., `set`, `set past-clashes off`
 **Unarchive** | `unarchive ID`<br> e.g., `unarchive S2345678B`
 **UnmarkAppt** | `unmarkappt ID NUMBER`<br> e.g., `unmarkappt S1234567A 2`
 **View** | `view [--all]`, `view [--archived]` or `view ID`<br> e.g., `view`, `view --all`, `view S1234567A`
