@@ -723,8 +723,8 @@ Each command navigates as follows:
 | `view` without an ID, `find` | `Navigation.toView(View.PATIENTS)`, which selects the first patient in the list |
 | `viewappt` | `Navigation.toView(View.APPOINTMENTS)`, with the range of a date, of `--from`/`--to` or of `--id` alone, and with no range for a plain `viewappt`. Every result also has the scope of the appointment view, `withAppointmentScope`. |
 | `addappt`, `editappt`, `markappt`, `unmarkappt` | `Navigation.toAppointment` of the changed appointment, with no range, so the page shown stays if it has the appointment |
-| `delete`, `deleteappt`, `clear` | `withSelectionCleared()`: keeps the view and selects nothing |
-| `help`, `exit` | no navigation: keeps the view and the selection |
+| `delete`, `deleteappt`, `clear`, `clearappt` | `withSelectionCleared()`: keeps the view and selects nothing |
+| `help`, `exit`, `set` | no navigation: keeps the view and the selection |
 
 Switching the tab by mouse or key runs no command and changes no model state. So the result display, the filtered
 patient list and the shown page of appointments all keep their state. If the keyboard focus is in the view being hidden, `MainWindow`
@@ -1024,10 +1024,10 @@ and turn it off again after each test.
     * Pros: The released code has no switch.
     * Cons: The branch drifts from `master`, and merging it late changes much code at once.
 
-### Settings (not released yet)
+### Settings
 
 The settings of #216 decide how marks, past clashes and archived patients behave. They are behind
-`FeatureFlags#isSettingsEnabled()`.
+`FeatureFlags#isSettingsEnabled()`, which is on.
 
 * `Settings` in `model` holds four switches: `isMarkStoppingClashes`, `isMarkCountedAsDone`, `isPastClashing` and
   `isArchivedClashing`. Its defaults are how LaiNurse behaves without settings. `UserPrefs` saves it in
@@ -1049,10 +1049,10 @@ The settings of #216 decide how marks, past clashes and archived patients behave
 * The panels follow the settings through `useSettings`, which `MainWindow` calls with `Logic#getSettings()`, and
   refresh when they change.
 
-### Clearing selectively (not released yet)
+### Clearing selectively
 
-The selective clearing of #217 is behind `FeatureFlags#isSelectiveClearEnabled()`. Before its release, `clear` deletes
-every patient at once, as before, and `clearappt` is an unknown command.
+The selective clearing of #217 is behind `FeatureFlags#isSelectiveClearEnabled()`, which is on. With the switch off,
+`clear` deletes every patient at once, as in AB3, and `clearappt` is an unknown command.
 
 * `clear --archived` (`ClearCommand` with `isArchivedOnly`) deletes only archived patients. `clearappt`
   (`ClearAppointmentCommand`) deletes every appointment, all of one patient's appointments, or every appointment from
@@ -1129,6 +1129,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | home-based nurse | archive a discharged patient instead of deleting them                                                | they're hidden from my list but I keep their records         |
 | `* *`    | home-based nurse | see or search my archived patients when I need them                                                  | I can look up a former patient who calls again               |
 | `* *`    | home-based nurse | have archived patients' appointments not clash with my current visits                                | old visits do not raise false clash warnings                  |
+| `* *`    | home-based nurse | delete all archived patients at once                                                                 | discharged patients I no longer need do not pile up            |
+| `* *`    | home-based nurse | delete all appointments in a range of dates, of all patients or of one                              | old visits do not clutter my schedule                          |
+| `* *`    | home-based nurse | confirm before many patients or appointments are deleted                                             | one mistyped command does not wipe my records                  |
+| `*`      | home-based nurse | choose whether done, past and archived patients' appointments can clash                              | the clash warnings match how I work                            |
+| `*`      | home-based nurse | have a done appointment count as past                                                                | my finished visits move out of the way as soon as I mark them  |
 
 ### Use cases
 
@@ -1604,6 +1609,52 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * 5a. The nurse requests to unarchive the patient.
     * 5a1. LaiNurse shows the patient with the others again, and their appointments can clash again.
     * Use case ends.
+
+**Use case: UC13 - Delete many patients or appointments**
+
+**MSS**
+
+1. Nurse requests to delete every patient, every archived patient, or the appointments of every patient or of one,
+   optionally from one date, or date and time, to another.
+2. LaiNurse says how many patients or appointments it would delete, and asks the nurse to confirm.
+3. Nurse types the confirmation phrase.
+4. LaiNurse deletes them and saves the data.
+5. LaiNurse keeps the view that is shown, and selects nothing.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The arguments are invalid, such as an option with a value that takes none, or `--from` after `--to`.
+    * 1a1. LaiNurse shows an error message with the valid format, or says that `--from` must not be after `--to`.
+    * Use case resumes at step 1.
+* 1b. The given ID does not match any patient.
+    * 1b1. LaiNurse shows an error message.
+    * Use case resumes at step 1.
+* 1c. Nothing matches, so there is nothing to delete.
+    * 1c1. LaiNurse says so, and asks for no confirmation.
+    * Use case ends.
+* 3a. Nurse types anything other than the confirmation phrase, even another command.
+    * 3a1. LaiNurse cancels the deletion, deletes nothing, and does not run what the nurse typed.
+    * Use case ends.
+
+**Use case: UC14 - Change a setting**
+
+**MSS**
+
+1. Nurse requests to see the settings.
+2. LaiNurse lists each setting, and whether it is on or off.
+3. Nurse requests to turn one setting on or off.
+4. LaiNurse changes the setting and saves it.
+5. LaiNurse updates the clash marks and the past appointments in the view shown to follow the setting.
+
+   Use case ends.
+
+**Extensions**
+
+* 3a. The setting is unknown, or the value is not `on` or `off`.
+    * 3a1. LaiNurse shows an error message with the valid format and the names of the settings.
+    * Use case resumes at step 3.
 
 ### Non-Functional Requirements
 
@@ -2546,11 +2597,88 @@ testers are expected to do more *exploratory* testing.
        Expected: `--all`, then `--archived`. `view --all --` offers nothing, and `archive S` offers archived
        patients' IDs last.
 
+### Deleting many patients or appointments
+
+1. Deleting archived patients
+
+    1. Prerequisites: Start with the sample data.
+    1. Test case: `clear --archived`<br>
+       Expected: `There are no archived patients to delete.`, and nothing is asked or deleted.
+    1. Test case: `archive S2345678B`, then `clear --archived`<br>
+       Expected: `This deletes 1 archived patient(s) and their 1 appointment(s).`, followed by
+       `Type "I LOVE 2103T" to confirm, or anything else to cancel.` Nothing is deleted yet.
+    1. Test case: then `I LOVE 2103T`<br>
+       Expected: `Deleted 1 archived patient(s).` Bernice Yu is gone, also after `view --all`, and the other 5
+       patients stay.
+    1. Test cases: `clear --archived yes`, `clear extra`, `clear --archived --archived`<br>
+       Expected: The command format error, the command format error, and the error that `--archived` is given more
+       than once.
+
+1. Cancelling a deletion
+
+    1. Prerequisites: Start with the sample data.
+    1. Test case: `clear`<br>
+       Expected: `This deletes 6 patient(s) and their 4 appointment(s).`, followed by the confirmation prompt.
+    1. Test case: then `view S1234567A`<br>
+       Expected: `Cancelled. Nothing was deleted.` The `view` command does not run, so the selection stays.
+    1. Test case: `clear`, then `i love 2103t`<br>
+       Expected: `Cancelled. Nothing was deleted.`, as the phrase must be in capitals.
+
+1. Deleting appointments
+
+    1. Prerequisites: Start with the sample data. Use its Monday and Tuesday dates for `MON` and `TUE`.
+    1. Test case: `clearappt`, then any other input<br>
+       Expected: `This deletes 4 appointment(s) of 3 patient(s).` and the prompt, then the cancellation.
+    1. Test case: `clearappt --from MON 10:00 --to TUE`, then `I LOVE 2103T`<br>
+       Expected: `This deletes 1 appointment(s) of 1 patient(s).`, then `Deleted 1 appointment(s).` Bernice Yu's
+       date-only Tuesday appointment is gone, as it counts as at the start of Tuesday. Alex Yeoh's Monday 09:30
+       appointment stays, as it is before `MON 10:00`.
+    1. Test case: `clearappt S1234567A --to MON`, then `I LOVE 2103T`<br>
+       Expected: `This deletes 1 appointment(s) of ALEX YEOH (S1234567A).`, then `Deleted 1 appointment(s).` Alex's
+       monthly blood test becomes #1.
+    1. Test case: `clearappt S4567890F`<br>
+       Expected: `No appointments match, so there is nothing to delete.`, as Roy Balakrishnan has none.
+    1. Test cases: `clearappt --from TUE --to MON`, `clearappt S0000000Z`, `clearappt S1234567A --id S1234567A`,
+       `clearappt --from 2026-02-30`<br>
+       Expected: `The --from date and time must not be after the --to date and time.`, `No patient has the ID
+       S0000000Z.`, the command format error, and the date format error.
+
+### Changing settings
+
+1. Showing and changing settings
+
+    1. Prerequisites: Start with the sample data, and delete `preferences.json` first for the default settings.
+    1. Test case: `set`<br>
+       Expected: `Settings:`, then `mark-stops-clashes: on`, `mark-counts-as-done: off`, `past-clashes: on` and
+       `archived-clashes: off`, each on its own line. The view and the selection stay.
+    1. Test case: `set past-clashes off`, then close and restart LaiNurse, and enter `set`<br>
+       Expected: `Turned past-clashes off.` After the restart, `set` still shows `past-clashes: off`.
+    1. Test cases: `set past-clashes`, `set past-clashes yes`, `set unknown on`, `set PAST-CLASHES on`<br>
+       Expected: The command format error, which lists the setting names, and no setting changes.
+
+1. Settings and clashes
+
+    1. Prerequisites: Start with the sample data and the default settings. Use a date in the future for `FUTURE`
+       and one in the past for `PAST`. Enter `addappt S2345678B --date FUTURE 09:00`, then
+       `addappt S1234567A --date FUTURE 09:00`, so the two clash.
+    1. Test case: `markappt S1234567A N`, where `N` is the number of Alex's `FUTURE` appointment<br>
+       Expected: Neither appointment is red any more. `set mark-stops-clashes off` makes both red again, and Alex's
+       has a red pin in place of the `!`. Enter `set mark-stops-clashes on` afterwards.
+    1. Test case: `set mark-counts-as-done on`<br>
+       Expected: Alex's marked appointment is greyed out, comes first in its day, and is under **Past** in his
+       details. `set mark-counts-as-done off` undoes it.
+    1. Test case: `unmarkappt S1234567A N`, `archive S2345678B`, then `set archived-clashes on`<br>
+       Expected: Unmarking brings the clash back, and archiving Bernice ends it. With `archived-clashes on`, Alex's
+       appointment is red again.
+    1. Test case: `addappt S3456789D --date PAST 09:00` and `addappt T0123456C --date PAST 09:00`, then
+       `set past-clashes off`<br>
+       Expected: The two past appointments are red until `past-clashes` is turned off.
+
 ### Viewing help and command instructions
 
 1. Command overview via CLI
     * Test case: `help`
-        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `archive`, `clear`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `markappt`, `unarchive`, `unmarkappt`, `view`, `viewappt`) is displayed in the result box.
+        * Expected: An alphabetical summary of all available commands (`add`, `addappt`, `archive`, `clear`, `clearappt`, `delete`, `deleteappt`, `edit`, `editappt`, `exit`, `find`, `help`, `list`, `markappt`, `set`, `unarchive`, `unmarkappt`, `view`, `viewappt`) is displayed in the result box.
 
 2. Targeted command help
     * Test case: `help add`
