@@ -30,6 +30,13 @@ public class VoucherBalanceTest {
     }
 
     @Test
+    public void constructor_boundaryCounts_areAccepted() {
+        // the smallest count is 0, and the largest is the largest finite double
+        assertEquals(0, new VoucherBalance(0, INTEREST_DATE).getCount(), 0);
+        assertEquals(Double.MAX_VALUE, new VoucherBalance(Double.MAX_VALUE, INTEREST_DATE).getCount(), 0);
+    }
+
+    @Test
     public void isValidCount() {
         assertTrue(VoucherBalance.isValidCount(0));
         assertTrue(VoucherBalance.isValidCount(5));
@@ -76,6 +83,67 @@ public class VoucherBalanceTest {
     }
 
     @Test
+    public void withInterestAppliedUntil_compoundsEachDay_notAdds() {
+        // two days of interest grow the count by 1.21 times, not by twice a tenth
+        VoucherBalance balance = new VoucherBalance(100, INTEREST_DATE);
+        assertEquals(121, balance.withInterestAppliedUntil(SECOND_DAY).getCount(), 1e-9);
+    }
+
+    @Test
+    public void withInterestAppliedUntil_acrossAYearBoundary_countsCalendarDays() {
+        // a day is a day, also over New Year
+        VoucherBalance balance = new VoucherBalance(10, LocalDate.parse("2026-12-31"));
+        VoucherBalance nextYear = balance.withInterestAppliedUntil(LocalDate.parse("2027-01-01"));
+        assertEquals(11, nextYear.getCount(), 1e-9);
+        assertEquals(LocalDate.parse("2027-01-01"), nextYear.getInterestDate());
+    }
+
+    @Test
+    public void withInterestAppliedUntil_acrossLeapDay_countsCalendarDays() {
+        // 2028 is a leap year: Feb 28 grows by two days of interest by Mar 1, and Feb 29 is itself a date
+        // the balance may be dated on
+        VoucherBalance balance = new VoucherBalance(10, LocalDate.parse("2028-02-28"));
+        assertEquals(12.1, balance.withInterestAppliedUntil(LocalDate.parse("2028-03-01")).getCount(), 1e-9);
+
+        VoucherBalance leapDay = new VoucherBalance(10, LocalDate.parse("2028-02-29"));
+        VoucherBalance afterLeapDay = leapDay.withInterestAppliedUntil(LocalDate.parse("2028-03-01"));
+        assertEquals(11, afterLeapDay.getCount(), 1e-9);
+    }
+
+    @Test
+    public void withInterestAppliedUntil_overAYear_growsByTheCompoundFactor() {
+        // a year from 2026-10-05 is 365 days, and the count grows by 1.1 to the power of the days
+        double expected = 10 * Math.pow(VoucherBalance.DAILY_INTEREST_MULTIPLIER, 365);
+        VoucherBalance balance = new VoucherBalance(10, INTEREST_DATE);
+        VoucherBalance afterAYear = balance.withInterestAppliedUntil(INTEREST_DATE.plusYears(1));
+        assertEquals(expected, afterAYear.getCount(), expected * 1e-12);
+        assertTrue(Double.isFinite(afterAYear.getCount()));
+    }
+
+    @Test
+    public void withInterestAppliedUntil_beyondEveryDouble_clampsToTheLargestCount() {
+        // a balance that grows past every double stays at the largest count, and never becomes infinite
+        VoucherBalance balance = new VoucherBalance(Double.MAX_VALUE, LocalDate.parse("2026-01-01"));
+        VoucherBalance nextDay = balance.withInterestAppliedUntil(LocalDate.parse("2026-01-02"));
+        assertEquals(Double.MAX_VALUE, nextDay.getCount(), 0);
+        assertEquals(LocalDate.parse("2026-01-02"), nextDay.getInterestDate());
+    }
+
+    @Test
+    public void interestLeavesTheBalanceAppliedTo_unchanged() {
+        VoucherBalance balance = new VoucherBalance(10, INTEREST_DATE);
+        balance.withInterestAppliedUntil(SECOND_DAY);
+        balance.added(5, SECOND_DAY);
+        balance.redeemed(4, SECOND_DAY);
+        assertEquals(10, balance.getCount(), 0);
+        assertEquals(INTEREST_DATE, balance.getInterestDate());
+
+        // the shared balance of no vouchers is never changed by an operation on it
+        VoucherBalance.ZERO.added(5, NEXT_DAY);
+        assertEquals(0, VoucherBalance.ZERO.getCount(), 0);
+    }
+
+    @Test
     public void withInterestAppliedUntil_interestDateFarPast_staysFinite() {
         VoucherBalance balance = new VoucherBalance(10, LocalDate.of(1, 1, 1));
         assertTrue(Double.isFinite(balance.withInterestAppliedUntil(LocalDate.now()).getCount()));
@@ -118,6 +186,48 @@ public class VoucherBalanceTest {
     }
 
     @Test
+    public void redeemed_leavesARemainderAboveAResidue() {
+        // redeeming 10 of 11 vouchers held a hair above 11 leaves that hair, which is a real fraction
+        VoucherBalance balance = new VoucherBalance(10, INTEREST_DATE).withInterestAppliedUntil(NEXT_DAY);
+        VoucherBalance remainder = balance.redeemed(10, NEXT_DAY);
+        assertNotEquals(VoucherBalance.ZERO, remainder);
+        assertEquals(1, remainder.getCount(), 1e-9);
+        assertEquals(NEXT_DAY, remainder.getInterestDate());
+    }
+
+    @Test
+    public void added_nonPositiveNumber_throws() {
+        for (long nonPositive : new long[] {0, -1, -5}) {
+            assertThrows(IllegalArgumentException.class, VoucherNumber.MESSAGE_CONSTRAINTS, () ->
+                    new VoucherBalance(10, INTEREST_DATE).added(nonPositive, INTEREST_DATE));
+        }
+    }
+
+    @Test
+    public void redeemed_nonPositiveNumber_throws() {
+        // a negative number would otherwise grow the balance, by redeeming a negative amount of it
+        for (long nonPositive : new long[] {0, -1, -5}) {
+            assertThrows(IllegalArgumentException.class, VoucherNumber.MESSAGE_CONSTRAINTS, () ->
+                    new VoucherBalance(10, INTEREST_DATE).redeemed(nonPositive, INTEREST_DATE));
+        }
+    }
+
+    @Test
+    public void nullDates_throwNullPointerException() {
+        VoucherBalance balance = new VoucherBalance(10, INTEREST_DATE);
+        assertThrows(NullPointerException.class, () -> balance.withInterestAppliedUntil(null));
+        assertThrows(NullPointerException.class, () -> balance.added(5, null));
+        assertThrows(NullPointerException.class, () -> balance.redeemed(5, null));
+    }
+
+    @Test
+    public void added_largestNumberOfVouchers_staysFinite() {
+        VoucherBalance balance = new VoucherBalance(1, INTEREST_DATE).added(Long.MAX_VALUE, INTEREST_DATE);
+        assertTrue(Double.isFinite(balance.getCount()));
+        assertEquals(INTEREST_DATE, balance.getInterestDate());
+    }
+
+    @Test
     public void redeemed_vouchersLeft_keepEarningInterest() {
         // the redeemed vouchers leave the balance, and the unused ones left grow by another tenth the next day
         VoucherBalance balance = new VoucherBalance(10, INTEREST_DATE).redeemed(4, NEXT_DAY);
@@ -147,6 +257,13 @@ public class VoucherBalanceTest {
         assertEquals("11.2", VoucherBalance.formatCount(11.2));
         // a count grown to a hair above 13.31 by the daily multiplication still shows as 13.31
         assertEquals("13.31", VoucherBalance.formatCount(13.310000000000002));
+
+        // the second decimal rounds half-up: 0.005 counts as 0.01, and 0.004 as none
+        assertEquals("0.01", VoucherBalance.formatCount(0.005));
+        assertEquals("0", VoucherBalance.formatCount(0.004));
+        assertEquals("1.01", VoucherBalance.formatCount(1.005));
+        // a large count is written out in full, with no exponent
+        assertEquals("1000000000000000", VoucherBalance.formatCount(1e15));
     }
 
     @Test

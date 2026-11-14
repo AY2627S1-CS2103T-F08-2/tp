@@ -99,9 +99,12 @@ public class VoucherBalance {
 
     /**
      * Returns the balance as of {@code today} after the patient is given {@code number} more vouchers.
+     *
+     * @throws IllegalArgumentException if {@code number} is not a positive whole number.
      */
     public VoucherBalance added(long number, LocalDate today) {
         requireNonNull(today);
+        checkArgument(number > 0, VoucherNumber.MESSAGE_CONSTRAINTS);
         VoucherBalance current = withInterestAppliedUntil(today);
         return new VoucherBalance(current.count + number, today);
     }
@@ -118,9 +121,12 @@ public class VoucherBalance {
      * Returns the balance as of {@code today} after {@code number} of the patient's vouchers are redeemed, so that
      * they leave the balance and the unused vouchers left keep earning interest. Redeeming every voucher the
      * patient holds gives {@link #ZERO}: the rounded count can leave a hair of a voucher, which is none.
+     *
+     * @throws IllegalArgumentException if {@code number} is not a positive whole number.
      */
     public VoucherBalance redeemed(long number, LocalDate today) {
         requireNonNull(today);
+        checkArgument(number > 0, VoucherNumber.MESSAGE_CONSTRAINTS);
         VoucherBalance current = withInterestAppliedUntil(today);
         double remaining = current.count - number;
         if (Math.abs(remaining) < REDEEM_TOLERANCE) {
