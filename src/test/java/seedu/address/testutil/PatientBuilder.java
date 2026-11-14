@@ -1,5 +1,6 @@
 package seedu.address.testutil;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import seedu.address.model.patient.Address;
@@ -12,6 +13,7 @@ import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherBalance;
 import seedu.address.model.util.SampleDataUtil;
 
 /**
@@ -31,6 +33,7 @@ public class PatientBuilder {
     private Optional<MedicalHistory> medicalHistory;
     private Optional<Notes> notes;
     private AppointmentSchedule appointments;
+    private VoucherBalance vouchers;
     private boolean isArchived;
 
     /**
@@ -44,6 +47,7 @@ public class PatientBuilder {
         medicalHistory = Optional.empty();
         notes = Optional.empty();
         appointments = AppointmentSchedule.empty();
+        vouchers = VoucherBalance.ZERO;
     }
 
     /**
@@ -57,6 +61,7 @@ public class PatientBuilder {
         medicalHistory = patientToCopy.getMedicalHistory();
         notes = patientToCopy.getNotes();
         appointments = patientToCopy.getSchedule();
+        vouchers = patientToCopy.getVoucherBalance();
         isArchived = patientToCopy.isArchived();
     }
 
@@ -159,8 +164,25 @@ public class PatientBuilder {
         return this;
     }
 
+    /**
+     * Sets the {@code VoucherBalance} of the {@code Patient} that we are building.
+     */
+    public PatientBuilder withVoucherBalance(VoucherBalance vouchers) {
+        this.vouchers = vouchers;
+        return this;
+    }
+
+    /**
+     * Gives the {@code Patient} that we are building {@code count} vouchers on {@code date}, as the balance the
+     * commands would leave, before any interest.
+     */
+    public PatientBuilder withVouchers(double count, LocalDate date) {
+        this.vouchers = new VoucherBalance(count, date);
+        return this;
+    }
+
     public Patient build() {
-        return new Patient(id, name, phone, address, medicalHistory, notes, appointments, isArchived);
+        return new Patient(id, name, phone, address, medicalHistory, notes, appointments, vouchers, isArchived);
     }
 
 }

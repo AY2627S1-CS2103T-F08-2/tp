@@ -1126,6 +1126,65 @@ patients' IDs last.
     * Cons: Every command that filters must remember to hide archived patients, and the scope is lost whenever a
       command replaces the filter.
 
+### Tracking vouchers
+
+LaiNurse tracks, for every patient, a balance of unused vouchers, which `addvoucher` grows and `redeemvoucher`
+shrinks. Every voucher has the same value, whatever that value is: a count is a number of vouchers, not an amount
+of money or of anything else. Unused vouchers earn a daily interest of 10%: on each day after the day the balance
+last changed, the count is multiplied by 1.1, so a balance can hold a fraction of a voucher, such as 12.1.
+
+**Model.** `VoucherBalance` holds two things: the count, a `double` of at least 0, and the interest date, the last
+date on which the count changed. It is immutable, like every model field, and `Patient` holds one, which
+`Patient#withVoucherBalance(VoucherBalance)` replaces, as `withSchedule` does for appointments. A patient who never
+held vouchers holds `VoucherBalance.ZERO`, whose count of 0 makes its date irrelevant. `VoucherNumber` is the number
+of vouchers that a command gives or redeems: a positive whole number, for vouchers are given and redeemed one at a
+time, and parsed by `ParserUtil#parseVoucherNumber`.
+
+**Interest.** The interest is applied **lazily**, when the balance is read or changed, rather than by a task that
+runs at midnight. `VoucherBalance#withInterestAppliedUntil(LocalDate)` returns the balance as of a day, multiplied
+by 1.1 for every whole day after its interest date, and dated that day. A count of 0 never grows, and a day that is
+not after the interest date, such as one before it in a hand-edited data file, applies none. The commands apply the
+interest before they change the balance: `addvoucher` adds to the grown count, and `redeemvoucher` subtracts from
+it, so the redeemed vouchers stop earning and the unused ones left keep earning. When a balance is displayed, the
+patient detail panel also applies the interest up to today, so a count left open past midnight keeps up with the
+clock, as the appointments do.
+
+**Aspect: How the daily interest is applied**
+
+* **Alternative 1 (current choice):** Lazily, from the interest date, when the balance is read or changed.
+    * Pros: No background task, and no work at all for a balance nobody looks at. The stored count and date are
+      enough to compute the balance as of any day, exactly once, and a computer that was off for a week catches up
+      at once on loading. Tests pass a fixed date and are exact.
+    * Cons: Every reader of the balance must remember to apply the interest first, which the command base class and
+      the detail panel each do in one place.
+* **Alternative 2:** A task at midnight, or at every launch, that multiplies every balance once per elapsed day.
+    * Pros: The stored count is always current, and readers need no interest logic.
+    * Cons: The task must not run twice a day, must catch up after the app was closed, and touches every patient
+      even when nothing changes, which then saves the whole data file at midnight.
+
+**Commands.** `AddVoucherCommand` and `RedeemVoucherCommand` share `VoucherCommand`, as `archive` and `unarchive`
+share `ArchiveStatusCommand`: it finds the patient with `Model#findPatientById`, applies the interest as of today,
+asks the subclass for the new balance, and saves it with `Model#setPatient`. Each succeeds with the number of
+vouchers and the new balance, named by `Messages#formatCount(double, String)`, which says `1 voucher` in the
+singular. `redeemvoucher` refuses a redemption of more vouchers than the patient holds, with the count they do
+hold. Both switch to the Patients view, and select the patient only if the list still shows them, so that giving
+vouchers to an archived patient does not select a hidden row.
+
+**Rounding.** The daily multiplication rounds the count, so a balance of exactly 11 vouchers can be held as
+11.000000000000002 or a hair below. `VoucherBalance#canRedeem(long)` accepts a count a hair below the whole number
+redeemed, and `redeemed` snaps the residue of a redemption of every voucher to a clean 0, so a nurse can always
+redeem the balance that the panel shows. Counts are shown rounded to 2 decimal places, with trailing zeros left
+out, and are never rounded in storage or arithmetic.
+
+**Storage.** `JsonAdaptedPatient` saves `"voucherCount"` and `"voucherInterestDate"` for a patient who holds
+vouchers, and neither field for one who holds none, so files from earlier versions load unchanged. The two fields
+must be given together, the count must be a number of at least 0, and the date must parse in the appointment date
+format, or the file fails to load as any other invalid field does.
+
+**UI.** The patient detail panel shows the balance under **Vouchers**, as of today, between the notes and the
+appointments. Tab completes the patient ID of both commands, through `IdCompleter`'s commands that take an ID
+first.
+
 ### Feature flags
 
 `FeatureFlags` in `commons.core` holds a switch for each feature that is built and tested, but not released to users
@@ -1253,6 +1312,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | home-based nurse | delete all archived patients at once                                                                 | discharged patients I no longer need do not pile up            |
 | `* *`    | home-based nurse | delete all appointments in a range of dates, of all patients or of one                              | old visits do not clutter my schedule                          |
 | `* *`    | home-based nurse | confirm before many patients or appointments are deleted                                             | one mistyped command does not wipe my records                  |
+| `* * *`  | home-based nurse | give a patient a number of vouchers, which all have the same value                                    | I can track what they own without recording money               |
+| `* * *`  | home-based nurse | redeem a number of a patient's unused vouchers                                                        | what they spend is taken off their balance                      |
+| `* * *`  | home-based nurse | have unused vouchers grow by 10% interest every day                                                   | the balance rewards the vouchers the patient keeps              |
 | `*`      | home-based nurse | choose whether done, past and archived patients' appointments can clash                              | the clash warnings match how I work                            |
 | `*`      | home-based nurse | have a done appointment count as past                                                                | my finished visits move out of the way as soon as I mark them  |
 
@@ -1838,6 +1900,60 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 3.
 
+**Use case: UC15 - Give a patient vouchers**
+
+**MSS**
+
+1.  Nurse requests to give a number of vouchers to the patient with a given ID
+2.  LaiNurse applies the interest of every day since the patient's balance last changed, adds the vouchers, and saves the patient
+3.  LaiNurse names the number given and the patient's new balance, and shows their details
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The ID is invalid, or no patient has it.
+
+    * 1a1. LaiNurse shows an error message.
+
+      Use case ends.
+
+* 1b. The number of vouchers is not a positive whole number.
+
+    * 1b1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
+**Use case: UC16 - Redeem vouchers**
+
+**MSS**
+
+1.  Nurse requests to redeem a number of the unused vouchers of the patient with a given ID
+2.  LaiNurse applies the interest of every day since the patient's balance last changed, and the patient holds at least that many vouchers
+3.  LaiNurse takes the vouchers off the balance, saves the patient, and names the number redeemed and the new balance
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The ID is invalid, or no patient has it.
+
+    * 1a1. LaiNurse shows an error message.
+
+      Use case ends.
+
+* 1b. The number of vouchers is not a positive whole number.
+
+    * 1b1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
+* 2a. The patient holds fewer vouchers than are redeemed.
+
+    * 2a1. LaiNurse shows an error naming the balance the patient holds, and changes nothing.
+
+      Use case ends.
+
 ### Non-Functional Requirements
 
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed. On macOS, this must be the JDK version given in the User Guide's Quick Start.
@@ -1889,6 +2005,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Notes**: Optional free-form personal information about a patient that the other fields do not cover, such as their
   hobbies, pet peeves and daily routines (e.g., "walks every morning"). Health information goes in the Medical History
   instead.
+* **Voucher**: A unit that a patient owns and can later redeem. Every voucher has the same value, whatever that value
+  is: a voucher count is a number of vouchers, not an amount of money. Unused vouchers grow by 10% interest every
+  day, so a balance can hold a fraction of a voucher.
+* **Interest (voucher)**: The daily growth of a patient's unused voucher count: on each day after the day the balance
+  last changed, the count is multiplied by 1.1.
 * **Normalization (normalized text)**: How LaiNurse stores text: trimmed, in uppercase, with each run of whitespace
   collapsed into one space, so values differing only in case or spacing are equal.
 * **Patients view (patient view)**: The tab that shows the patient list beside one patient's details; also called the
@@ -2871,6 +2992,53 @@ testers are expected to do more *exploratory* testing.
     1. Test case: type `view --a`, then press Tab<br>
        Expected: `--all`, then `--archived`. `view --all --` offers nothing, and `archive S` offers archived
        patients' IDs last.
+
+### Adding and redeeming vouchers
+
+1. Giving vouchers
+
+    1. Prerequisites: Start with the sample data, and enter `view`. Alex Yeoh holds 12.1 vouchers in the sample
+       data, and Charlotte Oliveiro holds none.
+    1. Test case: `addvoucher S1234567A 5`<br>
+       Expected: `Added 5 vouchers to ALEX YEOH (S1234567A). New balance: 17.1 vouchers.`, Alex is selected, and
+       their details show `17.1` under **Vouchers**.
+    1. Test case: `addvoucher T0123456C 20`<br>
+       Expected: Charlotte gains 20, and their details show `20` under **Vouchers**.
+    1. Test case: `addvoucher s1234567a 05`<br>
+       Expected: The same as `addvoucher S1234567A 5`: IDs are case-insensitive and leading zeros are kept.
+    1. Test cases: `addvoucher`, `addvoucher S1234567A`, `addvoucher S1234567A 5 2`, `addvoucher S0000000Z 5`,
+       `addvoucher S1234567A 0`, `addvoucher S1234567A -1`, `addvoucher S1234567A 1.5`, `addvoucher S1234567A two`<br>
+       Expected: The command format error for the first four, with the usage shown, and
+       `The number of vouchers must be a positive whole number.` for the rest; no changes to any balance.
+
+1. Redeeming vouchers
+
+    1. Prerequisites: Start with the sample data, and enter `view`.
+    1. Test case: `redeemvoucher S1234567A 2`<br>
+       Expected: `Redeemed 2 vouchers from ALEX YEOH (S1234567A). New balance: 10.1 vouchers.`, and the details show
+       `10.1`.
+    1. Test case: `redeemvoucher S1234567A 99`<br>
+       Expected: `ALEX YEOH (S1234567A) has only 10.1 vouchers to redeem, which is fewer than 99 vouchers.`, and
+       nothing changes.
+    1. Test case: `redeemvoucher T0123456C 1`<br>
+       Expected: `CHARLOTTE OLIVEIRO (T0123456C) has only 0 vouchers to redeem, which is fewer than 1 voucher.`,
+       with the singular used for one.
+    1. Test case: `redeemvoucher S1234567A 10`<br>
+       Expected: `Redeemed 10 vouchers from ALEX YEOH (S1234567A). New balance: 0 vouchers.` Redeeming again gives
+       the error of the third case, with `0` held.
+    1. Test cases: `redeemvoucher S1234567A 0`, `redeemvoucher S1234567A 1.5`<br>
+       Expected: `The number of vouchers must be a positive whole number.`
+
+1. Interest and persistence
+
+    1. Prerequisites: Start with the sample data, give `addvoucher S1234567A 10`, and note the balance.
+    1. Test case: `exit`, then start LaiNurse the next day and enter `view S1234567A`<br>
+       Expected: The balance under **Vouchers** is 1.1 times what it was, rounded to 2 decimal places.
+    1. Test case: open `data/lainurse.json`, and set Alex's `voucherCount` to `-5`<br>
+       Expected: LaiNurse cannot load the file, and starts from the backup as
+       [Backing up the data file](#backing-up-the-data-file) describes.
+    1. Test case: delete `voucherInterestDate` from Alex's entry in `data/lainurse.json`, keeping `voucherCount`<br>
+       Expected: LaiNurse cannot load the file: the two voucher fields must be given together.
 
 ### Deleting many patients or appointments
 

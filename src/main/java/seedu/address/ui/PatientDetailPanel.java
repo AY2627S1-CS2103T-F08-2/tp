@@ -34,6 +34,7 @@ import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
+import seedu.address.model.patient.VoucherBalance;
 
 /**
  * Panel that shows all the details of one patient, including their upcoming and latest past appointments.
@@ -119,6 +120,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private Label medicalHistory;
     @FXML
     private Label notes;
+    @FXML
+    private Label vouchers;
     @FXML
     private Label upcomingNote;
     @FXML
@@ -243,6 +246,11 @@ public class PatientDetailPanel extends UiPart<Region> {
         address.setText(patient.getAddress().value);
         setValue(medicalHistory, patient.getMedicalHistory().map(Object::toString), NO_MEDICAL_HISTORY);
         setValue(notes, patient.getNotes().map(Object::toString), NO_NOTES);
+
+        // The vouchers show as of now, so that they keep growing while the panel is open past midnight
+        LocalDate today = LocalDate.now();
+        vouchers.setText(VoucherBalance.formatCount(
+                patient.getVoucherBalance().withInterestAppliedUntil(today).getCount()));
 
         // An edit can remove the marked appointment
         if (markedAppointment != null && !patient.getSchedule().contains(markedAppointment)) {

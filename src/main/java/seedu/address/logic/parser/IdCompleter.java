@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 import seedu.address.commons.core.FeatureFlags;
 import seedu.address.logic.commands.AddAppointmentCommand;
+import seedu.address.logic.commands.AddVoucherCommand;
 import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.ClearAppointmentCommand;
 import seedu.address.logic.commands.DeleteAppointmentCommand;
@@ -17,6 +18,7 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditAppointmentCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.MarkAppointmentCommand;
+import seedu.address.logic.commands.RedeemVoucherCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.UnmarkAppointmentCommand;
 import seedu.address.logic.commands.ViewCommand;
@@ -37,7 +39,8 @@ public class IdCompleter {
     private static final Set<String> COMMANDS_TAKING_ID_FIRST =
             Set.of(EditCommand.COMMAND_WORD, EditAppointmentCommand.COMMAND_WORD,
                     AddAppointmentCommand.COMMAND_WORD, DeleteAppointmentCommand.COMMAND_WORD,
-                    MarkAppointmentCommand.COMMAND_WORD, UnmarkAppointmentCommand.COMMAND_WORD);
+                    MarkAppointmentCommand.COMMAND_WORD, UnmarkAppointmentCommand.COMMAND_WORD,
+                    AddVoucherCommand.COMMAND_WORD, RedeemVoucherCommand.COMMAND_WORD);
 
     /**
      * A command word, optionally followed by whitespace and the start of an ID, and then optionally by the rest of

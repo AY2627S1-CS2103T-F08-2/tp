@@ -22,9 +22,12 @@ import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherBalance;
 
 /**
  * Contains utility methods for populating {@code LaiNurse} with sample data.
+ * Alex Yeoh holds 10 vouchers given two days before {@code today}, which interest has made 12.1 vouchers, and
+ * Irfan Ibrahim holds 4 vouchers given today.
  */
 public class SampleDataUtil {
 
@@ -47,7 +50,8 @@ public class SampleDataUtil {
                 Optional.of(new MedicalHistory("Type 2 diabetes")),
                 Optional.of(new Notes("Daughter Mei Ling (91234567) is the main contact")),
                 new AppointmentSchedule(List.of(getAppointment(alexInsulinReviewDateTime, "Insulin review"),
-                        getAppointment(alexMonthlyBloodTestDate, "Monthly blood test")))),
+                        getAppointment(alexMonthlyBloodTestDate, "Monthly blood test"))),
+                new VoucherBalance(10, today.minusDays(2)), false),
             new Patient(new PatientId("S2345678B"), new Name("Bernice Yu"), new Phone("99272758"),
                 new Address("Blk 30 Lorong 3 Serangoon Gardens, #07-18"),
                 Optional.of(new MedicalHistory("Hypertension, allergic to penicillin")),
@@ -64,7 +68,8 @@ public class SampleDataUtil {
                 new Address("Blk 47 Tampines Street 20, #17-35"),
                 Optional.empty(), Optional.empty(),
                 new AppointmentSchedule(List.of(
-                        getAppointment(irfanWoundDressingDateTime, "Dress the wound on the left foot")))),
+                        getAppointment(irfanWoundDressingDateTime, "Dress the wound on the left foot"))),
+                new VoucherBalance(4, today), false),
             new Patient(new PatientId("S4567890F"), new Name("Roy Balakrishnan"), new Phone("92624417"),
                 new Address("Blk 45 Aljunied Street 85, #11-31"),
                 Optional.of(new MedicalHistory("Dementia")),

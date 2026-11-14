@@ -11,6 +11,7 @@ import seedu.address.commons.core.FeatureFlags;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddAppointmentCommand;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddVoucherCommand;
 import seedu.address.logic.commands.ArchiveCommand;
 import seedu.address.logic.commands.ClearAppointmentCommand;
 import seedu.address.logic.commands.ClearCommand;
@@ -23,6 +24,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.MarkAppointmentCommand;
+import seedu.address.logic.commands.RedeemVoucherCommand;
 import seedu.address.logic.commands.SetCommand;
 import seedu.address.logic.commands.UnarchiveCommand;
 import seedu.address.logic.commands.UnmarkAppointmentCommand;
@@ -70,6 +72,7 @@ public class LaiNurseParser {
         return switch (commandWord) {
             case AddCommand.COMMAND_WORD -> new AddCommandParser().parse(arguments);
             case AddAppointmentCommand.COMMAND_WORD -> new AddAppointmentCommandParser().parse(arguments);
+            case AddVoucherCommand.COMMAND_WORD -> new AddVoucherCommandParser().parse(arguments);
             case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
             case EditAppointmentCommand.COMMAND_WORD -> new EditAppointmentCommandParser().parse(arguments);
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
@@ -78,6 +81,7 @@ public class LaiNurseParser {
             case UnmarkAppointmentCommand.COMMAND_WORD -> new UnmarkAppointmentCommandParser().parse(arguments);
             case ArchiveCommand.COMMAND_WORD -> new ArchiveCommandParser().parse(arguments);
             case UnarchiveCommand.COMMAND_WORD -> new UnarchiveCommandParser().parse(arguments);
+            case RedeemVoucherCommand.COMMAND_WORD -> new RedeemVoucherCommandParser().parse(arguments);
             case ClearCommand.COMMAND_WORD -> FeatureFlags.isSelectiveClearEnabled()
                     ? new ClearCommandParser().parse(arguments)
                     : new ClearCommand();

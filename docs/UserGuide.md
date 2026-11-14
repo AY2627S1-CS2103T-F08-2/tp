@@ -89,7 +89,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12`, or `3 of 12` when filtered. It says `Filtered patients` whenever a filter is set, even one that every patient matches, such as `12 of 12`, so that you can tell that Esc will remove it. An empty list says why: `No patients yet.`, `No patients match the filter.`, `No archived patients.` or `Every patient is archived. To see them: view --all`.
   * The list hides [archived](#archiving-a-patient-archive) patients, and the header counts only the others, such as `12`. `view --all` shows archived patients too, at the bottom of the list and greyed out, and the header counts them in brackets: `12 (2)`. `view --archived` shows only them, under `Archived patients`, with `(2)`. When the list is filtered, each count shows how many of each kind it shows, such as `3 of 12 (1 of 2)`. This choice is the list's **scope**. It stays until you choose another, and goes back to the default, which hides archived patients, when LaiNurse restarts.
   * The next appointment of a patient is their first **undone** appointment that has not passed.
-  * The details list every upcoming appointment of the patient, in time order, and all their past appointments, latest first and dimmed.
+  * The details list every upcoming appointment of the patient, in time order, and all their past appointments, latest first and dimmed. They also show how many unused [vouchers](#adding-vouchers-addvoucher) the patient holds, under **Vouchers**, with the interest of every day up to today applied.
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` in a small box after the patient ID:
   this is the appointment's number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. A patient's
   appointments are numbered from 1 in date order. The details panel shows the same number, dimmed, before each date.
@@ -114,9 +114,10 @@ These are the rules with the default settings. [`set`](#changing-settings-set) d
 
 ![The weekly appointment view, with the first appointment that has not passed selected](images/AppointmentView.png)
 
-Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `find`, `view`, `add`, `edit`, `archive` and `unarchive` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear`, `clearappt`, `set` and `help`, keep the view that is shown. Commands also choose what is selected:
+Commands switch the view. `viewappt`, `editappt`, `addappt`, `markappt` and `unmarkappt` show **Appointments**, and `find`, `view`, `add`, `edit`, `archive`, `unarchive`, `addvoucher` and `redeemvoucher` show **Patients**. Other commands, such as `delete`, `deleteappt`, `clear`, `clearappt`, `set` and `help`, keep the view that is shown. Commands also choose what is selected:
 
 * `add`, `edit` and `view ID` select the patient that they add, edit or show. If the patient list's scope hides that patient, because they are archived, or because the list shows only archived patients, the list shows all patients. `view` without an ID and `find` select the first patient in the list.
+* `addvoucher` and `redeemvoucher` select the patient that they change if the list still shows them, as `archive` does. Otherwise, they select nothing, and the list keeps its scope.
 * `archive` and `unarchive` select the patient if the list still shows them. Otherwise, they select nothing, and the list keeps its scope: archiving a patient hides them.
 * `viewappt` selects the next appointment from now: the first appointment on the page that has not passed, or the first on the page if all have passed. This automatic selection remains date-based and can select a done appointment.
 * `addappt`, `editappt`, `markappt` and `unmarkappt` select the appointment that they change: on the page shown, if that page has it, or else in the weekly view of its week. If the patient is archived and the view hides their appointments, it shows archived patients' appointments too.
@@ -174,8 +175,8 @@ Esc | In the patient view, removes the filter of `find`, and keeps the scope, su
 * Tab finishes these words:
   * **Command words.** For example, `dele` gives `delete`, then `deleteappt`. `view` gives `viewappt`, so type a space after `view` to finish a patient ID instead. When there is only one match, the next Tab goes on to the patient ID if the command takes one, so `addap` gives `addappt`, and the next Tab `addappt S1234567A`.
   * **Options.** Type `-` or the start of an option. For example, `edit S1234567A --ph` gives `edit S1234567A --phone`. Tab offers only the options of that command, and skips the ones you have already typed, and the ones that cannot be given with them: `--all` and `--archived` exclude each other, and in `view` and `viewappt`, a patient ID excludes both.
-  * **Patient IDs** after `view`, `delete`, `archive`, `unarchive`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt`, `unmarkappt` or `clearappt`, and after `--id` in `viewappt`. Type the first few characters of the ID, or none. Patients in the displayed list come first, and archived patients last. For example, `view s12` gives `view S1234567A`.<br>
-    With `edit`, `addappt`, `editappt`, `deleteappt`, `markappt` and `unmarkappt`, Tab also works after you have typed the remaining arguments, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`, and `markappt s12 2` becomes `markappt S1234567A 2`.
+  * **Patient IDs** after `view`, `delete`, `archive`, `unarchive`, `edit`, `addappt`, `editappt`, `deleteappt`, `markappt`, `unmarkappt`, `addvoucher`, `redeemvoucher` or `clearappt`, and after `--id` in `viewappt`. Type the first few characters of the ID, or none. Patients in the displayed list come first, and archived patients last. For example, `view s12` gives `view S1234567A`.<br>
+    With `edit`, `addappt`, `editappt`, `deleteappt`, `markappt`, `unmarkappt`, `addvoucher` and `redeemvoucher`, Tab also works after you have typed the remaining arguments, and keeps them. For example, `edit s12 --phone 91234567` becomes `edit S1234567A --phone 91234567`, and `markappt s12 2` becomes `markappt S1234567A 2`.
   * **Help topics** after `help`. For example, `help ad` gives `help add`, then `help addappt`. `help w` gives `help window`.
   * **Settings** after `set`. For example, `set mark` gives `set mark-noclash`, then `set mark-past`, and `set past-clash ` gives `set past-clash on`, then `set past-clash off`.
 * Tab matches what you type in any case, but fills in command words, options, help topics and settings in lowercase, as LaiNurse expects them. For example, `DELE` gives `delete`, then `deleteappt`, and `--PH` gives `--phone`. A whole word in the wrong case, such as `VIEW`, gives the lowercase word first, then the longer ones: `view`, then `viewappt`. The command word and options before the word you complete must already be in lowercase, so `EDIT S1234567A --PH` and `HELP W` give nothing to fill in.
@@ -473,7 +474,7 @@ Format: `view [--all]`, `view [--archived]` or `view ID`
 * `view ID` takes no `--all` or `--archived`, since it shows the patient whether they are archived or not.
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * LaiNurse switches to the **Patients** view.
-* The panel shows the patient's name, ID, phone number, address, medical history, notes and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists those that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
+* The panel shows the patient's name, ID, phone number, address, medical history, notes, vouchers and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Vouchers**, it shows how many unused vouchers the patient holds, such as `12.1`, with the interest of every day up to today applied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists those that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
 * The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete them with `clear`, it goes back to its starting message.
 * You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 
@@ -510,6 +511,39 @@ Format: `unarchive ID`
 
 Examples:
 * `unarchive S2345678B` unarchives Bernice Yu.
+
+### Adding vouchers: `addvoucher`
+
+Gives a patient new vouchers, which they can later redeem with [`redeemvoucher`](#redeeming-vouchers-redeemvoucher). Every voucher has the same value, whatever that value is: a voucher count is a number of vouchers, not an amount of money or of anything else.
+
+Format: `addvoucher ID NUMBER_OF_VOUCHERS`
+
+* Gives `NUMBER_OF_VOUCHERS` new vouchers to the patient with the specified `ID`. IDs are case-insensitive, and the patient does not need to be in the displayed list. Archived patients can be given vouchers too.
+* `NUMBER_OF_VOUCHERS` must be a positive whole number, such as `5`. It cannot be `0`, a fraction, or negative, even though a balance can hold a fraction, as the interest below explains.
+* Unused vouchers earn **10% interest every day**: on each day after the day the balance last changed, the patient's unused voucher count is multiplied by 1.1. The count is therefore kept as a number that can be a fraction, such as `12.1` vouchers, and LaiNurse shows counts rounded to 2 decimal places. For example, 10 vouchers given on Monday are 11 on Tuesday, 12.1 on Wednesday, and 13.31 on Thursday.
+* The interest of every day since the balance last changed is applied at once when you give or redeem vouchers, so the new vouchers simply add to the grown balance. In the sample data, `addvoucher S1234567A 5` gives Alex Yeoh 5 vouchers on top of the 12.1 their earlier vouchers have grown to, leaving 17.1.
+* The result names how many vouchers were given and the patient's new balance, and the patient's details show the balance under **Vouchers**.
+* LaiNurse switches to the **Patients** view, and selects the patient if the list shows them.
+
+Examples:
+* `addvoucher S1234567A 5` gives Alex Yeoh 5 vouchers.
+* `addvoucher t0123456c 20` gives Charlotte Oliveiro 20 vouchers.
+
+### Redeeming vouchers: `redeemvoucher`
+
+Redeems some of a patient's unused vouchers, such as when they pay for something with them. Redeemed vouchers leave their balance, and the unused ones left keep earning interest.
+
+Format: `redeemvoucher ID NUMBER_OF_VOUCHERS`
+
+* Redeems `NUMBER_OF_VOUCHERS` of the unused vouchers of the patient with the specified `ID`, which works as in [`addvoucher`](#adding-vouchers-addvoucher), including the interest of past days.
+* `NUMBER_OF_VOUCHERS` must be a positive whole number, as in `addvoucher`.
+* The patient must hold at least that many vouchers. Redeeming more than they hold shows an error and changes nothing, such as `BERNICE YU (S2345678B) has only 3 vouchers to redeem, which is fewer than 5 vouchers.` Redeeming every voucher the patient holds leaves them with none.
+* The result names how many vouchers were redeemed and the patient's new balance, and the patient's details show the balance under **Vouchers**.
+* LaiNurse switches to the **Patients** view, and selects the patient if the list shows them.
+
+Examples:
+* `redeemvoucher S1234567A 2` redeems 2 of Alex Yeoh's unused vouchers.
+* `redeemvoucher T0123456C 1` redeems 1 of Charlotte Oliveiro's unused vouchers.
 
 ### Deleting a patient: `delete`
 
@@ -607,6 +641,8 @@ LaiNurse numbers each patient's appointments in date order when it loads them, a
 time keep their order in the file. Same-time visits are all preserved. A missing `marked` field defaults to false (unmarked). If supplied, `marked` must be the
 JSON boolean `true` or `false`; strings, numbers and null are invalid.
 
+Vouchers are saved as two fields, for example `"voucherCount": 12.1, "voucherInterestDate": "2026-10-03"`. The count is the number of unused vouchers the patient held as of the interest date, and the interest date is the last day on which the count changed. A patient who holds no vouchers is saved without either field, and a file with no voucher fields, such as one saved by an earlier version, loads with every patient holding none. If either field is supplied, both must be: a count without a date, or a date without a count, makes the file fail to load. The count must be a number of at least 0, and the date must be a real date in the appointment date format described in the notes about the command format above. Each day after the interest date multiplies the count by 1.1, so edit these fields only if you are confident about the balance you mean.
+
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 Do not edit `lainurse.backup.json`. LaiNurse cannot stop you from editing it, and it does not check it until it needs it. The backup protects you only in the cases in the table above.<br>
 If the backup is missing or cannot be loaded either, LaiNurse starts with no data, and the next command that succeeds, even `view`, `help` or `exit`, saves that empty data over both files. Your data is then only in `lainurse.corrupt.json`. To leave both files as they are, close the window with its close button instead.<br>
@@ -633,6 +669,9 @@ Certain edits can cause LaiNurse to behave in unexpected ways (e.g., if a value 
 
 **Q**: Can two patients have appointments at the same time?<br>
 **A**: Yes. LaiNurse keeps both, warns you when you add or change one, and marks both with a red boxed `!`. [`set`](#changing-settings-set) decides which appointments can clash.
+
+**Q**: Why did my patient's voucher count go up on its own?<br>
+**A**: Unused vouchers earn 10% interest every day: each day, the count is multiplied by 1.1, so 10 vouchers become 11 after a day and 12.1 after two. Redeemed vouchers leave the balance and stop earning. See [Adding vouchers](#adding-vouchers-addvoucher).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -673,6 +712,7 @@ Action | Format, Examples
 --------|-----------------
 **Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
 **AddAppt** | `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen`
+**AddVoucher** | `addvoucher ID NUMBER_OF_VOUCHERS`<br> e.g., `addvoucher S1234567A 5`
 **Archive** | `archive ID`<br> e.g., `archive S2345678B`
 **Clear** | `clear [--archived]`, then `confirm` to confirm<br> e.g., `clear --archived`
 **ClearAppt** | `clearappt [ID] [--from DATE_OR_DATETIME] [--to DATE_OR_DATETIME]`, then `confirm` to confirm<br> e.g., `clearappt S1234567A`, `clearappt --to 2026-10-04`
@@ -682,6 +722,7 @@ Action | Format, Examples
 **EditAppt** | `editappt ID NUMBER [--date NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`<br> e.g., `editappt S1234567A 1 --date 2026-10-06 10:00`, `editappt S1234567A 1 --add-details Bring glucometer`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES] [--all] [--archived]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one field option required), `find --name yu --archived`
 **MarkAppt** | `markappt ID NUMBER`<br> e.g., `markappt S1234567A 2`
+**RedeemVoucher** | `redeemvoucher ID NUMBER_OF_VOUCHERS`<br> e.g., `redeemvoucher S1234567A 2`
 **Set** | `set`, `set SETTING on` or `set SETTING off`<br> e.g., `set`, `set past-clash off`
 **Unarchive** | `unarchive ID`<br> e.g., `unarchive S2345678B`
 **UnmarkAppt** | `unmarkappt ID NUMBER`<br> e.g., `unmarkappt S1234567A 2`

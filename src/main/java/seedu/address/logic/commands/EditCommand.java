@@ -104,7 +104,7 @@ public class EditCommand extends Command {
     /**
      * Creates and returns a {@code Patient} with the details of {@code patientToEdit}
      * edited with {@code editPatientDescriptor}. The patient ID is never changed.
-     * The patient's appointments are kept.
+     * The patient's appointments and vouchers are kept.
      */
     private static Patient createEditedPatient(Patient patientToEdit, EditPatientDescriptor editPatientDescriptor) {
         assert patientToEdit != null;
@@ -121,7 +121,8 @@ public class EditCommand extends Command {
                 .orElse(patientToEdit.getNotes());
 
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, updatedNotes, patientToEdit.getSchedule(), patientToEdit.isArchived());
+                updatedMedicalHistory, updatedNotes, patientToEdit.getSchedule(), patientToEdit.getVoucherBalance(),
+                patientToEdit.isArchived());
     }
 
     @Override

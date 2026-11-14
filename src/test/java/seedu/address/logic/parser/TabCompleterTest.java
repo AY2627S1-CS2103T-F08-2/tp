@@ -29,7 +29,7 @@ public class TabCompleterTest {
     public void complete_commandWordThatLongerOnesStartWith_givesOnlyTheLongerOnes() {
         assertEquals(List.of("viewappt"), words("view"));
         assertEquals(List.of("editappt"), words("edit"));
-        assertEquals(List.of("addappt"), words("add"));
+        assertEquals(List.of("addappt", "addvoucher"), words("add"));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class TabCompleterTest {
     public void complete_uppercase_givesLowercaseWords() {
         assertEquals(List.of("delete", "deleteappt"), texts("DELE"));
         assertEquals(List.of("edit S1234567A --name"), texts("edit S1234567A --NA"));
-        assertEquals(List.of("help add", "help addappt"), texts("help ADD"));
+        assertEquals(List.of("help add", "help addappt", "help addvoucher"), texts("help ADD"));
         // the whole word in the wrong case gives the lowercase word first
         assertEquals(List.of("view", "viewappt"), texts("VIEW"));
         assertEquals(List.of("edit S1234567A --notes"), texts("edit S1234567A --Notes"));
@@ -139,10 +139,10 @@ public class TabCompleterTest {
 
     @Test
     public void complete_helpTarget_givesCommandWordsAndWindow() {
-        assertEquals(List.of("add", "addappt"), words("help ad"));
+        assertEquals(List.of("add", "addappt", "addvoucher"), words("help ad"));
         assertEquals(List.of("help window"), texts("help w"));
-        assertEquals(List.of("help add", "help addappt"), texts("help AD"));
-        assertEquals(List.of("addappt"), words("help add"));
+        assertEquals(List.of("help add", "help addappt", "help addvoucher"), texts("help AD"));
+        assertEquals(List.of("addappt", "addvoucher"), words("help add"));
         // every command word, then window
         List<String> targets = words("help ");
         assertEquals(HelpCommand.COMMAND_USAGE_MAP.size() + 1, targets.size());

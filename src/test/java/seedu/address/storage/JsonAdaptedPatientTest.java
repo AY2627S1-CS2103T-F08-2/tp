@@ -8,6 +8,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.CARL;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherBalance;
 import seedu.address.testutil.PatientBuilder;
 
 public class JsonAdaptedPatientTest {
@@ -35,6 +37,7 @@ public class JsonAdaptedPatientTest {
     private static final String INVALID_APPOINTMENT = "2026-02-30";
     private static final String INVALID_NOTES = " ";
     private static final String INVALID_DETAILS = " ";
+    private static final String INVALID_VOUCHER_DATE = "03-10-2026";
 
     private static final String VALID_ID = BENSON.getId().toString();
     private static final String VALID_NAME = BENSON.getName().toString();
@@ -42,6 +45,8 @@ public class JsonAdaptedPatientTest {
     private static final String VALID_ADDRESS = BENSON.getAddress().toString();
     private static final String VALID_MEDICAL_HISTORY = BENSON.getMedicalHistory().get().toString();
     private static final String VALID_APPOINTMENT = BENSON.getSchedule().asList().get(0).toString();
+    private static final double VALID_VOUCHER_COUNT = 12.1;
+    private static final String VALID_VOUCHER_DATE = "2026-10-03";
 
     @Test
     public void toModelType_validPatientDetails_returnsPatient() throws Exception {
@@ -214,6 +219,51 @@ public class JsonAdaptedPatientTest {
                 VALID_MEDICAL_HISTORY, null, List.of(new JsonAdaptedAppointment(null, "Blood test")));
         String expectedMessage = String.format(JsonAdaptedAppointment.MISSING_FIELD_MESSAGE_FORMAT, "dateTime");
         assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_validVouchers_returnsPatient() throws Exception {
+        VoucherBalance vouchers = new VoucherBalance(12.1, LocalDate.parse("2026-10-03"));
+        Patient voucherHolder = BENSON.withVoucherBalance(vouchers);
+        assertEquals(voucherHolder, new JsonAdaptedPatient(voucherHolder).toModelType());
+        // a patient who holds no vouchers is saved without the voucher fields, as before vouchers existed
+        assertFalse(JsonUtil.toJsonString(new JsonAdaptedPatient(BENSON)).contains("voucher"));
+        assertTrue(JsonUtil.toJsonString(new JsonAdaptedPatient(voucherHolder)).contains("\"voucherCount\" : 12.1"));
+    }
+
+    @Test
+    public void toModelType_voucherCountWithoutDate_throwsIllegalValueException() throws Exception {
+        JsonAdaptedPatient patient = JsonUtil.fromJsonString("{\"id\": \"S1234567A\", \"name\": \"Alex\", "
+                + "\"phone\": \"91234567\", \"address\": \"Blk 1\", \"voucherCount\": 5}",
+                JsonAdaptedPatient.class);
+        String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, "voucher");
+        assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_voucherDateWithoutCount_throwsIllegalValueException() throws Exception {
+        JsonAdaptedPatient patient = JsonUtil.fromJsonString("{\"id\": \"S1234567A\", \"name\": \"Alex\", "
+                + "\"phone\": \"91234567\", \"address\": \"Blk 1\", \"voucherInterestDate\": \"2026-10-03\"}",
+                JsonAdaptedPatient.class);
+        String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, "voucher");
+        assertThrows(IllegalValueException.class, expectedMessage, patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_invalidVoucherCount_throwsIllegalValueException() {
+        for (double invalidCount : new double[] {-5, Double.NaN, Double.POSITIVE_INFINITY}) {
+            JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_ID, VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                    VALID_MEDICAL_HISTORY, null, null, invalidCount, VALID_VOUCHER_DATE, null);
+            assertThrows(IllegalValueException.class, VoucherBalance.MESSAGE_COUNT_CONSTRAINTS,
+                    patient::toModelType);
+        }
+    }
+
+    @Test
+    public void toModelType_invalidVoucherDate_throwsIllegalValueException() {
+        JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_ID, VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                VALID_MEDICAL_HISTORY, null, null, VALID_VOUCHER_COUNT, INVALID_VOUCHER_DATE, null);
+        assertThrows(IllegalValueException.class, VoucherBalance.MESSAGE_DATE_CONSTRAINTS, patient::toModelType);
     }
 
     private static List<JsonAdaptedAppointment> appointments(String... appointments) {
