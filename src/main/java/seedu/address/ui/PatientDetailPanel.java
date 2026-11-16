@@ -253,14 +253,11 @@ public class PatientDetailPanel extends UiPart<Region> {
         setValue(notes, patient.getNotes().map(Object::toString), NO_NOTES);
 
         // The vouchers show as of now, so that they keep growing while the panel is open past midnight. On the
-        // patient's birthday, each other patient with the same birthday doubles them, which the bonus names.
+        // patient's birthday, each other patient with the same birthday doubles the vouchers they hold that day.
         LocalDate today = LocalDate.now();
         double birthdayFactor = BirthdayBonus.voucherMultiplier(patient, allPatients, today);
-        double voucherCount = VoucherBalance.multipliedCount(
-                patient.getVoucherBalance().withInterestAppliedUntil(today).getCount(), birthdayFactor);
-        String birthdayBonus = birthdayFactor > 1
-                ? " (birthday ×" + VoucherBalance.formatCount(birthdayFactor) + ")" : "";
-        vouchers.setText(VoucherBalance.formatCount(voucherCount) + birthdayBonus);
+        vouchers.setText(VoucherBalance.formatCount(VoucherBalance.multipliedCount(
+                patient.getVoucherBalance().withInterestAppliedUntil(today).getCount(), birthdayFactor)));
 
         // An edit can remove the marked appointment
         if (markedAppointment != null && !patient.getSchedule().contains(markedAppointment)) {

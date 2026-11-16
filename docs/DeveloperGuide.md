@@ -1199,9 +1199,9 @@ format, or the file fails to load as any other invalid field does. A date of bir
 without one.
 
 **UI.** The patient detail panel shows the date of birth, and the balance under **Vouchers**, as of today,
-between the notes and the appointments. When the birthday bonus is on, the balance is followed by the bonus, such
-as `40 (birthday ×4)`. Tab completes the patient ID of both commands, through `IdCompleter`'s commands that take
-an ID first, and the `--dob` option of `add` and `edit`.
+between the notes and the appointments. On the patient's birthday, the balance it shows carries the bonus, as
+the results of `addvoucher` and `redeemvoucher` do. Tab completes the patient ID of both commands, through
+`IdCompleter`'s commands that take an ID first, and the `--dob` option of `add` and `edit`.
 
 ### Feature flags
 
@@ -3112,8 +3112,7 @@ testers are expected to do more *exploratory* testing.
     1. Test case: `edit G1234567E --dob THIS_DAY`<br>
        Expected: Irfan holds `4` under **Vouchers**: his birthday is shared by no one.
     1. Test case: `edit S4567890F --dob THIS_DAY`<br>
-       Expected: Roy shares the birthday now, so Irfan's vouchers double: his details show `8 (birthday ×2)`, and
-       Roy's show `0 (birthday ×2)`.
+       Expected: Roy shares the birthday now, so Irfan's vouchers double: his details show `8` under **Vouchers**.
     1. Test case: `edit T0123456C --dob THIS_DAY`, then `addvoucher G1234567E 5`<br>
        Expected: Charlotte shares the birthday too, so Irfan's balance doubles twice: the 9 vouchers he holds
        after the adding show as 36, and the result says `New balance: 36 vouchers.`
