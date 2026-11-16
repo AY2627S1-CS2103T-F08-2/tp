@@ -2054,10 +2054,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   day, so a balance can hold a fraction of a voucher.
 * **Interest (voucher)**: The daily growth of a patient's unused voucher count: on each day after the day the balance
   last changed, the count is multiplied by 1.1.
-* **Normalization (normalized text)**: How LaiNurse stores text: trimmed, in uppercase, with each run of whitespace
-  collapsed into one space, so values differing only in case or spacing are equal.
+* **Date of birth**: An optional real date recording when the patient was born, set with `--dob`. Its month and day
+  make up the patient's birthday, whatever the year, and a patient without one has no birthday.
 * **Birthday bonus**: The doubling of a patient's unused vouchers on their birthday, once for every other patient
   with the same birthday. It belongs to the birthday alone, and no doubled amount is stored.
+* **Normalization (normalized text)**: How LaiNurse stores text: trimmed, in uppercase, with each run of whitespace
+  collapsed into one space, so values differing only in case or spacing are equal.
 * **Patients view (patient view)**: The tab that shows the patient list beside one patient's details; also called the
   patient view or the **Patients** tab.
 * **Appointments view (appointment view)**: The tab that shows appointments day by day beside the selected
