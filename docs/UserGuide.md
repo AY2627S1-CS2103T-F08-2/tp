@@ -73,7 +73,7 @@ LaiNurse is a **desktop application that gives home nurses fast access to patien
 
 * Keys such as Tab, Esc, and Up and Down save typing. See [Using the keyboard](#using-the-keyboard).
 
-* An appointment date is written `yyyy-MM-dd`, such as `2026-10-05`, and a time, when you give one, `HH:mm`, such as `09:00`. The year has exactly four digits and no sign, and the month, day, hour and minute each have two digits. Dates such as `+12345-01-01` and `-2026-10-05` are rejected, and so are `2026-1-5` and a time such as `9:00`. This applies to `addappt`, the new date supplied to `editappt`, `viewappt`, and to appointments in the data file.
+* An appointment date is written `yyyy-MM-dd`, such as `2026-10-05`, and a time, when you give one, `HH:mm`, such as `09:00`. The year has exactly four digits and no sign, and the month, day, hour and minute each have two digits. Dates such as `+12345-01-01` and `-2026-10-05` are rejected, and so are `2026-1-5` and a time such as `9:00`. This applies to `addappt`, the new date supplied to `editappt`, `viewappt`, to appointments in the data file, and to a date of birth.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 
@@ -89,7 +89,7 @@ LaiNurse shows one view at a time. The tabs under the result display switch betw
   * A header above the list says whether it shows `All patients` or `Filtered patients`, such as after `find`, and how many: `12`, or `3 of 12` when filtered. It says `Filtered patients` whenever a filter is set, even one that every patient matches, such as `12 of 12`, so that you can tell that Esc will remove it. An empty list says why: `No patients yet.`, `No patients match the filter.`, `No archived patients.` or `Every patient is archived. To see them: view --all`.
   * The list hides [archived](#archiving-a-patient-archive) patients, and the header counts only the others, such as `12`. `view --all` shows archived patients too, at the bottom of the list and greyed out, and the header counts them in brackets: `12 (2)`. `view --archived` shows only them, under `Archived patients`, with `(2)`. When the list is filtered, each count shows how many of each kind it shows, such as `3 of 12 (1 of 2)`. This choice is the list's **scope**. It stays until you choose another, and goes back to the default, which hides archived patients, when LaiNurse restarts.
   * The next appointment of a patient is their first **undone** appointment that has not passed.
-  * The details list every upcoming appointment of the patient, in time order, and all their past appointments, latest first and dimmed. They also show how many unused [vouchers](#adding-vouchers-addvoucher) the patient holds, under **Vouchers**, with the interest of every day up to today applied.
+  * The details list every upcoming appointment of the patient, in time order, and all their past appointments, latest first and dimmed. They also show the patient's date of birth, and how many unused [vouchers](#adding-vouchers-addvoucher) the patient holds, under **Vouchers**, with the interest of every day up to today applied, and the [birthday bonus](#the-loyalty-programs-birthday-bonus) named when it is on, such as `40 (birthday ×4)`.
 * **Appointments**: the appointments, day by day, and beside them the details of the selected appointment's patient, with that appointment highlighted. Each day has a heading with its number of appointments, and the appointments are numbered from 1 down the page. Each row also shows `#N` in a small box after the patient ID:
   this is the appointment's number within that patient, used by `editappt`, `deleteappt`, `markappt` and `unmarkappt`. A patient's
   appointments are numbered from 1 in date order. The details panel shows the same number, dimmed, before each date.
@@ -208,10 +208,11 @@ Examples:
 
 Adds a patient to LaiNurse.
 
-Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]`
+Format: `add --id ID --name NAME --phone PHONE --address ADDRESS [--dob DATE_OF_BIRTH] [--medical-history MEDICAL_HISTORY] [--notes NOTES]`
 
 * `--id`, `--name`, `--phone`, and `--address` are required. Each must have a non-blank value.
-* Medical history and notes are independently optional. If an option is supplied, its value must not be blank.
+* Date of birth, medical history and notes are independently optional. If an option is supplied, its value must not be blank.
+* A date of birth is a real date in the appointment date format described in the notes about the command format above, such as `1955-03-21`, and cannot be in the future. It decides when the patient's [birthday bonus](#adding-vouchers-addvoucher) falls, and is shown in their details.
 * Notes record other personal information not covered by the other fields, such as the patient's hobbies, pet peeves and daily routines. Use `--medical-history` for health information.
 * Parameters may appear in any order. Each option may appear only once. Separate options and values using spaces or tabs; values may contain spaces.
 * IDs contain 1 to 10 letters or digits. IDs are case-insensitive, and a patient with an existing ID cannot be added again. LaiNurse then names the patient who has that ID, such as `ALEX YEOH (S1234567A) already exists in LaiNurse.` If that patient is archived, it says so, and how to unarchive them: `ALEX YEOH (S1234567A) already exists in LaiNurse, and is archived. To unarchive them: 'unarchive S1234567A'`
@@ -238,7 +239,7 @@ Examples:
 
 Edits the details of an existing patient.
 
-Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`
+Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--dob [DATE_OF_BIRTH]] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`
 
 * Edits the patient with the given `ID`, which is the patient ID shown in their row, not their position in the list. The patient does not have to be in the list currently shown.
 * `ID` must come first; the other parameters may appear in any order. Separate options and values using spaces or tabs.
@@ -247,7 +248,8 @@ Format: `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-hi
 * The ID itself cannot be edited. To correct a wrong ID, delete the patient and add them again. Deleting a patient also deletes their appointments, so note them down first with [`viewappt --id ID`](#viewing-appointments-viewappt), and add them again with [`addappt`](#adding-an-appointment-addappt).
 * At least one of the optional parameters must be provided.
 * `--name`, `--phone`, `--address`, `--medical-history` and `--notes` replace the existing value, and follow the same rules as in [`add`](#adding-a-patient-add). `--medical-history` and `--notes` can also set a value for a patient who has none.
-* `--medical-history` or `--notes` with no value clears that field. For example, `edit S1234567A --notes` removes the patient's notes. In `add`, a blank value is still rejected.
+* `--medical-history`, `--notes` and `--dob` with no value clear that field. For example, `edit S1234567A --notes` removes the patient's notes, and `edit S1234567A --dob` removes their date of birth. In `add`, a blank value is still rejected.
+* `--dob DATE_OF_BIRTH` sets the patient's date of birth, which follows the same rules as in [`add`](#adding-a-patient-add).
 * `--add-medical-history` and `--add-notes` add text to the end of the field, after `; `. If the field is empty, the text becomes its value. The text to add cannot be blank.
 * A field can be replaced or added to, not both: `--notes` and `--add-notes` together are rejected, and so are `--medical-history` and `--add-medical-history`. Each option may appear only once.
 * Omitting all the options for a field keeps its existing value.
@@ -474,7 +476,7 @@ Format: `view [--all]`, `view [--archived]` or `view ID`
 * `view ID` takes no `--all` or `--archived`, since it shows the patient whether they are archived or not.
 * If no patient has that ID, LaiNurse shows an error, and the panel keeps showing what it showed before.
 * LaiNurse switches to the **Patients** view.
-* The panel shows the patient's name, ID, phone number, address, medical history, notes, vouchers and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Vouchers**, it shows how many unused vouchers the patient holds, such as `12.1`, with the interest of every day up to today applied. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists those that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
+* The panel shows the patient's name, ID, phone number, address, date of birth, medical history, notes, vouchers and appointments. Notes appear below medical history, with `None recorded` when no notes have been supplied. Under **Vouchers**, it shows how many unused vouchers the patient holds, such as `12.1`, with the interest of every day up to today applied, and the [birthday bonus](#the-loyalty-programs-birthday-bonus) named when it is on. Under **Appointments**, it lists every appointment that has not passed, in time order. Under **Past**, it lists those that have passed, latest first and dimmed, including any earlier today. An appointment today or tomorrow shows `Today` or `Tomorrow`, and one with no time shows `Unspecified`. A patient with no appointment left shows `None upcoming`. If the details do not fit, press Shift+Down with the focus in the view, or scroll down the panel.
 * The panel stays up to date. After you edit the patient, it shows the new details. After you delete the patient, or delete them with `clear`, it goes back to its starting message.
 * You can also click a patient in the list to see their details, or press Esc and move to them with Up and Down. See [Using the keyboard](#using-the-keyboard).
 
@@ -521,6 +523,7 @@ Format: `addvoucher ID NUMBER_OF_VOUCHERS`
 * Gives `NUMBER_OF_VOUCHERS` new vouchers to the patient with the specified `ID`. IDs are case-insensitive, and the patient does not need to be in the displayed list. Archived patients can be given vouchers too.
 * `NUMBER_OF_VOUCHERS` must be a positive whole number, such as `5`. It cannot be `0`, a fraction, or negative, even though a balance can hold a fraction, as the interest below explains.
 * Unused vouchers earn **10% interest every day**: on each day after the day the balance last changed, the patient's unused voucher count is multiplied by 1.1. The count is therefore kept as a number that can be a fraction, such as `12.1` vouchers, and LaiNurse shows counts rounded to 2 decimal places. For example, 10 vouchers given on Monday are 11 on Tuesday, 12.1 on Wednesday, and 13.31 on Thursday.
+* On the patient's **birthday**, the vouchers they hold that day double once for every other patient with the same birthday, in the [loyalty program's birthday bonus](#the-loyalty-programs-birthday-bonus). The bonus belongs to the birthday alone: the next day, the balance continues from the count it had, and no doubled amount is stored.
 * The interest of every day since the balance last changed is applied at once when you give or redeem vouchers, so the new vouchers simply add to the grown balance. In the sample data, `addvoucher S1234567A 5` gives Alex Yeoh 5 vouchers on top of the 12.1 their earlier vouchers have grown to, leaving 17.1.
 * The result names how many vouchers were given and the patient's new balance, and the patient's details show the balance under **Vouchers**.
 * LaiNurse switches to the **Patients** view, and selects the patient if the list shows them.
@@ -529,13 +532,23 @@ Examples:
 * `addvoucher S1234567A 5` gives Alex Yeoh 5 vouchers.
 * `addvoucher t0123456c 20` gives Charlotte Oliveiro 20 vouchers.
 
+### The loyalty program's birthday bonus
+
+The more patients share a birthday, the more the loyalty program rewards each of them: on a patient's birthday, and only on it, the unused vouchers they hold that day double once for every other patient with the same birthday.
+
+* A birthday is the month and day of the [date of birth](#adding-a-patient-add), whatever the year it was in, and a patient needs a date of birth to have one. A patient born on 29 February has their birthday on a 29 February only.
+* Every other patient with the same birthday counts, archived patients included: two others double the balance twice, three others three times. For example, if a patient held 9.09 vouchers the day before their birthday, and shares it with two others, they hold 9.09 × 1.1 × 2 × 2 = 40 vouchers on the birthday itself.
+* The doubled amount belongs to the birthday alone: the balance keeps growing from the count it had, so the same patient holds 11 vouchers the day after. No doubled amount is stored.
+* The patient's details name the bonus, such as `40 (birthday ×4)`, and `addvoucher` and `redeemvoucher` name the doubled balance in their results.
+* A redemption on the birthday is spent off the doubled balance, and so takes a doubling off the balance itself for each doubling the bonus gave: redeeming 6 of a doubled balance of 20, held by a balance of 10, takes 3, and leaves 7, which shows as 14 that day. See [Redeeming vouchers](#redeeming-vouchers-redeemvoucher).
+
 ### Redeeming vouchers: `redeemvoucher`
 
 Redeems some of a patient's unused vouchers, such as when they pay for something with them. Redeemed vouchers leave their balance, and the unused ones left keep earning interest.
 
 Format: `redeemvoucher ID NUMBER_OF_VOUCHERS`
 
-* Redeems `NUMBER_OF_VOUCHERS` of the unused vouchers of the patient with the specified `ID`, which works as in [`addvoucher`](#adding-vouchers-addvoucher), including the interest of past days.
+* Redeems `NUMBER_OF_VOUCHERS` of the unused vouchers of the patient with the specified `ID`, which works as in [`addvoucher`](#adding-vouchers-addvoucher), including the interest of past days. On the patient's birthday, the redemption is spent off their [doubled balance](#the-loyalty-programs-birthday-bonus).
 * `NUMBER_OF_VOUCHERS` must be a positive whole number, as in `addvoucher`.
 * The patient must hold at least that many vouchers. Redeeming more than they hold shows an error and changes nothing, such as `BERNICE YU (S2345678B) has only 3 vouchers to redeem, which is fewer than 5 vouchers.` Redeeming every voucher the patient holds leaves them with none.
 * The result names how many vouchers were redeemed and the patient's new balance, and the patient's details show the balance under **Vouchers**.
@@ -641,6 +654,8 @@ LaiNurse numbers each patient's appointments in date order when it loads them, a
 time keep their order in the file. Same-time visits are all preserved. A missing `marked` field defaults to false (unmarked). If supplied, `marked` must be the
 JSON boolean `true` or `false`; strings, numbers and null are invalid.
 
+A patient's date of birth is saved as `"dateOfBirth": "1990-11-16"`, and a patient with none is saved without it, so files from earlier versions load unchanged. If supplied, it must be a real date in the appointment date format described in the notes about the command format above, and cannot be in the future.
+
 Vouchers are saved as two fields, for example `"voucherCount": 12.1, "voucherInterestDate": "2026-10-03"`. The count is the number of unused vouchers the patient held as of the interest date, and the interest date is the last day on which the count changed. A patient who holds no vouchers is saved without either field, and a file with no voucher fields, such as one saved by an earlier version, loads with every patient holding none. If either field is supplied, both must be: a count without a date, or a date without a count, makes the file fail to load. The count must be a number of at least 0, and the date must be a real date in the appointment date format described in the notes about the command format above. Each day after the interest date multiplies the count by 1.1, so edit these fields only if you are confident about the balance you mean.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
@@ -672,6 +687,9 @@ Certain edits can cause LaiNurse to behave in unexpected ways (e.g., if a value 
 
 **Q**: Why did my patient's voucher count go up on its own?<br>
 **A**: Unused vouchers earn 10% interest every day: each day, the count is multiplied by 1.1, so 10 vouchers become 11 after a day and 12.1 after two. Redeemed vouchers leave the balance and stop earning. See [Adding vouchers](#adding-vouchers-addvoucher).
+
+**Q**: Why did my patient's voucher count double today?<br>
+**A**: It is their birthday, and they share it with at least one other patient: each of the others doubles the vouchers the patient holds for that day alone. See [The loyalty program's birthday bonus](#the-loyalty-programs-birthday-bonus).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -710,7 +728,7 @@ These are not in this version. We plan to add them in a future version.
 
 Action | Format, Examples
 --------|-----------------
-**Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
+**Add** | `add --id ID --name NAME --phone PHONE --address ADDRESS [--dob DATE_OF_BIRTH] [--medical-history MEDICAL_HISTORY] [--notes NOTES]` <br> e.g., `add --id S3333333C --name James Ho --phone 22224444 --address 123, Clementi Rd, 1234665 --notes Enjoys gardening`
 **AddAppt** | `addappt ID --date DATE_OR_DATETIME [--details DETAILS]`<br> e.g., `addappt S1234567A --date 2026-12-01 10:00 --details Bring insulin pen`
 **AddVoucher** | `addvoucher ID NUMBER_OF_VOUCHERS`<br> e.g., `addvoucher S1234567A 5`
 **Archive** | `archive ID`<br> e.g., `archive S2345678B`
@@ -718,7 +736,7 @@ Action | Format, Examples
 **ClearAppt** | `clearappt [ID] [--from DATE_OR_DATETIME] [--to DATE_OR_DATETIME]`, then `confirm` to confirm<br> e.g., `clearappt S1234567A`, `clearappt --to 2026-10-04`
 **Delete** | `delete ID`, then `confirm` to confirm<br> e.g., `delete T0123456B`
 **DeleteAppt** | `deleteappt ID NUMBER`<br> e.g., `deleteappt S1234567A 1`
-**Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`<br> e.g., `edit S1234567A --notes Walks every morning`, `edit S1234567A --add-medical-history Asthma`
+**Edit** | `edit ID [--name NAME] [--phone PHONE] [--address ADDRESS] [--dob [DATE_OF_BIRTH]] [--medical-history [MEDICAL_HISTORY]] [--add-medical-history MORE_HISTORY] [--notes [NOTES]] [--add-notes MORE_NOTES]`<br> e.g., `edit S1234567A --notes Walks every morning`, `edit S1234567A --add-medical-history Asthma`
 **EditAppt** | `editappt ID NUMBER [--date NEW_DATE_OR_DATETIME] [--details [DETAILS]] [--add-details MORE_DETAILS]`<br> e.g., `editappt S1234567A 1 --date 2026-10-06 10:00`, `editappt S1234567A 1 --add-details Bring glucometer`
 **Find** | `find [--id ID] [--name NAME] [--address ADDRESS] [--phone PHONE] [--medical-history HISTORY] [--notes NOTES] [--all] [--archived]`<br> e.g., `find --name "John" --notes gardening` (matches either field; at least one field option required), `find --name yu --archived`
 **MarkAppt** | `markappt ID NUMBER`<br> e.g., `markappt S1234567A 2`

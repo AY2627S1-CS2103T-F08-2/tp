@@ -3,7 +3,9 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.DOB_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_ADDRESS_DESC;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_DOB_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_ID;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_NAME_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_PHONE_DESC;
@@ -12,6 +14,7 @@ import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_DOB_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ID_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ID_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_MEDICAL_HISTORY_BOB;
@@ -35,6 +38,7 @@ import seedu.address.logic.Messages;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -150,6 +154,25 @@ public class EditCommandParserTest {
         EditCommand expectedCommand = new EditCommand(new PatientId(VALID_ID_AMY), descriptor);
         assertParseSuccess(parser, VALID_ID_AMY + " --notes Enjoys   gardening", expectedCommand);
         assertParseSuccess(parser, VALID_ID_AMY + "\t--notes\tEnjoys\t gardening", expectedCommand);
+    }
+
+    @Test
+    public void parse_dateOfBirthOnly_success() {
+        EditPatientDescriptor descriptor = new EditPatientDescriptorBuilder().withDateOfBirth(VALID_DOB_BOB).build();
+        assertParseSuccess(parser, VALID_ID_AMY + DOB_DESC_BOB,
+                new EditCommand(new PatientId(VALID_ID_AMY), descriptor));
+
+        // a --dob with no value clears the date of birth
+        descriptor = new EditPatientDescriptorBuilder().withoutDateOfBirth().build();
+        assertParseSuccess(parser, VALID_ID_AMY + " --dob",
+                new EditCommand(new PatientId(VALID_ID_AMY), descriptor));
+    }
+
+    @Test
+    public void parse_invalidDateOfBirth_failure() {
+        assertParseFailure(parser, VALID_ID_AMY + INVALID_DOB_DESC, DateOfBirth.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --dob 1990-02-30", DateOfBirth.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, VALID_ID_AMY + " --dob 21-03-1955", DateOfBirth.MESSAGE_CONSTRAINTS);
     }
 
     @Test

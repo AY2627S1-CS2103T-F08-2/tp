@@ -1,15 +1,12 @@
 package seedu.address.logic.commands;
 
-import java.time.LocalDate;
-
-import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
-import seedu.address.model.patient.VoucherBalance;
 import seedu.address.model.patient.VoucherNumber;
 
 /**
  * Gives a patient a number of new vouchers. The patient's unused voucher count first grows by the interest of every
- * day since it last changed, and the new vouchers then add to it.
+ * day since it last changed, and the new vouchers then add to it. On the patient's birthday, the whole balance
+ * they hold that day is doubled once for each other patient with the same birthday.
  */
 public class AddVoucherCommand extends VoucherCommand {
 
@@ -30,8 +27,8 @@ public class AddVoucherCommand extends VoucherCommand {
     }
 
     @Override
-    protected VoucherBalance applyTo(Patient patient, VoucherBalance balance, long voucherCount, LocalDate today) {
-        return balance.added(voucherCount, today);
+    protected boolean isRedeeming() {
+        return false;
     }
 
     @Override

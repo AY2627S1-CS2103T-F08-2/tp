@@ -31,6 +31,7 @@ import javafx.scene.layout.VBox;
 import seedu.address.model.Settings;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentClashes;
+import seedu.address.model.patient.BirthdayBonus;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
 import seedu.address.model.patient.PatientId;
@@ -45,6 +46,7 @@ import seedu.address.model.patient.VoucherBalance;
 public class PatientDetailPanel extends UiPart<Region> {
 
     private static final String FXML = "PatientDetailPanel.fxml";
+    private static final String NO_DATE_OF_BIRTH = "None recorded";
     private static final String NO_MEDICAL_HISTORY = "None recorded";
     private static final String NO_NOTES = "None recorded";
     private static final String EMPTY_VALUE_STYLE_CLASS = "patient-detail-value-empty";
@@ -116,6 +118,8 @@ public class PatientDetailPanel extends UiPart<Region> {
     private Label phone;
     @FXML
     private Label address;
+    @FXML
+    private Label dateOfBirth;
     @FXML
     private Label medicalHistory;
     @FXML
@@ -244,13 +248,19 @@ public class PatientDetailPanel extends UiPart<Region> {
         patientId.setText(patient.getId().value);
         phone.setText(patient.getPhone().value);
         address.setText(patient.getAddress().value);
+        setValue(dateOfBirth, patient.getDateOfBirth().map(Object::toString), NO_DATE_OF_BIRTH);
         setValue(medicalHistory, patient.getMedicalHistory().map(Object::toString), NO_MEDICAL_HISTORY);
         setValue(notes, patient.getNotes().map(Object::toString), NO_NOTES);
 
-        // The vouchers show as of now, so that they keep growing while the panel is open past midnight
+        // The vouchers show as of now, so that they keep growing while the panel is open past midnight. On the
+        // patient's birthday, each other patient with the same birthday doubles them, which the bonus names.
         LocalDate today = LocalDate.now();
-        vouchers.setText(VoucherBalance.formatCount(
-                patient.getVoucherBalance().withInterestAppliedUntil(today).getCount()));
+        double birthdayFactor = BirthdayBonus.voucherMultiplier(patient, allPatients, today);
+        double voucherCount = VoucherBalance.multipliedCount(
+                patient.getVoucherBalance().withInterestAppliedUntil(today).getCount(), birthdayFactor);
+        String birthdayBonus = birthdayFactor > 1
+                ? " (birthday ×" + VoucherBalance.formatCount(birthdayFactor) + ")" : "";
+        vouchers.setText(VoucherBalance.formatCount(voucherCount) + birthdayBonus);
 
         // An edit can remove the marked appointment
         if (markedAppointment != null && !patient.getSchedule().contains(markedAppointment)) {

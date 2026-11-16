@@ -11,6 +11,7 @@ import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.CARL;
 import static seedu.address.testutil.TypicalPatients.getTypicalLaiNurse;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.VoucherBalance;
 import seedu.address.model.patient.VoucherNumber;
+import seedu.address.testutil.PatientBuilder;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for {@code AddVoucherCommand} and
@@ -255,6 +257,99 @@ public class VoucherCommandTest {
                 BENSON.getId(), Messages.formatCount(grownCount(10, daysElapsed), "voucher"),
                 Messages.formatCount(15, "voucher"));
         assertCommandFailure(new RedeemVoucherCommand(BENSON.getId(), FIFTEEN), model, expectedMessage);
+    }
+
+    /**
+     * Returns the date of birth of a patient whose birthday is today, in some past year.
+     */
+    private static String birthdayToday() {
+        LocalDate today = LocalDate.now();
+        try {
+            return LocalDate.of(1990, today.getMonth(), today.getDayOfMonth()).toString();
+        } catch (DateTimeException february29) {
+            return LocalDate.of(1992, today.getMonth(), today.getDayOfMonth()).toString();
+        }
+    }
+
+    /**
+     * Sets BENSON and CARL up as the only two patients born on this day, with Benson holding 10 vouchers from
+     * today, so that Benson's vouchers double today.
+     */
+    private void setBirthdaySharersUp() {
+        Patient benson = new PatientBuilder(BENSON).withDateOfBirth(birthdayToday())
+                .withVoucherBalance(new VoucherBalance(10, LocalDate.now())).build();
+        Patient carl = new PatientBuilder(CARL).withDateOfBirth(birthdayToday()).build();
+        model.setPatient(BENSON, benson);
+        model.setPatient(CARL, carl);
+    }
+
+    @Test
+    public void execute_addVouchersOnBirthday_doublesTheBalanceThatDay() {
+        // Benson and Carl share this birthday, so the 15 vouchers Benson holds after the adding show as 30
+        setBirthdaySharersUp();
+        Patient benson = model.findPatientById(BENSON.getId()).orElseThrow();
+        Patient carl = model.findPatientById(CARL.getId()).orElseThrow();
+        Patient expectedBenson = benson.withVoucherBalance(new VoucherBalance(15, LocalDate.now()));
+        Model expectedModel = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
+        expectedModel.setPatient(BENSON, expectedBenson);
+        expectedModel.setPatient(CARL, carl);
+
+        String expectedMessage = String.format(AddVoucherCommand.MESSAGE_ADD_SUCCESS,
+                Messages.formatCount(5, "voucher"), BENSON.getName(), BENSON.getId(),
+                Messages.formatCount(30, "voucher"));
+        assertCommandSuccess(new AddVoucherCommand(BENSON.getId(), FIVE), model,
+                new CommandResult(expectedMessage).withNavigation(Navigation.toPatient(BENSON.getId())),
+                expectedModel);
+        // the doubling belongs to the day alone: the balance that is stored holds no doubled amount
+        assertEquals(15, model.findPatientById(BENSON.getId()).orElseThrow().getVoucherBalance().getCount(), 0);
+    }
+
+    @Test
+    public void execute_redeemOnBirthday_spendsTheDoubledVouchers() {
+        // Benson's 10 vouchers hold as 20 today, and redeeming 6 of them takes 3 from the balance itself
+        setBirthdaySharersUp();
+        Patient benson = model.findPatientById(BENSON.getId()).orElseThrow();
+        Patient carl = model.findPatientById(CARL.getId()).orElseThrow();
+        Patient expectedBenson = benson.withVoucherBalance(new VoucherBalance(7, LocalDate.now()));
+        Model expectedModel = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
+        expectedModel.setPatient(BENSON, expectedBenson);
+        expectedModel.setPatient(CARL, carl);
+
+        String expectedMessage = String.format(RedeemVoucherCommand.MESSAGE_REDEEM_SUCCESS,
+                Messages.formatCount(6, "voucher"), BENSON.getName(), BENSON.getId(),
+                Messages.formatCount(14, "voucher"));
+        assertCommandSuccess(new RedeemVoucherCommand(BENSON.getId(), new VoucherNumber("6")), model,
+                new CommandResult(expectedMessage).withNavigation(Navigation.toPatient(BENSON.getId())),
+                expectedModel);
+        assertEquals(7, model.findPatientById(BENSON.getId()).orElseThrow().getVoucherBalance().getCount(), 0);
+    }
+
+    @Test
+    public void execute_redeemMoreThanTheDoubledBalance_throwsCommandException() {
+        // the doubled balance of 20 covers 21 vouchers by none, and the error names the doubled balance
+        setBirthdaySharersUp();
+
+        String expectedMessage = String.format(RedeemVoucherCommand.MESSAGE_INSUFFICIENT, BENSON.getName(),
+                BENSON.getId(), Messages.formatCount(20, "voucher"), Messages.formatCount(21, "voucher"));
+        assertCommandFailure(new RedeemVoucherCommand(BENSON.getId(), new VoucherNumber("21")), model,
+                expectedMessage);
+    }
+
+    @Test
+    public void execute_onABirthdayWithoutSharers_theBalanceDoesNotDouble() {
+        // Carl is the only patient born on this day, so no one doubles his vouchers
+        Patient carl = new PatientBuilder(CARL).withDateOfBirth(birthdayToday()).build();
+        model.setPatient(CARL, carl);
+        Patient expectedCarl = carl.withVoucherBalance(new VoucherBalance(5, LocalDate.now()));
+        Model expectedModel = new ModelManager(getTypicalLaiNurse(), new UserPrefs());
+        expectedModel.setPatient(CARL, expectedCarl);
+
+        String expectedMessage = String.format(AddVoucherCommand.MESSAGE_ADD_SUCCESS,
+                Messages.formatCount(5, "voucher"), CARL.getName(), CARL.getId(),
+                Messages.formatCount(5, "voucher"));
+        assertCommandSuccess(new AddVoucherCommand(CARL.getId(), FIVE), model,
+                new CommandResult(expectedMessage).withNavigation(Navigation.toPatient(CARL.getId())),
+                expectedModel);
     }
 
     @Test

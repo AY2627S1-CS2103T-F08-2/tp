@@ -83,9 +83,9 @@ public class TabCompleterTest {
 
     @Test
     public void complete_option_skipsOptionsAlreadyTyped() {
-        assertEquals(List.of("--phone", "--address", "--medical-history", "--add-medical-history", "--notes",
-                "--add-notes"), words("edit S1234567A --name Alex Tan --"));
-        assertEquals(List.of("--name", "--phone", "--address", "--medical-history", "--notes"),
+        assertEquals(List.of("--phone", "--address", "--dob", "--medical-history", "--add-medical-history",
+                "--notes", "--add-notes"), words("edit S1234567A --name Alex Tan --"));
+        assertEquals(List.of("--name", "--phone", "--address", "--dob", "--medical-history", "--notes"),
                 words("add --id S1234567A --"));
     }
 

@@ -19,6 +19,7 @@ import seedu.address.commons.util.DateUtil;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -48,6 +49,7 @@ class JsonAdaptedPatient {
     private final List<JsonAdaptedAppointment> appointments; // null if there are none
     private final Double voucherCount; // null, with voucherInterestDate, if the patient holds no vouchers
     private final String voucherInterestDate; // null with voucherCount
+    private final String dateOfBirth; // null if not set
     // null, or a NullNode if missing, if not archived; any other value but a boolean fails to load, as "marked" does
     private final JsonNode archived;
 
@@ -61,6 +63,7 @@ class JsonAdaptedPatient {
             @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments,
             @JsonProperty("voucherCount") Double voucherCount,
             @JsonProperty("voucherInterestDate") String voucherInterestDate,
+            @JsonProperty("dateOfBirth") String dateOfBirth,
             @JsonProperty("archived") JsonNode archived) {
         this.id = id;
         this.name = name;
@@ -71,16 +74,17 @@ class JsonAdaptedPatient {
         this.appointments = appointments;
         this.voucherCount = voucherCount;
         this.voucherInterestDate = voucherInterestDate;
+        this.dateOfBirth = dateOfBirth;
         this.archived = archived;
     }
 
     /**
-     * Constructs a {@code JsonAdaptedPatient} of a patient who is not archived and holds no vouchers, with the
-     * given patient details.
+     * Constructs a {@code JsonAdaptedPatient} of a patient who is not archived, holds no vouchers and has no date
+     * of birth, with the given patient details.
      */
     public JsonAdaptedPatient(String id, String name, String phone, String address, String medicalHistory,
             String notes, List<JsonAdaptedAppointment> appointments) {
-        this(id, name, phone, address, medicalHistory, notes, appointments, null, null, null);
+        this(id, name, phone, address, medicalHistory, notes, appointments, null, null, null, null);
     }
 
     /**
@@ -100,6 +104,7 @@ class JsonAdaptedPatient {
         VoucherBalance voucherBalance = source.getVoucherBalance();
         voucherCount = voucherBalance.getCount() == 0 ? null : voucherBalance.getCount();
         voucherInterestDate = voucherBalance.getCount() == 0 ? null : voucherBalance.getInterestDate().toString();
+        dateOfBirth = source.getDateOfBirth().map(dateOfBirth -> dateOfBirth.value.toString()).orElse(null);
         // Saved only for an archived patient, so that a patient who is not archived is saved as before
         archived = source.isArchived() ? BooleanNode.TRUE : null;
     }
@@ -154,6 +159,11 @@ class JsonAdaptedPatient {
         }
         final Optional<Notes> modelNotes = Optional.ofNullable(notes).map(Notes::new);
 
+        if (dateOfBirth != null && !DateOfBirth.isValidDateOfBirth(dateOfBirth)) {
+            throw new IllegalValueException(DateOfBirth.MESSAGE_CONSTRAINTS);
+        }
+        final Optional<DateOfBirth> modelDateOfBirth = Optional.ofNullable(dateOfBirth).map(DateOfBirth::new);
+
         final List<JsonAdaptedAppointment> savedAppointments = appointments == null ? List.of() : appointments;
         final List<Appointment> modelAppointmentList = new ArrayList<>();
         for (JsonAdaptedAppointment appointment : savedAppointments) {
@@ -177,7 +187,7 @@ class JsonAdaptedPatient {
             throw new IllegalValueException(MESSAGE_ARCHIVED_CONSTRAINTS);
         }
         return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelNotes,
-                modelSchedule, toModelVoucherBalance(), isArchivedGiven && archived.booleanValue());
+                modelDateOfBirth, modelSchedule, toModelVoucherBalance(), isArchivedGiven && archived.booleanValue());
     }
 
     /**

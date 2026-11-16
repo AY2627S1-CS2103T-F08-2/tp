@@ -7,6 +7,7 @@ import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.AppointmentSchedule;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -34,6 +35,7 @@ public class PatientBuilder {
     private Optional<Notes> notes;
     private AppointmentSchedule appointments;
     private VoucherBalance vouchers;
+    private DateOfBirth dateOfBirth;
     private boolean isArchived;
 
     /**
@@ -62,6 +64,7 @@ public class PatientBuilder {
         notes = patientToCopy.getNotes();
         appointments = patientToCopy.getSchedule();
         vouchers = patientToCopy.getVoucherBalance();
+        dateOfBirth = patientToCopy.getDateOfBirth().orElse(null);
         isArchived = patientToCopy.isArchived();
     }
 
@@ -165,6 +168,15 @@ public class PatientBuilder {
     }
 
     /**
+     * Sets the {@code DateOfBirth} of the {@code Patient} that we are building, from a date in the format
+     * yyyy-MM-dd that is not in the future.
+     */
+    public PatientBuilder withDateOfBirth(String dateOfBirth) {
+        this.dateOfBirth = new DateOfBirth(dateOfBirth);
+        return this;
+    }
+
+    /**
      * Sets the {@code VoucherBalance} of the {@code Patient} that we are building.
      */
     public PatientBuilder withVoucherBalance(VoucherBalance vouchers) {
@@ -181,8 +193,12 @@ public class PatientBuilder {
         return this;
     }
 
+    /**
+     * Builds the {@code Patient} with the details that were set.
+     */
     public Patient build() {
-        return new Patient(id, name, phone, address, medicalHistory, notes, appointments, vouchers, isArchived);
+        return new Patient(id, name, phone, address, medicalHistory, notes, Optional.ofNullable(dateOfBirth),
+                appointments, vouchers, isArchived);
     }
 
 }

@@ -18,6 +18,7 @@ import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -244,6 +245,22 @@ public class ParserUtil {
             logger.fine("Rejected number of vouchers that is too large.");
             throw new ParseException(e.getMessage());
         }
+    }
+
+    /**
+     * Parses a date of birth, which is a real date in the format that appointment dates use, and cannot be in
+     * the future.
+     *
+     * @throws ParseException if the given {@code dateOfBirth} is invalid.
+     */
+    public static DateOfBirth parseDateOfBirth(String dateOfBirth) throws ParseException {
+        requireNonNull(dateOfBirth);
+        String trimmedDateOfBirth = dateOfBirth.trim();
+        if (!DateOfBirth.isValidDateOfBirth(trimmedDateOfBirth)) {
+            logger.fine("Rejected invalid date of birth.");
+            throw new ParseException(DateOfBirth.MESSAGE_CONSTRAINTS);
+        }
+        return new DateOfBirth(trimmedDateOfBirth);
     }
 
     /**

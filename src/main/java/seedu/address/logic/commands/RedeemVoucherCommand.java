@@ -1,20 +1,14 @@
 package seedu.address.logic.commands;
 
-import java.time.LocalDate;
-import java.util.logging.Logger;
-
-import seedu.address.commons.core.LogsCenter;
-import seedu.address.logic.Messages;
-import seedu.address.logic.commands.exceptions.CommandException;
-import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
-import seedu.address.model.patient.VoucherBalance;
 import seedu.address.model.patient.VoucherNumber;
 
 /**
  * Redeems a number of a patient's unused vouchers, such as when they pay for something with them. The patient's
  * unused voucher count first grows by the interest of every day since it last changed, and the redeemed vouchers
- * then leave it. A patient can redeem only vouchers that they hold.
+ * then leave it. On the patient's birthday, the whole balance they hold that day is doubled once for each other
+ * patient with the same birthday, and a redemption takes that doubling off the balance itself. A patient can
+ * redeem only vouchers that they hold.
  */
 public class RedeemVoucherCommand extends VoucherCommand {
 
@@ -30,8 +24,6 @@ public class RedeemVoucherCommand extends VoucherCommand {
 
     public static final String MESSAGE_INSUFFICIENT = "%1$s (%2$s) has only %3$s to redeem, which is fewer than %4$s.";
 
-    private static final Logger logger = LogsCenter.getLogger(RedeemVoucherCommand.class);
-
     /**
      * Creates a command to redeem {@code voucherNumber} of the unused vouchers of the patient with {@code targetId}.
      */
@@ -40,17 +32,8 @@ public class RedeemVoucherCommand extends VoucherCommand {
     }
 
     @Override
-    protected VoucherBalance applyTo(Patient patient, VoucherBalance balance, long voucherCount, LocalDate today)
-            throws CommandException {
-        VoucherBalance current = balance.withInterestAppliedUntil(today);
-        if (!current.canRedeem(voucherCount)) {
-            logger.fine("Rejected " + COMMAND_WORD + ": the patient holds fewer vouchers than are redeemed.");
-            String held = Messages.formatCount(current.getCount(), "voucher");
-            String requested = Messages.formatCount(voucherCount, "voucher");
-            throw new CommandException(
-                    String.format(MESSAGE_INSUFFICIENT, patient.getName(), patient.getId(), held, requested));
-        }
-        return current.redeemed(voucherCount, today);
+    protected boolean isRedeeming() {
+        return true;
     }
 
     @Override

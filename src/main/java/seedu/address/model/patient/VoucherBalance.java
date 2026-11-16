@@ -113,18 +113,19 @@ public class VoucherBalance {
      * Returns true if this balance holds at least {@code number} vouchers to redeem, where a count a hair below
      * {@code number} through rounding, such as 11 vouchers held as 10.999999999999998, still counts as holding it.
      */
-    public boolean canRedeem(long number) {
+    public boolean canRedeem(double number) {
         return count + REDEEM_TOLERANCE >= number;
     }
 
     /**
      * Returns the balance as of {@code today} after {@code number} of the patient's vouchers are redeemed, so that
-     * they leave the balance and the unused vouchers left keep earning interest. Redeeming every voucher the
+     * they leave the balance and the unused vouchers left keep earning interest. The number may be a fraction,
+     * as when a redemption on a birthday takes a factor-th of the balance itself. Redeeming every voucher the
      * patient holds gives {@link #ZERO}: the rounded count can leave a hair of a voucher, which is none.
      *
-     * @throws IllegalArgumentException if {@code number} is not a positive whole number.
+     * @throws IllegalArgumentException if {@code number} is not a positive number of vouchers.
      */
-    public VoucherBalance redeemed(long number, LocalDate today) {
+    public VoucherBalance redeemed(double number, LocalDate today) {
         requireNonNull(today);
         checkArgument(number > 0, VoucherNumber.MESSAGE_CONSTRAINTS);
         VoucherBalance current = withInterestAppliedUntil(today);
@@ -133,6 +134,14 @@ public class VoucherBalance {
             return ZERO;
         }
         return new VoucherBalance(remaining, today);
+    }
+
+    /**
+     * Returns {@code count} multiplied by {@code factor}, which the largest finite count caps, so that no factor,
+     * however many patients share a birthday, can make a count infinite or undefined.
+     */
+    public static double multipliedCount(double count, double factor) {
+        return Math.min(count * factor, Double.MAX_VALUE);
     }
 
     /**

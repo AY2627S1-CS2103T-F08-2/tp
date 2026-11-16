@@ -150,6 +150,10 @@ public class PatientTest {
         editedAlice = new PatientBuilder(ALICE).withVouchers(5, LocalDate.parse("2026-11-01")).build();
         assertFalse(ALICE.equals(editedAlice));
 
+        // different date of birth -> returns false
+        editedAlice = new PatientBuilder(ALICE).withDateOfBirth("1990-11-16").build();
+        assertFalse(ALICE.equals(editedAlice));
+
         // the same appointment with different details -> returns false
         assertFalse(new PatientBuilder(ALICE).withAppointment(VALID_APPOINTMENT, "Insulin review").build()
                 .equals(new PatientBuilder(ALICE).withAppointment(VALID_APPOINTMENT, "Blood test").build()));
@@ -170,6 +174,7 @@ public class PatientTest {
                 + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
                 + ", medicalHistory=" + BENSON.getMedicalHistory().get()
                 + ", notes=null"
+                + ", dateOfBirth=null"
                 + ", schedule=" + BENSON.getSchedule() + ", vouchers=" + BENSON.getVoucherBalance()
                 + ", isArchived=false}";
         assertEquals(expected, BENSON.toString());
@@ -207,5 +212,16 @@ public class PatientTest {
 
         // a patient starts with no vouchers
         assertEquals(VoucherBalance.ZERO, BENSON.getVoucherBalance());
+    }
+
+    @Test
+    public void getDateOfBirth_notGiven_returnsEmpty() {
+        assertTrue(new PatientBuilder().build().getDateOfBirth().isEmpty());
+    }
+
+    @Test
+    public void getDateOfBirth_given_returnsValue() {
+        Patient born = new PatientBuilder().withDateOfBirth("1990-11-16").build();
+        assertEquals(new DateOfBirth("1990-11-16"), born.getDateOfBirth().orElseThrow());
     }
 }

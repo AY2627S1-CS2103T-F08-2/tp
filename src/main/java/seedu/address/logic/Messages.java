@@ -99,6 +99,7 @@ public class Messages {
                 .append(patient.getPhone())
                 .append("; Address: ")
                 .append(patient.getAddress());
+        patient.getDateOfBirth().ifPresent(dob -> builder.append("; Date of Birth: ").append(dob));
         patient.getMedicalHistory().ifPresent(history -> builder.append("; Medical History: ").append(history));
         patient.getNotes().ifPresent(notes -> builder.append("; Notes: ").append(notes));
         if (!patient.getSchedule().isEmpty()) {

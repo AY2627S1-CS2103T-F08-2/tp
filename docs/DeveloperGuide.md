@@ -1162,13 +1162,28 @@ clock, as the appointments do.
     * Cons: The task must not run twice a day, must catch up after the app was closed, and touches every patient
       even when nothing changes, which then saves the whole data file at midnight.
 
+**Birthdays.** `Patient` holds an optional `DateOfBirth`, a real date in the appointment date format that cannot
+be in the future, which `add --dob` sets and `edit --dob` replaces or clears. On the patient's birthday, the day
+of the year that shares their date of birth's month and day, every other patient with the same birthday doubles
+the vouchers they hold that day, which is how the loyalty program rewards its members as it grows.
+`BirthdayBonus#voucherMultiplier` counts the sharers among all patients, archived ones included, whatever their
+birth years, and gives a factor of 2 to the power of that count, so the bonus grows with the program. The
+doubling belongs to the day alone: no doubled amount is stored, and the balance keeps growing from its own
+count, so a patient with 9.09 vouchers the day before a birthday shared with two others holds 10 after the
+interest and 40 with the doubling on the birthday, then 11 the next day. A redemption on the birthday is spent
+off the doubled balance, and so takes a factor-th of the balance itself: redeeming 6 of a doubled 20 takes 3
+from the balance of 10, leaving 7, which shows as 14 that day. Both the factor and every doubled count are
+capped at the largest finite count, so no number of birthday sharers can make a balance infinite. A birthday is
+a month and a day, so a patient born on 29 February has their birthday on a 29 February only.
+
 **Commands.** `AddVoucherCommand` and `RedeemVoucherCommand` share `VoucherCommand`, as `archive` and `unarchive`
-share `ArchiveStatusCommand`: it finds the patient with `Model#findPatientById`, applies the interest as of today,
-asks the subclass for the new balance, and saves it with `Model#setPatient`. Each succeeds with the number of
-vouchers and the new balance, named by `Messages#formatCount(double, String)`, which says `1 voucher` in the
-singular. `redeemvoucher` refuses a redemption of more vouchers than the patient holds, with the count they do
-hold. Both switch to the Patients view, and select the patient only if the list still shows them, so that giving
-vouchers to an archived patient does not select a hidden row.
+share `ArchiveStatusCommand`: it finds the patient with `Model#findPatientById`, applies the interest as of
+today, and adds the vouchers to the balance, or subtracts the redemption from it. Each succeeds with the number
+of vouchers and the balance the patient holds that day, which carries the birthday bonus, named by
+`Messages#formatCount(double, String)`, which says `1 voucher` in the singular. `redeemvoucher` refuses a
+redemption of more vouchers than the patient holds that day, with the balance they do hold. Both switch to the
+Patients view, and select the patient only if the list still shows them, so that giving vouchers to an archived
+patient does not select a hidden row.
 
 **Rounding.** The daily multiplication rounds the count, so a balance of exactly 11 vouchers can be held as
 11.000000000000002 or a hair below. `VoucherBalance#canRedeem(long)` accepts a count a hair below the whole number
@@ -1179,11 +1194,14 @@ out, and are never rounded in storage or arithmetic.
 **Storage.** `JsonAdaptedPatient` saves `"voucherCount"` and `"voucherInterestDate"` for a patient who holds
 vouchers, and neither field for one who holds none, so files from earlier versions load unchanged. The two fields
 must be given together, the count must be a number of at least 0, and the date must parse in the appointment date
-format, or the file fails to load as any other invalid field does.
+format, or the file fails to load as any other invalid field does. A date of birth is saved as
+`"dateOfBirth"`, which must parse in the same format and not be in the future, and is left out for a patient
+without one.
 
-**UI.** The patient detail panel shows the balance under **Vouchers**, as of today, between the notes and the
-appointments. Tab completes the patient ID of both commands, through `IdCompleter`'s commands that take an ID
-first.
+**UI.** The patient detail panel shows the date of birth, and the balance under **Vouchers**, as of today,
+between the notes and the appointments. When the birthday bonus is on, the balance is followed by the bonus, such
+as `40 (birthday ×4)`. Tab completes the patient ID of both commands, through `IdCompleter`'s commands that take
+an ID first, and the `--dob` option of `add` and `edit`.
 
 ### Feature flags
 
@@ -1315,6 +1333,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | home-based nurse | give a patient a number of vouchers, which all have the same value                                    | I can track what they own without recording money               |
 | `* * *`  | home-based nurse | redeem a number of a patient's unused vouchers                                                        | what they spend is taken off their balance                      |
 | `* * *`  | home-based nurse | have unused vouchers grow by 10% interest every day                                                   | the balance rewards the vouchers the patient keeps              |
+| `* *`    | home-based nurse | record a patient's date of birth                                                                      | I know how old they are, and when their birthday is             |
+| `* *`    | home-based nurse | have a patient's vouchers double on their birthday, once for each other patient with the same birthday | the loyalty program rewards its members as it grows             |
 | `*`      | home-based nurse | choose whether done, past and archived patients' appointments can clash                              | the clash warnings match how I work                            |
 | `*`      | home-based nurse | have a done appointment count as past                                                                | my finished visits move out of the way as soon as I mark them  |
 
@@ -1954,6 +1974,30 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case ends.
 
+**Use case: UC17 - Record a patient's date of birth**
+
+**MSS**
+
+1.  Nurse requests to add a patient with a date of birth, or to set one for an existing patient
+2.  LaiNurse records the date of birth and saves the patient
+
+    Use case ends.
+
+**Extensions**
+
+* 1a. The date of birth is not a real date in the format yyyy-MM-dd, or is in the future.
+
+    * 1a1. LaiNurse shows an error message with the valid format.
+
+      Use case resumes at step 1.
+
+* 2a. The date of birth is the same month and day as another patient's, and it is that day.
+
+    * 2a1. Each of those patients holds twice as many vouchers that day, as the loyalty program's birthday
+      bonus gives.
+
+      Use case ends.
+
 ### Non-Functional Requirements
 
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed. On macOS, this must be the JDK version given in the User Guide's Quick Start.
@@ -2012,6 +2056,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   last changed, the count is multiplied by 1.1.
 * **Normalization (normalized text)**: How LaiNurse stores text: trimmed, in uppercase, with each run of whitespace
   collapsed into one space, so values differing only in case or spacing are equal.
+* **Birthday bonus**: The doubling of a patient's unused vouchers on their birthday, once for every other patient
+  with the same birthday. It belongs to the birthday alone, and no doubled amount is stored.
 * **Patients view (patient view)**: The tab that shows the patient list beside one patient's details; also called the
   patient view or the **Patients** tab.
 * **Appointments view (appointment view)**: The tab that shows appointments day by day beside the selected
@@ -3039,6 +3085,42 @@ testers are expected to do more *exploratory* testing.
        [Backing up the data file](#backing-up-the-data-file) describes.
     1. Test case: delete `voucherInterestDate` from Alex's entry in `data/lainurse.json`, keeping `voucherCount`<br>
        Expected: LaiNurse cannot load the file: the two voucher fields must be given together.
+
+### Recording a date of birth and birthday bonuses
+
+1. Recording a date of birth
+
+    1. Prerequisites: Start with the sample data, and enter `view`. Alex Yeoh, Bernice Yu and Charlotte Oliveiro
+       were born on 16 November in the sample data.
+    1. Test case: `add --id T9999999Z --name Grace Chan --phone 91234567 --address 12 Kent Ridge Road --dob
+       1955-03-21`<br>
+       Expected: Grace is added, and their details show `1955-03-21` under **Date of birth**.
+    1. Test case: `edit T9999999Z --dob 1955-03-22`<br>
+       Expected: The date of birth shows `1955-03-22`.
+    1. Test case: `edit T9999999Z --dob`<br>
+       Expected: The date of birth shows `None recorded`.
+    1. Test cases: `edit T9999999Z --dob 21-03-1955`, `edit T9999999Z --dob 2999-01-01`,
+       `add --id T9999998Y --name Ian Tan --phone 91234567 --address 12 Kent Ridge Road --dob 2026-13-01`<br>
+       Expected: `Dates of birth must be a real date in the format yyyy-MM-dd, and cannot be in the future.`
+
+1. Birthday bonuses
+
+    1. Prerequisites: Start with the sample data, and enter `view`. Use today's month and day, in a past year,
+       as `THIS_DAY` below, such as `1990-06-15` on 15 June. Irfan Ibrahim holds 4 vouchers in the sample data.
+    1. Test case: `edit G1234567E --dob THIS_DAY`<br>
+       Expected: Irfan holds `4` under **Vouchers**: his birthday is shared by no one.
+    1. Test case: `edit S4567890F --dob THIS_DAY`<br>
+       Expected: Roy shares the birthday now, so Irfan's vouchers double: his details show `8 (birthday ×2)`, and
+       Roy's show `0 (birthday ×2)`.
+    1. Test case: `edit T0123456C --dob THIS_DAY`, then `addvoucher G1234567E 5`<br>
+       Expected: Charlotte shares the birthday too, so Irfan's balance doubles twice: the 9 vouchers he holds
+       after the adding show as 36, and the result says `New balance: 36 vouchers.`
+    1. Test case: `redeemvoucher G1234567E 12`<br>
+       Expected: The 12 doubled vouchers take 3 off the balance of 9: the result says `New balance: 24 vouchers.`,
+       which shows as `24` that day.
+    1. Test case: `edit G1234567E --dob 1955-03-22`<br>
+       Expected: With the birthday gone, Irfan's balance returns to what it grew from, without any doubled
+       amount: `6`.
 
 ### Deleting many patients or appointments
 

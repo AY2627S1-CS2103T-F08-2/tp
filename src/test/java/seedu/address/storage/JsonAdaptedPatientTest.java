@@ -19,6 +19,7 @@ import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -253,7 +254,7 @@ public class JsonAdaptedPatientTest {
     public void toModelType_invalidVoucherCount_throwsIllegalValueException() {
         for (double invalidCount : new double[] {-5, Double.NaN, Double.POSITIVE_INFINITY}) {
             JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_ID, VALID_NAME, VALID_PHONE, VALID_ADDRESS,
-                    VALID_MEDICAL_HISTORY, null, null, invalidCount, VALID_VOUCHER_DATE, null);
+                    VALID_MEDICAL_HISTORY, null, null, invalidCount, VALID_VOUCHER_DATE, null, null);
             assertThrows(IllegalValueException.class, VoucherBalance.MESSAGE_COUNT_CONSTRAINTS,
                     patient::toModelType);
         }
@@ -262,8 +263,26 @@ public class JsonAdaptedPatientTest {
     @Test
     public void toModelType_invalidVoucherDate_throwsIllegalValueException() {
         JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_ID, VALID_NAME, VALID_PHONE, VALID_ADDRESS,
-                VALID_MEDICAL_HISTORY, null, null, VALID_VOUCHER_COUNT, INVALID_VOUCHER_DATE, null);
+                VALID_MEDICAL_HISTORY, null, null, VALID_VOUCHER_COUNT, INVALID_VOUCHER_DATE, null, null);
         assertThrows(IllegalValueException.class, VoucherBalance.MESSAGE_DATE_CONSTRAINTS, patient::toModelType);
+    }
+
+    @Test
+    public void toModelType_validDateOfBirth_returnsPatient() throws Exception {
+        Patient born = new PatientBuilder(BENSON).withDateOfBirth("1990-11-16").build();
+        assertEquals(born, new JsonAdaptedPatient(born).toModelType());
+        // a patient with no date of birth is saved without the field, as before dates of birth existed
+        assertFalse(JsonUtil.toJsonString(new JsonAdaptedPatient(BENSON)).contains("dateOfBirth"));
+        assertTrue(JsonUtil.toJsonString(new JsonAdaptedPatient(born)).contains("\"dateOfBirth\" : \"1990-11-16\""));
+    }
+
+    @Test
+    public void toModelType_invalidDateOfBirth_throwsIllegalValueException() {
+        for (String invalidDateOfBirth : new String[] {"16-11-1990", "1990-02-30", "not a date", "2999-01-01"}) {
+            JsonAdaptedPatient patient = new JsonAdaptedPatient(VALID_ID, VALID_NAME, VALID_PHONE, VALID_ADDRESS,
+                    VALID_MEDICAL_HISTORY, null, null, null, null, invalidDateOfBirth, null);
+            assertThrows(IllegalValueException.class, DateOfBirth.MESSAGE_CONSTRAINTS, patient::toModelType);
+        }
     }
 
     private static List<JsonAdaptedAppointment> appointments(String... appointments) {

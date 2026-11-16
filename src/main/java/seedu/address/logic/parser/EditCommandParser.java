@@ -5,6 +5,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
@@ -12,6 +13,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
+import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.PatientId;
 
@@ -28,7 +30,7 @@ public class EditCommandParser implements Parser<EditCommand> {
     public EditCommand parse(String args) throws ParseException {
         requireNonNull(args);
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
-        Prefix[] prefixes = {PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
+        Prefix[] prefixes = {PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_DOB, PREFIX_MEDICAL_HISTORY,
             PREFIX_ADD_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ADD_NOTES};
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage, prefixes);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(normalizedArgs, prefixes);
@@ -53,6 +55,12 @@ public class EditCommandParser implements Parser<EditCommand> {
         }
         if (argMultimap.getValue(PREFIX_ADDRESS).isPresent()) {
             editPatientDescriptor.setAddress(ParserUtil.parseAddress(argMultimap.getValue(PREFIX_ADDRESS).get()));
+        }
+        if (argMultimap.getValue(PREFIX_DOB).isPresent()) {
+            String dobValue = argMultimap.getValue(PREFIX_DOB).get();
+            editPatientDescriptor.setDateOfBirth(dobValue.isBlank()
+                    ? OptionalFieldEdit.clear()
+                    : OptionalFieldEdit.replace(ParserUtil.parseDateOfBirth(dobValue)));
         }
         ParserUtil.parseOptionalFieldEdit(argMultimap, PREFIX_MEDICAL_HISTORY, PREFIX_ADD_MEDICAL_HISTORY,
                 ParserUtil::parseMedicalHistory).ifPresent(editPatientDescriptor::setMedicalHistory);

@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -34,6 +35,7 @@ public class CommandTestUtil {
     public static final String VALID_ADDRESS_BOB = "Block 123, Bobby Street 3";
     public static final String VALID_MEDICAL_HISTORY_BOB = "dementia";
     public static final String VALID_APPOINTMENT_BOB = "2026-11-30 09:00";
+    public static final String VALID_DOB_BOB = "1955-03-21";
 
     public static final String ID_DESC_AMY = " " + PREFIX_ID + VALID_ID_AMY;
     public static final String ID_DESC_BOB = " " + PREFIX_ID + VALID_ID_BOB;
@@ -43,6 +45,7 @@ public class CommandTestUtil {
     public static final String PHONE_DESC_BOB = " " + PREFIX_PHONE + VALID_PHONE_BOB;
     public static final String ADDRESS_DESC_AMY = " " + PREFIX_ADDRESS + VALID_ADDRESS_AMY;
     public static final String ADDRESS_DESC_BOB = " " + PREFIX_ADDRESS + VALID_ADDRESS_BOB;
+    public static final String DOB_DESC_BOB = " " + PREFIX_DOB + VALID_DOB_BOB;
     public static final String MEDICAL_HISTORY_DESC_BOB = " " + PREFIX_MEDICAL_HISTORY + VALID_MEDICAL_HISTORY_BOB;
 
     public static final String INVALID_ID = "S1234-567"; // '-' not allowed in IDs
@@ -51,6 +54,7 @@ public class CommandTestUtil {
     public static final String INVALID_PHONE_DESC = " " + PREFIX_PHONE + "abc"; // no digits
     public static final String INVALID_ADDRESS_DESC = " " + PREFIX_ADDRESS; // empty string not allowed for addresses
     public static final String INVALID_MEDICAL_HISTORY_DESC = " " + PREFIX_MEDICAL_HISTORY; // similar to address
+    public static final String INVALID_DOB_DESC = " " + PREFIX_DOB + "2999-01-01"; // a birth date is in the past
 
     public static final String PREAMBLE_WHITESPACE = "\t  \r  \n";
     public static final String PREAMBLE_NON_EMPTY = "NonEmptyPreamble";

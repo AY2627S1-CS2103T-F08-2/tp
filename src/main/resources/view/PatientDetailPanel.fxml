@@ -57,26 +57,34 @@
             <Region fx:constant="USE_PREF_SIZE" />
           </minHeight>
         </Label>
-        <Label text="Medical history" styleClass="patient-detail-key"
+        <Label text="Date of birth" styleClass="patient-detail-key"
                GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.valignment="TOP" />
-        <Label fx:id="medicalHistory" styleClass="patient-detail-value" wrapText="true"
+        <Label fx:id="dateOfBirth" styleClass="patient-detail-value" wrapText="true"
                GridPane.rowIndex="2" GridPane.columnIndex="1">
           <minHeight>
             <Region fx:constant="USE_PREF_SIZE" />
           </minHeight>
         </Label>
-        <Label text="Notes" styleClass="patient-detail-key"
+        <Label text="Medical history" styleClass="patient-detail-key"
                GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.valignment="TOP" />
-        <Label fx:id="notes" styleClass="patient-detail-value" wrapText="true"
+        <Label fx:id="medicalHistory" styleClass="patient-detail-value" wrapText="true"
                GridPane.rowIndex="3" GridPane.columnIndex="1">
           <minHeight>
             <Region fx:constant="USE_PREF_SIZE" />
           </minHeight>
         </Label>
-        <Label text="Vouchers" styleClass="patient-detail-key"
+        <Label text="Notes" styleClass="patient-detail-key"
                GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.valignment="TOP" />
-        <Label fx:id="vouchers" styleClass="patient-detail-value" wrapText="true"
+        <Label fx:id="notes" styleClass="patient-detail-value" wrapText="true"
                GridPane.rowIndex="4" GridPane.columnIndex="1">
+          <minHeight>
+            <Region fx:constant="USE_PREF_SIZE" />
+          </minHeight>
+        </Label>
+        <Label text="Vouchers" styleClass="patient-detail-key"
+               GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+        <Label fx:id="vouchers" styleClass="patient-detail-value" wrapText="true"
+               GridPane.rowIndex="5" GridPane.columnIndex="1">
           <minHeight>
             <Region fx:constant="USE_PREF_SIZE" />
           </minHeight>
