@@ -1,5 +1,7 @@
 package seedu.address.storage;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,15 +15,18 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.DateUtil;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentSchedule;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherBalance;
 
 /**
  * Jackson-friendly version of {@link Patient}.
@@ -42,6 +47,9 @@ class JsonAdaptedPatient {
     private final String medicalHistory; // null if not set
     private final String notes; // null if not set
     private final List<JsonAdaptedAppointment> appointments; // null if there are none
+    private final Double voucherCount; // null, with voucherInterestDate, if the patient holds no vouchers
+    private final String voucherInterestDate; // null with voucherCount
+    private final String dateOfBirth; // null if not set
     // null, or a NullNode if missing, if not archived; any other value but a boolean fails to load, as "marked" does
     private final JsonNode archived;
 
@@ -53,6 +61,9 @@ class JsonAdaptedPatient {
             @JsonProperty("phone") String phone, @JsonProperty("address") String address,
             @JsonProperty("medicalHistory") String medicalHistory, @JsonProperty("notes") String notes,
             @JsonProperty("appointments") List<JsonAdaptedAppointment> appointments,
+            @JsonProperty("voucherCount") Double voucherCount,
+            @JsonProperty("voucherInterestDate") String voucherInterestDate,
+            @JsonProperty("dateOfBirth") String dateOfBirth,
             @JsonProperty("archived") JsonNode archived) {
         this.id = id;
         this.name = name;
@@ -61,15 +72,19 @@ class JsonAdaptedPatient {
         this.medicalHistory = medicalHistory;
         this.notes = notes;
         this.appointments = appointments;
+        this.voucherCount = voucherCount;
+        this.voucherInterestDate = voucherInterestDate;
+        this.dateOfBirth = dateOfBirth;
         this.archived = archived;
     }
 
     /**
-     * Constructs a {@code JsonAdaptedPatient} of a patient who is not archived, with the given patient details.
+     * Constructs a {@code JsonAdaptedPatient} of a patient who is not archived, holds no vouchers and has no date
+     * of birth, with the given patient details.
      */
     public JsonAdaptedPatient(String id, String name, String phone, String address, String medicalHistory,
             String notes, List<JsonAdaptedAppointment> appointments) {
-        this(id, name, phone, address, medicalHistory, notes, appointments, null);
+        this(id, name, phone, address, medicalHistory, notes, appointments, null, null, null, null);
     }
 
     /**
@@ -85,6 +100,11 @@ class JsonAdaptedPatient {
         appointments = source.getSchedule().isEmpty()
                 ? null
                 : source.getSchedule().asList().stream().map(JsonAdaptedAppointment::new).toList();
+        // Saved only for a patient who holds vouchers, so that the others are saved as before vouchers existed
+        VoucherBalance voucherBalance = source.getVoucherBalance();
+        voucherCount = voucherBalance.getCount() == 0 ? null : voucherBalance.getCount();
+        voucherInterestDate = voucherBalance.getCount() == 0 ? null : voucherBalance.getInterestDate().toString();
+        dateOfBirth = source.getDateOfBirth().map(dateOfBirth -> dateOfBirth.value.toString()).orElse(null);
         // Saved only for an archived patient, so that a patient who is not archived is saved as before
         archived = source.isArchived() ? BooleanNode.TRUE : null;
     }
@@ -139,6 +159,11 @@ class JsonAdaptedPatient {
         }
         final Optional<Notes> modelNotes = Optional.ofNullable(notes).map(Notes::new);
 
+        if (dateOfBirth != null && !DateOfBirth.isValidDateOfBirth(dateOfBirth)) {
+            throw new IllegalValueException(DateOfBirth.MESSAGE_CONSTRAINTS);
+        }
+        final Optional<DateOfBirth> modelDateOfBirth = Optional.ofNullable(dateOfBirth).map(DateOfBirth::new);
+
         final List<JsonAdaptedAppointment> savedAppointments = appointments == null ? List.of() : appointments;
         final List<Appointment> modelAppointmentList = new ArrayList<>();
         for (JsonAdaptedAppointment appointment : savedAppointments) {
@@ -162,7 +187,33 @@ class JsonAdaptedPatient {
             throw new IllegalValueException(MESSAGE_ARCHIVED_CONSTRAINTS);
         }
         return new Patient(modelId, modelName, modelPhone, modelAddress, modelMedicalHistory, modelNotes,
-                modelSchedule, isArchivedGiven && archived.booleanValue());
+                modelDateOfBirth, modelSchedule, toModelVoucherBalance(), isArchivedGiven && archived.booleanValue());
+    }
+
+    /**
+     * Converts the saved voucher fields into the patient's {@code VoucherBalance}. A patient saved with no voucher
+     * fields, such as one saved by an earlier version, holds no vouchers, and one field without the other is an
+     * incomplete balance that fails to load.
+     *
+     * @throws IllegalValueException if exactly one voucher field is saved, or a saved one is invalid.
+     */
+    private VoucherBalance toModelVoucherBalance() throws IllegalValueException {
+        if (voucherCount == null && voucherInterestDate == null) {
+            return VoucherBalance.ZERO;
+        }
+        if (voucherCount == null || voucherInterestDate == null) {
+            throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, "voucher"));
+        }
+        if (!VoucherBalance.isValidCount(voucherCount)) {
+            throw new IllegalValueException(VoucherBalance.MESSAGE_COUNT_CONSTRAINTS);
+        }
+        final LocalDate modelInterestDate;
+        try {
+            modelInterestDate = DateUtil.parseDate(voucherInterestDate);
+        } catch (DateTimeParseException e) {
+            throw new IllegalValueException(VoucherBalance.MESSAGE_DATE_CONSTRAINTS, e);
+        }
+        return new VoucherBalance(voucherCount, modelInterestDate);
     }
 
 }

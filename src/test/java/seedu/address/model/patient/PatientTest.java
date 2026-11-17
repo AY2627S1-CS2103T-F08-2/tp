@@ -13,6 +13,7 @@ import static seedu.address.testutil.TypicalPatients.ALICE;
 import static seedu.address.testutil.TypicalPatients.BENSON;
 import static seedu.address.testutil.TypicalPatients.BOB;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -145,6 +146,14 @@ public class PatientTest {
         editedAlice = new PatientBuilder(ALICE).withAppointments(VALID_APPOINTMENT).build();
         assertFalse(ALICE.equals(editedAlice));
 
+        // different vouchers -> returns false
+        editedAlice = new PatientBuilder(ALICE).withVouchers(5, LocalDate.parse("2026-11-01")).build();
+        assertFalse(ALICE.equals(editedAlice));
+
+        // different date of birth -> returns false
+        editedAlice = new PatientBuilder(ALICE).withDateOfBirth("1990-11-16").build();
+        assertFalse(ALICE.equals(editedAlice));
+
         // the same appointment with different details -> returns false
         assertFalse(new PatientBuilder(ALICE).withAppointment(VALID_APPOINTMENT, "Insulin review").build()
                 .equals(new PatientBuilder(ALICE).withAppointment(VALID_APPOINTMENT, "Blood test").build()));
@@ -165,7 +174,9 @@ public class PatientTest {
                 + ", phone=" + BENSON.getPhone() + ", address=" + BENSON.getAddress()
                 + ", medicalHistory=" + BENSON.getMedicalHistory().get()
                 + ", notes=null"
-                + ", schedule=" + BENSON.getSchedule() + ", isArchived=false}";
+                + ", dateOfBirth=null"
+                + ", schedule=" + BENSON.getSchedule() + ", vouchers=" + BENSON.getVoucherBalance()
+                + ", isArchived=false}";
         assertEquals(expected, BENSON.toString());
     }
 
@@ -185,5 +196,32 @@ public class PatientTest {
         assertEquals(AppointmentSchedule.empty(), rescheduled.getSchedule());
         assertEquals(BENSON.getName(), rescheduled.getName());
         assertEquals(BENSON.getMedicalHistory(), rescheduled.getMedicalHistory());
+    }
+
+    @Test
+    public void withVoucherBalance_keepsEveryOtherDetail() {
+        VoucherBalance vouchers = new VoucherBalance(10, LocalDate.parse("2026-11-01"));
+        Patient voucherHolder = BENSON.withVoucherBalance(vouchers);
+        assertTrue(voucherHolder.isArchived() == BENSON.isArchived());
+        assertEquals(vouchers, voucherHolder.getVoucherBalance());
+        assertEquals(BENSON.getName(), voucherHolder.getName());
+        assertEquals(BENSON.getSchedule(), voucherHolder.getSchedule());
+        assertNotEquals(BENSON, voucherHolder);
+        assertTrue(BENSON.isSamePatient(voucherHolder));
+        assertEquals(BENSON, voucherHolder.withVoucherBalance(VoucherBalance.ZERO));
+
+        // a patient starts with no vouchers
+        assertEquals(VoucherBalance.ZERO, BENSON.getVoucherBalance());
+    }
+
+    @Test
+    public void getDateOfBirth_notGiven_returnsEmpty() {
+        assertTrue(new PatientBuilder().build().getDateOfBirth().isEmpty());
+    }
+
+    @Test
+    public void getDateOfBirth_given_returnsValue() {
+        Patient born = new PatientBuilder().withDateOfBirth("1990-11-16").build();
+        assertEquals(new DateOfBirth("1990-11-16"), born.getDateOfBirth().orElseThrow());
     }
 }

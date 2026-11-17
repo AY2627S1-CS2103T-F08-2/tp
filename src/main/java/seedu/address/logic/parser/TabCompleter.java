@@ -9,6 +9,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ALL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ARCHIVED;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DETAILS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_FROM;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
@@ -62,10 +63,10 @@ public class TabCompleter {
 
     /** The options of each command that takes options, in the order of its usage message. */
     private static final Map<String, List<String>> OPTIONS = Map.of(
-            AddCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
+            AddCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_DOB,
                     PREFIX_MEDICAL_HISTORY, PREFIX_NOTES),
-            EditCommand.COMMAND_WORD, options(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY,
-                    PREFIX_ADD_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ADD_NOTES),
+            EditCommand.COMMAND_WORD, options(PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_DOB,
+                    PREFIX_MEDICAL_HISTORY, PREFIX_ADD_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ADD_NOTES),
             FindCommand.COMMAND_WORD, options(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
                     PREFIX_MEDICAL_HISTORY, PREFIX_NOTES, PREFIX_ALL, PREFIX_ARCHIVED),
             AddAppointmentCommand.COMMAND_WORD, options(PREFIX_DATE, PREFIX_DETAILS),

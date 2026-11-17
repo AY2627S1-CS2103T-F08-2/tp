@@ -16,15 +16,19 @@ import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.AppointmentSchedule;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherBalance;
 
 /**
  * Contains utility methods for populating {@code LaiNurse} with sample data.
+ * Alex Yeoh holds 10 vouchers given two days before {@code today}, which interest has made 12.1 vouchers, and
+ * Irfan Ibrahim holds 4 vouchers given today.
  */
 public class SampleDataUtil {
 
@@ -33,7 +37,9 @@ public class SampleDataUtil {
     /**
      * Returns sample patients whose appointments are based on the week containing {@code today}, where a week
      * is the Monday to Sunday defined by {@link DateUtil#getStartOfWeek}. Three fall in that week, and the monthly
-     * blood test is on the Monday four weeks later.
+     * blood test is on the Monday four weeks later. Alex Yeoh, Bernice Yu and Charlotte Oliveiro were all born on
+     * 16 November, so on that day each holds twice twice as many vouchers, and Alex Yeoh holds 10 vouchers given
+     * two days before {@code today} and Irfan Ibrahim 4 given on it.
      */
     public static Patient[] getSamplePatients(LocalDate today) {
         LocalDate weekStart = DateUtil.getStartOfWeek(today);
@@ -46,16 +52,20 @@ public class SampleDataUtil {
                 new Address("Blk 30 Geylang Street 29, #06-40"),
                 Optional.of(new MedicalHistory("Type 2 diabetes")),
                 Optional.of(new Notes("Daughter Mei Ling (91234567) is the main contact")),
+                Optional.of(new DateOfBirth("1990-11-16")),
                 new AppointmentSchedule(List.of(getAppointment(alexInsulinReviewDateTime, "Insulin review"),
-                        getAppointment(alexMonthlyBloodTestDate, "Monthly blood test")))),
+                        getAppointment(alexMonthlyBloodTestDate, "Monthly blood test"))),
+                new VoucherBalance(10, today.minusDays(2)), false),
             new Patient(new PatientId("S2345678B"), new Name("Bernice Yu"), new Phone("99272758"),
                 new Address("Blk 30 Lorong 3 Serangoon Gardens, #07-18"),
                 Optional.of(new MedicalHistory("Hypertension, allergic to penicillin")),
                 Optional.of(new Notes("Has a dog; ring the bell and wait at the gate")),
-                getSchedule(berniceAppointmentDate)),
+                Optional.of(new DateOfBirth("1985-11-16")),
+                getSchedule(berniceAppointmentDate), VoucherBalance.ZERO, false),
             new Patient(new PatientId("T0123456C"), new Name("Charlotte Oliveiro"), new Phone("93210283"),
                 new Address("Blk 11 Ang Mo Kio Street 74, #11-04"),
-                Optional.empty(), Optional.empty(), AppointmentSchedule.empty()),
+                Optional.empty(), Optional.empty(), Optional.of(new DateOfBirth("2001-11-16")),
+                AppointmentSchedule.empty(), VoucherBalance.ZERO, false),
             new Patient(new PatientId("S3456789D"), new Name("David Li"), new Phone("91031282"),
                 new Address("Blk 436 Serangoon Gardens Street 26, #16-43"),
                 Optional.of(new MedicalHistory("Post-stroke rehabilitation")),
@@ -64,7 +74,8 @@ public class SampleDataUtil {
                 new Address("Blk 47 Tampines Street 20, #17-35"),
                 Optional.empty(), Optional.empty(),
                 new AppointmentSchedule(List.of(
-                        getAppointment(irfanWoundDressingDateTime, "Dress the wound on the left foot")))),
+                        getAppointment(irfanWoundDressingDateTime, "Dress the wound on the left foot"))),
+                new VoucherBalance(4, today), false),
             new Patient(new PatientId("S4567890F"), new Name("Roy Balakrishnan"), new Phone("92624417"),
                 new Address("Blk 45 Aljunied Street 85, #11-31"),
                 Optional.of(new MedicalHistory("Dementia")),

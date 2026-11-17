@@ -1,17 +1,20 @@
 package seedu.address.testutil;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.AppointmentSchedule;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherBalance;
 import seedu.address.model.util.SampleDataUtil;
 
 /**
@@ -31,6 +34,8 @@ public class PatientBuilder {
     private Optional<MedicalHistory> medicalHistory;
     private Optional<Notes> notes;
     private AppointmentSchedule appointments;
+    private VoucherBalance vouchers;
+    private DateOfBirth dateOfBirth;
     private boolean isArchived;
 
     /**
@@ -44,6 +49,7 @@ public class PatientBuilder {
         medicalHistory = Optional.empty();
         notes = Optional.empty();
         appointments = AppointmentSchedule.empty();
+        vouchers = VoucherBalance.ZERO;
     }
 
     /**
@@ -57,6 +63,8 @@ public class PatientBuilder {
         medicalHistory = patientToCopy.getMedicalHistory();
         notes = patientToCopy.getNotes();
         appointments = patientToCopy.getSchedule();
+        vouchers = patientToCopy.getVoucherBalance();
+        dateOfBirth = patientToCopy.getDateOfBirth().orElse(null);
         isArchived = patientToCopy.isArchived();
     }
 
@@ -159,8 +167,38 @@ public class PatientBuilder {
         return this;
     }
 
+    /**
+     * Sets the {@code DateOfBirth} of the {@code Patient} that we are building, from a date in the format
+     * yyyy-MM-dd that is not in the future.
+     */
+    public PatientBuilder withDateOfBirth(String dateOfBirth) {
+        this.dateOfBirth = new DateOfBirth(dateOfBirth);
+        return this;
+    }
+
+    /**
+     * Sets the {@code VoucherBalance} of the {@code Patient} that we are building.
+     */
+    public PatientBuilder withVoucherBalance(VoucherBalance vouchers) {
+        this.vouchers = vouchers;
+        return this;
+    }
+
+    /**
+     * Gives the {@code Patient} that we are building {@code count} vouchers on {@code date}, as the balance the
+     * commands would leave, before any interest.
+     */
+    public PatientBuilder withVouchers(double count, LocalDate date) {
+        this.vouchers = new VoucherBalance(count, date);
+        return this;
+    }
+
+    /**
+     * Builds the {@code Patient} with the details that were set.
+     */
     public Patient build() {
-        return new Patient(id, name, phone, address, medicalHistory, notes, appointments, isArchived);
+        return new Patient(id, name, phone, address, medicalHistory, notes, Optional.ofNullable(dateOfBirth),
+                appointments, vouchers, isArchived);
     }
 
 }

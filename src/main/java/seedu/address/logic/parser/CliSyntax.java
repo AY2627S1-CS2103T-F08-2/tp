@@ -14,6 +14,7 @@ public class CliSyntax {
     public static final Prefix PREFIX_ADD_MEDICAL_HISTORY = new Prefix("--add-medical-history ");
     public static final Prefix PREFIX_NOTES = new Prefix("--notes ");
     public static final Prefix PREFIX_ADD_NOTES = new Prefix("--add-notes ");
+    public static final Prefix PREFIX_DOB = new Prefix("--dob ");
     public static final Prefix PREFIX_FROM = new Prefix("--from ");
     public static final Prefix PREFIX_TO = new Prefix("--to ");
     public static final Prefix PREFIX_DATE = new Prefix("--date ");

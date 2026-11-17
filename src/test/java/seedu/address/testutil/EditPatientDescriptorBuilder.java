@@ -3,6 +3,7 @@ package seedu.address.testutil;
 import seedu.address.logic.commands.EditCommand.EditPatientDescriptor;
 import seedu.address.logic.commands.OptionalFieldEdit;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -32,6 +33,7 @@ public class EditPatientDescriptorBuilder {
         descriptor.setName(patient.getName());
         descriptor.setPhone(patient.getPhone());
         descriptor.setAddress(patient.getAddress());
+        patient.getDateOfBirth().map(OptionalFieldEdit::replace).ifPresent(descriptor::setDateOfBirth);
         patient.getMedicalHistory().map(OptionalFieldEdit::replace).ifPresent(descriptor::setMedicalHistory);
         patient.getNotes().map(OptionalFieldEdit::replace).ifPresent(descriptor::setNotes);
     }
@@ -57,6 +59,23 @@ public class EditPatientDescriptorBuilder {
      */
     public EditPatientDescriptorBuilder withAddress(String address) {
         descriptor.setAddress(new Address(address));
+        return this;
+    }
+
+    /**
+     * Sets the {@code EditPatientDescriptor} that we are building to replace the date of birth with
+     * {@code dateOfBirth}.
+     */
+    public EditPatientDescriptorBuilder withDateOfBirth(String dateOfBirth) {
+        descriptor.setDateOfBirth(OptionalFieldEdit.replace(new DateOfBirth(dateOfBirth)));
+        return this;
+    }
+
+    /**
+     * Sets the {@code EditPatientDescriptor} that we are building to clear the date of birth.
+     */
+    public EditPatientDescriptorBuilder withoutDateOfBirth() {
+        descriptor.setDateOfBirth(OptionalFieldEdit.clear());
         return this;
     }
 

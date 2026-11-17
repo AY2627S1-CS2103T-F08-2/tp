@@ -24,17 +24,20 @@ public class Patient {
     private final Address address;
     private final MedicalHistory medicalHistory; // null if not given
     private final Notes notes; // null if not given
+    private final DateOfBirth dateOfBirth; // null if not given
     private final AppointmentSchedule schedule;
+    private final VoucherBalance vouchers;
     private final boolean isArchived;
 
     /**
-     * Every field must be present and not null. An absent medical history or absent notes are passed as
+     * Every field must be present and not null. An absent medical history, notes or date of birth are passed as
      * {@code Optional#empty()}, and a patient with no appointments is given {@link AppointmentSchedule#empty()}.
-     * The patient is not archived.
+     * The patient is not archived, holds no vouchers, and has no date of birth.
      */
     public Patient(PatientId id, Name name, Phone phone, Address address,
             Optional<MedicalHistory> medicalHistory, Optional<Notes> notes, AppointmentSchedule schedule) {
-        this(id, name, phone, address, medicalHistory, notes, schedule, false);
+        this(id, name, phone, address, medicalHistory, notes, Optional.empty(), schedule, VoucherBalance.ZERO,
+                false);
     }
 
     /**
@@ -43,14 +46,37 @@ public class Patient {
      */
     public Patient(PatientId id, Name name, Phone phone, Address address, Optional<MedicalHistory> medicalHistory,
             Optional<Notes> notes, AppointmentSchedule schedule, boolean isArchived) {
-        requireAllNonNull(id, name, phone, address, medicalHistory, notes, schedule);
+        this(id, name, phone, address, medicalHistory, notes, Optional.empty(), schedule, VoucherBalance.ZERO,
+                isArchived);
+    }
+
+    /**
+     * Every field must be present and not null. A patient who holds no vouchers is given
+     * {@link VoucherBalance#ZERO}, and the patient is archived if {@code isArchived}.
+     */
+    public Patient(PatientId id, Name name, Phone phone, Address address, Optional<MedicalHistory> medicalHistory,
+            Optional<Notes> notes, AppointmentSchedule schedule, VoucherBalance vouchers, boolean isArchived) {
+        this(id, name, phone, address, medicalHistory, notes, Optional.empty(), schedule, vouchers, isArchived);
+    }
+
+    /**
+     * Every field must be present and not null. An absent date of birth is passed as {@code Optional#empty()}, a
+     * patient who holds no vouchers is given {@link VoucherBalance#ZERO}, and the patient is archived if
+     * {@code isArchived}.
+     */
+    public Patient(PatientId id, Name name, Phone phone, Address address, Optional<MedicalHistory> medicalHistory,
+            Optional<Notes> notes, Optional<DateOfBirth> dateOfBirth, AppointmentSchedule schedule,
+            VoucherBalance vouchers, boolean isArchived) {
+        requireAllNonNull(id, name, phone, address, medicalHistory, notes, schedule, vouchers);
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.address = address;
         this.medicalHistory = medicalHistory.orElse(null);
         this.notes = notes.orElse(null);
+        this.dateOfBirth = dateOfBirth.orElse(null);
         this.schedule = schedule;
+        this.vouchers = vouchers;
         this.isArchived = isArchived;
     }
 
@@ -85,10 +111,24 @@ public class Patient {
     }
 
     /**
+     * Returns the date of birth, or {@code Optional#empty()} if none was given.
+     */
+    public Optional<DateOfBirth> getDateOfBirth() {
+        return Optional.ofNullable(dateOfBirth);
+    }
+
+    /**
      * Returns the patient's appointments, in chronological order.
      */
     public AppointmentSchedule getSchedule() {
         return schedule;
+    }
+
+    /**
+     * Returns the patient's balance of unused vouchers.
+     */
+    public VoucherBalance getVoucherBalance() {
+        return vouchers;
     }
 
     /**
@@ -99,18 +139,29 @@ public class Patient {
     }
 
     /**
-     * Returns a copy of this patient with {@code schedule} in place of their appointments, and every other detail kept,
-     * also whether they are archived.
+     * Returns a copy of this patient with {@code schedule} in place of their appointments, and every other detail
+     * kept, also their date of birth, vouchers and whether they are archived.
      */
     public Patient withSchedule(AppointmentSchedule schedule) {
-        return new Patient(id, name, phone, address, getMedicalHistory(), getNotes(), schedule, isArchived);
+        return new Patient(id, name, phone, address, getMedicalHistory(), getNotes(), getDateOfBirth(), schedule,
+                vouchers, isArchived);
+    }
+
+    /**
+     * Returns a copy of this patient with {@code vouchers} in place of their voucher balance, and every other
+     * detail kept, also their date of birth and whether they are archived.
+     */
+    public Patient withVoucherBalance(VoucherBalance vouchers) {
+        return new Patient(id, name, phone, address, getMedicalHistory(), getNotes(), getDateOfBirth(), schedule,
+                vouchers, isArchived);
     }
 
     /**
      * Returns a copy of this patient that is archived if {@code isArchived}, with every other detail kept.
      */
     public Patient withArchived(boolean isArchived) {
-        return new Patient(id, name, phone, address, getMedicalHistory(), getNotes(), schedule, isArchived);
+        return new Patient(id, name, phone, address, getMedicalHistory(), getNotes(), getDateOfBirth(), schedule,
+                vouchers, isArchived);
     }
 
     /**
@@ -147,14 +198,17 @@ public class Patient {
                 && address.equals(otherPatient.address)
                 && Objects.equals(medicalHistory, otherPatient.medicalHistory)
                 && Objects.equals(notes, otherPatient.notes)
+                && Objects.equals(dateOfBirth, otherPatient.dateOfBirth)
                 && schedule.equals(otherPatient.schedule)
+                && vouchers.equals(otherPatient.vouchers)
                 && isArchived == otherPatient.isArchived;
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(id, name, phone, address, medicalHistory, notes, schedule, isArchived);
+        return Objects.hash(id, name, phone, address, medicalHistory, notes, dateOfBirth, schedule, vouchers,
+                isArchived);
     }
 
     @Override
@@ -166,7 +220,9 @@ public class Patient {
                 .add("address", address)
                 .add("medicalHistory", medicalHistory)
                 .add("notes", notes)
+                .add("dateOfBirth", dateOfBirth)
                 .add("schedule", schedule)
+                .add("vouchers", vouchers)
                 .add("isArchived", isArchived)
                 .toString();
     }

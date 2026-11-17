@@ -27,6 +27,13 @@ public class MessagesTest {
     }
 
     @Test
+    public void format_patientWithDateOfBirth_includesIt() {
+        Patient patient = new PatientBuilder().withDateOfBirth("1990-11-16").build();
+        assertEquals("AMY BEE; ID: S9876543Z; Phone: 85355255; Address: 123, JURONG WEST AVE 6, #08-111"
+                + "; Date of Birth: 1990-11-16", Messages.format(patient));
+    }
+
+    @Test
     public void format_patientWithoutNotes_omitsNotes() {
         assertEquals("AMY BEE; ID: S9876543Z; Phone: 85355255; Address: 123, JURONG WEST AVE 6, #08-111",
                 Messages.format(new PatientBuilder().build()));

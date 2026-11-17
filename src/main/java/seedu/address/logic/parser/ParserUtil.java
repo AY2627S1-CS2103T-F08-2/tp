@@ -18,11 +18,13 @@ import seedu.address.model.PatientScope;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherNumber;
 
 /**
  * Contains utility methods used for parsing strings in the various *Parser classes.
@@ -222,6 +224,43 @@ public class ParserUtil {
             logger.fine("Rejected appointment number that is too large.");
             throw new ParseException(String.format(Appointment.MESSAGE_NUMBER_TOO_LARGE, number));
         }
+    }
+
+    /**
+     * Parses a number of vouchers, which is a positive whole number with no sign or fraction, such as the number
+     * that {@code addvoucher} gives a patient or {@code redeemvoucher} redeems.
+     *
+     * @throws ParseException if {@code number} is not a positive whole number, or is too large for a {@code long}.
+     */
+    public static VoucherNumber parseVoucherNumber(String number) throws ParseException {
+        requireNonNull(number);
+        String trimmedNumber = number.trim();
+        if (!VoucherNumber.isValidNumber(trimmedNumber)) {
+            logger.fine("Rejected invalid number of vouchers.");
+            throw new ParseException(VoucherNumber.MESSAGE_CONSTRAINTS);
+        }
+        try {
+            return new VoucherNumber(trimmedNumber);
+        } catch (IllegalArgumentException e) {
+            logger.fine("Rejected number of vouchers that is too large.");
+            throw new ParseException(e.getMessage());
+        }
+    }
+
+    /**
+     * Parses a date of birth, which is a real date in the format that appointment dates use, and cannot be in
+     * the future.
+     *
+     * @throws ParseException if the given {@code dateOfBirth} is invalid.
+     */
+    public static DateOfBirth parseDateOfBirth(String dateOfBirth) throws ParseException {
+        requireNonNull(dateOfBirth);
+        String trimmedDateOfBirth = dateOfBirth.trim();
+        if (!DateOfBirth.isValidDateOfBirth(trimmedDateOfBirth)) {
+            logger.fine("Rejected invalid date of birth.");
+            throw new ParseException(DateOfBirth.MESSAGE_CONSTRAINTS);
+        }
+        return new DateOfBirth(trimmedDateOfBirth);
     }
 
     /**

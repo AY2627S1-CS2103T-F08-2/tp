@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADD_NOTES;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NOTES;
@@ -22,6 +23,7 @@ import seedu.address.logic.commands.CommandResult.Navigation;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.patient.Address;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
@@ -46,6 +48,7 @@ public class EditCommand extends Command {
             + "[" + PREFIX_NAME + "NAME] "
             + "[" + PREFIX_PHONE + "PHONE] "
             + "[" + PREFIX_ADDRESS + "ADDRESS] "
+            + "[" + PREFIX_DOB + "[DATE_OF_BIRTH]] "
             + "[" + PREFIX_MEDICAL_HISTORY + "[MEDICAL_HISTORY]] "
             + "[" + PREFIX_ADD_MEDICAL_HISTORY + "MORE_HISTORY] "
             + "[" + PREFIX_NOTES + "[NOTES]] "
@@ -56,8 +59,9 @@ public class EditCommand extends Command {
     public static final String MESSAGE_EDIT_PATIENT_SUCCESS = "Edited patient: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one of " + PREFIX_NAME.toString().trim() + ", "
             + PREFIX_PHONE.toString().trim() + ", " + PREFIX_ADDRESS.toString().trim() + ", "
-            + PREFIX_MEDICAL_HISTORY.toString().trim() + ", " + PREFIX_ADD_MEDICAL_HISTORY.toString().trim() + ", "
-            + PREFIX_NOTES.toString().trim() + " and " + PREFIX_ADD_NOTES.toString().trim() + " must be provided.";
+            + PREFIX_DOB.toString().trim() + ", " + PREFIX_MEDICAL_HISTORY.toString().trim() + ", "
+            + PREFIX_ADD_MEDICAL_HISTORY.toString().trim() + ", " + PREFIX_NOTES.toString().trim() + " and "
+            + PREFIX_ADD_NOTES.toString().trim() + " must be provided.";
 
     private static final Logger logger = LogsCenter.getLogger(EditCommand.class);
 
@@ -104,7 +108,7 @@ public class EditCommand extends Command {
     /**
      * Creates and returns a {@code Patient} with the details of {@code patientToEdit}
      * edited with {@code editPatientDescriptor}. The patient ID is never changed.
-     * The patient's appointments are kept.
+     * The patient's appointments and vouchers are kept.
      */
     private static Patient createEditedPatient(Patient patientToEdit, EditPatientDescriptor editPatientDescriptor) {
         assert patientToEdit != null;
@@ -113,6 +117,9 @@ public class EditCommand extends Command {
         Name updatedName = editPatientDescriptor.getName().orElse(patientToEdit.getName());
         Phone updatedPhone = editPatientDescriptor.getPhone().orElse(patientToEdit.getPhone());
         Address updatedAddress = editPatientDescriptor.getAddress().orElse(patientToEdit.getAddress());
+        Optional<DateOfBirth> updatedDateOfBirth = editPatientDescriptor.getDateOfBirth()
+                .map(edit -> edit.applyTo(patientToEdit.getDateOfBirth(), DateOfBirth::new))
+                .orElse(patientToEdit.getDateOfBirth());
         Optional<MedicalHistory> updatedMedicalHistory = editPatientDescriptor.getMedicalHistory()
                 .map(edit -> edit.applyTo(patientToEdit.getMedicalHistory(), MedicalHistory::new))
                 .orElse(patientToEdit.getMedicalHistory());
@@ -121,7 +128,8 @@ public class EditCommand extends Command {
                 .orElse(patientToEdit.getNotes());
 
         return new Patient(patientToEdit.getId(), updatedName, updatedPhone, updatedAddress,
-                updatedMedicalHistory, updatedNotes, patientToEdit.getSchedule(), patientToEdit.isArchived());
+                updatedMedicalHistory, updatedNotes, updatedDateOfBirth, patientToEdit.getSchedule(),
+                patientToEdit.getVoucherBalance(), patientToEdit.isArchived());
     }
 
     @Override
@@ -154,13 +162,14 @@ public class EditCommand extends Command {
 
     /**
      * Stores the details to edit the patient with. Each non-empty field value will replace the
-     * corresponding field value of the patient. The medical history and notes are stored as edits, which can also
-     * clear the field or add text to the end of it.
+     * corresponding field value of the patient. The medical history, notes and date of birth are stored as edits,
+     * which can also clear the field, and the medical history and notes can also add text to the end of them.
      */
     public static class EditPatientDescriptor {
         private Name name;
         private Phone phone;
         private Address address;
+        private OptionalFieldEdit<DateOfBirth> dateOfBirth;
         private OptionalFieldEdit<MedicalHistory> medicalHistory;
         private OptionalFieldEdit<Notes> notes;
 
@@ -173,6 +182,7 @@ public class EditCommand extends Command {
             setName(toCopy.name);
             setPhone(toCopy.phone);
             setAddress(toCopy.address);
+            setDateOfBirth(toCopy.dateOfBirth);
             setMedicalHistory(toCopy.medicalHistory);
             setNotes(toCopy.notes);
         }
@@ -181,7 +191,7 @@ public class EditCommand extends Command {
          * Returns true if at least one field is edited.
          */
         public boolean isAnyFieldEdited() {
-            return CollectionUtil.isAnyNonNull(name, phone, address, medicalHistory, notes);
+            return CollectionUtil.isAnyNonNull(name, phone, address, dateOfBirth, medicalHistory, notes);
         }
 
         public void setName(Name name) {
@@ -206,6 +216,14 @@ public class EditCommand extends Command {
 
         public Optional<Address> getAddress() {
             return Optional.ofNullable(address);
+        }
+
+        public void setDateOfBirth(OptionalFieldEdit<DateOfBirth> dateOfBirth) {
+            this.dateOfBirth = dateOfBirth;
+        }
+
+        public Optional<OptionalFieldEdit<DateOfBirth>> getDateOfBirth() {
+            return Optional.ofNullable(dateOfBirth);
         }
 
         public void setMedicalHistory(OptionalFieldEdit<MedicalHistory> medicalHistory) {
@@ -238,6 +256,7 @@ public class EditCommand extends Command {
             return Objects.equals(name, otherEditPatientDescriptor.name)
                     && Objects.equals(phone, otherEditPatientDescriptor.phone)
                     && Objects.equals(address, otherEditPatientDescriptor.address)
+                    && Objects.equals(dateOfBirth, otherEditPatientDescriptor.dateOfBirth)
                     && Objects.equals(medicalHistory, otherEditPatientDescriptor.medicalHistory)
                     && Objects.equals(notes, otherEditPatientDescriptor.notes);
         }
@@ -248,6 +267,7 @@ public class EditCommand extends Command {
                     .add("name", name)
                     .add("phone", phone)
                     .add("address", address)
+                    .add("dateOfBirth", dateOfBirth)
                     .add("medicalHistory", medicalHistory)
                     .add("notes", notes)
                     .toString();

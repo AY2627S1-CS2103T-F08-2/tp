@@ -7,6 +7,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +19,7 @@ import seedu.address.model.LaiNurse;
 import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentDetails;
 import seedu.address.model.patient.AppointmentSchedule;
+import seedu.address.model.patient.VoucherBalance;
 import seedu.address.testutil.PatientBuilder;
 import seedu.address.testutil.TypicalPatients;
 
@@ -28,6 +30,11 @@ public class JsonSerializableLaiNurseTest {
     private static final Path INVALID_PATIENT_FILE = TEST_DATA_FOLDER.resolve("invalidPatientLaiNurse.json");
     private static final Path DUPLICATE_PATIENT_FILE = TEST_DATA_FOLDER.resolve("duplicatePatientLaiNurse.json");
     private static final Path NOTES_AND_DETAILS_FILE = TEST_DATA_FOLDER.resolve("notesAndDetailsLaiNurse.json");
+    private static final Path VOUCHER_PATIENT_FILE = TEST_DATA_FOLDER.resolve("voucherPatientLaiNurse.json");
+    private static final Path INVALID_VOUCHER_PATIENT_FILE =
+            TEST_DATA_FOLDER.resolve("invalidVoucherPatientLaiNurse.json");
+    private static final Path VOUCHER_COUNT_WITHOUT_DATE_FILE =
+            TEST_DATA_FOLDER.resolve("voucherCountWithoutDateLaiNurse.json");
     private static final Path PERSONS_KEY_FILE = TEST_DATA_FOLDER.resolve("personsKeyLaiNurse.json");
     private static final Path NULL_PATIENT_FILE = TEST_DATA_FOLDER.resolve("nullPatientLaiNurse.json");
 
@@ -87,6 +94,28 @@ public class JsonSerializableLaiNurseTest {
     }
 
     @Test
+    public void toModelType_voucherPatientFile_success() throws Exception {
+        JsonSerializableLaiNurse dataFromFile = JsonUtil.readJsonFile(VOUCHER_PATIENT_FILE,
+                JsonSerializableLaiNurse.class).get();
+        assertEquals(getVoucherPatientsLaiNurse(), dataFromFile.toModelType());
+    }
+
+    @Test
+    public void toModelType_invalidVoucherCount_throwsIllegalValueException() throws Exception {
+        JsonSerializableLaiNurse dataFromFile = JsonUtil.readJsonFile(INVALID_VOUCHER_PATIENT_FILE,
+                JsonSerializableLaiNurse.class).get();
+        assertThrows(IllegalValueException.class, VoucherBalance.MESSAGE_COUNT_CONSTRAINTS, dataFromFile::toModelType);
+    }
+
+    @Test
+    public void toModelType_voucherCountWithoutDate_throwsIllegalValueException() throws Exception {
+        JsonSerializableLaiNurse dataFromFile = JsonUtil.readJsonFile(VOUCHER_COUNT_WITHOUT_DATE_FILE,
+                JsonSerializableLaiNurse.class).get();
+        assertThrows(IllegalValueException.class, String.format(JsonAdaptedPatient.MISSING_FIELD_MESSAGE_FORMAT,
+                "voucher"), dataFromFile::toModelType);
+    }
+
+    @Test
     public void constructor_notesAndDetails_savedWithAppointmentsAsObjects() throws Exception {
         String json = JsonUtil.toJsonString(new JsonSerializableLaiNurse(getNotesAndDetailsLaiNurse()));
         assertTrue(json.contains("\"notes\" : \"DAUGHTER MEI LING (91234567) IS THE MAIN CONTACT\""));
@@ -111,6 +140,23 @@ public class JsonSerializableLaiNurseTest {
         laiNurse.addPatient(new PatientBuilder().withId("S2345678B").withName("Bernice Yu").withPhone("99272758")
                 .withAddress("Blk 30 Lorong 3 Serangoon Gardens, #07-18")
                 .withAppointments("2026-10-06", "2026-10-13 10:00").build());
+        return laiNurse;
+    }
+
+    /**
+     * Returns the patients in {@code voucherPatientLaiNurse.json}, as their balances are before any interest is
+     * applied on loading.
+     */
+    private static LaiNurse getVoucherPatientsLaiNurse() {
+        LaiNurse laiNurse = new LaiNurse();
+        laiNurse.addPatient(new PatientBuilder().withId("S1234567A").withName("Alex Yeoh").withPhone("87438807")
+                .withAddress("Blk 30 Geylang Street 29, #06-40")
+                .withVouchers(12.1, LocalDate.parse("2026-10-03")).build());
+        laiNurse.addPatient(new PatientBuilder().withId("S2345678B").withName("Bernice Yu").withPhone("99272758")
+                .withAddress("Blk 30 Lorong 3 Serangoon Gardens, #07-18")
+                .withVouchers(8, LocalDate.parse("2026-10-05")).build());
+        laiNurse.addPatient(new PatientBuilder().withId("S3456789C").withName("Carl Kurz").withPhone("95352563")
+                .withAddress("Wall street").build());
         return laiNurse;
     }
 }

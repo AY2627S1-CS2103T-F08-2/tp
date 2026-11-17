@@ -1,0 +1,23 @@
+{
+  "_comment": "LaiNurse save file with patients who hold vouchers, as JsonSerializableLaiNurseTest#toModelType_voucherPatientFile_success expects them",
+  "patients" : [ {
+    "id" : "S1234567A",
+    "name" : "ALEX YEOH",
+    "phone" : "87438807",
+    "address" : "BLK 30 GEYLANG STREET 29, #06-40",
+    "voucherCount" : 12.1,
+    "voucherInterestDate" : "2026-10-03"
+  }, {
+    "id" : "S2345678B",
+    "name" : "BERNICE YU",
+    "phone" : "99272758",
+    "address" : "BLK 30 LORONG 3 SERANGOON GARDENS, #07-18",
+    "voucherCount" : 8,
+    "voucherInterestDate" : "2026-10-05"
+  }, {
+    "id" : "S3456789C",
+    "name" : "CARL KURZ",
+    "phone" : "95352563",
+    "address" : "WALL STREET"
+  } ]
+}

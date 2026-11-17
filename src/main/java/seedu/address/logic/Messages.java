@@ -17,6 +17,7 @@ import seedu.address.model.patient.Appointment;
 import seedu.address.model.patient.AppointmentClashes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientAppointment;
+import seedu.address.model.patient.VoucherBalance;
 
 /**
  * Container for user visible messages.
@@ -47,6 +48,9 @@ public class Messages {
     public static final String MESSAGE_CONFLICTING_FIELD_EDITS = "%1$s and %2$s cannot be given together. "
             + "%1$s replaces the value, or clears it if given no value, and %2$s adds to the end of it.";
 
+    /** How far a voucher count may be from a whole number, and still show as that whole number, as rounding does. */
+    private static final double VOUCHER_COUNT_TOLERANCE = 1e-9;
+
     /**
      * Returns an error message naming the options of {@code duplicatePrefixes}, which were each given more than once,
      * in the given order. Parsers give them in the order of the command's usage.
@@ -73,6 +77,17 @@ public class Messages {
     }
 
     /**
+     * Returns {@code count} with {@code noun}, as {@link #formatCount(long, String)} does, but for a count that
+     * interest can make a fraction: the count shows rounded to 2 decimal places, and it is singular only when it
+     * rounds to exactly 1, such as "1 voucher" or "11.2 vouchers".
+     */
+    public static String formatCount(double count, String noun) {
+        long roundedCount = Math.round(count);
+        boolean isSingular = Math.abs(count - roundedCount) < VOUCHER_COUNT_TOLERANCE && roundedCount == 1;
+        return VoucherBalance.formatCount(count) + " " + noun + (isSingular ? "" : "s");
+    }
+
+    /**
      * Formats the {@code patient} for display to the user.
      */
     public static String format(Patient patient) {
@@ -84,6 +99,7 @@ public class Messages {
                 .append(patient.getPhone())
                 .append("; Address: ")
                 .append(patient.getAddress());
+        patient.getDateOfBirth().ifPresent(dob -> builder.append("; Date of Birth: ").append(dob));
         patient.getMedicalHistory().ifPresent(history -> builder.append("; Medical History: ").append(history));
         patient.getNotes().ifPresent(notes -> builder.append("; Notes: ").append(notes));
         if (!patient.getSchedule().isEmpty()) {

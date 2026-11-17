@@ -84,7 +84,8 @@ public class EditPatientDescriptorTest {
         String expected = EditPatientDescriptor.class.getCanonicalName() + "{name="
                 + editPatientDescriptor.getName().orElse(null) + ", phone="
                 + editPatientDescriptor.getPhone().orElse(null) + ", address="
-                + editPatientDescriptor.getAddress().orElse(null) + ", medicalHistory="
+                + editPatientDescriptor.getAddress().orElse(null) + ", dateOfBirth="
+                + editPatientDescriptor.getDateOfBirth().orElse(null) + ", medicalHistory="
                 + editPatientDescriptor.getMedicalHistory().orElse(null) + ", notes="
                 + editPatientDescriptor.getNotes().orElse(null) + "}";
         assertEquals(expected, editPatientDescriptor.toString());

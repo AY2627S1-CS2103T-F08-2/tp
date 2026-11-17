@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_DOB;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ID;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_MEDICAL_HISTORY;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -15,12 +16,14 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.patient.Address;
 import seedu.address.model.patient.AppointmentSchedule;
+import seedu.address.model.patient.DateOfBirth;
 import seedu.address.model.patient.MedicalHistory;
 import seedu.address.model.patient.Name;
 import seedu.address.model.patient.Notes;
 import seedu.address.model.patient.Patient;
 import seedu.address.model.patient.PatientId;
 import seedu.address.model.patient.Phone;
+import seedu.address.model.patient.VoucherBalance;
 
 /**
  * Parses input arguments and creates a new AddCommand object
@@ -36,23 +39,27 @@ public class AddCommandParser implements Parser<AddCommand> {
     public AddCommand parse(String args) throws ParseException {
         String invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
         String normalizedArgs = ArgumentTokenizer.normalizeOptionSeparators(args, invalidFormatMessage,
-                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
+                PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_DOB, PREFIX_MEDICAL_HISTORY,
+                PREFIX_NOTES);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(normalizedArgs, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
-                        PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
+                        PREFIX_DOB, PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
 
         if (!arePrefixesPresent(argMultimap, PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS)
                 || !argMultimap.getPreamble().isEmpty()) {
             throw new ParseException(invalidFormatMessage);
         }
 
-        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS,
+        argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ID, PREFIX_NAME, PREFIX_PHONE, PREFIX_ADDRESS, PREFIX_DOB,
                 PREFIX_MEDICAL_HISTORY, PREFIX_NOTES);
         PatientId id = ParserUtil.parseId(argMultimap.getValue(PREFIX_ID).get());
         Name name = ParserUtil.parseName(argMultimap.getValue(PREFIX_NAME).get());
         Phone phone = ParserUtil.parsePhone(argMultimap.getValue(PREFIX_PHONE).get());
         Address address = ParserUtil.parseAddress(argMultimap.getValue(PREFIX_ADDRESS).get());
 
+        DateOfBirth dateOfBirth = argMultimap.getValue(PREFIX_DOB).isPresent()
+                ? ParserUtil.parseDateOfBirth(argMultimap.getValue(PREFIX_DOB).get())
+                : null;
         MedicalHistory medicalHistory =
                 argMultimap.getValue(PREFIX_MEDICAL_HISTORY).isPresent()
                 ? ParserUtil.parseMedicalHistory(argMultimap.getValue(PREFIX_MEDICAL_HISTORY).get())
@@ -62,7 +69,8 @@ public class AddCommandParser implements Parser<AddCommand> {
                 : null;
 
         Patient patient = new Patient(id, name, phone, address, Optional.ofNullable(medicalHistory),
-                Optional.ofNullable(notes), AppointmentSchedule.empty());
+                Optional.ofNullable(notes), Optional.ofNullable(dateOfBirth), AppointmentSchedule.empty(),
+                VoucherBalance.ZERO, false);
 
         return new AddCommand(patient);
     }
